@@ -2,7 +2,7 @@ using NeoFences.Core.Model;
 
 namespace NeoFences.Shell;
 
-/// <summary>The contents of a Portal's folder, and the facts sorting needs about any item (M4).</summary>
+/// <summary>A folder's contents (the Game Library's folder), and the facts "Sort by" needs about any target (M4).</summary>
 public static class FolderItems
 {
     /// <summary>Visible entries (not Hidden or System, like Explorer), or null when the folder cannot be read (missing, offline, denied).</summary>
@@ -21,7 +21,7 @@ public static class FolderItems
         }
     }
 
-    /// <summary>Sorting facts for items of a desktop fence ("Sort by", one time). Special items sort as folders by name.</summary>
+    /// <summary>Sorting facts for targets ("Sort by", one time). Special items sort as folders by name.</summary>
     public static IReadOnlyList<ItemInfo> Describe(IEnumerable<string> itemRefs) => itemRefs.Select(itemRef =>
     {
         if (itemRef.StartsWith("::", StringComparison.Ordinal))
@@ -41,13 +41,15 @@ public static class FolderItems
     }
 }
 
-/// <summary>Says when a folder's contents changed (a Portal re-lists it). Events arrive on thread-pool threads.</summary>
+/// <summary>Says when a folder's contents changed (the library rescans, items are re-checked). Events arrive on thread-pool threads.</summary>
 public sealed class FolderWatcher : IDisposable
 {
     private readonly FileSystemWatcher? _watcher;
     private readonly FileSystemWatcher? _parentWatcher; // the folder itself renamed, moved or deleted (and back)
 
     public event Action? Changed;
+    /// <summary>An entry of the folder, or the folder itself, was renamed in place: old and new full path (items follow it, M18).</summary>
+    public event Action<string, string>? Renamed;
     /// <summary>The watcher lost events or stopped (a drive going away, a network hiccup): re-list and re-arm, with backoff (M8d).</summary>
     public event Action? Failed;
 
@@ -55,7 +57,7 @@ public sealed class FolderWatcher : IDisposable
     public bool HasFailed => _hasFailed;
     private volatile bool _hasFailed;
 
-    /// <summary>False when the folder itself could not be watched (missing, offline): the Portal then retries.</summary>
+    /// <summary>False when the folder itself could not be watched (missing, offline): the owner then retries.</summary>
     public bool IsWatching => _watcher is not null;
 
     /// <summary>
@@ -64,7 +66,7 @@ public sealed class FolderWatcher : IDisposable
     /// </summary>
     public string? HeldFolder { get; private set; }
 
-    /// <param name="logFailure">Told when the folder cannot be watched; the Portal then only refreshes on navigation.</param>
+    /// <param name="logFailure">Told when the folder cannot be watched; its items are then only re-checked.</param>
     /// <param name="directoriesOnly">Only folders appearing, going or renamed: a game folder whose games write files at their
     /// own root would otherwise rescan the library while they run (M13b).</param>
     public FolderWatcher(string folderPath, Action<Exception> logFailure, bool directoriesOnly = false)
@@ -79,7 +81,11 @@ public sealed class FolderWatcher : IDisposable
             };
             _watcher.Created += (_, _) => Changed?.Invoke();
             _watcher.Deleted += (_, _) => Changed?.Invoke();
-            _watcher.Renamed += (_, _) => Changed?.Invoke();
+            _watcher.Renamed += (_, renamed) =>
+            {
+                Renamed?.Invoke(renamed.OldFullPath, renamed.FullPath);
+                Changed?.Invoke();
+            };
             _watcher.Changed += (_, _) => Changed?.Invoke();
             _watcher.Error += (_, _) =>
             {
@@ -93,8 +99,8 @@ public sealed class FolderWatcher : IDisposable
         {
             logFailure(failure);
         }
-        // A watcher follows its directory when that is renamed and reports nothing, so the Portal would keep showing
-        // a folder that is gone (M4 smoke). The parent tells when the folder itself goes away or comes back.
+        // A watcher follows its directory when that is renamed and reports nothing (M4 smoke). The parent tells when the
+        // folder itself goes away, comes back or is renamed.
         try
         {
             var trimmed = folderPath.TrimEnd('\\', '/');
@@ -107,7 +113,11 @@ public sealed class FolderWatcher : IDisposable
                 };
                 _parentWatcher.Created += (_, _) => Changed?.Invoke();
                 _parentWatcher.Deleted += (_, _) => Changed?.Invoke();
-                _parentWatcher.Renamed += (_, _) => Changed?.Invoke();
+                _parentWatcher.Renamed += (_, renamed) =>
+                {
+                    Renamed?.Invoke(renamed.OldFullPath, renamed.FullPath);
+                    Changed?.Invoke();
+                };
                 _parentWatcher.EnableRaisingEvents = true;
                 HeldFolder ??= parent;
             }

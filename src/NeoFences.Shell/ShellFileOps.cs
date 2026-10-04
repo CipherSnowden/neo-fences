@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using NeoFences.Core.Model;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Shell;
@@ -7,8 +6,8 @@ using Windows.Win32.UI.Shell;
 namespace NeoFences.Shell;
 
 /// <summary>
-/// File operations through Windows' own engine (IFileOperation): its dialogs, progress, conflicts and Undo (Ctrl+Z in
-/// Explorer). Deleting always goes to the Recycle Bin (hard rule 1); if Windows cannot recycle an item it asks the user.
+/// Deleting NeoFences' own files (snapshots) through Windows' own engine (IFileOperation): its dialogs and Undo (Ctrl+Z
+/// in Explorer), always to the Recycle Bin. Never used on items or their targets (hard rule 1, ADR-040).
 /// </summary>
 public static class ShellFileOps
 {
@@ -61,13 +60,6 @@ public static class ShellFileOps
             return false; // unknown: never risk a permanent delete
         }
     }
-
-    /// <param name="newName">As typed. If Explorer hides this item's extension (shortcuts, or the user's setting), Windows keeps it.</param>
-    /// <returns>False also for a name that is not a plain name: "sub\x" or "..\x" would move the file off the Desktop (M3a review I2).</returns>
-    public static bool TryRename(nint ownerHandle, string itemRef, string newName) =>
-        !itemRef.StartsWith("::", StringComparison.Ordinal)
-        && FileNames.IsValidNewName(newName)
-        && Run(ownerHandle, operation => operation.RenameItem(Create(itemRef), newName, null));
 
     private static bool Run(nint ownerHandle, Action<IFileOperation> queue)
     {

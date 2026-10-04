@@ -397,10 +397,10 @@ public static class GameScanners
             if (launch is null) continue;
             var gameFolder = gameFolders.Select(root => GameFolderOf(root, launch.Target)).FirstOrDefault(found => found is not null);
             var asText = launch.Arguments is null ? launch.Target : $"{launch.Target} {launch.Arguments}";
-            if (gameFolder is null && Rules.LauncherOf(asText) is null) continue;
+            if (gameFolder is null && GameLaunchers.LauncherOf(asText) is null) continue;
             // The target's folder only when the target is a game itself (under a game library): steam.exe, Battle.net.exe or
             // GalaxyClient.exe started with a game argument have no folder of their own game (final review I2).
-            var installFolder = gameFolder ?? (launch.IsLink || Rules.LauncherOf(launch.Target) is null ? null : Path.GetDirectoryName(launch.Target));
+            var installFolder = gameFolder ?? (launch.IsLink || GameLaunchers.LauncherOf(launch.Target) is null ? null : Path.GetDirectoryName(launch.Target));
             found.Add(new GameEntry("desktop:" + itemRef.ToLowerInvariant(), Path.GetFileNameWithoutExtension(itemRef), GameSource.DesktopShortcut, "desktop",
                 launch, installFolder, Poster: null, IconPath: launch.IsLink ? null : launch.Target) { ShortcutFile = itemRef });
         }

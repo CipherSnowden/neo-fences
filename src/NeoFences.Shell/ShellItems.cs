@@ -4,13 +4,14 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Shell;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace NeoFences.Shell;
 
 /// <summary>32-bit premultiplied BGRA pixels, top-down rows (ready for WPF's Pbgra32 BitmapSource).</summary>
 public sealed record ShellImage(int Width, int Height, byte[] Pixels);
 
-/// <summary>Display names, icons/thumbnails and opening of desktop items, by item ref (parsing name).</summary>
+/// <summary>Display names, icons/thumbnails and opening of item targets (parsing names: paths, <c>::{GUID}</c>, URLs).</summary>
 public static class ShellItems
 {
     /// <summary>The name Explorer shows ("Crysis 2", not "Crysis 2.lnk"; "Recycle Bin" in the user's language).</summary>
@@ -76,17 +77,25 @@ public static class ShellItems
     }
 
     /// <summary>
-    /// Opens with the default verb, like a double-click in Explorer. If it cannot, Windows shows its own message
-    /// (broken shortcut, no app for this file type) owned by <paramref name="ownerHandle"/> (M2b finding H5).
+    /// Opens like a double-click in Explorer (websites in the default browser), with the item's own arguments, "run as
+    /// administrator", and the target's folder as the working folder, as a shortcut would. If it cannot, Windows shows its
+    /// own message (no app for this file type) owned by <paramref name="ownerHandle"/> (M2b finding H5).
     /// </summary>
-    /// <returns>False when nothing could open it (no associated app, the user cancelled a UAC prompt, the item is gone).</returns>
-    public static bool TryOpen(string itemRef, nint ownerHandle)
+    /// <returns>False when nothing could open it (no associated app, the user declined the UAC prompt, the item is gone).</returns>
+    public static bool TryOpen(string target, nint ownerHandle, string? arguments = null, bool runAsAdmin = false)
     {
         try
         {
-            var startInfo = itemRef.StartsWith("::", StringComparison.Ordinal)
-                ? new ProcessStartInfo("explorer.exe", "shell:" + itemRef) { UseShellExecute = true }
-                : new ProcessStartInfo(itemRef) { UseShellExecute = true };
+            ProcessStartInfo startInfo;
+            if (target.StartsWith("::", StringComparison.Ordinal)) startInfo = new ProcessStartInfo("explorer.exe", "shell:" + target);
+            else if (target.StartsWith("shell:", StringComparison.OrdinalIgnoreCase)) startInfo = new ProcessStartInfo("explorer.exe", target);
+            else
+            {
+                startInfo = new ProcessStartInfo(target) { Arguments = arguments ?? "" };
+                if (runAsAdmin) startInfo.Verb = "runas";
+                if (Path.IsPathFullyQualified(target) && Path.GetDirectoryName(target) is { Length: > 0 } folder) startInfo.WorkingDirectory = folder;
+            }
+            startInfo.UseShellExecute = true;
             startInfo.ErrorDialog = true;
             startInfo.ErrorDialogParentHandle = ownerHandle;
             // The user just clicked our (never-activated) fence: let the opened window come to the front.
@@ -100,13 +109,83 @@ public static class ShellItems
         }
     }
 
+    /// <summary>Explorer with the target selected in its folder (item menu → Open file location). Read-only: nothing changes.</summary>
+    public static bool TryShowInFolder(string target)
+    {
+        try
+        {
+            PInvoke.AllowSetForegroundWindow(unchecked((uint)-1)); // ASFW_ANY
+            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{target}\"") { UseShellExecute = true })?.Dispose();
+            return true;
+        }
+        catch (Exception failure) when (failure is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    private static string? _defaultBrowser;
+    private static bool _defaultBrowserRead;
+
+    /// <summary>The program that opens http links for this user (a website item shows its icon), or null. Read once per run.</summary>
+    public static string? DefaultBrowserPath()
+    {
+        if (_defaultBrowserRead) return _defaultBrowser;
+        _defaultBrowserRead = true;
+        const uint AssocfIsProtocol = 0x1000; // ASSOCF_IS_PROTOCOL: honour the user's choice (UserChoice), not HKCR\http
+        var buffer = new char[1024];
+        var length = (uint)buffer.Length;
+        try
+        {
+            if (PInvoke.AssocQueryString((ASSOCF)AssocfIsProtocol, ASSOCSTR.ASSOCSTR_EXECUTABLE, "http", "open", buffer, ref length).Succeeded)
+            {
+                var end = Array.IndexOf(buffer, '\0');
+                _defaultBrowser = new string(buffer, 0, end >= 0 ? end : buffer.Length);
+            }
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            _defaultBrowser = null; // websites then show no icon
+        }
+        return _defaultBrowser;
+    }
+
+    /// <summary>
+    /// The icon at <paramref name="index"/> in an .ico, .exe or .dll (an item's own icon, Properties → From a file…), at
+    /// <paramref name="sizePx"/>. Null when the file or the icon is not there.
+    /// </summary>
+    public static ShellImage? TryGetFileIcon(string file, int index, int sizePx)
+    {
+        DestroyIconSafeHandle? large = null, small = null;
+        ICONINFO info = default;
+        try
+        {
+            if (PInvoke.SHDefExtractIcon(file, index, 0, out large, out small, (uint)sizePx).Failed || large.IsInvalid) return null;
+            if (!PInvoke.GetIconInfo(large, out info)) return null;
+            // ponytail: icons without an alpha channel (old 24-bit ones) come out with an opaque background; apply the mask if users pick those.
+            return ReadPixels(info.hbmColor, premultiply: true);
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            return null;
+        }
+        finally
+        {
+            if (!info.hbmColor.IsNull) PInvoke.DeleteObject(info.hbmColor);
+            if (!info.hbmMask.IsNull) PInvoke.DeleteObject(info.hbmMask);
+            large?.Dispose();
+            small?.Dispose();
+        }
+    }
+
     private static IShellItem Create(string itemRef)
     {
         PInvoke.SHCreateItemFromParsingName(itemRef, null, out IShellItem item).ThrowOnFailure();
         return item;
     }
 
-    private static unsafe ShellImage? ReadPixels(HBITMAP bitmap)
+    /// <param name="premultiply">Icon bitmaps carry straight alpha; WPF's Pbgra32 wants it premultiplied.</param>
+    private static unsafe ShellImage? ReadPixels(HBITMAP bitmap, bool premultiply = false)
     {
         BITMAP header;
         // Any bit depth: GetDIBits converts to 32-bit; a 24-bit (or palette) image comes back with alpha 0 and is made
@@ -144,6 +223,14 @@ public static class ShellItems
         var hasAlpha = false;
         for (var alphaIndex = 3; alphaIndex < pixels.Length && !hasAlpha; alphaIndex += 4) hasAlpha = pixels[alphaIndex] != 0;
         if (!hasAlpha) for (var alphaIndex = 3; alphaIndex < pixels.Length; alphaIndex += 4) pixels[alphaIndex] = 255;
+        else if (premultiply)
+        {
+            for (var pixel = 0; pixel < pixels.Length; pixel += 4)
+            {
+                var alpha = pixels[pixel + 3];
+                for (var channel = 0; channel < 3; channel++) pixels[pixel + channel] = (byte)(pixels[pixel + channel] * alpha / 255);
+            }
+        }
         return new ShellImage(width, height, pixels);
     }
 }

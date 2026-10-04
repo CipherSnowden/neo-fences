@@ -7,7 +7,6 @@ BITMAPINFO
 CallNextHookEx
 CLIPBOARD_FORMAT
 CLSID_DragDropHelper
-CMF_CANRENAME
 CMF_EXTENDEDVERBS
 CMF_NORMAL
 CMIC_MASK_PTINVOKE
@@ -182,3 +181,14 @@ IDesktopWallpaper
 DesktopWallpaper
 ChooseColor
 CHOOSECOLOR_FLAGS
+PickIconDlg
+SHDefExtractIcon
+GetIconInfo
+ICONINFO
+AssocQueryString
+ASSOCF
+ASSOCSTR
+SHParseDisplayName
+SHCreateDataObject
+InsertMenu
+COMDLG_FILTERSPEC

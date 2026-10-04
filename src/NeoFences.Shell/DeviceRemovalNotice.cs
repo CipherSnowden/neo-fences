@@ -7,9 +7,9 @@ using Windows.Win32.UI.WindowsAndMessaging;
 namespace NeoFences.Shell;
 
 /// <summary>
-/// "Safely Remove" / Eject for a Portal's drive (M8d, M4 carry-over): any open handle on a drive vetoes its removal, and
-/// a Portal keeps two (its folder watcher and its parent's). Windows asks every window registered for a handle on the
-/// drive first (DBT_DEVICEQUERYREMOVE to the owner window); the Portal then closes everything it holds there.
+/// "Safely Remove" / Eject for a drive NeoFences watches (M8d; item targets, the library): any open handle on a drive vetoes
+/// its removal, and a watcher keeps two (the folder and its parent). Windows asks every window registered for a handle on
+/// the drive first (DBT_DEVICEQUERYREMOVE to the owner window); NeoFences then closes everything it holds there.
 /// </summary>
 public sealed class DeviceRemovalNotice : IDisposable
 {
@@ -62,7 +62,7 @@ public sealed class DeviceRemovalNotice : IDisposable
         }
         catch (Exception failure) when (failure is not OutOfMemoryException)
         {
-            logFailure(failure); // the drive then just cannot be removed safely while the Portal shows it (as before)
+            logFailure(failure); // the drive then just cannot be removed safely while it is watched (as before)
             return null;
         }
     }
@@ -77,7 +77,7 @@ public sealed class DeviceRemovalNotice : IDisposable
 
     private bool _disposed;
 
-    /// <summary>Safe to call twice (a Portal can let go of an in-flight notice and then dispose it again, M13b).</summary>
+    /// <summary>Safe to call twice (a lister can let go of an in-flight notice and then dispose it again, M13b).</summary>
     public void Dispose()
     {
         if (_disposed) return;

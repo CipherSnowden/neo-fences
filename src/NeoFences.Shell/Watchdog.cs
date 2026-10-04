@@ -20,12 +20,12 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
     private static readonly TimeSpan SessionPollInterval = TimeSpan.FromMilliseconds(500);
     private static readonly TimeSpan SessionEndGracePeriod = TimeSpan.FromSeconds(30);
 
-    private string TakeoverActivePath => Path.Combine(dataDirectory, "takeover-active");
+    private string IconsHiddenPath => Path.Combine(dataDirectory, "icons-hidden");
     private string RestartLogPath => Path.Combine(dataDirectory, "watchdog-restarts.txt");
     private string CleanMarkerPath(int processId) => Path.Combine(dataDirectory, $"clean-shutdown-{processId}");
     private string SessionEndingMarkerPath(int processId) => Path.Combine(dataDirectory, $"session-ending-{processId}");
 
-    public bool IsTakeoverActiveMarked => File.Exists(TakeoverActivePath);
+    public bool IsIconsHiddenMarked => File.Exists(IconsHiddenPath);
 
     /// <summary>Main process, at startup: drops stale markers for this PID, then launches the watchdog detached.</summary>
     public void LaunchDetached(int mainProcessId)
@@ -40,11 +40,11 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
     public static void RunLauncher(int mainProcessId) => StartSelf($"{RunArgument} {mainProcessId}");
 
     /// <summary>Main process: the icons may be hidden by NeoFences right now (the watchdog restores only in that case).</summary>
-    public void SetTakeoverActive(bool active)
+    public void SetIconsHiddenMarker(bool hidden)
     {
         Directory.CreateDirectory(dataDirectory);
-        if (active) File.WriteAllText(TakeoverActivePath, Timestamp());
-        else File.Delete(TakeoverActivePath);
+        if (hidden) File.WriteAllText(IconsHiddenPath, Timestamp());
+        else File.Delete(IconsHiddenPath);
     }
 
     /// <summary>Main process, on an orderly exit the user asked for.</summary>
@@ -70,7 +70,7 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
         var plan = WatchdogPlan.For(
             cleanShutdown: ConsumeMarker(CleanMarkerPath(mainProcessId)),
             sessionEnding: ConsumeMarker(SessionEndingMarkerPath(mainProcessId)),
-            takeoverActive: IsTakeoverActiveMarked);
+            iconsHidden: IsIconsHiddenMarked);
         log($"main exited: {plan}");
 
         if (plan.RestoreIcons) RestoreIconsWithRetry();
@@ -116,7 +116,7 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
     {
         // Explorer may be down at the same moment (e.g. it crashed together with us): keep trying for ~5 s, then fall
         // back to Explorer's persisted setting (DesktopIcons.ShowWithRetry).
-        if (DesktopIcons.ShowWithRetry(giveUpAfter: RestoreRetryDelay * RestoreAttempts, log: log)) TryDelete(TakeoverActivePath);
+        if (DesktopIcons.ShowWithRetry(giveUpAfter: RestoreRetryDelay * RestoreAttempts, log: log)) TryDelete(IconsHiddenPath);
     }
 
     private void RestartMain(string reason)

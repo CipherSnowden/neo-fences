@@ -6,14 +6,14 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace NeoFences.Shell;
 
-/// <summary>What the user picked in Windows' item menu that NeoFences runs itself instead of the shell.</summary>
-/// <summary>Custom: one of the caller's own commands (the Game Library's "Hide from library", M12).</summary>
-public enum ItemMenuChoice { None, Rename, Delete, Custom }
+/// <summary>What the user picked in Windows' item menu that the caller runs itself: Delete (when handed back), or one of
+/// the caller's own commands (the Game Library's "Hide from library", M12).</summary>
+public enum ItemMenuChoice { None, Delete, Custom }
 
 /// <summary>
-/// Windows' own right-click menu for desktop items (the classic menu: Open, Open with, Send to, Properties, shell
-/// extensions; the Windows 11 compact menu is Explorer-private, spec §6). Rename and Delete are handed back so
-/// NeoFences renames in place and always recycles (hard rule 1, user decision 2026-10-02).
+/// Windows' own right-click menu for a target (the classic menu: Open, Open with, Send to, Properties, shell extensions;
+/// the Windows 11 compact menu is Explorer-private, spec §6). For virtual items it is only behind Shift+right-click,
+/// under a first line saying it acts on the real file (ADR-040): there Windows itself deletes or renames, never NeoFences.
 /// </summary>
 public static class ShellItemMenu
 {
@@ -56,15 +56,13 @@ public static class ShellItemMenu
     /// Shows the menu for these items at a screen point and runs the chosen shell command.
     /// </summary>
     /// <param name="extended">Shift held: the extended menu ("Copy as path", "Open PowerShell here", …).</param>
-    /// <returns>Rename/Delete for the caller to run; None when the shell ran the command, the user cancelled, or the menu could not be built.</returns>
+    /// <returns>Delete or Custom for the caller to run; None when the shell ran the command, the user cancelled, or the menu could not be built.</returns>
     /// <param name="logFailure">Told when the menu could not be built or a command failed (a broken shell extension).</param>
-    public static ItemMenuChoice Show(nint ownerHandle, IReadOnlyList<string> itemRefs, int screenX, int screenY, bool extended, Action<Exception> logFailure) =>
-        Show(ownerHandle, itemRefs, screenX, screenY, extended, logFailure, customCommands: [], canRename: true, out _);
-
+    /// <param name="header">A disabled first line ("Windows menu — acts on the real file"), or null.</param>
     /// <param name="customCommands">Added at the end, after a separator; the chosen one comes back as <paramref name="customCommand"/>.</param>
-    /// <param name="canRename">False: the shell's Rename is not offered (a Game Library shortcut, M12).</param>
+    /// <param name="handDeleteBack">True: Delete comes back to the caller instead of running (the library hides the game, M12).</param>
     public static unsafe ItemMenuChoice Show(nint ownerHandle, IReadOnlyList<string> itemRefs, int screenX, int screenY, bool extended, Action<Exception> logFailure,
-        IReadOnlyList<string> customCommands, bool canRename, out int customCommand)
+        string? header, IReadOnlyList<string> customCommands, bool handDeleteBack, out int customCommand)
     {
         customCommand = -1;
         var owner = (HWND)ownerHandle;
@@ -76,12 +74,17 @@ public static class ShellItemMenu
             contextMenu = (IContextMenu)DesktopNamespace.GetUIObject(owner, itemRefs, typeof(IContextMenu).GUID);
 
             menu = PInvoke.CreatePopupMenu();
-            var flags = PInvoke.CMF_NORMAL | (canRename ? PInvoke.CMF_CANRENAME : 0) | (extended ? PInvoke.CMF_EXTENDEDVERBS : 0);
+            var flags = PInvoke.CMF_NORMAL | (extended ? PInvoke.CMF_EXTENDEDVERBS : 0); // no CMF_CANRENAME: Windows' Rename needs an Explorer view
             var queried = contextMenu.QueryContextMenu(menu, 0, FirstCommandId, LastCommandId, flags);
             if (queried.Failed) // a broken extension can fail the whole menu without throwing (M3a review)
             {
                 logFailure(new COMException("QueryContextMenu failed", queried.Value));
                 return ItemMenuChoice.None;
+            }
+            if (header is not null)
+            {
+                fixed (char* text = header) PInvoke.InsertMenu(menu, 0, MENU_ITEM_FLAGS.MF_BYPOSITION | MENU_ITEM_FLAGS.MF_STRING | MENU_ITEM_FLAGS.MF_GRAYED, 0, text);
+                PInvoke.InsertMenu(menu, 1, MENU_ITEM_FLAGS.MF_BYPOSITION | MENU_ITEM_FLAGS.MF_SEPARATOR, 0, (PCWSTR)null);
             }
             if (customCommands.Count > 0) PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, (PCWSTR)null);
             for (var index = 0; index < customCommands.Count; index++)
@@ -104,8 +107,7 @@ public static class ShellItemMenu
             }
 
             var verb = Verb(contextMenu, command - FirstCommandId);
-            if (string.Equals(verb, "rename", StringComparison.OrdinalIgnoreCase)) return ItemMenuChoice.Rename;
-            if (string.Equals(verb, "delete", StringComparison.OrdinalIgnoreCase)) return ItemMenuChoice.Delete;
+            if (handDeleteBack && string.Equals(verb, "delete", StringComparison.OrdinalIgnoreCase)) return ItemMenuChoice.Delete;
             Invoke(contextMenu, command - FirstCommandId, owner, screenX, screenY);
             return ItemMenuChoice.None;
         }

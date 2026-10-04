@@ -26,9 +26,6 @@ public static class DesktopItems
     ];
 
     // DoNotVerify: a missing (offline, unmounted) folder still has a path, so its items are recognised as unknown, not gone.
-    /// <summary>The Recycle Bin's item ref.</summary>
-    public const string RecycleBinRef = "::{645FF040-5081-101B-9F08-00AA002F954E}";
-
     public static string UserDesktop => Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory, Environment.SpecialFolderOption.DoNotVerify);
 
     public static string PublicDesktop => Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory, Environment.SpecialFolderOption.DoNotVerify);
