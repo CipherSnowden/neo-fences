@@ -125,14 +125,56 @@ public static class ShellDragDrop
     }
 
     /// <summary>
-    /// What an outside drag brings: its files (CF_HDROP), else one website (a browser's link). Virtual files (zip contents,
-    /// a phone) are never asked for CF_HDROP — that would extract every file — and have no target an item could point at.
+    /// What an outside drag brings: its shell items (Explorer, the desktop), else its files (CF_HDROP), else one website (a
+    /// browser's link). Virtual files (zip contents, a phone) are never asked for CF_HDROP — that would extract every file —
+    /// and have no target an item could point at.
     /// </summary>
     internal static IReadOnlyList<string> DroppedTargets(IDataObject dataObject)
     {
+        // Explorer's own drags also offer the virtual-file format: their shell items say what is real (live check AD2).
+        if (ShellItemTargets(dataObject) is { Count: > 0 } items) return items;
         if (!OffersVirtualFiles(dataObject) && DroppedFiles(dataObject) is { Count: > 0 } files) return files;
         var url = ReadText(dataObject, UrlFormat) ?? ReadText(dataObject, UnicodeTextFormat);
         return ItemKinds.Clean(url?.Split('\n')[0]) is { } website && ItemKinds.IsWebsite(website) ? [website] : [];
+    }
+
+    /// <summary>
+    /// The dragged shell items (Explorer, the desktop): a file or folder gives its path, a special item (Recycle Bin, This
+    /// PC) its <c>::{GUID}</c>. Items with neither (zip contents, a phone) are left out — nothing is extracted.
+    /// </summary>
+    private static unsafe List<string> ShellItemTargets(IDataObject dataObject)
+    {
+        var targets = new List<string>();
+        IShellItemArray? array = null;
+        try
+        {
+            var arrayId = typeof(IShellItemArray).GUID;
+            // The same COM object seen through the binding SHCreateShellItemArrayFromDataObject takes.
+            PInvoke.SHCreateShellItemArrayFromDataObject((ComDataObject)(object)dataObject, &arrayId, out var created).ThrowOnFailure();
+            array = (IShellItemArray)created;
+            array.GetCount(out var count);
+            for (uint index = 0; index < count; index++)
+            {
+                array.GetItemAt(index, out var item);
+                try
+                {
+                    if ((ShellItems.FileSystemPath(item) ?? ShellItems.SpecialItemRef(item)) is { } target) targets.Add(target);
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(item);
+                }
+            }
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            // No shell items (a browser's link, another app's text): the formats below decide.
+        }
+        finally
+        {
+            if (array is not null) Marshal.ReleaseComObject(array);
+        }
+        return targets;
     }
 
     private static FORMATETC Format(ushort format) => new()

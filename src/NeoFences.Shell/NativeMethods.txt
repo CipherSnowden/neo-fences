@@ -192,3 +192,5 @@ SHParseDisplayName
 SHCreateDataObject
 InsertMenu
 COMDLG_FILTERSPEC
+SHCreateShellItemArrayFromDataObject
+IShellItemArray

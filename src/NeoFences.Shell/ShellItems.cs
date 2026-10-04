@@ -51,6 +51,21 @@ public static class ShellItems
         }
     }
 
+    /// <summary>A special item's ref ("::{645FF040-…}" for the Recycle Bin), or null for anything else.</summary>
+    internal static unsafe string? SpecialItemRef(IShellItem item)
+    {
+        try
+        {
+            item.GetDisplayName(SIGDN.SIGDN_DESKTOPABSOLUTEPARSING, out var name);
+            try { return name.ToString() is { } parsed && parsed.StartsWith("::", StringComparison.Ordinal) && !parsed.Contains('\\') ? parsed : null; }
+            finally { Marshal.FreeCoTaskMem((nint)name.Value); }
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// The thumbnail (images, videos) or icon at <paramref name="sizePx"/>. Call from an STA thread that is not the
     /// UI thread (slow for big files). Null when the shell has nothing (the item vanished, a broken handler).
