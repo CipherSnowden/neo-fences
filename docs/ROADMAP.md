@@ -11,7 +11,7 @@ Milestone details and exit criteria: spec §9.
 - [x] Reset: local history bundle in F:projects (neo_fences-history-2026-10-04.bundle), GitHub reset to one commit (0.8.0), release/tags/branch deleted
 - [x] Installed v1.8.0 and its data removed from this PC (data backed up to F:projects
 eofences-data-backup-2026-10-04)
-- [ ] **M18 — Virtual items (0.9.0)**: spec → plan → execute → review → release (open spec questions in PIVOT §Next steps)
+- [~] **M18 — Virtual items (0.9.0)** — claimed by session 2026-10-04 m18-virtual-items
 - [ ] M19 — customization polish (Locate, Ctrl-duplicates, bulk refresh)
 - [ ] M20 — dynamic collections (read-only folder views, auto-collect rules) — later
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
