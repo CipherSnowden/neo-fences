@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using NeoFences.Core.Items;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -103,8 +104,9 @@ public static class ShellItems
         try
         {
             ProcessStartInfo startInfo;
-            if (target.StartsWith("::", StringComparison.Ordinal)) startInfo = new ProcessStartInfo("explorer.exe", "shell:" + target);
-            else if (target.StartsWith("shell:", StringComparison.OrdinalIgnoreCase)) startInfo = new ProcessStartInfo("explorer.exe", target);
+            // Quoted (M19 review): a program's app id holds spaces and commas, where Explorer would split it.
+            if (target.StartsWith("::", StringComparison.Ordinal) || target.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
+                startInfo = new ProcessStartInfo("explorer.exe", ItemKinds.ExplorerArgument(target));
             else
             {
                 startInfo = new ProcessStartInfo(target) { Arguments = arguments ?? "" };

@@ -229,7 +229,8 @@ public sealed partial class FenceHost
         if (_items.Find(itemId) is not { } item) return;
         if (ItemKinds.IsApp(item.Target))
         {
-            var picker = new AppPickerWindow(_iconLoader) { Owner = window };
+            // The fence's window may have closed meanwhile (a tray restore during the Missing question): then it stands alone.
+            var picker = new AppPickerWindow(_iconLoader) { Owner = _windows.ContainsValue(window) ? window : null };
             if (picker.ShowDialog() == true && picker.Chosen is { } app) Relocated(window, itemId, ItemKinds.AppTarget(app.AppId));
             return;
         }

@@ -64,13 +64,14 @@ public static class AppList
     {
         try
         {
-            PInvoke.SHCreateItemFromParsingName(appTarget, null, out IShellItem item).ThrowOnFailure();
+            var parsed = PInvoke.SHCreateItemFromParsingName(appTarget, null, out IShellItem item);
+            if (parsed.Failed) return !TargetChecks.AppIsGone(parsed.Value); // only "not found" is uninstalled (M19 review)
             Marshal.ReleaseComObject(item);
             return true;
         }
         catch (Exception failure) when (failure is not OutOfMemoryException)
         {
-            return false;
+            return !TargetChecks.AppIsGone(failure.HResult); // a passing failure (sign-in, an update) is not "uninstalled"
         }
     }
 

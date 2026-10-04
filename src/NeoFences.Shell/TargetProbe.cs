@@ -12,8 +12,11 @@ public static class TargetProbe
 {
     public static readonly TimeSpan NetworkTimeout = TimeSpan.FromSeconds(2);
 
-    /// <summary>Root probes still waiting: a root that never answers is not asked again (and no more threads block) until it does.</summary>
-    private static readonly ConcurrentDictionary<string, Task<bool>> PendingRoots = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>
+    /// Root probes still waiting, with when they started: a root that never answers is not asked again until it does, and
+    /// later callers wait only what is left of the first one's timeout (M19 review I1).
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, (Task<bool> Probe, DateTimeOffset Started)> PendingRoots = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>One target (Properties, opening an item). Call off the UI thread.</summary>
     public static TargetCheck Check(string target) => CheckAll([target])[0].Check;
@@ -56,14 +59,33 @@ public static class TargetProbe
         }
     }
 
-    /// <summary>The drive or share is there and answers within <see cref="NetworkTimeout"/>.</summary>
+    /// <summary>
+    /// A path whose shell calls may hang for many seconds: a share (<c>\\server\share</c>) or a mapped network drive letter
+    /// (M19 review I2). A local disk, even a sleeping one, is not. Never touches the path itself.
+    /// </summary>
+    public static bool MayHang(string path)
+    {
+        if (TargetChecks.IsNetworkPath(path)) return true;
+        if (TargetChecks.RootOf(path) is not { } root) return false;
+        try
+        {
+            return new DriveInfo(root).DriveType == DriveType.Network; // GetDriveType: answers at once, also when disconnected
+        }
+        catch (Exception failure) when (failure is ArgumentException or IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>The drive or share is there and answers within <see cref="NetworkTimeout"/> of its probe's start.</summary>
     private static bool RootAnswers(string root)
     {
         // ponytail: a probe that never returns keeps one pool thread until Windows gives up; it is never started twice.
-        var probe = PendingRoots.GetOrAdd(root, key => Task.Run(() => Exists(key)));
-        if (!probe.Wait(NetworkTimeout)) return false; // still pending: the next batch does not start another one
-        PendingRoots.TryRemove(new KeyValuePair<string, Task<bool>>(root, probe));
-        return probe.Result;
+        var pending = PendingRoots.GetOrAdd(root, key => (Task.Run(() => Exists(key)), DateTimeOffset.UtcNow));
+        // Still pending past its timeout: Unavailable at once, so twenty items on a dead share cost 2 s, not 40 (M19 review I1).
+        if (!pending.Probe.Wait(TargetChecks.ProbeWait(pending.Started, DateTimeOffset.UtcNow, NetworkTimeout))) return false;
+        PendingRoots.TryRemove(new KeyValuePair<string, (Task<bool>, DateTimeOffset)>(root, pending));
+        return pending.Probe.Result;
     }
 
     private static TargetCheck Classify(string target)

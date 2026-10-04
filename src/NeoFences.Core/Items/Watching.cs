@@ -45,6 +45,23 @@ public static class TargetChecks
 
     /// <summary>A share path (\\server\share\…): its checks may hang for many seconds, so they get a timeout.</summary>
     public static bool IsNetworkPath(string path) => path.StartsWith(@"\\", StringComparison.Ordinal);
+
+    /// <summary>
+    /// How long one more caller waits for a root probe that started at <paramref name="started"/>: only what is left of the
+    /// first caller's timeout, so many items on one dead share wait once together, not once each (M19 review I1).
+    /// </summary>
+    public static TimeSpan ProbeWait(DateTimeOffset started, DateTimeOffset now, TimeSpan timeout)
+    {
+        var elapsed = now - started;
+        if (elapsed < TimeSpan.Zero) return timeout; // the clock stepped back: never more than one timeout
+        return elapsed >= timeout ? TimeSpan.Zero : timeout - elapsed;
+    }
+
+    /// <summary>
+    /// An app's target did not parse: only "not found" means Windows no longer has it (uninstalled). Anything else (the
+    /// app resolver not ready at sign-in, a Store app mid-update) is passing: the app counts as there (M19 review).
+    /// </summary>
+    public static bool AppIsGone(int hresult) => hresult is unchecked((int)0x80070002) or unchecked((int)0x80070003);
 }
 
 /// <summary>Per-target and per-fence records that outlived their target or fence (M19 R5).</summary>

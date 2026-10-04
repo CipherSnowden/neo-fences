@@ -526,3 +526,12 @@ Test files only in `%USERPROFILE%\NeoFences-m19-test\` and the pendrive's `G:\Ne
 | AE20 | Restart NeoFences with the share item in a fence | the share item shows a generic icon within ~2 s; the other items' icons load normally (no stuck loader) |
 | AE21 | Pendrive: add an item on G:, then pull the stick right after NeoFences starts (watchers still arming) | no veto, no error; re-plug: the rename of `g.txt` is followed |
 | AE22 | Remove many items and a fence, then keep using NeoFences for a while | no growth of per-target records (log has no errors; behaviour unchanged) — covered by Core tests for the clean-up |
+
+Added after the M19 final review:
+
+| ID | Steps | Expected |
+|---|---|---|
+| AE23 | A fence with 10 items on `\\neofences-nohost\share\` (x1.txt … x10.txt); restart NeoFences | the other fences' icons appear within ~3 s (the dead share costs one 2 s wait, not 2 s per item) |
+| AE24 | An app item for a program whose app id holds spaces (Epic Games Launcher from the app list); double-click | the program opens |
+| AE25 | If a mapped network drive is at hand: an item on it, the drive disconnected; restart NeoFences | the item shows Unavailable with a generic icon within ~2 s; other icons are not held up |
+| AE26 | An app item with a passing failure (reading-based: `AppList.Exists` treats only not-found as uninstalled) | an app is never shown Missing because Windows was not ready at sign-in |

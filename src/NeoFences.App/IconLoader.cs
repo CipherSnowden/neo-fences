@@ -47,8 +47,9 @@ public sealed class IconLoader : IDisposable
             try
             {
                 var kind = ItemKinds.Of(request.Target);
-                // A share is asked first, at most 2 s (M19 R7): a dead one would hold this worker in the shell for minutes.
-                var reachable = kind != ItemKind.Path || !TargetChecks.IsNetworkPath(request.Target)
+                // A share or mapped network drive is asked first, at most 2 s (M19 R7, review I2): a dead one would hold this
+                // worker in the shell for minutes.
+                var reachable = kind != ItemKind.Path || !TargetProbe.MayHang(request.Target)
                                 || TargetProbe.Check(request.Target).State == TargetState.Ok;
                 var label = !request.WantsName ? null
                     : kind == ItemKind.Website ? ItemKinds.WebsiteName(request.Target)

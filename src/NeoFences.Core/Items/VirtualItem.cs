@@ -68,6 +68,13 @@ public static class ItemKinds
 
     private const string AppsFolderPrefix = @"shell:AppsFolder\";
 
+    /// <summary>
+    /// What Explorer is given to open a special item or app: quoted, because a program's app id holds spaces and Explorer
+    /// splits its command line at spaces and commas (M19 review). A <c>::{GUID}</c> becomes <c>shell:::{GUID}</c>.
+    /// </summary>
+    public static string ExplorerArgument(string target) =>
+        $"\"{(target.StartsWith("::", StringComparison.Ordinal) ? "shell:" + target : target)}\"";
+
     /// <summary>An entry of Start's All apps (M19, ADR-042): <c>shell:AppsFolder\&lt;AppUserModelID&gt;</c>, a Store app or a program.</summary>
     public static bool IsApp(string target) => AppIdOf(target) is not null;
 
