@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Threading;
 using NeoFences.Core.Items;
+using NeoFences.Core.Library;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
 using Serilog;
@@ -27,6 +28,7 @@ public partial class DesktopFillWindow : Window
     private readonly IReadOnlyList<(string Id, string Title)> _fences;
     private readonly IReadOnlyDictionary<string, string> _alreadyIn;
     private readonly LibrarySettings _library;
+    private readonly IReadOnlyList<GameEntry> _lastScan;
     private readonly IconLoader _iconLoader;
     private readonly List<(DesktopGroup Group, ComboBox PutIn, List<(CheckBox Box, string ItemRef)> Rows)> _sections = [];
 
@@ -36,13 +38,15 @@ public partial class DesktopFillWindow : Window
     /// <param name="alreadyIn">Targets already held by an item → the title of a fence holding it.</param>
     /// <param name="iconsHidden">"Hide desktop icons" is on already: the option is not offered.</param>
     /// <param name="library">The Game Library's settings: its scan tells which desktop entries are games.</param>
+    /// <param name="lastScan">The Game Library's last scan (its index), reused when there is one; empty: scanned here (M20).</param>
     public DesktopFillWindow(IReadOnlyList<(string Id, string Title)> fences, IReadOnlyDictionary<string, string> alreadyIn,
-        LibrarySettings library, IconLoader iconLoader, bool iconsHidden)
+        LibrarySettings library, IReadOnlyList<GameEntry> lastScan, IconLoader iconLoader, bool iconsHidden)
     {
         InitializeComponent();
         _fences = fences;
         _alreadyIn = alreadyIn;
         _library = library;
+        _lastScan = lastScan;
         _iconLoader = iconLoader;
         HideIconsBox.Visibility = iconsHidden ? Visibility.Collapsed : Visibility.Visible;
         AddButton.Click += (_, _) => Accept();
@@ -61,13 +65,14 @@ public partial class DesktopFillWindow : Window
     {
         var dispatcher = Dispatcher.CurrentDispatcher;
         var library = _library;
+        var lastScan = _lastScan;
         // An STA thread of its own: shortcuts are read through the shell's link object.
         ShellWorker.RunAlone(() =>
         {
             List<(DesktopGroup Group, string ItemRef)>? sorted = null;
             try
             {
-                var (gameFolders, knownGames) = KnownGames(library);
+                var (gameFolders, knownGames) = KnownGames(library, lastScan);
                 sorted = [.. DesktopItems.Enumerate().ItemRefs.Select(itemRef => (DesktopSorting.GroupOf(Read(itemRef), gameFolders, knownGames), itemRef))];
             }
             catch (Exception failure) when (failure is not OutOfMemoryException)
@@ -79,22 +84,24 @@ public partial class DesktopFillWindow : Window
     }
 
     /// <summary>
-    /// What the Game Library's scan knows (read-only; it writes nothing): the user's game folders plus every scanned game's
-    /// install folder, and the desktop shortcuts it counts as games. A scan that fails leaves the user's folders only.
+    /// What the Game Library knows (read-only; it writes nothing): the user's game folders plus every game's install folder
+    /// (never a drive root or a system folder, M20), and the desktop shortcuts it counts as games. Its last scan is reused
+    /// when there is one; otherwise a scan runs here. A scan that fails leaves the user's folders only.
     /// </summary>
-    private static (IReadOnlyList<string> Folders, IReadOnlySet<string> Shortcuts) KnownGames(LibrarySettings library)
+    private static (IReadOnlyList<string> Folders, IReadOnlySet<string> Shortcuts) KnownGames(LibrarySettings library, IReadOnlyList<GameEntry> lastScan)
     {
         try
         {
-            var games = GameScanners.ScanAll(library, (source, failure) => Log.Debug(failure, "game scan {Source} failed for Add from desktop", source))
-                .SelectMany(scan => scan.Games).ToList();
-            IReadOnlyList<string> folders = [.. library.Folders, .. games.Select(game => game.InstallFolder).OfType<string>().Where(folder => folder.TrimEnd('\\').Length > 3)];
+            var games = lastScan.Count > 0 ? lastScan
+                : GameScanners.ScanAll(library, (source, failure) => Log.Debug(failure, "game scan {Source} failed for Add from desktop", source))
+                    .SelectMany(scan => scan.Games).ToList();
+            var folders = DesktopSorting.UsableGameFolders([.. library.Folders, .. games.Select(game => game.InstallFolder).OfType<string>()]);
             return (folders, games.Select(game => game.ShortcutFile).OfType<string>().ToHashSet(StringComparer.OrdinalIgnoreCase));
         }
         catch (Exception failure) when (failure is not OutOfMemoryException)
         {
             Log.Warning(failure, "the games could not be scanned for Add from desktop; launcher links and game folders still count");
-            return (library.Folders, new HashSet<string>());
+            return (DesktopSorting.UsableGameFolders(library.Folders), new HashSet<string>());
         }
     }
 
@@ -106,9 +113,11 @@ public partial class DesktopFillWindow : Window
         {
             var isFolder = Directory.Exists(itemRef);
             if (isFolder || Path.GetExtension(itemRef).ToLowerInvariant() is not (".lnk" or ".url")) return new DesktopEntry(itemRef, isFolder, null, null);
-            // A shortcut with no file path (a Store app's) reads as nothing: its target is "", which sorts it with the apps.
+            // A shortcut with no file path (a Store app's, Control Panel's, This PC's) tells what it points at instead (M20):
+            // an app's shell:AppsFolder\<id> or Windows' "::{GUID}…"; nothing at all sorts it with the apps.
             var launch = ShellLinks.Read(itemRef);
-            return new DesktopEntry(itemRef, IsFolder: false, LinkTarget: launch?.Target ?? "", LinkArguments: launch?.Arguments);
+            var target = launch?.Target ?? (Path.GetExtension(itemRef).Equals(".lnk", StringComparison.OrdinalIgnoreCase) ? ShellLinks.ShellTargetOf(itemRef) : null) ?? "";
+            return new DesktopEntry(itemRef, IsFolder: false, LinkTarget: target, LinkArguments: launch?.Arguments);
         }
         catch (Exception failure) when (failure is not OutOfMemoryException)
         {

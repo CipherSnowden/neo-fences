@@ -71,8 +71,7 @@ public sealed partial class FenceHost
     private static string DisplayName(VirtualItem item) => item.OwnName ?? item.Kind switch
     {
         ItemKind.Website => ItemKinds.WebsiteName(item.Target),
-        _ when ItemKinds.AppIdOf(item.Target) is { } appId => appId.Split('_', '!')[0], // "SpotifyAB.SpotifyMusic" until Windows names it
-
+        _ when ItemKinds.AppIdOf(item.Target) is { } appId => ItemKinds.AppName(appId), // until (or when uninstalled, never) Windows names it
         _ => Path.GetFileNameWithoutExtension(item.Target.TrimEnd('\\')) is { Length: > 0 } name ? name : item.Target,
     };
 
@@ -143,6 +142,11 @@ public sealed partial class FenceHost
         if (item.Kind == ItemKind.Website) return; // a website has no Windows menu
         Task.Run(() => TargetProbe.Check(item.Target)).ContinueWith(checking =>
         {
+            if (checking.IsFaulted)
+            {
+                Log.Warning(checking.Exception, "Windows' menu: {Target} could not be checked", item.Target); // M20: never silent
+                return;
+            }
             if (checking.Result.State == TargetState.Unavailable)
             {
                 var menu = new ContextMenu();
@@ -270,7 +274,11 @@ public sealed partial class FenceHost
         // Off the UI thread: each new place is checked (a share answers within 2 s or does not count).
         Task.Run(() => TargetProbe.CheckAll([.. moves.Select(move => move.NewTarget)])).ContinueWith(checking =>
         {
-            if (checking.IsFaulted) return;
+            if (checking.IsFaulted)
+            {
+                Log.Warning(checking.Exception, "the new places of {Count} item(s) could not be checked; no bulk fix offered", moves.Count);
+                return;
+            }
             var found = moves.Where((_, index) => checking.Result[index].Check.State == TargetState.Ok).ToList();
             if (found.Count == 0) return;
             var labels = found.Select(move => _items.Find(move.ItemId)).OfType<VirtualItem>().Select(DisplayName).ToList();
@@ -282,17 +290,23 @@ public sealed partial class FenceHost
     /// <summary>"Fix": an undo snapshot first (tray → "Undo the last restore or fix"); not saved: nothing changes.</summary>
     private void FixItems(IReadOnlyList<Relocation.Move> moves, Relocation.Bases bases)
     {
+        // Only items still pointing where they did when asked (one may have been removed or changed meanwhile); none left:
+        // the undo slot keeps what it had (M20).
+        var newTargets = moves.Where(move => _items.Find(move.ItemId) is { } item && ItemKinds.Comparer.Equals(item.Target, move.OldTarget))
+            .ToDictionary(move => move.ItemId, move => move.NewTarget, StringComparer.Ordinal);
+        if (newTargets.Count == 0)
+        {
+            Log.Information("bulk fix: every proposed item changed meanwhile; nothing fixed");
+            return;
+        }
         var now = DateTimeOffset.Now;
-        if (_snapshots.Save(Snapshots.Take(_config, _items, name: $"Before fixing {moves.Count} items ({now:d MMM HH:mm})", now: now),
+        if (_snapshots.Save(Snapshots.Take(_config, _items, name: Relocation.UndoName(newTargets.Count, $"{now:d MMM HH:mm}"), now: now),
                 SnapshotStore.BeforeRestoreFileName) is null)
         {
             Log.Warning(_snapshots.LastFailure, "items not fixed: the undo snapshot could not be saved");
             SnapshotFailure("Items not fixed", "NeoFences could not save the undo snapshot first (see the log).");
             return;
         }
-        // Only items still pointing where they did when asked (one may have been removed or changed meanwhile).
-        var newTargets = moves.Where(move => _items.Find(move.ItemId) is { } item && ItemKinds.Comparer.Equals(item.Target, move.OldTarget))
-            .ToDictionary(move => move.ItemId, move => move.NewTarget, StringComparer.Ordinal);
         _items = ItemEdits.Relocate(_items, newTargets);
         Log.Information("{Count} item(s) fixed: {OldBase} -> {NewBase}", newTargets.Count, bases.OldBase, bases.NewBase);
         ItemsChanged(checkTargets: [.. newTargets.Values]);

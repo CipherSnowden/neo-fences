@@ -90,7 +90,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
     private static string PlaceholderName(string target) => ItemKinds.Of(target) switch
     {
         ItemKind.Website => ItemKinds.WebsiteName(target),
-        _ when ItemKinds.AppIdOf(target) is { } appId => appId.Split('_', '!')[0],
+        _ when ItemKinds.AppIdOf(target) is { } appId => ItemKinds.AppName(appId), // a program's id holds its path (M20)
         ItemKind.Special => "",
         _ => Path.GetFileNameWithoutExtension(target.TrimEnd('\\')) is { Length: > 0 } name ? name : target,
     };

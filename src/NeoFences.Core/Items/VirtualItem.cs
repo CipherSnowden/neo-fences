@@ -78,6 +78,13 @@ public static class ItemKinds
     /// <summary>An entry of Start's All apps (M19, ADR-042): <c>shell:AppsFolder\&lt;AppUserModelID&gt;</c>, a Store app or a program.</summary>
     public static bool IsApp(string target) => AppIdOf(target) is not null;
 
+    /// <summary>
+    /// A readable name for an app until (or when, uninstalled, never) Windows names it: a program's file name without its
+    /// extension (its id is <c>{GUID}\folder\x.exe</c>), else the front of a Store app's id ("Microsoft.WindowsCalculator").
+    /// </summary>
+    public static string AppName(string appId) =>
+        appId.Contains('\\') ? Path.GetFileNameWithoutExtension(appId) : appId.Split('_', '!')[0];
+
     /// <summary>The app's id (AppUserModelID), or null when the target is not an app.</summary>
     public static string? AppIdOf(string target) =>
         target.Length > AppsFolderPrefix.Length && target.StartsWith(AppsFolderPrefix, StringComparison.OrdinalIgnoreCase)

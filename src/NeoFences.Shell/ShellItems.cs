@@ -53,6 +53,21 @@ public static class ShellItems
         }
     }
 
+    /// <summary>Windows' full parsing name of any item ("C:\…", "::{GUID}\…"), or null.</summary>
+    internal static unsafe string? DesktopAbsoluteName(IShellItem item)
+    {
+        try
+        {
+            item.GetDisplayName(SIGDN.SIGDN_DESKTOPABSOLUTEPARSING, out var name);
+            try { return name.ToString(); }
+            finally { Marshal.FreeCoTaskMem((nint)name.Value); }
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>A special item's ref ("::{645FF040-…}" for the Recycle Bin), or null for anything else.</summary>
     internal static unsafe string? SpecialItemRef(IShellItem item)
     {

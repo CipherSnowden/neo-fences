@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using NeoFences.Core.Library;
 using Windows.Win32.System.Com;
 using Windows.Win32.UI.Shell;
+using Windows.Win32.UI.Shell.Common;
 
 namespace NeoFences.Shell;
 
@@ -40,6 +41,38 @@ public static class ShellLinks
         }
         finally
         {
+            if (link is not null) Marshal.ReleaseComObject(link);
+        }
+    }
+
+    /// <summary>
+    /// What a shortcut without a file path points at (M20: a Store app's, Control Panel's, This PC's): an app's
+    /// <c>shell:AppsFolder\&lt;id&gt;</c>, else Windows' parsing name ("::{GUID}…"). Null when it cannot be read. STA thread.
+    /// </summary>
+    public static unsafe string? ShellTargetOf(string path)
+    {
+        IShellLinkW? link = null;
+        IShellItem? item = null;
+        ITEMIDLIST* idList = null;
+        try
+        {
+            link = (IShellLinkW)Activator.CreateInstance(Type.GetTypeFromCLSID(typeof(ShellLink).GUID)!)!;
+            fixed (char* file = path) ((IPersistFile)link).Load(file, STGM.STGM_READ);
+            link.GetIDList(&idList);
+            if (idList is null) return null;
+            var itemId = typeof(IShellItem).GUID;
+            Windows.Win32.PInvoke.SHCreateItemFromIDList(idList, &itemId, out var created).ThrowOnFailure();
+            item = (IShellItem)created;
+            return AppList.AppTargetOf(item) ?? ShellItems.DesktopAbsoluteName(item);
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            return null; // listed with the files (spec §3: never a failure)
+        }
+        finally
+        {
+            if (idList is not null) Marshal.FreeCoTaskMem((nint)idList);
+            if (item is not null) Marshal.ReleaseComObject(item);
             if (link is not null) Marshal.ReleaseComObject(link);
         }
     }

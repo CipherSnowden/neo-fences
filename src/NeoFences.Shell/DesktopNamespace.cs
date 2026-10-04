@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using NeoFences.Core.Items;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Shell;
@@ -61,6 +62,9 @@ internal static class DesktopNamespace
     private static IShellFolder ParentFolder(IReadOnlyList<string> itemRefs)
     {
         if (itemRefs.Count == 0) throw new ArgumentException("No items.", nameof(itemRefs));
+        // Apps are children of Start's All apps, whatever their id holds ("{GUID}\folder\x.exe" is not a path; M20).
+        if (itemRefs.All(ItemKinds.IsApp)) return FolderObject("shell:AppsFolder");
+        if (itemRefs.Any(ItemKinds.IsApp)) throw new ArgumentException("Apps mixed with other items.", nameof(itemRefs));
         // The desktop folder parses a name to the user's copy: a Public Desktop item with the same name is reached through
         // its own folder, or the menu and drag would act on the user's file (M3a/M3b review).
         if (itemRefs.All(IsDesktopItem) && !itemRefs.Any(IsShadowedPublicItem))
@@ -97,7 +101,7 @@ internal static class DesktopNamespace
         {
             foreach (var itemRef in itemRefs)
             {
-                var childName = itemRef.StartsWith("::", StringComparison.Ordinal) ? itemRef : Path.GetFileName(itemRef);
+                var childName = ItemKinds.AppIdOf(itemRef) ?? (itemRef.StartsWith("::", StringComparison.Ordinal) ? itemRef : Path.GetFileName(itemRef));
                 ITEMIDLIST* childId;
                 uint attributes = 0;
                 fixed (char* name = childName)

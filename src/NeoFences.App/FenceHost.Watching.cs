@@ -304,8 +304,10 @@ public sealed partial class FenceHost
     {
         if (_watchingStopped) return;
         var changed = new HashSet<string>(ItemKinds.Comparer);
+        var live = ItemEdits.CheckedTargets(_items).ToHashSet(ItemKinds.Comparer);
         foreach (var (target, check) in checks)
         {
+            if (!live.Contains(target)) continue; // its item went while the check ran: no record left behind (M20)
             if (_checkBatchOf.TryGetValue(target, out var newest) && newest > batch) continue; // a newer answer is already there
             _checkBatchOf[target] = Math.Min(batch, _checkBatch);
             if (_targetChecks.TryGetValue(target, out var before) && before == check) continue;

@@ -141,8 +141,10 @@ public partial class ItemPropertiesWindow : Window
         Task.Run(() => TargetProbe.Check(path).State == TargetState.Ok).ContinueWith(checking =>
         {
             IsEnabled = true;
-            if (!checking.Result) Log.Information("{Path} did not answer; the dialog opens at its default place", path);
-            open(checking.Result ? path : null);
+            var reachable = !checking.IsFaulted && checking.Result; // a failed check counts as not reachable, logged (M20)
+            if (checking.IsFaulted) Log.Warning(checking.Exception, "{Path} could not be checked; the dialog opens at its default place", path);
+            else if (!reachable) Log.Information("{Path} did not answer; the dialog opens at its default place", path);
+            open(reachable ? path : null);
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 

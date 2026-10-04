@@ -943,6 +943,7 @@ public sealed partial class FenceHost
             window.Refresh(shown);
             window.SetTitle(shown.Title);
         }
+        ForgetGoneTargets(); // records of items the restore took away (M20)
         CheckAllTargets(); // the restored items' targets may have changed since
         _settingsWindow?.ShowSnapshotNotice($"Restored \"{snapshot.Name}\".", failed: false); // replaces an earlier failure line (final review M1)
         RefreshSettings();

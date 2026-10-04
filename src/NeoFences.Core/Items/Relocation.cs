@@ -12,6 +12,9 @@ public static class Relocation
     /// <summary>One item's proposed new target.</summary>
     public sealed record Move(string ItemId, string OldTarget, string NewTarget);
 
+    /// <summary>The undo snapshot's name: "Before fixing 1 item (…)", "Before fixing 7 items (…)".</summary>
+    public static string UndoName(int count, string when) => $"Before fixing {count} item{(count == 1 ? "" : "s")} ({when})";
+
     /// <summary>
     /// Compares the two paths segment by segment from the end (ignoring case and a trailing "\"): what they share at the
     /// end stayed, the rest moved. Null when the last segment (the file or folder name) differs, nothing moved, or

@@ -24,7 +24,7 @@ public sealed partial class FenceHost
             if (!titles.TryGetValue(fenceId, out var title)) continue;
             foreach (var item in items) alreadyIn.TryAdd(item.Target, title);
         }
-        var dialog = new DesktopFillWindow(fences, alreadyIn, _config.Library, _iconLoader, iconsHidden: _config.Settings.HideDesktopIcons);
+        var dialog = new DesktopFillWindow(fences, alreadyIn, _config.Library, [.. _library.Items.Select(item => item.Game)], _iconLoader, iconsHidden: _config.Settings.HideDesktopIcons);
         _desktopFillOpen = true;
         try
         {

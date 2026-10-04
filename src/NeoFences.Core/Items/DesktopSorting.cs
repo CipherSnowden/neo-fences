@@ -14,6 +14,21 @@ public sealed record DesktopEntry(string ItemRef, bool IsFolder, string? LinkTar
 public static class DesktopSorting
 {
     private static readonly string[] ProgramExtensions = [".exe", ".bat", ".cmd", ".com", ".msc", ".ps1", ".appref-ms"];
+    private static readonly string[] SystemFolders = ["Program Files", "Program Files (x86)", "ProgramData", "Windows"];
+    private const string AppsFolderRef = "::{4234D49B-0245-4DF3-B780-3893943456E1}"; // Start's All apps
+
+    /// <summary>
+    /// Game folders that can mean "a game is in here": not a drive root and not a system folder (Program Files, Windows…),
+    /// which a sloppy launcher record can name as an install folder and which would make every program a game (M20).
+    /// </summary>
+    public static IReadOnlyList<string> UsableGameFolders(IEnumerable<string> folders) =>
+        [.. folders.Where(folder =>
+        {
+            var trimmed = folder.Trim().TrimEnd('\\');
+            if (trimmed.Length <= 2) return false; // "D:" or nothing
+            var rest = trimmed.Length > 3 && trimmed[1] == ':' && trimmed[2] == '\\' ? trimmed[3..] : null;
+            return rest is null || !SystemFolders.Contains(rest, StringComparer.OrdinalIgnoreCase);
+        })];
 
     /// <summary>
     /// Games: what the Game Library counts as a game (a launcher link or library folder, a target under one of the user's
@@ -35,6 +50,9 @@ public static class DesktopSorting
         if (GameLaunchers.LauncherOf($"{target} {entry.LinkArguments}".Trim()) is not null
             || gameFolders.Any(folder => target.StartsWith(folder.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase))) return DesktopGroup.Games;
         if (ItemKinds.IsWebsite(target)) return DesktopGroup.WebLinks;
+        // A shortcut to a Windows place (Control Panel, This PC) or a file:// link: a place, not a program (M20).
+        if (target.StartsWith(AppsFolderRef, StringComparison.OrdinalIgnoreCase)) return DesktopGroup.Apps;
+        if (target.StartsWith("::", StringComparison.Ordinal) || target.StartsWith("file:", StringComparison.OrdinalIgnoreCase)) return DesktopGroup.FoldersAndFiles;
         if (target.Length == 0 || ItemKinds.IsApp(target) || IsProgram(target) || target.Contains(':') && !target.Contains('\\'))
             return DesktopGroup.Apps; // "ms-settings:display", another app's link scheme
         return DesktopGroup.FoldersAndFiles;
