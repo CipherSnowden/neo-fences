@@ -33,7 +33,10 @@ public sealed class SystemMessageWindow : IDisposable
     public event Action? SessionUnlocked;
     /// <summary>The Recycle Bin (or another icon image) changed: refresh the special icons (M8c).</summary>
     public event Action? SpecialIconsChanged;
-    /// <summary>Windows asks to remove the drive holding this registered handle (Safely Remove, Eject): release it now (M8d).</summary>
+    /// <summary>
+    /// Windows asks to remove the drive holding this registered handle (Safely Remove, Eject), or it was pulled without
+    /// asking: release it now (M8d), so the drive coming back re-arms fresh watchers (M18 live check AD28).
+    /// </summary>
     public event Action<nint>? DeviceRemovalRequested;
 
     /// <summary>False when Windows refused unlock notices (very early at sign-in): the hook is then not re-installed on unlock.</summary>
@@ -53,7 +56,8 @@ public sealed class SystemMessageWindow : IDisposable
     {
         switch (message)
         {
-            case DeviceRemovalNotice.WmDeviceChange when wParam == DeviceRemovalNotice.QueryRemove && DeviceRemovalNotice.HandleOf(lParam) is var removed and not 0:
+            case DeviceRemovalNotice.WmDeviceChange when wParam is DeviceRemovalNotice.QueryRemove or DeviceRemovalNotice.RemoveComplete
+                                                         && DeviceRemovalNotice.HandleOf(lParam) is var removed and not 0:
                 DeviceRemovalRequested?.Invoke(removed); // handles closed before returning: Windows then removes the drive
                 handled = true;
                 return 1; // TRUE: removal allowed

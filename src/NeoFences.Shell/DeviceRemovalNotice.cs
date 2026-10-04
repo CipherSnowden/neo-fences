@@ -15,6 +15,7 @@ public sealed class DeviceRemovalNotice : IDisposable
 {
     public const int WmDeviceChange = 0x0219;
     public const int QueryRemove = 0x8001; // DBT_DEVICEQUERYREMOVE
+    public const int RemoveComplete = 0x8004; // DBT_DEVICEREMOVECOMPLETE: also the only notice of a stick pulled without asking
 
     private readonly SafeFileHandle _folder;
     private readonly HDEVNOTIFY _registration;
