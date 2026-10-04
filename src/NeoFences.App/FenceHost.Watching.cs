@@ -133,6 +133,8 @@ public sealed partial class FenceHost
             _folderChangeTimer = new DispatcherTimer { Interval = FolderChangeQuiet };
             _folderChangeTimer.Tick += (_, _) =>
             {
+                // A rename still settling: check after it, or the renamed target flashes Missing first (M18 live check AD14).
+                if (_seenRenames.Count > 0 || _renameTimer?.IsEnabled == true) return;
                 _folderChangeTimer.Stop();
                 var targets = ItemEdits.PathTargets(_items).Where(target => WatchPlan.ParentOf(target) is { } parent && _changedFolders.Contains(parent)).ToList();
                 _changedFolders.Clear();
