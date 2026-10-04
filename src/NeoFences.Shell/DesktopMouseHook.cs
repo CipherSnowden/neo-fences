@@ -190,11 +190,14 @@ public static class DesktopWindows
     }
 
     /// <summary>
-    /// A visible native desktop icon is under the point (UI Automation list item). A double-click there opens the
-    /// icon, so it must not also quick-hide. Cross-process COM: call from the UI thread, never inside the hook.
+    /// A visible native desktop icon is under the point. A double-click there opens the icon, so it must not also
+    /// quick-hide. Explorer's own icon positions decide; UI Automation (a list item, or the F2 rename box) is the fallback:
+    /// behind a live web wallpaper it only ever sees the wallpaper's page (M18 live check). Cross-process COM: call from the
+    /// UI thread, never inside the hook.
     /// </summary>
     public static bool IsOverDesktopIcon(int x, int y, Action<string> log)
     {
+        if (DesktopIcons.TryIsIconAt(x, y) == true) return true;
         Windows.Win32.UI.Accessibility.IUIAutomation? automation = null;
         Windows.Win32.UI.Accessibility.IUIAutomationElement? element = null;
         try

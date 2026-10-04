@@ -194,3 +194,6 @@ InsertMenu
 COMDLG_FILTERSPEC
 SHCreateShellItemArrayFromDataObject
 IShellItemArray
+FindWindowEx
+ScreenToClient
+_SVGIO

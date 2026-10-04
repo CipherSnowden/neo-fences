@@ -1,4 +1,6 @@
 using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.Shell.Common;
 using Windows.Win32.UI.Shell;
 using ComServiceProvider = Windows.Win32.System.Com.IServiceProvider;
 
@@ -57,6 +59,44 @@ public static class DesktopIcons
     /// <returns>Null when the desktop folder view is unavailable or did not answer in time.</returns>
     public static bool? TryIsHidden() => RunOffThread(() => (bool?)IsHidden());
 
+    /// <summary>
+    /// A visible desktop icon is at this screen point, by Explorer's own icon positions and spacing. UI Automation cannot
+    /// tell on every desktop: behind a live web wallpaper it reports the wallpaper's page, never the icon (M18 live check).
+    /// </summary>
+    /// <returns>Null when the desktop folder view is unavailable or did not answer in time.</returns>
+    public static bool? TryIsIconAt(int screenX, int screenY) => RunOffThread(() => (bool?)IsIconAt(screenX, screenY));
+
+    private static unsafe bool IsIconAt(int screenX, int screenY)
+    {
+        if (IsHidden()) return false;
+        var view = GetDesktopFolderView();
+        // Item positions are in the icon list's client coordinates (the whole desktop, from the primary monitor's corner).
+        // Found by class: IShellView.GetWindow is an input-synchronous call Explorer refuses from here.
+        var list = DesktopListView();
+        if (list.IsNull) return false;
+        var point = new System.Drawing.Point(screenX, screenY);
+        PInvoke.ScreenToClient(list, ref point);
+        System.Drawing.Point spacing;
+        view.GetSpacing(&spacing);
+        view.ItemCount(_SVGIO.SVGIO_ALLVIEW, out var count);
+        for (var index = 0; index < count; index++)
+        {
+            ITEMIDLIST* item = null;
+            view.Item(index, &item);
+            try
+            {
+                System.Drawing.Point position;
+                view.GetItemPosition(item, &position);
+                if (point.X >= position.X && point.X < position.X + spacing.X && point.Y >= position.Y && point.Y < position.Y + spacing.Y) return true;
+            }
+            finally
+            {
+                PInvoke.CoTaskMemFree(item);
+            }
+        }
+        return false;
+    }
+
     private static T? RunOffThread<T>(Func<T> comCall)
     {
         var call = Task.Run(() =>
@@ -73,6 +113,20 @@ public static class DesktopIcons
             }
         });
         return call.Wait(CallTimeout) ? call.Result : default;
+    }
+
+    /// <summary>The desktop's icon list: under Progman (24H2+) or under the WorkerW that holds SHELLDLL_DefView (before).</summary>
+    private static HWND DesktopListView()
+    {
+        var host = PInvoke.FindWindow("Progman", null);
+        var view = PInvoke.FindWindowEx(host, HWND.Null, "SHELLDLL_DefView", null);
+        for (var worker = HWND.Null; view.IsNull;)
+        {
+            worker = PInvoke.FindWindowEx(HWND.Null, worker, "WorkerW", null);
+            if (worker.IsNull) return HWND.Null;
+            view = PInvoke.FindWindowEx(worker, HWND.Null, "SHELLDLL_DefView", null);
+        }
+        return PInvoke.FindWindowEx(view, HWND.Null, "SysListView32", null);
     }
 
     private static bool IsHidden()
