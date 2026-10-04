@@ -16,7 +16,8 @@ public sealed partial class FenceHost
     private static readonly TimeSpan RecheckInterval = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan FolderChangeQuiet = TimeSpan.FromMilliseconds(300);
     private static readonly TimeSpan DriveChangeQuiet = TimeSpan.FromSeconds(1);
-    private const int MaxDeferredRenames = 500;
+    private static readonly TimeSpan RenameQuiet = TimeSpan.FromMilliseconds(500);
+    private const int MaxPendingRenames = 500;
 
     private readonly Dictionary<string, TargetCheck> _targetChecks = new(ItemKinds.Comparer);
     private readonly Dictionary<string, (FolderWatcher Watcher, DeviceRemovalNotice? Notice)> _targetWatchers = new(ItemKinds.Comparer);
@@ -25,8 +26,8 @@ public sealed partial class FenceHost
     private readonly RefreshThrottle _refreshThrottle = new();
     private readonly Dictionary<string, DispatcherTimer> _fenceRefreshTimers = new(StringComparer.Ordinal);
     private readonly HashSet<string> _changedFolders = new(ItemKinds.Comparer);
-    private readonly List<(string OldPath, string NewPath)> _deferredRenames = [];
-    private DispatcherTimer? _folderChangeTimer, _recheckTimer, _drivesTimer;
+    private readonly List<(string OldPath, string NewPath)> _seenRenames = []; // settled once quiet, or after a game (final review C1)
+    private DispatcherTimer? _folderChangeTimer, _recheckTimer, _drivesTimer, _renameTimer;
     private bool _checksDeferred, _watchingStopped;
 
     /// <summary>The last check of a target; Ok while it was never checked (fences show at once, states fill in).</summary>
@@ -48,6 +49,7 @@ public sealed partial class FenceHost
         _recheckTimer?.Stop();
         _folderChangeTimer?.Stop();
         _drivesTimer?.Stop();
+        _renameTimer?.Stop();
         foreach (var timer in _fenceRefreshTimers.Values) timer.Stop();
         foreach (var (watcher, notice) in _targetWatchers.Values)
         {
@@ -57,12 +59,12 @@ public sealed partial class FenceHost
         _targetWatchers.Clear();
     }
 
-    /// <summary>Watches the folders the plan picks now; watchers no longer wanted (or not watching any more) go.</summary>
+    /// <summary>Watches the folders the plan picks now; watchers no longer wanted, not watching or stopped (final review I3) are replaced.</summary>
     private void UpdateWatching()
     {
         if (_watchingStopped) return;
         _wantedFolders = WatchPlan.Folders(ItemEdits.PathTargets(_items)).ToHashSet(ItemKinds.Comparer);
-        foreach (var (folder, (watcher, notice)) in _targetWatchers.Where(entry => !_wantedFolders.Contains(entry.Key) || !entry.Value.Watcher.IsWatching).ToList())
+        foreach (var (folder, (watcher, notice)) in _targetWatchers.Where(entry => !_wantedFolders.Contains(entry.Key) || !entry.Value.Watcher.IsWatching || entry.Value.Watcher.HasFailed).ToList())
         {
             watcher.Dispose();
             notice?.Dispose();
@@ -86,7 +88,7 @@ public sealed partial class FenceHost
                 }
                 watch.Watcher.Changed += () => dispatcher.BeginInvoke(() => OnTargetFolderChanged(folder));
                 watch.Watcher.Renamed += (oldPath, newPath) => dispatcher.BeginInvoke(() => OnTargetRenamed(oldPath, newPath));
-                // Events were lost or it stopped: its targets are checked now; the 5-minute check re-arms it.
+                // Events were lost or it stopped: its targets are checked now; the next UpdateWatching (an edit, a drive, the 5-minute check) re-arms it.
                 watch.Watcher.Failed += () => dispatcher.BeginInvoke(() => OnTargetFolderChanged(folder));
                 _targetWatchers[folder] = watch;
             }
@@ -96,7 +98,8 @@ public sealed partial class FenceHost
     /// <summary>A watcher, with a removal notice where Windows offers one, so "Safely remove" still works (M8d). Off the UI thread.</summary>
     private static (FolderWatcher Watcher, DeviceRemovalNotice? Notice) Watch(string folder, nint noticeOwner)
     {
-        var watcher = new FolderWatcher(folder, failure => Log.Debug(failure, "cannot watch {Folder}; its items are checked every few minutes", folder));
+        // Names only: a game writing logs and caches next to its .exe must not wake NeoFences on every write (final review I4).
+        var watcher = new FolderWatcher(folder, failure => Log.Debug(failure, "cannot watch {Folder}; its items are checked every few minutes", folder), namesOnly: true);
         var notice = watcher.HeldFolder is { } held
             ? DeviceRemovalNotice.TryRegister(noticeOwner, held, failure => Log.Debug(failure, "no removal notice for {Folder}", held))
             : null;
@@ -113,10 +116,15 @@ public sealed partial class FenceHost
         return true; // re-armed when the drive is back (DrivesChanged) or by the 5-minute check
     }
 
-    /// <summary>Something in a watched folder changed: its targets are checked once the burst is over.</summary>
+    /// <summary>Something in a watched folder changed: its targets are checked 300 ms later (a busy folder never delays the others).</summary>
     private void OnTargetFolderChanged(string folder)
     {
         if (_watchingStopped) return;
+        if (Current.ShellWorkDeferred)
+        {
+            _checksDeferred = true; // one check of everything after the game (final review I4)
+            return;
+        }
         _changedFolders.Add(folder);
         if (_folderChangeTimer is null)
         {
@@ -129,21 +137,43 @@ public sealed partial class FenceHost
                 CheckTargets(targets);
             };
         }
-        _folderChangeTimer.Stop();
-        _folderChangeTimer.Start();
+        if (!_folderChangeTimer.IsEnabled) _folderChangeTimer.Start(); // not restarted by every event (final review I4)
     }
 
-    /// <summary>A target (or a folder holding targets) was renamed in place: every item pointing at it follows (spec §4).</summary>
+    /// <summary>
+    /// A file or folder was renamed in a watched folder. Items follow only once the renames are quiet and settled
+    /// (<see cref="Renames.Settle"/>): an editor's save renames the original away and back (final review C1).
+    /// </summary>
     private void OnTargetRenamed(string oldPath, string newPath)
     {
         if (_watchingStopped) return;
-        if (Current.ShellWorkDeferred)
+        if (_seenRenames.Count < MaxPendingRenames) _seenRenames.Add((oldPath, newPath));
+        else _checksDeferred = true; // a flood: the next full check shows what is missing
+        if (Current.ShellWorkDeferred) return; // settled after the game
+        if (_renameTimer is null)
         {
-            if (_deferredRenames.Count < MaxDeferredRenames) _deferredRenames.Add((oldPath, newPath)); // after the game
-            else _checksDeferred = true; // too many: the check after the game shows what is missing
-            return;
+            _renameTimer = new DispatcherTimer { Interval = RenameQuiet };
+            _renameTimer.Tick += (_, _) =>
+            {
+                _renameTimer.Stop();
+                SettleRenames();
+            };
         }
-        FollowRename(oldPath, newPath);
+        _renameTimer.Stop();
+        _renameTimer.Start();
+    }
+
+    /// <summary>The renames seen so far: settled off the UI thread (it asks the disk), then followed by every item.</summary>
+    private void SettleRenames()
+    {
+        if (_seenRenames.Count == 0) return;
+        var seen = _seenRenames.ToList();
+        _seenRenames.Clear();
+        Task.Run(() => Renames.Settle(seen, TargetProbe.Exists)).ContinueWith(settled =>
+        {
+            if (_watchingStopped) return;
+            foreach (var (oldPath, newPath) in settled.Result) FollowRename(oldPath, newPath);
+        }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     private void FollowRename(string oldPath, string newPath)
@@ -248,12 +278,10 @@ public sealed partial class FenceHost
     /// <summary>The game was left: renames seen meanwhile are followed, and every target is checked if checks waited.</summary>
     private void ApplyDeferredWatching()
     {
-        if (_deferredRenames.Count > 0)
+        if (_seenRenames.Count > 0)
         {
-            var renames = _deferredRenames.ToList();
-            _deferredRenames.Clear();
-            Log.Information("following {Count} rename(s) from game mode", renames.Count);
-            foreach (var (oldPath, newPath) in renames) FollowRename(oldPath, newPath); // also at a session end during a game
+            Log.Information("settling {Count} rename(s) from game mode", _seenRenames.Count);
+            SettleRenames();
         }
         if (!_checksDeferred) return;
         _checksDeferred = false;

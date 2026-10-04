@@ -17,6 +17,19 @@ public static class TargetProbe
         return probe.Wait(NetworkTimeout) ? probe.Result : new TargetCheck(TargetState.Unavailable);
     }
 
+    /// <summary>A file or folder is at the path now (settling renames). Call off the UI thread.</summary>
+    public static bool Exists(string path)
+    {
+        try
+        {
+            return File.Exists(path) || Directory.Exists(path);
+        }
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return false;
+        }
+    }
+
     private static TargetCheck Classify(string target)
     {
         try

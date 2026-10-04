@@ -69,13 +69,16 @@ public sealed class FolderWatcher : IDisposable
     /// <param name="logFailure">Told when the folder cannot be watched; its items are then only re-checked.</param>
     /// <param name="directoriesOnly">Only folders appearing, going or renamed: a game folder whose games write files at their
     /// own root would otherwise rescan the library while they run (M13b).</param>
-    public FolderWatcher(string folderPath, Action<Exception> logFailure, bool directoriesOnly = false)
+    /// <param name="namesOnly">Only entries appearing, going or renamed (item targets): writes to files are not reported.</param>
+    public FolderWatcher(string folderPath, Action<Exception> logFailure, bool directoriesOnly = false, bool namesOnly = false)
     {
         try
         {
             _watcher = new FileSystemWatcher(folderPath)
             {
-                NotifyFilter = directoriesOnly ? NotifyFilters.DirectoryName : NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Attributes | NotifyFilters.LastWrite,
+                NotifyFilter = directoriesOnly ? NotifyFilters.DirectoryName
+                    : namesOnly ? NotifyFilters.FileName | NotifyFilters.DirectoryName
+                    : NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Attributes | NotifyFilters.LastWrite,
                 IncludeSubdirectories = false,
                 InternalBufferSize = 64 * 1024,
             };
