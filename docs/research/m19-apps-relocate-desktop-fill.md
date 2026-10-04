@@ -68,7 +68,8 @@ and its data backed up and restored afterwards; test files only in `%USERPROFILE
 Verdict "with fixes"; every Review Focus invariant held. Fixed in `3c3033c` (Core tests RED→GREEN, 460 tests): a dead
 share cost 2 s per item (shared root probes now wait once); mapped network drives were not probed before icons; any app
 parse failure counted as uninstalled (now only not-found); app targets opened unquoted (ids with spaces); Locate… for an
-app set a closed fence as owner (crash). Deferred minors (for later):
+app set a closed fence as owner (crash). Deferred minors — **all fixed in 0.10.1 (M20, commit `17379bb`, 468 tests)
+except the R1 race, left as is by the user's choice** (a removal in those microseconds is refused once; retrying works):
 
 - the bulk fix writes the undo snapshot even when every move was filtered out; "Before fixing 1 items";
 - app ids containing `\` (desktop programs): the placeholder label shows the whole id; Shift+right-click Windows' menu

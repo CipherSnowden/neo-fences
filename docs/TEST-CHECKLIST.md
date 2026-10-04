@@ -535,3 +535,13 @@ Added after the M19 final review:
 | AE24 | An app item for a program whose app id holds spaces (Epic Games Launcher from the app list); double-click | the program opens |
 | AE25 | If a mapped network drive is at hand: an item on it, the drive disconnected; restart NeoFences | the item shows Unavailable with a generic icon within ~2 s; other icons are not held up |
 | AE26 | An app item with a passing failure (reading-based: `AppList.Exists` treats only not-found as uninstalled) | an app is never shown Missing because Windows was not ready at sign-in |
+
+## AF — 0.10.1 small fixes (M20)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AF1 | Shift+right-click a Store app item (Sticky Notes) and a program from the app list (7-Zip File Manager) | Windows' menu for the app, under its header line (no silent failure) |
+| AF2 | Typed target `shell:AppsFolder\{6D809377-6AF0-444B-8957-A3773F02200E}\Fake\Fake App.exe` | Missing, labelled "Fake App" (not the whole id) |
+| AF3 | A test shortcut to This PC and one to Control Panel on the desktop; Add from desktop… | both listed under Folders and files; removed afterwards |
+| AF4 | Add from desktop… twice with a Game Library fence present | the second opening lists at once (the library's last scan reused); log has no scan errors |
+| AF5 | Bulk fix: Fix after every proposed item was changed by hand meanwhile | log "nothing fixed"; `before-restore.json` unchanged |

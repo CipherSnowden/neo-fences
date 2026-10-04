@@ -143,6 +143,12 @@ fences; the M18 reliability leftovers: removal notices released while watchers a
 checked first (2 s), COM objects released, failed watcher batches retried, stale per-target records dropped, OK waits
 for the target check, generic icons for unreachable targets (ADR-042, `research/m19-apps-relocate-desktop-fill.md`).
 
+**0.10.1 (M20)**: the M19 review minors — the bulk fix writes its undo snapshot only when something is fixed; programs
+from the app list get readable placeholder names and Windows' menu (built from `shell:AppsFolder`); Add from desktop
+reuses the Game Library's last scan and never counts a drive root or system folder as a game folder; shortcuts to Windows
+places (Control Panel, This PC) and `file:///` links sort as folders and files (`ShellLinks.ShellTargetOf`); stale
+per-target records dropped after a restore and when a check outlives its item; failed background checks logged.
+
 Pre-pivot history (v1.x dev builds, the M0–M17 notes in `research/` and SESSION-LOG) describes the Takeover model; read
 it as history. Kept from it: fences, tabs (M9), snapshots (M10), the Game Library (M12), roll-up, lock, Peek, game mode,
 Appearance (M14/M16), the installer and auto-update (M7/M17).
