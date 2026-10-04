@@ -63,6 +63,25 @@ and its data backed up and restored afterwards; test files only in `%USERPROFILE
 | AD14 | PASS | rename while running followed both ways, no Missing |
 | AD18 | PASS | Shift+right-click: Windows' menu with its header line |
 
+## Final review (Opus, dc7cceb..ce3269d) and the fix pass
+
+Verdict "with fixes"; every Review Focus invariant held. Fixed in `3c3033c` (Core tests RED→GREEN, 460 tests): a dead
+share cost 2 s per item (shared root probes now wait once); mapped network drives were not probed before icons; any app
+parse failure counted as uninstalled (now only not-found); app targets opened unquoted (ids with spaces); Locate… for an
+app set a closed fence as owner (crash). Deferred minors (for later):
+
+- the bulk fix writes the undo snapshot even when every move was filtered out; "Before fixing 1 items";
+- app ids containing `\` (desktop programs): the placeholder label shows the whole id; Shift+right-click Windows' menu
+  fails for them (logged);
+- Add from desktop runs a full Game Library scan per open (could reuse the library's last scan); a sloppy EA /
+  Battle.net install location at a Program Files root would make every program a Game;
+- `.lnk` files with an empty raw path (Control Panel, This PC) and `file:///` `.url` files sort as Apps;
+- R5 gaps: a snapshot restore does not drop stale records; a check batch finishing late re-adds records of removed
+  targets (bounded, cleaned at the next items change);
+- a few continuations read `.Result` without checking `IsFaulted` (Windows' menu, picker start check, the bulk-fix offer);
+- R1: a microsecond race between registering a removal notice and tracking it;
+- a stray blank line in `FenceHost.Items` `DisplayName`.
+
 Script lessons (memory `feedback-desktop-automation`): dialogs can open behind other windows (bring to front and
 uncover first); a double-click on an item scrolled out of view lands on the desktop and quick-hides everything (scroll
 the item into view and check the point is on the fence first); a restore can recreate fence windows (look them up again).
