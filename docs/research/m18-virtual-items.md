@@ -1,8 +1,9 @@
 # M18 — Virtual items (0.9.0): build, final review and live check
 
-**Status (2026-10-04, ~21:35):** Tasks 0–6 of `docs/superpowers/plans/2026-10-04-m18-virtual-items.md` done on branch
+**Status (2026-10-04, ~22:50):** Tasks 0–6 of `docs/superpowers/plans/2026-10-04-m18-virtual-items.md` done on branch
 `m18-virtual-items` (worktree `F:\projects\neo_fences-m18`); final whole-branch review done and its fix pass committed;
-**Task 7 live check in progress** (most rows PASS, the rest listed below). Not merged, not released.
+**Task 7 live check complete: every AD row passes** (five bugs found and fixed on the way). Cleaned up (test build
+stopped, its data folder and its "Start with Windows" entry removed). Not merged, not released.
 
 ## Handoff — read this first in the next session
 
@@ -10,7 +11,7 @@
    the plan). Build: `dotnet build` (0 warnings), `dotnet test` → 404 Core tests pass.
 2. Ledger (rulings, deferred minors, fixes): `F:\projects\neo_fences-m18\.superpowers\sdd\2026-10-04-m18-virtual-items\progress.md`
    (git-ignored). Final review report: summarised under "Final review" below.
-3. **Live check state on this PC right now:**
+3. **Live check state (historical — the check is done and cleaned up; kept for a re-run):**
    - The **test build** runs: `src\NeoFences.App\bin\Debug\net10.0-windows\NeoFences.exe` (3 fences: "Fence", a second
      "New fence", the Game Library). Its data `%LOCALAPPDATA%\NeoFences\` was created by the test (nothing was
      installed before; delete it at cleanup with `m18-reset.ps1`).
@@ -25,7 +26,9 @@
    (guarded cleanup), `m18-restart.ps1`, `m18-renameflash.ps1`. Run with
    `powershell.exe -NoProfile -ExecutionPolicy Bypass -File <script>`. Write/edit scripts **only with the Write/Edit
    tools** (shell-escaped edits lost backslashes and once emptied the scratchpad — memory `feedback-desktop-automation`).
-5. **Remaining live rows** (do automatically where possible, ask the user only for physical steps; take screenshots):
+5. **Done — were the remaining live rows** (results in the table below; scripts `m18-ad3.ps1` (desktop icon found by
+   reading Explorer's list view), `m18-ad11.ps1`, `m18-ad13*.ps1`, `m18-ad22.ps1`, `m18-ad32.ps1`, `m18-watch.ps1`;
+   Win32 dialogs (#32770) show no controls to UI Automation here: click their child buttons, `ClickDialogButton`):
    AD3 (desktop icon dragged onto a fence — UIA cannot find desktop icons here; drag from the icon's position, e.g.
    found with `DesktopIcons.TryIsIconAt` or a screenshot), AD5 (browser link drag — Firefox), AD11 (icon from a file:
    the Change Icon dialog opened but the script's OK did not set the icon), AD13 (Run as administrator → UAC: user
@@ -39,20 +42,23 @@
    publish; every outward step asked); session end: SESSION-LOG entry, ROADMAP ticks (M18), PIVOT "Next steps", hub
    refresh (`url` from `CLAUDE.local.md`); delete the plan's `.superpowers/sdd` workspace.
 
-## Live check results so far (TEST-CHECKLIST AD)
+## Live check results (TEST-CHECKLIST AD, all 32 rows)
 
 | ID | Result | Notes |
 |---|---|---|
 | AD1 | PASS | one empty fence "Fence", hint shown, native icons visible (HideIcons 0) |
 | AD2 | PASS | Explorer drop: link cursor, item at the drop point, file byte-identical, no dialog (by hand and scripted) |
+| AD3 | PASS | the desktop's own `NeoFences-test-desk.txt` dragged onto the fence: item at the drop point; the file and its desktop icon stay |
 | AD4 | PASS | the same drop again adds nothing |
-| AD5 | PASS (typed) | `www.github.com` → https://www.github.com, label "github.com", browser icon; browser drag still to do |
+| AD5 | PASS | typed `www.github.com` → https://www.github.com; Firefox address-bar drag (by the user) → `https://github.com/CipherSnowden/neo-fences`, label "github.com", Firefox icon |
 | AD6 | PASS | Add item… folder: "Found (a folder)", Arguments greyed |
 | AD7 | PASS | moved to a second fence; Ctrl+drag duplicated back |
 | AD8 | PASS after fix | drag-out made nothing → fixed (shell item array data object); copy in `out`, original byte-identical |
 | AD9 | PASS | Del removes one item; Ctrl+A Del asks once; files untouched |
 | AD10 | PASS | Properties (from the item menu): own name shown as the label |
+| AD11 | PASS | Change Icon → shell32.dll index 17 shown; Reset brings the folder icon back (icon cleared in items.json) |
 | AD12 | PASS | picture icon copied into `icons\` at 256×171 |
+| AD13 | PASS | `-x` + Run as administrator saved; notepad.exe opened elevated with `-x` **without a prompt** (this PC's UAC level 5 auto-elevates Windows binaries); dotnet.exe: prompt shown, user clicked No → `[WRN] could not open … the admin prompt was declined`, no dialog, fences responsive |
 | AD14 | PASS | rename followed by both items; no Missing flash after the fix |
 | AD15 | PASS | recycled → `"Missing"` logged; restored from the Recycle Bin → `"Ok"` |
 | AD16 | PASS | with a G: item watched, Safely remove (CM eject) was **allowed**; item `"Unavailable"` |
@@ -61,12 +67,17 @@
 | AD19 | PASS | item menu: Open · Run as administrator · Open file location · Copy path · Properties… · Remove from fence · grey Shift hint |
 | AD20 | PASS | Refresh: no errors |
 | AD21 | PASS | Hide icons on → HideIcons 1, marker; forced kill → icons back, watchdog restarted NeoFences, setting kept |
+| AD22 | PASS | snapshot (tray) → item renamed → restart → restore (tray submenu): old name back; "Undo the last restore": rename back |
+| AD23 | PASS | asked first with the count ("Delete "New fence" and its 1 item?"); OK → fence and its item list gone; `b.txt` untouched |
 | AD24 | PASS | Game Library: 12 tiles; a game dragged into a fence became an item of its library shortcut |
 | AD25 | PASS | killed right after an add: the item is there after the restart, items.json intact |
 | AD26 | PASS | unreachable share: `"Unavailable"` 1 s after the add; fences responsive throughout |
 | AD27 | PASS | editor-style save (rename away, temp onto the name, delete): target kept, never Missing |
+| AD28 | PASS after fix | first run: after a pull without Safely remove and a re-plug, renaming `g.txt` on the stick was not followed (stale watcher) → fixed (`cf2775e`); then: pull → released + Unavailable, re-plug → Ok, rename followed and followed back; the user saw `g.txt` dimmed while out |
+| AD29 | PASS | NeoFences restarted while G: was out → Unavailable at start; plugged in → Ok with its real icon |
 | AD30 | PASS | Sort by with the share item: fences stayed responsive |
 | AD31 | PASS | an item dropped onto the desktop Recycle Bin: nothing deleted |
+| AD32 | PASS | picture item in a snapshot → item removed → restart (the picture file stays in `icons\`) → restore: back with its picture |
 | gesture | PASS after fix | double-clicking a desktop icon quick-hid fences and icons (see findings) |
 
 ## Findings of the live check (all fixed on the branch)
@@ -80,6 +91,18 @@
 - **Drops read as shell items** (Explorer, desktop): real paths, special items as `::{GUID}`, zip/phone contents skipped
   without extraction. Commit `b66846a`.
 - **A rename flashed Missing for a moment**: folder-change checks now wait while renames settle. Commits `b66ea45`, `8d06251`.
+- **A stick pulled without Safely remove left a deaf watcher** (AD28): only `DBT_DEVICEQUERYREMOVE` was handled; a surprise
+  pull sends only `DBT_DEVICEREMOVECOMPLETE`, so the dead watcher still looked healthy and was never re-armed when the
+  stick came back. Now both release it (item watchers and the library alike). Commit `cf2775e`.
+
+Observations (no change):
+- A **power cut** hit mid-check (~21:47, Kernel-Power 41). The test build came back at sign-in by itself (its "Start with
+  Windows" entry) with every item intact; icons were not hidden at the time.
+- Once (after the eject and several restarts) github.com's icon stayed blank until Refresh; not reproduced on a clean
+  restart, both icon loader threads idle (`dotnet-stack`).
+- Game mode switched on twice for 2–3 s during the pendrive steps (something full-screen in front); harmless.
+- The AD29 check restarts NeoFences on purpose while the stick is out: the user saw the fences vanish for a second
+  (not a crash: clean exit and start in the log). Say so up front next time.
 
 ## Final review (Opus, whole branch e3dbabe..43f0610) and the fix pass
 
@@ -93,4 +116,5 @@ fence window had closed; dialogs now in the taskbar. Deferred minors (for M19) a
 Deferred minors: arming watchers cannot be released for a removal; UI-thread shell calls on possibly unreachable targets
 (drag-out parse, Shift+right-click menu, Properties start paths, Locate's folder walk); `PathPicker` / `DesktopNamespace`
 COM objects not released; a faulted arming batch is lost silently; per-target dictionaries never shrink; Properties OK
-during "Checking…" uses the previous folder flag; icon loaders may block on dead-share items at start.
+during "Checking…" uses the previous folder flag; icon loaders may block on dead-share items at start; an unreachable
+share item shows no icon at all (Windows gives none: a generic icon by extension would read better).
