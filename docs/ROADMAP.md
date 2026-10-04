@@ -8,11 +8,16 @@ Milestone details and exit criteria: spec §9.
 
 - [x] Decided: fences hold **virtual items**; no file operations; native icons visible (optional hide); versions 0.x; fresh GitHub repo
 - [x] Docs written (PIVOT, ADR-040, CLAUDE.md hard rules)
-- [x] Reset: local history bundle in F:projects (neo_fences-history-2026-10-04.bundle), GitHub reset to one commit (0.8.0), release/tags/branch deleted
-- [x] Installed v1.8.0 and its data removed from this PC (data backed up to F:projects
-eofences-data-backup-2026-10-04)
-- [~] **M18 — Virtual items (0.9.0)** — claimed by session 2026-10-04 m18-virtual-items
-- [ ] M19 — customization polish (Locate, Ctrl-duplicates, bulk refresh)
+- [x] Reset: local history bundle in F:\projects\ (neo_fences-history-2026-10-04.bundle), GitHub reset to one commit (0.8.0), release/tags/branch deleted
+- [x] Installed v1.8.0 and its data removed from this PC (data backed up to F:\projects\neofences-data-backup-2026-10-04)
+- [ ] **M18 — Virtual items (0.9.0)** — spec `docs/superpowers/specs/2026-10-04-virtual-items-design.md`, plan `docs/superpowers/plans/2026-10-04-m18-virtual-items.md`, ADR-040/041
+  - [x] Core: virtual items and their edits; target checks, watch plan, refresh throttle
+  - [x] Core: config schema 5, items.json (`ItemStore`, `JsonStore`), snapshots with items; Membership, Rules, Portals, Inbox and Takeover removed
+  - [x] Shell: drops create items (link, never move), drag-out copies, pickers, target probe, Windows' menu with its header line
+  - [x] App: items in fences, item menu, Properties / Add item…, Locate…, target watching, "Hide desktop icons while NeoFences runs"
+  - [x] Docs: ARCHITECTURE, FEATURES, TEST-CHECKLIST section AD
+  - [ ] Live check (TEST-CHECKLIST AD, `research/m18-virtual-items.md`), final review, merge, release 0.9.0
+- [ ] M19 — customization polish (bulk re-locate of missing items, Store/UWP apps as items, deferred M18 minors)
 - [ ] M20 — dynamic collections (read-only folder views, auto-collect rules) — later
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 

@@ -448,3 +448,40 @@ M0 spike checks. In the app they are section N (D2 → N3, D7 → N14, D8 → N1
 | AC8 | A full-screen game for over a day of uptime | no check and no notice while the game is in front |
 | AC9 | A developer build (dotnet run) | Settings → Updates says updates are off in a developer build |
 | AC10 | Push a version tag | GitHub Actions builds, tests and uploads a draft release with notes; installed copies see nothing until it is published |
+
+## AD — Virtual items (M18, ADR-040, ADR-041)
+
+Test data only in `%USERPROFILE%\Desktop\NeoFences-test\` (created and recycled by the test) and on the pendrive
+`G:\NeoFences-test\` (LOCO_DUCK). "Byte for byte" = `cmp` of the file against a copy made before.
+
+| ID | Steps | Expected |
+|---|---|---|
+| AD1 | First start with no data folder | one empty fence "Fence" with the hint "Drop files, folders or links here — or right-click → Add item…"; native desktop icons visible |
+| AD2 | Drag `a.txt` from Explorer (`Desktop\NeoFences-test`) onto the fence | cursor shows the link arrow; an item appears at the drop point; `a.txt` is still in its folder, byte for byte; no Windows dialog |
+| AD3 | Drag the Desktop's own `a.txt` (from the desktop) onto the fence | as AD2 (bug K5 gone); the icon stays on the desktop |
+| AD4 | Drop `a.txt` onto the same fence again | not added again; the existing item is selected |
+| AD5 | Drag a browser link (address-bar icon) onto the fence | a website item named after the host, with the default browser's icon; double-click opens the browser |
+| AD6 | Fence menu → Add item… → Browse ▾ → A folder… → OK | a folder item; Arguments and Run as administrator greyed in Properties |
+| AD7 | Drag an item to another fence; Ctrl+drag it back | moved (name and icon kept); Ctrl: a second item, the first stays |
+| AD8 | Drag an item out onto the desktop or into an Explorer folder | Explorer makes a copy; the original stays where it was |
+| AD9 | Select an item, Del; select three, Del | one: gone at once; three: one confirmation; the files are untouched |
+| AD10 | F2 on an item; type a name; OK | the label shows the new name; the file keeps its name |
+| AD11 | Properties → Change icon → From a file… → shell32.dll, any icon | the item shows that icon; Reset brings the target's icon back |
+| AD12 | Properties → Change icon → From a picture… (a PNG) | the item shows the picture; `%LOCALAPPDATA%\NeoFences\icons\` holds a copy ≤ 256 px |
+| AD13 | Properties of an .exe item: Arguments `-x`, Run as administrator on; open it | the UAC prompt appears; Cancel: nothing breaks (logged) |
+| AD14 | Rename `a.txt` to `b.txt` in Explorer | within 2 s every item pointing at it shows `b` (own names kept) |
+| AD15 | Delete `b.txt` in Explorer (Recycle Bin) | the item dims with the ! badge, tooltip "Missing: …"; restore it from the Recycle Bin: back to normal by itself |
+| AD16 | Item on `G:\NeoFences-test\` → Safely remove the pendrive | Windows allows the removal; the item dims, tooltip "Drive G: is not connected"; plug it back: normal again within seconds |
+| AD17 | Double-click a missing item | NeoFences' "is missing" window (Locate… / Remove from fence / Cancel), no Windows error; Locate… opens at the nearest folder that exists |
+| AD18 | Shift+right-click an item | Windows' menu with a first grey line "Windows menu — acts on the real file" |
+| AD19 | Right-click an item | Open · Run as administrator · Open file location · Copy path · Properties… · Remove from fence · the grey Shift hint |
+| AD20 | Fence menu → Refresh | names and icons reload; states re-checked |
+| AD21 | Settings → "Hide desktop icons while NeoFences runs" on; Task Manager → End task on NeoFences | icons hidden while running; back within ~5 s after the kill (watchdog) |
+| AD22 | Take a snapshot; remove an item and rename another; restore the snapshot | both items back as they were; "Undo the last restore" works |
+| AD23 | Delete a fence with items | asked first (count shown); the fence and its items go; files untouched |
+| AD24 | Game Library fence | still lists games as tiles; dragging a game into a fence makes an item of its shortcut |
+| AD25 | Kill NeoFences (Task Manager) right after adding an item; restart | the item is there (or, at worst, the fence is as before the add); no damaged files |
+| AD26 | Add item… with the target `\\neofences-nohost\share\x.txt`, then Refresh the fence and drag another fence meanwhile | the item turns Unavailable within a few seconds; the fences never freeze (checks run off the UI thread, 2 s timeout) |
+
+Sections C (Takeover parts), H, J, K, L, U and X describe the pre-pivot model (Takeover, membership, item file
+actions, Portals, Rules): parked with ADR-040, not run for 0.9.
