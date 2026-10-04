@@ -19,8 +19,8 @@ Milestone details and exit criteria: spec §9.
   - [x] Final review (Opus) and its fix pass; live check: TEST-CHECKLIST AD 32/32 pass, five bugs fixed on the way (`research/m18-virtual-items.md`)
   - [x] Merged to main (fast-forward), version 0.9.0
   - [x] Release 0.9.0: main pushed (CI green) → tag v0.9.0 → draft → install check on this PC → published 2026-10-04
-- [ ] Before 1.0.0 (first version for friends): user decides the name ("Fences" trademark, ADR-009) and code signing (ADR-039); user uses 0.9.0 for a few days to shape M19
-- [ ] M19 — customization polish (bulk re-locate of missing items, Store/UWP apps as items, deferred M18 minors)
+- [ ] Before 1.0.0 (first version for friends): code signing (ADR-039; not needed for 0.10.0). Name decided: stays NeoFences (ADR-043)
+- [~] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — claimed by session 2026-10-05 m19-apps-relocate-desktop-fill
 - [ ] M20 — dynamic collections (read-only folder views, auto-collect rules) — later
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
