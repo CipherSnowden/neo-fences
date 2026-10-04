@@ -494,3 +494,21 @@ v5 (Node 24, CI green); the M18 test files and the older ones on the stick delet
 (customization polish + the deferred M18 minors in `research/m18-virtual-items.md`).
 **Open:** an unreachable share item shows no icon; one unreproduced blank website icon after many restarts (both in
 `research/m18-virtual-items.md`).
+
+## 2026-10-05 — M19 Store apps, bulk fix, Add from desktop, reliability (0.10.0)
+
+**Done:** the user skipped the "use 0.9.0 first" step and chose 0.10.0 for themselves (not yet for friends), the name
+stays NeoFences (ADR-043 supersedes ADR-009), no code signing. Brainstorm → spec (ADR-042) → a prototype with live
+probes on the user's desktop (182 Start apps listed in 0.34 s; `shell:AppsFolder\<id>` parses with name and icon; a
+drag from Start works; four findings fixed: an uninstalled app's empty label, screen-reader names in the app list,
+games sorted as apps without game folders — the Game Library's scan now counts —, a false "drop failed" warning on
+Start drags) → a plan of replay-verified patches → native execution (Core test-first, 450 tests) → final Opus review
+"with fixes" (no Critical; fixed: dead-share probes waited 2 s per item, mapped drives not probed, any app parse failure
+= uninstalled, unquoted app launch, Locate owner guard; 460 tests) → live check AE 29/30 with the installed 0.9.0 and
+its data backed up and restored → merged to main, version 0.10.0.
+**Decisions:** ADR-042 (apps as `shell:AppsFolder` items; bulk fix with an undo snapshot in the restore slot; Add from
+desktop points at the desktop entries), ADR-043 (the name stays). Rulings: plan patches applied from the plan's own
+blocks; three review minors re-graded Important (app answers at sign-in, quoted launch, a crash guard).
+**Next:** release 0.10.0 (push → CI → tag → draft → install check as an update from 0.9.0 → publish, each step asked);
+hub refresh; then M20 (the deferred M19 minors, dynamic collections).
+**Open:** the deferred minors in `research/m19-apps-relocate-desktop-fill.md`; AE25 (a mapped network drive) not run.

@@ -20,7 +20,13 @@ Milestone details and exit criteria: spec §9.
   - [x] Merged to main (fast-forward), version 0.9.0
   - [x] Release 0.9.0: main pushed (CI green) → tag v0.9.0 → draft → install check on this PC → published 2026-10-04
 - [ ] Before 1.0.0 (first version for friends): code signing (ADR-039; not needed for 0.10.0). Name decided: stays NeoFences (ADR-043)
-- [~] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — claimed by session 2026-10-05 m19-apps-relocate-desktop-fill
+- [ ] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
+  - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches
+  - [x] Core (apps, Relocation, DesktopSorting, StaleEntries), Shell (AppList, generic icons, COM releases), App (app list, bulk fix + undo, Add from desktop, R1–R8)
+  - [x] Final Opus review "with fixes": dead-share probes, mapped drives, app answers, quoted app launch, Locate owner guard fixed (460 tests); minors deferred (`research/m19-apps-relocate-desktop-fill.md`)
+  - [x] Live check TEST-CHECKLIST AE (29/30; AE25 needs a mapped drive) + AD2/AD8/AD14/AD18; merged to main, version 0.10.0
+  - [ ] Release 0.10.0: push main → CI → tag v0.10.0 → draft → install check (update from the installed 0.9.0) → publish (each step asked)
+- [ ] M20 candidates: the deferred M19 minors; dynamic collections (below)
 - [ ] M20 — dynamic collections (read-only folder views, auto-collect rules) — later
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
