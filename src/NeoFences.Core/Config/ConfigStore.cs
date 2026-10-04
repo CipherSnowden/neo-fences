@@ -7,14 +7,7 @@ namespace NeoFences.Core.Config;
 /// True when config.json must not be overwritten this session: it was written by a newer NeoFences, or it
 /// could not be read (locked by antivirus, OneDrive or an editor). The config returned is the best fallback.
 /// </param>
-public sealed record ConfigLoadResult(NeoFencesConfig Config, ConfigLoadSource Source, string? CorruptCopyPath, bool IsReadOnly)
-{
-    /// <summary>
-    /// True when the config's fences are the user's real ones (read from a file, writable). A fresh or read-only fallback
-    /// does not know them: item lists of fences it lacks must then be kept, not dropped at save (ADR-041).
-    /// </summary>
-    public bool KnowsTheFences => Source != ConfigLoadSource.Fresh && !IsReadOnly;
-}
+public sealed record ConfigLoadResult(NeoFencesConfig Config, ConfigLoadSource Source, string? CorruptCopyPath, bool IsReadOnly);
 
 /// <summary>
 /// Loads and saves <c>config.json</c> (ADR-006): atomic replace with <c>.bak</c>, one backup per day (newest 10 kept),

@@ -50,11 +50,6 @@ public sealed partial class FenceHost
     private LibraryLister? _libraryLister; // the Game Library fence's folder (M12), while that fence exists
     private NeoFencesConfig _config = NeoFencesConfig.CreateDefault();
     private ItemsDocument _items = new();
-    /// <summary>
-    /// False when this session's config is only a fallback (fresh, or read-only): its fence ids are not the real ones, so
-    /// item lists it does not know are kept rather than dropped at save (ADR-041).
-    /// </summary>
-    private bool _pruneItemLists;
     private IReadOnlyList<MonitorPlacement> _monitors = [];
     private bool _lightTheme = SystemTheme.AppsUseLightTheme();
     private bool _sessionEnding;
@@ -117,8 +112,6 @@ public sealed partial class FenceHost
         Log.Information("items loaded from {Source} (read-only: {IsReadOnly}, corrupt copy: {CorruptCopyPath}): {Count} item(s)",
             loadedItems.Source, loadedItems.IsReadOnly, loadedItems.CorruptCopyPath, loadedItems.Document.Fences.Values.Sum(items => items.Count));
         _items = loadedItems.Document;
-        _pruneItemLists = loaded.KnowsTheFences;
-        if (!_pruneItemLists && _items.Fences.Count > 0) Log.Warning("config is a fallback this session: item lists of unknown fences are kept");
         if (loadedItems.Source == ConfigLoadSource.Primary && !loadedItems.IsReadOnly) CleanUnusedPictures(ItemEdits.ImagesInUse(_items));
         _watchdog.LaunchDetached(Environment.ProcessId);
         ApplyStartup(); // after a power loss NeoFences must come back by itself (ADR-019)
@@ -1362,7 +1355,10 @@ public sealed partial class FenceHost
         _saveTimer.Start();
     }
 
-    /// <summary>Both files, the config first (ADR-041): a fence deleted just before a power cut leaves only an unused item list.</summary>
+    /// <summary>
+    /// Both files, the config first (ADR-041). Item lists are never dropped here: a fence's delete removes its own list, and
+    /// a config that is only a fallback (fresh, an old backup) must not cost the user their items (final review I1).
+    /// </summary>
     private void SaveNow()
     {
         _saveTimer.Stop();
@@ -1377,9 +1373,6 @@ public sealed partial class FenceHost
         }
         try
         {
-            var toSave = _pruneItemLists ? ItemEdits.Prune(_items, _config.Fences.Select(fence => fence.Id).ToHashSet(StringComparer.Ordinal)) : _items;
-            if (!ReferenceEquals(toSave, _items)) Log.Information("dropped item lists of {Count} fence(s) that no longer exist", _items.Fences.Count - toSave.Fences.Count);
-            _items = toSave;
             if (!_itemStore.Save(_items)) Log.Warning("items not saved: items.json is read-only this session");
             else if (_itemStore.LastBackupFailure is { } backupFailure) Log.Warning(backupFailure, "items saved, but the daily backups could not be written or pruned");
         }

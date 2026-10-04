@@ -40,7 +40,7 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
  _items (ItemsDocument) ─► FenceHost.RefreshWindow ─► ShownItem[] ─► FenceWindow.SetItems ─► IconLoader (own name/icon win)
  FolderWatcher (≤ 64 parent folders, WatchPlan) ─► rename ─► ItemEdits.Retarget (all fences)
                                                 └► change ─► TargetProbe.Check (off the UI thread) ─► TargetState ─► fence refresh (≤ 1 / 2 s)
- SaveNow ─► ConfigStore.Save(config) then ItemStore.Save(Prune(items))     (config first: ADR-041)
+ SaveNow ─► ConfigStore.Save(config) then ItemStore.Save(items)     (config first; lists never pruned: ADR-041)
 ```
 
 ## Layers
@@ -112,7 +112,7 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
   - shape: `{ schemaVersion, settings: { hideDesktopIcons, peekHotkey, … }, fences: [ { id, title, isLibrary, iconSize, rolledUp, locked, labels, tabs, activeTab, tabColor, customColor } ], layouts: { <fingerprint>: { monitors, fences: { <fenceId>: { monitor, x, y, w, h } } } }, library, lastLayoutFingerprint }`
 - `items.json` (+ `.bak`) — schema 1 (ADR-041)
   - shape: `{ schema, fences: { <fenceId>: [ { id, target, name, icon: { file, index } | { image }, arguments, runAsAdmin, note } ] } }`
-  - lists of fences the config does not have are dropped at the next save — except in a session whose config is only a fallback (fresh or read-only)
+  - a list is removed only with its fence (Delete fence); lists of fences the config does not have stay (a fallback config never costs items; ADR-041 amended)
 - `icons\<itemId>-<guid>.png` — pictures chosen as item icons (≤ 256 px); unused ones deleted at start
 - `backups\config-<yyyyMMdd>.json`, `backups\items-<yyyyMMdd>.json` (keep 10 each), `backups\pre-schema-5-config.json`
 - `snapshots\*.json` — fences, layouts and items; `before-restore.json`

@@ -1156,3 +1156,8 @@ fence saves the config before the items. Custom icon images are copied into `ico
 
 **Consequences.** A damaged items file never takes settings or layout with it (and the other way round). Two files can
 disagree after a power cut — handled by the rules above, covered by Core tests.
+
+**Amendment (2026-10-04, M18 final review I1).** Saves never drop item lists. "Delete fence" removes its own list; a list
+whose fence the config does not have (a power cut between the two saves, a config that came back from a backup or
+fresh) stays in items.json, a few bytes, and comes back to life if the fence does (a restored backup or snapshot).
+Pruning at save lost every list after one session on a fresh or old config.

@@ -89,20 +89,6 @@ public class ItemStoreTests : IDisposable
     }
 
     [Fact]
-    public void OnlyARealConfig_MayDropItemListsOfUnknownFences()
-    {
-        // A fresh or read-only config is a fallback: its fence ids are not the user's, so items.json's lists must stay (ADR-041).
-        var config = new ConfigStore(_directory.Path, _clock);
-        Assert.False(config.Load().KnowsTheFences); // nothing on disk yet: fresh
-        config.Save(NeoFences.Core.Model.NeoFencesConfig.CreateDefault());
-        Assert.True(new ConfigStore(_directory.Path, _clock).Load().KnowsTheFences);
-        File.WriteAllText(config.ConfigPath, """{ "schemaVersion": 99 }""");
-        Assert.False(new ConfigStore(_directory.Path, _clock).Load().KnowsTheFences); // a newer NeoFences': read-only
-        File.WriteAllText(config.ConfigPath, """{ "schemaVersion": 4, "fences": [] }""");
-        Assert.False(new ConfigStore(_directory.Path, _clock).Load().KnowsTheFences); // from before the virtual items: fresh
-    }
-
-    [Fact]
     public void ADamagedItemsFile_NeverTouchesConfigJson()
     {
         var config = new ConfigStore(_directory.Path, _clock);

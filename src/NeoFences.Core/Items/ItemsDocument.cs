@@ -137,8 +137,8 @@ public static class ItemEdits
             : document with { Fences = document.Fences.Where(entry => entry.Key != fenceId).ToDictionary(entry => entry.Key, entry => entry.Value) };
 
     /// <summary>
-    /// Before each save (ADR-041): lists of fences the config no longer has go. After a power cut between the two saves
-    /// they were kept until now; a fence without a list is simply empty.
+    /// Only the lists of these fences (a snapshot restore keeps the items of the fences it brings back). Saves never prune
+    /// (ADR-041 amendment): a list whose fence the config lacks stays; a fence without a list is simply empty.
     /// </summary>
     public static ItemsDocument Prune(ItemsDocument document, IReadOnlyCollection<string> fenceIds) =>
         document.Fences.Keys.All(fenceIds.Contains) ? document
