@@ -97,10 +97,28 @@ public static class ShellDragDrop
                 if (PInvoke.SHParseDisplayName(file, null, out var idList, 0, out _).Succeeded) idLists.Add((nint)idList);
             }
             var interfaceId = typeof(ComDataObject).GUID;
+            if (idLists.Count == 0)
+            {
+                // Nothing on disk (websites only): an empty shell data object; the caller adds the links.
+                PInvoke.SHCreateDataObject(null, 0, null, null, &interfaceId, out var empty).ThrowOnFailure();
+                return (ComDataObject)empty;
+            }
+            // Items from any folders: their shell item array makes the data object Explorer accepts (CF_HDROP, ID lists).
+            // SHCreateDataObject with no parent folder gave a data object Explorer ignored (M18 live check AD8).
+            IShellItemArray array;
             fixed (nint* ids = idLists.ToArray())
             {
-                PInvoke.SHCreateDataObject(null, (uint)idLists.Count, (ITEMIDLIST**)ids, null, &interfaceId, out var created).ThrowOnFailure();
+                PInvoke.SHCreateShellItemArrayFromIDLists((uint)idLists.Count, (ITEMIDLIST**)ids, out array).ThrowOnFailure();
+            }
+            try
+            {
+                var handler = PInvoke.BHID_DataObject;
+                array.BindToHandler(null, &handler, &interfaceId, out var created);
                 return (ComDataObject)created;
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(array);
             }
         }
         finally

@@ -197,3 +197,5 @@ IShellItemArray
 FindWindowEx
 ScreenToClient
 _SVGIO
+SHCreateShellItemArrayFromIDLists
+BHID_DataObject
