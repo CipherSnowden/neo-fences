@@ -509,6 +509,10 @@ its data backed up and restored → merged to main, version 0.10.0.
 **Decisions:** ADR-042 (apps as `shell:AppsFolder` items; bulk fix with an undo snapshot in the restore slot; Add from
 desktop points at the desktop entries), ADR-043 (the name stays). Rulings: plan patches applied from the plan's own
 blocks; three review minors re-graded Important (app answers at sign-in, quoted launch, a crash guard).
-**Next:** release 0.10.0 (push → CI → tag → draft → install check as an update from 0.9.0 → publish, each step asked);
-hub refresh; then M20 (the deferred M19 minors, dynamic collections).
+**Release:** v0.10.0, each step with the user's go: main pushed (CI green), tag v0.10.0 (the release workflow built a
+draft with a 0.4 MB delta from 0.9.0), install check as a **real update**: the installed 0.9.0, pointed once at the
+draft's files (`NEOFENCES_UPDATE_SOURCE`), downloaded 0.10.0 quietly, offered "Restart to update to v0.10.0" and came
+back as 0.10.0 in 2 s with its data, schema 5 and startup entry unchanged (the restarted copy inherited the rehearsal
+switch: restarted plainly so it checks GitHub again); a plain first line added to the notes; published.
+**Next:** M20 (the deferred M19 minors, dynamic collections); 1.0.0 for friends when wanted (code signing then).
 **Open:** the deferred minors in `research/m19-apps-relocate-desktop-fill.md`; AE25 (a mapped network drive) not run.
