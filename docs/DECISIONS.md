@@ -111,7 +111,7 @@ mechanism; parallel sessions use separate worktrees/branches. Commits: single-li
 Conventional Commits, no co-author trailer.
 
 ## ADR-009 — Project name
-**Date:** 2026-10-02 · **Status:** Accepted (provisional)
+**Date:** 2026-10-02 · **Status:** Superseded by ADR-043 (the name stays NeoFences)
 
 "NeoFences" for private use. "Fences" is a Stardock trademark → rename before any public
 release (candidates: Palisade, Bastion, Enclave). Namespace/assembly names use `NeoFences`;
@@ -1161,3 +1161,32 @@ disagree after a power cut — handled by the rules above, covered by Core tests
 whose fence the config does not have (a power cut between the two saves, a config that came back from a backup or
 fresh) stays in items.json, a few bytes, and comes back to life if the fence does (a restored backup or snapshot).
 Pruning at save lost every list after one session on a fresh or old config.
+
+## ADR-042 — 0.10.0: Store apps as items, bulk fix with an undo snapshot, Add from desktop
+**Date:** 2026-10-05 · **Status:** Accepted · **Spec:** `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`
+
+**Context.** After M18 the user wants apps that are not files (Store apps, Start menu entries) as items, a way to fix
+many broken links at once, and a quick way to turn the desktop into fences.
+
+**Decision.** An app item's target is `shell:AppsFolder\<AppUserModelID>`: opened through Explorer, name and icon from
+the shell, **Missing** when it no longer parses (uninstalled); added from an "An app…" list (AppsFolder enumeration) or
+by dragging from Start when Start hands over app entries. A Locate… on a missing or unavailable item offers to move the
+other missing or unavailable items under the same old folder (matched from the end of the path) when their files exist
+at the new place; the fix saves a snapshot in the "before restore" slot first, so the tray's "Undo the last restore or
+fix" reverts it. "Add from desktop…" lists the desktop grouped (Games / Apps / Folders and files / Web links) and adds
+items that point at the **desktop entries themselves** (like a drag from the desktop), never at a shortcut's resolved
+target.
+
+**Consequences.** App items carry no arguments or run-as-admin. One undo slot shared by restores and fixes. Deleting a
+desktop shortcut later makes its item Missing; a clean desktop comes from "Hide desktop icons".
+
+## ADR-043 — The name stays NeoFences
+**Date:** 2026-10-05 · **Status:** Accepted · **Supersedes:** ADR-009
+
+**Context.** ADR-009 planned a rename before any public release because "Fences" is a Stardock trademark. The repository
+and releases are public (ADR-039); the user decided on 2026-10-05 to keep the name.
+
+**Decision.** The product, executable, install folder, data folder and code keep the name **NeoFences**. It is a personal
+project for now; the name is revisited only if it is ever distributed more widely (1.0.0 for friends or beyond).
+
+**Consequences.** No rename work; the trademark question stays a listed risk on the hub.
