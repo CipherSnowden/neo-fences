@@ -199,3 +199,11 @@ ScreenToClient
 _SVGIO
 SHCreateShellItemArrayFromIDLists
 BHID_DataObject
+SHGetFileInfo
+SHFILEINFOW
+SHGFI_FLAGS
+SHGetKnownFolderItem
+FOLDERID_AppsFolder
+KNOWN_FOLDER_FLAG
+BHID_EnumItems
+IEnumShellItems

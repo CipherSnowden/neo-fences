@@ -158,7 +158,8 @@ public static class ShellDragDrop
 
     /// <summary>
     /// The dragged shell items (Explorer, the desktop): a file or folder gives its path, a special item (Recycle Bin, This
-    /// PC) its <c>::{GUID}</c>. Items with neither (zip contents, a phone) are left out — nothing is extracted.
+    /// PC) its <c>::{GUID}</c>, an app from Start its <c>shell:AppsFolder\&lt;id&gt;</c> (M19). Items with none of these
+    /// (zip contents, a phone) are left out — nothing is extracted.
     /// </summary>
     private static unsafe List<string> ShellItemTargets(IDataObject dataObject)
     {
@@ -176,7 +177,7 @@ public static class ShellDragDrop
                 array.GetItemAt(index, out var item);
                 try
                 {
-                    if ((ShellItems.FileSystemPath(item) ?? ShellItems.SpecialItemRef(item)) is { } target) targets.Add(target);
+                    if ((ShellItems.FileSystemPath(item) ?? ShellItems.SpecialItemRef(item) ?? AppList.AppTargetOf(item)) is { } target) targets.Add(target);
                 }
                 finally
                 {
@@ -385,12 +386,22 @@ public static class ShellDragDrop
             }
         }
 
-        /// <summary>The drag image is cosmetic: a failing helper must not break the drop or leave state behind.</summary>
+        /// <summary>
+        /// The drag image is cosmetic: a failing helper must not break the drop or leave state behind. After one failure it is
+        /// not asked again for this drag. A source without a drag image (Start's All apps, M19) is refused with
+        /// DV_E_CLIPFORMAT: expected, not logged as a failed drop.
+        /// </summary>
         private void WithImageHelper(Action<IDropTargetHelper> call)
         {
             if (_imageHelper is null) return;
             try { call(_imageHelper); }
-            catch (Exception failure) when (failure is not OutOfMemoryException) { handlers.LogFailure(failure); }
+            catch (Exception failure) when (failure is not OutOfMemoryException)
+            {
+                const int NoDragImage = unchecked((int)0x8004006A); // DV_E_CLIPFORMAT
+                if (failure.HResult != NoDragImage) handlers.LogFailure(failure);
+                Marshal.ReleaseComObject(_imageHelper);
+                _imageHelper = null;
+            }
         }
 
         private void Reset()

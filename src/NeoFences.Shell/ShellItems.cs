@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
+using Windows.Win32.Storage.FileSystem;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 
@@ -190,6 +191,40 @@ public static class ShellItems
             if (!info.hbmMask.IsNull) PInvoke.DeleteObject(info.hbmMask);
             large?.Dispose();
             small?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Windows' icon for this kind of item, by its name only (M19 R8): a folder icon, or the icon of its file type ("a .txt
+    /// file"). Never touches the disk, so a missing or unreachable target still gets one. Null when Windows has none.
+    /// </summary>
+    public static unsafe ShellImage? TryGetGenericImage(string target, bool isFolder)
+    {
+        var info = new SHFILEINFOW();
+        ICONINFO iconInfo = default;
+        try
+        {
+            // ponytail: the 32 px "large" icon, scaled by WPF for bigger sizes; the system image list's jumbo icons if it looks soft.
+            var attributes = isFolder ? FILE_FLAGS_AND_ATTRIBUTES.FILE_ATTRIBUTE_DIRECTORY : FILE_FLAGS_AND_ATTRIBUTES.FILE_ATTRIBUTE_NORMAL;
+            var flags = SHGFI_FLAGS.SHGFI_ICON | SHGFI_FLAGS.SHGFI_LARGEICON | SHGFI_FLAGS.SHGFI_USEFILEATTRIBUTES;
+            nuint found;
+            fixed (char* name = target)
+            {
+                found = PInvoke.SHGetFileInfo(name, attributes, &info, (uint)sizeof(SHFILEINFOW), flags);
+            }
+            if (found == 0 || info.hIcon.IsNull) return null;
+            if (!PInvoke.GetIconInfo(info.hIcon, &iconInfo)) return null;
+            return ReadPixels(iconInfo.hbmColor, premultiply: true);
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            return null;
+        }
+        finally
+        {
+            if (!iconInfo.hbmColor.IsNull) PInvoke.DeleteObject(iconInfo.hbmColor);
+            if (!iconInfo.hbmMask.IsNull) PInvoke.DeleteObject(iconInfo.hbmMask);
+            if (!info.hIcon.IsNull) PInvoke.DestroyIcon(info.hIcon);
         }
     }
 

@@ -25,6 +25,12 @@ public static class TargetProbe
         var rootAnswers = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         foreach (var target in targets)
         {
+            // An app (M19): Missing once Windows no longer knows it; no disk, no timeout needed.
+            if (ItemKinds.IsApp(target))
+            {
+                results.Add((target, TargetChecks.Classify(target, File.Exists, Directory.Exists, appExists: AppList.Exists)));
+                continue;
+            }
             // Websites, special items, launcher links (steam://…): nothing on a disk to ask.
             if (ItemKinds.Of(target) != ItemKind.Path || TargetChecks.RootOf(target) is not { } root)
             {

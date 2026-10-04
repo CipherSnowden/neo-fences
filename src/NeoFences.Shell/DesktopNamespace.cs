@@ -18,18 +18,25 @@ internal static class DesktopNamespace
     public static unsafe object GetUIObject(HWND owner, IReadOnlyList<string> itemRefs, Guid interfaceId)
     {
         var parent = ParentFolder(itemRefs);
-        var childIds = ChildIds(owner, parent, itemRefs);
         try
         {
-            fixed (nint* ids = childIds.ToArray())
+            var childIds = ChildIds(owner, parent, itemRefs);
+            try
             {
-                parent.GetUIObjectOf(owner, (uint)childIds.Count, (ITEMIDLIST**)ids, &interfaceId, null, out var uiObject);
-                return uiObject;
+                fixed (nint* ids = childIds.ToArray())
+                {
+                    parent.GetUIObjectOf(owner, (uint)childIds.Count, (ITEMIDLIST**)ids, &interfaceId, null, out var uiObject);
+                    return uiObject;
+                }
+            }
+            finally
+            {
+                foreach (var childId in childIds) Marshal.FreeCoTaskMem(childId);
             }
         }
         finally
         {
-            foreach (var childId in childIds) Marshal.FreeCoTaskMem(childId);
+            Marshal.ReleaseComObject(parent); // M19 R3: the desktop or parent folder object, released now
         }
     }
 
@@ -70,10 +77,17 @@ internal static class DesktopNamespace
     private static unsafe IShellFolder FolderObject(string folderPath)
     {
         PInvoke.SHCreateItemFromParsingName(folderPath, null, out IShellItem folderItem).ThrowOnFailure();
-        var handler = PInvoke.BHID_SFObject;
-        var folderId = typeof(IShellFolder).GUID;
-        folderItem.BindToHandler(null, &handler, &folderId, out var folder);
-        return (IShellFolder)folder;
+        try
+        {
+            var handler = PInvoke.BHID_SFObject;
+            var folderId = typeof(IShellFolder).GUID;
+            folderItem.BindToHandler(null, &handler, &folderId, out var folder);
+            return (IShellFolder)folder;
+        }
+        finally
+        {
+            Marshal.ReleaseComObject(folderItem); // M19 R3
+        }
     }
 
     private static unsafe List<nint> ChildIds(HWND owner, IShellFolder parent, IReadOnlyList<string> itemRefs)

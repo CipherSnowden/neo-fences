@@ -58,7 +58,8 @@ public static class PathPicker
             }
             dialog.Show((HWND)ownerHandle); // throws ERROR_CANCELLED when the user cancels
             dialog.GetResult(out var item);
-            return ShellItems.FileSystemPath(item);
+            try { return ShellItems.FileSystemPath(item); }
+            finally { Marshal.ReleaseComObject(item); } // M19 R3: released now, not by the finalizer
         }
         catch (Exception failure) when (failure is not OutOfMemoryException)
         {
