@@ -1,6 +1,9 @@
 namespace NeoFences.Core.Items;
 
-/// <summary>Where an item's target is now (spec §4). Websites and special items are always <see cref="Ok"/>.</summary>
+/// <summary>
+/// Where an item's target is now (spec §4). Websites and special items are always <see cref="Ok"/>; an app (M19) is
+/// <see cref="Missing"/> once Windows no longer knows it.
+/// </summary>
 public enum TargetState { Ok, Missing, Unavailable }
 
 /// <param name="IsFolder">The target is a folder (Arguments and "Run as administrator" do not apply).</param>
@@ -18,8 +21,11 @@ public static class TargetChecks
     /// </summary>
     /// <param name="fileExists">True when a file is at the path.</param>
     /// <param name="folderExists">True when a folder is at the path (also asked for the root).</param>
-    public static TargetCheck Classify(string target, Func<string, bool> fileExists, Func<string, bool> folderExists)
+    /// <param name="appExists">True when Windows still knows this app (M19); null: apps count as Ok.</param>
+    public static TargetCheck Classify(string target, Func<string, bool> fileExists, Func<string, bool> folderExists,
+        Func<string, bool>? appExists = null)
     {
+        if (ItemKinds.IsApp(target)) return appExists is null || appExists(target) ? TargetCheck.Ok : new TargetCheck(TargetState.Missing);
         if (ItemKinds.Of(target) != ItemKind.Path) return TargetCheck.Ok;
         // A launcher link (steam://rungameid/570) or a relative path: nothing on a disk to check, Windows opens it.
         if (RootOf(target) is not { } root) return TargetCheck.Ok;
@@ -39,6 +45,17 @@ public static class TargetChecks
 
     /// <summary>A share path (\\server\share\…): its checks may hang for many seconds, so they get a timeout.</summary>
     public static bool IsNetworkPath(string path) => path.StartsWith(@"\\", StringComparison.Ordinal);
+}
+
+/// <summary>Per-target and per-fence records that outlived their target or fence (M19 R5).</summary>
+public static class StaleEntries
+{
+    /// <summary>The keys of <paramref name="known"/> that are not in <paramref name="live"/>.</summary>
+    public static IReadOnlyList<string> Gone(IEnumerable<string> known, IEnumerable<string> live, IEqualityComparer<string> comparer)
+    {
+        var liveKeys = live.ToHashSet(comparer);
+        return [.. known.Where(key => !liveKeys.Contains(key))];
+    }
 }
 
 /// <summary>Which folders NeoFences watches for its targets (spec §4): a fixed budget, the busiest folders first.</summary>

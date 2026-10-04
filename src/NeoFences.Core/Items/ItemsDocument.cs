@@ -159,6 +159,25 @@ public static class ItemEdits
         document.Fences.Values.SelectMany(items => items).Where(item => item.Kind == ItemKind.Path)
             .Select(item => item.Target).Distinct(ItemKinds.Comparer).ToList();
 
+    /// <summary>Every target NeoFences checks, once, in fence order: files and folders, and apps (M19; never watched).</summary>
+    public static IReadOnlyList<string> CheckedTargets(ItemsDocument document) =>
+        document.Fences.Values.SelectMany(items => items).Where(item => item.Kind == ItemKind.Path || ItemKinds.IsApp(item.Target))
+            .Select(item => item.Target).Distinct(ItemKinds.Comparer).ToList();
+
+    /// <summary>
+    /// The bulk fix after Locate… (M19 §2): these items (by id) take these targets; names, icons, arguments, notes and the
+    /// order stay. Unknown ids are ignored; nothing to change: the same document.
+    /// </summary>
+    public static ItemsDocument Relocate(ItemsDocument document, IReadOnlyDictionary<string, string> newTargets)
+    {
+        if (!document.Fences.Values.Any(items => items.Any(item => newTargets.ContainsKey(item.Id)))) return document;
+        return document with
+        {
+            Fences = document.Fences.ToDictionary(entry => entry.Key, entry => (IReadOnlyList<VirtualItem>)entry.Value
+                .Select(item => newTargets.TryGetValue(item.Id, out var target) ? item with { Target = target } : item).ToList()),
+        };
+    }
+
     /// <summary>Picture files in <c>icons\</c> some item still uses (the others are deleted at start).</summary>
     public static IReadOnlySet<string> ImagesInUse(ItemsDocument document) =>
         document.Fences.Values.SelectMany(items => items).Select(item => item.Icon?.Image).OfType<string>().ToHashSet(StringComparer.OrdinalIgnoreCase);

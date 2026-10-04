@@ -66,6 +66,18 @@ public static class ItemKinds
         : IsWebsite(target) ? ItemKind.Website
         : ItemKind.Path;
 
+    private const string AppsFolderPrefix = @"shell:AppsFolder\";
+
+    /// <summary>An entry of Start's All apps (M19, ADR-042): <c>shell:AppsFolder\&lt;AppUserModelID&gt;</c>, a Store app or a program.</summary>
+    public static bool IsApp(string target) => AppIdOf(target) is not null;
+
+    /// <summary>The app's id (AppUserModelID), or null when the target is not an app.</summary>
+    public static string? AppIdOf(string target) =>
+        target.Length > AppsFolderPrefix.Length && target.StartsWith(AppsFolderPrefix, StringComparison.OrdinalIgnoreCase)
+            ? target[AppsFolderPrefix.Length..] : null;
+
+    public static string AppTarget(string appId) => AppsFolderPrefix + appId;
+
     public static bool IsWebsite(string text) =>
         Uri.TryCreate(text, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 
