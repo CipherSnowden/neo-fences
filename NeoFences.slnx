@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NeoFences.App/NeoFences.App.csproj" />
+    <Project Path="src/NeoFences.Core/NeoFences.Core.csproj" />
+    <Project Path="src/NeoFences.Shell/NeoFences.Shell.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NeoFences.Core.Tests/NeoFences.Core.Tests.csproj" />
+  </Folder>
+</Solution>

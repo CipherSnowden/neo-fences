@@ -1,0 +1,21 @@
+<Window x:Class="NeoFences.Spikes.M0.SpikeFenceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Spike fence" Width="340" Height="230" Left="120" Top="120"
+        WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="False"
+        Background="Transparent" ShowInTaskbar="False" ShowActivated="False">
+    <WindowChrome.WindowChrome>
+        <WindowChrome GlassFrameThickness="-1" CaptionHeight="30" ResizeBorderThickness="6"
+                      CornerRadius="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <TextBlock Text="Games (spike fence)" Foreground="White" FontWeight="SemiBold" Margin="12,0" VerticalAlignment="Center" />
+        <Border Grid.Row="1" BorderBrush="#40FFFFFF" BorderThickness="0,1,0,0">
+            <TextBlock x:Name="StatusText" Foreground="#DDFFFFFF" Margin="12" TextWrapping="Wrap" />
+        </Border>
+    </Grid>
+</Window>

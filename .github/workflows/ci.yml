@@ -1,0 +1,18 @@
+# Every push to main and every pull request: build and run all tests on Windows (M17, ADR-039).
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet build NeoFences.slnx -c Release
+      - run: dotnet test NeoFences.slnx -c Release --no-build

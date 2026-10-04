@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+artifacts/
+
+.superpowers/
+CLAUDE.local.md

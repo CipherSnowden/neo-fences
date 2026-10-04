@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="M0.DesktopLayer.Tests/M0.DesktopLayer.Tests.csproj" />
+  <Project Path="M0.DesktopLayer/M0.DesktopLayer.csproj" />
+</Solution>

@@ -1,0 +1,1681 @@
+<title>NeoFences HQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one long field-manual page; sticky section nav; summary (status, next steps) before detail. */
+:root {
+  --bg: #eef1f4; --surface: #ffffff; --surface-2: #e4e9ee; --line: #cad3dc;
+  --fg: #121a22; --muted: #566472; --accent: #0a7f99; --accent-ink: #ffffff; --amber: #a86b00;
+  --ok: #2c8a4b; --warn: #b26f12; --crit: #c23434; --idle: #7a8794;
+  --ok-bg: #e2f2e7; --warn-bg: #f8ecd8; --crit-bg: #f8e1e1; --idle-bg: #e7ebef; --accent-bg: #dcf0f5;
+  --wall-a: #1d3b4a; --wall-b: #3f6b4f; --wall-c: #c27b3a;
+  --font-display: "Rajdhani", "Bahnschrift", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  --step--1: 0.8125rem; --step-0: 0.9375rem; --step-1: 1.125rem; --step-2: 1.5rem; --step-3: 2.25rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1015; --surface: #111a22; --surface-2: #17222d; --line: #26333f;
+  --fg: #dbe5ec; --muted: #8b9baa; --accent: #45c8e2; --accent-ink: #06222a; --amber: #e4a94c;
+  --ok: #52c47f; --warn: #e3a94d; --crit: #ef6e6e; --idle: #6b7a88;
+  --ok-bg: #12301f; --warn-bg: #33270f; --crit-bg: #3a1717; --idle-bg: #1b252f; --accent-bg: #0e2d36;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0b1015; --surface: #111a22; --surface-2: #17222d; --line: #26333f;
+  --fg: #dbe5ec; --muted: #8b9baa; --accent: #45c8e2; --accent-ink: #06222a; --amber: #e4a94c;
+  --ok: #52c47f; --warn: #e3a94d; --crit: #ef6e6e; --idle: #6b7a88;
+  --ok-bg: #12301f; --warn-bg: #33270f; --crit-bg: #3a1717; --idle-bg: #1b252f; --accent-bg: #0e2d36;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: var(--step-0); line-height: 1.6; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 0 80px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h2 { font-size: var(--step-3); font-weight: 700; letter-spacing: 0.01em; }
+h3 { font-size: var(--step-1); font-weight: 600; letter-spacing: 0.02em; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 4px; }
+.label { font-family: var(--font-display); font-weight: 600; font-size: var(--step--1); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+.scroll { overflow-x: auto; }
+
+/* masthead */
+.mast { padding-block: 40px 24px; display: grid; gap: 18px; }
+.mast h1 { font-size: clamp(2.6rem, 7vw, 4.4rem); font-weight: 700; letter-spacing: 0.02em; }
+.mast h1 span { color: var(--accent); }
+.mast .lede { font-size: var(--step-1); color: var(--muted); max-width: 62ch; }
+.hud { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.hud > div { background: var(--surface); padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
+.hud .v { font-family: var(--font-display); font-size: var(--step-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.hud .v.small { font-size: var(--step-1); }
+
+/* nav */
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); overflow-x: auto; }
+nav.toc ul { list-style: none; display: flex; gap: 4px; margin: 0 auto; padding: 8px 20px; max-width: 1120px; white-space: nowrap; }
+nav.toc a { display: block; padding: 4px 10px; border-radius: 6px; text-decoration: none; color: var(--muted); font-family: var(--font-display); font-weight: 600; letter-spacing: 0.06em; font-size: var(--step--1); text-transform: uppercase; }
+nav.toc a:hover { color: var(--fg); background: var(--surface-2); }
+
+section { padding-block: 48px 8px; display: grid; gap: 20px; scroll-margin-top: 56px; }
+.sec-head { display: grid; gap: 6px; }
+
+/* chips */
+.chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.s-done { color: var(--ok); background: var(--ok-bg); }
+.s-wip, .s-next { color: var(--accent); background: var(--accent-bg); }
+.s-todo { color: var(--idle); background: var(--idle-bg); }
+.s-blocked, .s-risk { color: var(--crit); background: var(--crit-bg); }
+.s-warn, .s-you { color: var(--warn); background: var(--warn-bg); }
+
+/* callout */
+.callout { border: 1px solid var(--warn); background: var(--warn-bg); border-radius: 10px; padding: 14px 18px; display: grid; gap: 6px; }
+.callout .label { color: var(--warn); }
+
+/* task list */
+.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.tasks li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+.tick { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--idle); margin-top: 3px; display: grid; place-items: center; font-size: 12px; line-height: 1; }
+.tick.done { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.tick.wip { border-color: var(--accent); background: var(--accent-bg); }
+.tasks .done-text { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line); }
+
+/* milestone track */
+.track { display: grid; grid-template-columns: repeat(9, minmax(116px, 1fr)); gap: 0; min-width: 1040px; }
+.ms { position: relative; padding: 34px 10px 0; display: grid; gap: 6px; align-content: start; }
+.ms::before { content: ""; position: absolute; top: 13px; left: 0; right: 0; height: 2px; background: var(--line); }
+.ms:first-child::before { left: 50%; } .ms:last-child::before { right: 50%; }
+.ms .dot { position: absolute; top: 6px; left: calc(50% - 8px); width: 16px; height: 16px; border-radius: 50%; background: var(--surface); border: 2px solid var(--idle); }
+.ms.done .dot { background: var(--ok); border-color: var(--ok); }
+.ms.next .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 5px var(--accent-bg); }
+.ms .id { font-family: var(--font-display); font-weight: 700; font-size: var(--step-1); text-align: center; }
+.ms .nm { font-weight: 600; text-align: center; font-size: var(--step--1); }
+.ms .gl { color: var(--muted); font-size: 0.78rem; text-align: center; line-height: 1.45; }
+.ms.next .id { color: var(--accent); }
+
+/* tables */
+table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+th { text-align: left; font-family: var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.78rem; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1.5px solid var(--line); white-space: nowrap; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+
+/* filters */
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font: inherit; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; font-size: var(--step--1); padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+/* figures */
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+figcaption { color: var(--muted); font-size: var(--step--1); max-width: 72ch; }
+svg.dia { width: 100%; height: auto; display: block; color: var(--fg); }
+svg.dia text { font-family: var(--font-body); font-size: 12px; fill: currentColor; }
+svg.dia .t-b { font-weight: 600; }
+svg.dia .t-m { fill: var(--muted); }
+svg.dia .t-h { font-family: var(--font-display); font-weight: 700; font-size: 14px; letter-spacing: 0.08em; }
+svg.dia .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+svg.dia .box2 { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.2; }
+svg.dia .hl { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.6; }
+svg.dia .hl-t { fill: var(--accent); font-weight: 600; }
+svg.dia .ln { stroke: currentColor; stroke-width: 1.3; fill: none; }
+svg.dia .ln-a { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+svg.dia .ln-d { stroke: var(--muted); stroke-width: 1.2; fill: none; stroke-dasharray: 4 4; }
+pre.mermaid { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 0; overflow-x: auto; font-family: var(--font-mono); font-size: 12px; }
+pre.code { background: var(--surface-2); border-radius: 8px; padding: 14px; margin: 0; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; }
+
+/* fence mock */
+.desk { position: relative; border-radius: 12px; overflow: hidden; min-height: 360px; padding: 22px; display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start;
+  background: radial-gradient(120% 90% at 85% 15%, var(--wall-c) 0%, transparent 45%), radial-gradient(90% 80% at 10% 100%, var(--wall-b) 0%, transparent 60%), linear-gradient(160deg, var(--wall-a), #0a1a22 70%); }
+.desk::after { content: "live wallpaper (Wallpaper Engine) — blurred through fences"; position: absolute; right: 12px; bottom: 10px; font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.65); }
+.fence { width: 300px; max-width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.22); background: rgba(22,30,38,0.42); backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3); color: #eef4f8; box-shadow: 0 8px 28px rgba(0,0,0,0.28); }
+.fence .ft { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.14); font-weight: 600; font-size: 13px; }
+.fence .ft .btns { display: flex; gap: 10px; opacity: 0.85; font-family: var(--font-mono); }
+.fence .fb { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; padding: 12px 10px 14px; }
+.ico { display: grid; justify-items: center; gap: 4px; font-size: 11px; text-align: center; line-height: 1.25; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+.ico i { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-family: var(--font-display); font-weight: 700; font-size: 15px; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
+.ico.sel i { outline: 2px solid rgba(120,220,240,0.9); outline-offset: 2px; }
+.fence.rolled .fb { display: none; }
+.fence.rolled { width: 260px; }
+.ctx { width: 210px; border-radius: 8px; background: rgba(30,38,46,0.9); border: 1px solid rgba(255,255,255,0.18); color: #eef4f8; font-size: 12.5px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.ctx div { padding: 5px 10px; border-radius: 5px; display: flex; justify-content: space-between; }
+.ctx div:hover { background: rgba(255,255,255,0.1); }
+.ctx hr { border: 0; border-top: 1px solid rgba(255,255,255,0.14); margin: 4px 0; }
+.ctx .danger { color: #ffb4b4; }
+.ann { display: grid; gap: 8px; }
+.ann li { margin-left: -4px; }
+
+/* journeys */
+.journey { display: grid; gap: 10px; }
+.steps { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(190px, 1fr); gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 6px; align-content: start; position: relative; }
+.step .n { font-family: var(--font-display); font-weight: 700; color: var(--accent); font-size: var(--step-1); }
+.step .you { font-weight: 600; }
+.step .sys { color: var(--muted); font-size: var(--step--1); }
+.step.alert { border-color: var(--crit); }
+.step.alert .n { color: var(--crit); }
+
+/* ADRs */
+details.adr { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+details.adr summary { cursor: pointer; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; list-style: none; }
+details.adr summary::-webkit-details-marker { display: none; }
+details.adr summary .aid { font-family: var(--font-mono); color: var(--accent); font-size: var(--step--1); }
+details.adr summary .at { font-weight: 600; flex: 1 1 260px; }
+details.adr .body { padding: 0 16px 14px; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+
+/* stack */
+.dep { display: grid; gap: 4px; }
+.dep .nm { font-family: var(--font-mono); font-size: var(--step--1); font-weight: 500; color: var(--accent); }
+.dep .why { font-size: var(--step--1); color: var(--muted); }
+
+.rules { counter-reset: r; list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.rules li { counter-increment: r; display: grid; grid-template-columns: 34px 1fr; gap: 8px; }
+.rules li::before { content: counter(r); font-family: var(--font-display); font-weight: 700; font-size: var(--step-2); color: var(--accent); line-height: 1; }
+
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--step--1); display: grid; gap: 6px; }
+
+@media (max-width: 560px) {
+  .wrap { padding-inline: 16px; }
+  nav.toc ul { padding-inline: 16px; }
+  h2 { font-size: var(--step-2); }
+  .fence { width: 100%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ms.next .dot { animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 9px var(--accent-bg); } }
+}
+</style>
+
+<nav class="toc" aria-label="Sections">
+  <ul>
+    <li><a href="#status">Status</a></li>
+    <li><a href="#next">Next steps</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#stack">Stack</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#flows">Flows</a></li>
+    <li><a href="#journeys">Journeys</a></li>
+    <li><a href="#ui">UI</a></li>
+    <li><a href="#data">Data</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#decisions">Decisions</a></li>
+    <li><a href="#research">Research</a></li>
+    <li><a href="#risks">Risks</a></li>
+    <li><a href="#docs">Docs</a></li>
+    <li><a href="#log">Log</a></li>
+  </ul>
+</nav>
+
+<div class="wrap">
+
+<header class="mast" id="status">
+  <div class="label">Project hub · source of truth mirrors <code>docs/</code></div>
+  <h1>Neo<span>Fences</span></h1>
+  <p class="lede">A Fences-style desktop organizer for Windows 10/11 x64. Translucent fences that hold your desktop icons or mirror any folder, with live acrylic blur over Wallpaper Engine and zero overhead while you game.</p>
+  <div class="hud" id="hud"></div>
+</header>
+
+<!-- NEXT STEPS -->
+<section id="next">
+  <div class="sec-head"><div class="label">What happens now</div><h2>Next steps</h2></div>
+  <div id="waiting"></div>
+  <div class="grid g2" id="tasklists"></div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="sec-head"><div class="label">Milestones · versions</div><h2>Roadmap</h2>
+    <p class="muted">v1.0 shipped on 2026-10-03; v1.1–v1.5 added reliability, icon-only labels, fence tabs, snapshots, rules and the Game Library. What is left for v2 is listed below.</p></div>
+  <div class="scroll card"><div class="track" id="track"></div></div>
+  <div class="grid g3" id="versions"></div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="sec-head"><div class="label">Project description</div><h2>What NeoFences is</h2></div>
+  <div class="grid g2">
+    <div class="card stack">
+      <h3>The idea</h3>
+      <p>Your desktop becomes a set of fences: acrylic panels that group icons ("Games", "Work", "Screenshots"). Desktop icons are drawn by NeoFences itself (<b>Takeover</b>), and any fence can instead show a live folder (<b>Portal</b>). Files never move unless you drag them into a portal.</p>
+      <p>Built for one power user first: a developer and story-game player running Wallpaper Engine on a Windows 11 gaming rig.</p>
+    </div>
+    <div class="card stack">
+      <h3>Priorities, in order</h3>
+      <ol class="rules">
+        <li><div><b>Robust and reliable.</b> Never lose files, never leave the desktop blank.</div></li>
+        <li><div><b>Modern UI/UX.</b> Fluent, acrylic, light/dark, smooth but optional animation.</div></li>
+        <li><div><b>Decent performance.</b> ~0% CPU idle, fully idle during games.</div></li>
+        <li><div><b>Feature count.</b> Fences 5/6 parity, then extras.</div></li>
+      </ol>
+    </div>
+  </div>
+  <div class="card stack">
+    <h3>Hard rules (from <code>CLAUDE.md</code>)</h3>
+    <ol class="rules" id="hardrules"></ol>
+  </div>
+</section>
+
+<!-- STACK -->
+<section id="stack">
+  <div class="sec-head"><div class="label">ADR-001</div><h2>Tech stack</h2>
+    <p class="muted">C# on .NET 10 LTS with WPF. Chosen for mature shell interop, fast multi-session development and robustness; cross-platform buys little for an app that is mostly Windows shell code.</p></div>
+  <div class="grid g4" id="deps"></div>
+  <div class="card scroll">
+    <table>
+      <thead><tr><th>Option</th><th>Modern UI</th><th>Shell interop</th><th>Robustness</th><th>Memory</th><th>Cross-platform</th><th>Dev speed</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><b>C# / .NET 10 + WPF</b></td><td>Fluent built-in, layered + accent blur</td><td>Excellent (CsWin32)</td><td>Very mature</td><td>80–150 MB</td><td>No (Core portable)</td><td>Fast</td><td><span class="chip s-done">Chosen</span></td></tr>
+        <tr><td>C# + Avalonia</td><td>Fluent, Skia GPU</td><td>OLE drag-drop friction</td><td>Good, younger</td><td>similar</td><td>Yes</td><td>Medium</td><td><span class="chip s-todo">Port path</span></td></tr>
+        <tr><td>Rust + windows-rs + Direct2D</td><td>Hand-built widgets</td><td>Good, heavy COM boilerplate</td><td>Best in theory</td><td>20–40 MB</td><td>Partial</td><td>Slow (~3× UI)</td><td><span class="chip s-todo">Rejected</span></td></tr>
+        <tr><td>WinUI 3</td><td>Native Fluent</td><td>Good</td><td>Packaging/transparency pain</td><td>~100 MB+</td><td>No</td><td>Medium</td><td><span class="chip s-todo">Rejected</span></td></tr>
+        <tr><td>Electron / Tauri</td><td>Web</td><td>Weak shell drag-drop</td><td>WebView per fence</td><td>High</td><td>Yes</td><td>Fast</td><td><span class="chip s-todo">Rejected</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card stack">
+    <h3>Toolchain on the dev PC</h3>
+    <div class="scroll"><table>
+      <thead><tr><th>Tool</th><th>Version</th><th>Needed</th></tr></thead>
+      <tbody>
+        <tr><td>.NET SDK</td><td class="mono">10.0.401</td><td><span class="chip s-done">Yes</span></td></tr>
+        <tr><td>Git</td><td class="mono">2.55</td><td><span class="chip s-done">Yes</span></td></tr>
+        <tr><td>Visual Studio 2026 Community</td><td class="mono">18 (C++ + Win SDK 26100)</td><td><span class="chip s-todo">Optional</span> add “.NET desktop development” for the WPF designer</td></tr>
+        <tr><td>Rust, CMake, vcpkg, JDK 25, Node 24, llama.cpp</td><td class="mono">various</td><td><span class="chip s-todo">No</span> other projects; llama.cpp is a v2+ idea</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <div class="sec-head"><div class="label">docs/ARCHITECTURE.md</div><h2>Architecture</h2></div>
+
+  <figure class="card">
+    <div class="scroll">
+    <svg class="dia" viewBox="0 0 900 360" role="img" aria-label="Desktop z-order: NeoFences fence windows sit above the hidden desktop icon layer and Wallpaper Engine, below normal apps; raised on Win+D, topmost during Peek.">
+      <defs><marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker></defs>
+      <text x="20" y="22" class="t-h">TOP</text>
+      <rect x="20" y="34" width="520" height="52" rx="6" class="box2"/>
+      <text x="36" y="58" class="t-b">Normal app windows</text><text x="36" y="76" class="t-m">games, browser, Discord</text>
+      <rect x="20" y="96" width="520" height="62" rx="6" class="hl"/>
+      <text x="36" y="122" class="hl-t">NeoFences fence windows</text><text x="36" y="142" class="t-m">top-level · layered · accent blur · owner = Progman</text>
+      <rect x="20" y="168" width="520" height="52" rx="6" class="box"/>
+      <text x="36" y="192" class="t-b">Desktop icons (SHELLDLL_DefView)</text><text x="36" y="210" class="t-m">hidden in Takeover via FWF_NOICONS</text>
+      <rect x="20" y="230" width="520" height="52" rx="6" class="box"/>
+      <text x="36" y="254" class="t-b">Wallpaper Engine (renders into WorkerW)</text><text x="36" y="272" class="t-m">untouched; blurred through fences</text>
+      <rect x="20" y="292" width="520" height="40" rx="6" class="box2"/>
+      <text x="36" y="317" class="t-b">Static wallpaper (Progman)</text>
+      <text x="20" y="352" class="t-h">BOTTOM</text>
+      <path d="M560 127 C 640 127, 640 60, 560 60" class="ln-a" marker-end="url(#arA)"/>
+      <text x="650" y="80" class="hl-t">Peek hotkey: topmost</text>
+      <text x="650" y="98" class="t-m">Esc / hotkey / click outside returns</text>
+      <path d="M560 140 C 620 150, 620 185, 560 192" class="ln-d"/>
+      <text x="650" y="160" class="t-b">Win+D: stays just above desktop</text>
+      <text x="650" y="178" class="t-m">owned by Progman (M0 winner)</text>
+      <text x="650" y="230" class="t-b">Game mode</text>
+      <text x="650" y="248" class="t-m">mouse hook removed, no rendering,</text>
+      <text x="650" y="266" class="t-m">shell events queued</text>
+    </svg>
+    </div>
+    <figcaption>Where fences live. They are top-level windows owned by the desktop window (Progman), so they ride just above it through Win+D while every app still covers them. Each is a layered window with accent blur, which keeps blurring the live Wallpaper Engine scene even when the fence is not focused (M0, ADR-011).</figcaption>
+  </figure>
+
+  <figure class="card">
+    <div class="scroll">
+    <svg class="dia" viewBox="0 0 900 260" role="img" aria-label="Windows desktop window tree before and after 24H2. Before: two top-level WorkerW windows. After: SHELLDLL_DefView and the wallpaper WorkerW are both children of Progman. NeoFences depends on neither.">
+      <text x="20" y="24" class="t-h">BEFORE 24H2</text>
+      <rect x="20" y="40" width="160" height="34" rx="5" class="box"/><text x="100" y="62" text-anchor="middle" class="t-b">Progman</text>
+      <rect x="200" y="40" width="200" height="34" rx="5" class="box"/><text x="300" y="62" text-anchor="middle" class="t-b">WorkerW (icons host)</text>
+      <rect x="230" y="104" width="170" height="34" rx="5" class="box2"/><text x="315" y="126" text-anchor="middle">SHELLDLL_DefView</text>
+      <path d="M300 74 V 104" class="ln"/>
+      <rect x="20" y="170" width="380" height="34" rx="5" class="box"/><text x="210" y="192" text-anchor="middle" class="t-b">WorkerW (wallpaper apps draw here)</text>
+      <text x="20" y="236" class="t-m">three separate top-level windows</text>
+
+      <line x1="450" y1="30" x2="450" y2="240" class="ln-d"/>
+
+      <text x="490" y="24" class="t-h">24H2 AND LATER</text>
+      <rect x="490" y="40" width="160" height="34" rx="5" class="box"/><text x="570" y="62" text-anchor="middle" class="t-b">Progman</text>
+      <path d="M570 74 V 90 H 540 V 104 M570 90 H 760 V 104" class="ln"/>
+      <rect x="490" y="104" width="170" height="34" rx="5" class="box2"/><text x="575" y="126" text-anchor="middle">SHELLDLL_DefView</text>
+      <rect x="680" y="104" width="200" height="34" rx="5" class="box2"/><text x="780" y="126" text-anchor="middle">WorkerW (wallpaper)</text>
+      <text x="490" y="170" class="t-m">children of Progman; WorkerW may appear late</text>
+      <text x="490" y="188" class="t-m">and is missed by plain enumeration</text>
+      <rect x="490" y="204" width="390" height="32" rx="5" class="hl"/><text x="685" y="225" text-anchor="middle" class="hl-t">NeoFences windows are top-level: depends on neither</text>
+    </svg>
+    </div>
+    <figcaption>Why we chose top-level windows (ADR-003). Windows 11 24H2 moved the icon and wallpaper layers under Progman and broke tools that parented into WorkerW. Our fences never parent into that tree.</figcaption>
+  </figure>
+
+  <figure class="card">
+    <div class="scroll">
+    <svg class="dia" viewBox="0 0 900 400" role="img" aria-label="Three layers: App (WPF) uses Shell (Win32/COM) which uses Core (pure C#). Shell talks to Explorer, DWM and the shell namespace; Core reads and writes config.json.">
+      <defs><marker id="arB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+      <rect x="20" y="20" width="640" height="96" rx="8" class="box2"/>
+      <text x="36" y="44" class="t-h">NEOFENCES.APP · WPF</text>
+      <g>
+        <rect x="36" y="58" width="110" height="40" rx="5" class="box"/><text x="91" y="83" text-anchor="middle">TrayIcon</text>
+        <rect x="156" y="58" width="130" height="40" rx="5" class="box"/><text x="221" y="83" text-anchor="middle">SettingsWindow</text>
+        <rect x="296" y="58" width="150" height="40" rx="5" class="hl"/><text x="371" y="83" text-anchor="middle" class="hl-t">FenceWindow ×N</text>
+        <rect x="456" y="58" width="190" height="40" rx="5" class="box"/><text x="551" y="83" text-anchor="middle">DrawFenceOverlay</text>
+      </g>
+      <path d="M340 116 V 146" class="ln" marker-end="url(#arB)"/><text x="350" y="136" class="t-m">calls</text>
+
+      <rect x="20" y="148" width="640" height="130" rx="8" class="box2"/>
+      <text x="36" y="172" class="t-h">NEOFENCES.SHELL · WIN32/COM</text>
+      <g>
+        <rect x="36" y="184" width="140" height="36" rx="5" class="box"/><text x="106" y="207" text-anchor="middle">DesktopLayer</text>
+        <rect x="186" y="184" width="140" height="36" rx="5" class="box"/><text x="256" y="207" text-anchor="middle">DesktopIcons</text>
+        <rect x="336" y="184" width="140" height="36" rx="5" class="box"/><text x="406" y="207" text-anchor="middle">ShellItems</text>
+        <rect x="486" y="184" width="160" height="36" rx="5" class="box"/><text x="566" y="207" text-anchor="middle">ShellActions</text>
+        <rect x="36" y="228" width="140" height="36" rx="5" class="box"/><text x="106" y="251" text-anchor="middle">InputHook</text>
+        <rect x="186" y="228" width="140" height="36" rx="5" class="box"/><text x="256" y="251" text-anchor="middle">GameDetector</text>
+        <rect x="336" y="228" width="140" height="36" rx="5" class="box"/><text x="406" y="251" text-anchor="middle">Displays</text>
+        <rect x="486" y="228" width="160" height="36" rx="5" class="box"/><text x="566" y="251" text-anchor="middle">Watchdog</text>
+      </g>
+      <path d="M340 278 V 308" class="ln" marker-end="url(#arB)"/><text x="350" y="298" class="t-m">calls</text>
+
+      <rect x="20" y="310" width="640" height="76" rx="8" class="box2"/>
+      <text x="36" y="334" class="t-h">NEOFENCES.CORE · PURE C#, UNIT-TESTED</text>
+      <g>
+        <rect x="36" y="342" width="140" height="32" rx="5" class="box"/><text x="106" y="363" text-anchor="middle">Model · Tabs · Rules</text>
+        <rect x="186" y="342" width="140" height="32" rx="5" class="box"/><text x="256" y="363" text-anchor="middle">LayoutEngine</text>
+        <rect x="336" y="342" width="140" height="32" rx="5" class="box"/><text x="406" y="363" text-anchor="middle">Config · Snapshots</text>
+        <rect x="486" y="342" width="160" height="32" rx="5" class="box"/><text x="566" y="363" text-anchor="middle">Membership · Library</text>
+      </g>
+
+      <rect x="720" y="150" width="160" height="126" rx="8" class="box"/>
+      <text x="800" y="176" text-anchor="middle" class="t-h">WINDOWS</text>
+      <text x="800" y="200" text-anchor="middle">Explorer / desktop</text>
+      <text x="800" y="220" text-anchor="middle">DWM (acrylic)</text>
+      <text x="800" y="240" text-anchor="middle">Shell namespace</text>
+      <text x="800" y="260" text-anchor="middle">Input / monitors</text>
+      <path d="M662 213 H 718" class="ln" marker-end="url(#arB)"/><text x="668" y="206" class="t-m">COM</text>
+
+      <rect x="720" y="320" width="160" height="56" rx="8" class="box"/>
+      <text x="800" y="344" text-anchor="middle" class="mono">config.json</text>
+      <text x="800" y="362" text-anchor="middle" class="t-m">%LOCALAPPDATA%</text>
+      <path d="M662 358 H 718" class="ln" marker-end="url(#arB)"/><text x="668" y="351" class="t-m">r/w</text>
+    </svg>
+    </div>
+    <figcaption>Three layers, one direction of dependency. All Win32/COM risk is contained in Shell; Core has no Windows references, so it is unit-tested and could be reused in an Avalonia port.</figcaption>
+  </figure>
+
+  <div class="grid g2">
+    <div class="card stack">
+      <h3>Threads</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Thread</th><th>Runs</th></tr></thead>
+        <tbody>
+          <tr><td>UI (STA)</td><td>WPF, all fence windows, shell COM objects, WinEvent hook callbacks</td></tr>
+          <tr><td>InputHook</td><td><code>WH_MOUSE_LL</code> + own message loop, posts gestures to UI; must return in under 1 ms</td></tr>
+          <tr><td>Icon loaders (2 × STA)</td><td><code>IShellItemImageFactory</code>, results marshalled to UI</td></tr>
+          <tr><td>Shell worker (STA)</td><td>Recycle, rename, rule facts (shortcut targets); opens run on their own thread</td></tr>
+          <tr><td>Portal listings</td><td>thread pool, newest result wins; watchers re-armed with backoff</td></tr>
+          <tr><td>Game Library scan (STA)</td><td>one at a time; reads launchers, writes NeoFences' own shortcuts, then hands back to UI</td></tr>
+          <tr><td>Watchdog process</td><td>same exe, <code>--watchdog &lt;pid&gt;</code>, waits on main</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card stack">
+      <h3>Key Windows APIs per component</h3>
+      <div class="scroll"><table>
+        <tbody id="apis"></tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- FLOWS -->
+<section id="flows">
+  <div class="sec-head"><div class="label">Data and control flows</div><h2>Flows</h2></div>
+  <div class="grid g2">
+    <figure class="card">
+      <h3>A new file lands on the desktop</h3>
+<pre class="mermaid">
+sequenceDiagram
+  participant You
+  participant Explorer
+  participant ShellItems
+  participant Membership
+  participant ConfigStore
+  participant Inbox as Inbox fence
+  You->>Explorer: save screenshot.png to Desktop
+  Explorer-->>ShellItems: SHCNE_CREATE (change notify)
+  ShellItems->>Membership: new item ref
+  Membership->>Membership: no fence owns it, assign Inbox
+  Membership->>Inbox: add item
+  Note over Membership: 1.5 s after the last arrival
+  Membership->>Membership: Rules: first matching rule picks a fence
+  Membership->>ConfigStore: save (debounced 500 ms)
+  Inbox-->>You: icon appears in the Inbox, or in its rule's fence
+</pre>
+      <figcaption>Takeover keeps the file on the Desktop folder; only NeoFences' record of which fence owns it changes. Rules (M11) move only items new to the Desktop.</figcaption>
+    </figure>
+    <figure class="card">
+      <h3>Fence window states</h3>
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> OnDesktop
+  OnDesktop --> OnDesktop: Win+D / Win+M (owner Progman keeps it visible)
+  OnDesktop --> Peek: Peek hotkey
+  Peek --> OnDesktop: hotkey / Esc / click outside
+  OnDesktop --> Hidden: double-click empty desktop
+  Hidden --> OnDesktop: double-click again
+  OnDesktop --> GameIdle: game is the foreground window
+  GameIdle --> OnDesktop: game leaves foreground
+  OnDesktop --> Paused: tray Pause
+  Paused --> OnDesktop: tray Resume
+  OnDesktop --> RolledUp: double-click title
+  RolledUp --> OnDesktop: hover or click (Settings)
+</pre>
+      <figcaption>Every state a fence window can be in.</figcaption>
+    </figure>
+    <figure class="card">
+      <h3>Crash or Task Manager kill</h3>
+<pre class="mermaid">
+sequenceDiagram
+  participant Main as NeoFences
+  participant WD as Watchdog
+  participant Explorer
+  Main->>WD: spawn --watchdog pid
+  Main->>Explorer: FWF_NOICONS on (icons hidden)
+  Note over Main: crash or killed
+  WD->>WD: main exited, no clean-shutdown marker
+  WD->>Explorer: FWF_NOICONS off (icons back)
+  WD->>Main: restart (max 3 per 10 min)
+</pre>
+      <figcaption>Hard rule 2: native icons always come back, even when the app cannot run its own cleanup.</figcaption>
+    </figure>
+    <figure class="card">
+      <h3>Monitor setup changes</h3>
+<pre class="mermaid">
+flowchart TD
+  A[Display change event] --> B[Compute fingerprint: monitors + resolution + DPI]
+  B --> C{Known fingerprint?}
+  C -- yes --> D[Restore saved layout exactly]
+  C -- no --> E[Copy most recent layout]
+  E --> F[Same monitor if present, else primary]
+  F --> G[Scale to new work area, clamp on-screen]
+  G --> H[Save under new fingerprint]
+</pre>
+      <figcaption>Going 4K to 1080p for a stream shrinks fences proportionally; going back restores the original pixel-exact.</figcaption>
+    </figure>
+  </div>
+  <div class="card stack">
+    <h3>Drag and drop matrix</h3>
+    <div class="scroll"><table>
+      <thead><tr><th>From</th><th>To</th><th>What happens</th><th>File operation?</th></tr></thead>
+      <tbody>
+        <tr><td>Desktop fence</td><td>Desktop fence</td><td>Membership or order change</td><td>No</td></tr>
+        <tr><td>Explorer</td><td>Desktop fence</td><td>Forwarded to the Desktop folder's own shell drop target, then lands in the target fence</td><td>Yes, native copy/move with progress and undo</td></tr>
+        <tr><td>Desktop fence</td><td>Portal fence (or back)</td><td>Real move/copy; Shift = move, Ctrl = copy</td><td>Yes</td></tr>
+        <tr><td>Any fence</td><td>Any app (Explorer, Discord, browser)</td><td><code>SHDoDragDrop</code> with the shell data object</td><td>Decided by the target app</td></tr>
+        <tr><td>Item</td><td>Recycle Bin item</td><td>Shell delete</td><td>Yes, recoverable</td></tr>
+        <tr><td>Fence title</td><td>Another fence's title</td><td>Combines them into one box with tabs (M9)</td><td>No</td></tr>
+        <tr><td>Item</td><td>A tab header</td><td>That tab shows; drop as into that fence (M9)</td><td>As for that fence</td></tr>
+        <tr><td>Game Library tile</td><td>Desktop or another app</td><td>Copy of the game's shortcut, never a move (M12)</td><td>Copy only</td></tr>
+        <tr><td>Anything</td><td>Game Library fence</td><td>Refused: it shows NeoFences' own shortcuts</td><td>No</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- JOURNEYS -->
+<section id="journeys">
+  <div class="sec-head"><div class="label">How it feels to use</div><h2>User journeys</h2></div>
+  <div class="stack" id="journeyList"></div>
+</section>
+
+<!-- UI -->
+<section id="ui">
+  <div class="sec-head"><div class="label">Spec §6 · default look: acrylic card</div><h2>Fence UI</h2>
+    <p class="muted">An illustration of the agreed look, not a screenshot. Real fences are layered windows with accent blur, which blurs the live wallpaper behind them (proven in M0).</p></div>
+  <div class="desk" aria-label="Mock desktop with three fences and a context menu">
+    <div class="fence">
+      <div class="ft"><span>Games</span><span class="btns"><span>⌃</span><span>⋯</span></span></div>
+      <div class="fb">
+        <div class="ico"><i style="background:#2b6f8a">C2</i>Crysis 2</div>
+        <div class="ico sel"><i style="background:#8a2b2b">AC</i>AC Unity</div>
+        <div class="ico"><i style="background:#6b4a8a">G</i>GOG Galaxy</div>
+        <div class="ico"><i style="background:#1f3c5c">S</i>Steam</div>
+        <div class="ico"><i style="background:#9a6a1f">M</i>AC Mirage</div>
+        <div class="ico"><i style="background:#3d6b3d">C3</i>Crysis 3</div>
+        <div class="ico"><i style="background:#555">U</i>Ubisoft Connect</div>
+      </div>
+    </div>
+    <div class="stack" style="gap:22px">
+      <div class="fence rolled"><div class="ft"><span>Work (12)</span><span class="btns"><span>⌄</span><span>⋯</span></span></div><div class="fb"></div></div>
+      <div class="fence" style="width:260px">
+        <div class="ft"><span>Inbox</span><span class="btns"><span>⌃</span><span>⋯</span></span></div>
+        <div class="fb" style="grid-template-columns:repeat(3,1fr)">
+          <div class="ico"><i style="background:#2f5d7a">PNG</i>screenshot.png</div>
+          <div class="ico"><i style="background:#4a4a6a">TXT</i>notes.txt</div>
+          <div class="ico"><i style="background:#7a5a2f">ZIP</i>mods.zip</div>
+        </div>
+      </div>
+    </div>
+    <div class="ctx" aria-label="Fence menu">
+      <div>New fence</div><div>Rename</div><div>Roll up</div>
+      <hr><div>Sort by <span>›</span></div><div>Icon size <span>›</span></div><div>Lock position</div>
+      <hr><div>Fence settings…</div><div class="danger">Delete fence</div>
+    </div>
+  </div>
+  <div class="grid g3">
+    <div class="card stack"><h3>Title bar</h3><p class="muted">Drag to move. Double-click to roll up. Buttons appear on hover: roll up, fence menu. Rolled-up fences show a count and expand on hover (300 ms) or click.</p></div>
+    <div class="card stack"><h3>Icons</h3><p class="muted">Real thumbnails for images and videos. Two-line labels. Size per fence: 32, 48, 64 or 96. Click, Ctrl, Shift and rubber-band select; Enter opens, F2 renames, Del sends to Recycle Bin.</p></div>
+    <div class="card stack"><h3>Menus</h3><p class="muted">Item right-click shows the real shell menu (7-Zip, Open with, Send to). Fence right-click shows the NeoFences menu above. Delete fence never deletes files; its items go to Inbox.</p></div>
+  </div>
+</section>
+
+<!-- DATA -->
+<section id="data">
+  <div class="sec-head"><div class="label">ADR-006</div><h2>Data model</h2>
+    <p class="muted">One JSON file at <code>%LOCALAPPDATA%\NeoFences\config.json</code>, saved atomically with a <code>.bak</code> and 10 daily backups. Beside it: <code>snapshots\</code> (one file per snapshot, M10) and <code>library\</code> (the Game Library's shortcuts and index, M12).</p></div>
+  <div class="grid g2">
+    <div class="card stack" style="min-width:0">
+      <h3>config.json (example)</h3>
+<pre class="code">{
+  "schemaVersion": 1,
+  "settings": { "takeover": true, "peekHotkey": "Ctrl+Alt+Space",
+                "startWithWindows": true, "gameMode": true,
+                "rollupExpand": "hover" },
+  "fences": [
+    { "id": "a1f3…", "title": "Games",
+      "source": { "kind": "desktop" },
+      "items": ["C:\\Users\\cipher\\Desktop\\Crysis 2.lnk",
+                "::{645FF040-5081-101B-9F08-00AA002F954E}"],
+      "sort": "manual", "iconSize": 48, "rolledUp": false,
+      "tabs": ["a1f3…", "d5e6…"], "activeTab": "a1f3…" },
+    { "id": "b7c2…", "title": "Inbox", "isInbox": true,
+      "source": { "kind": "desktop" }, "items": [] },
+    { "id": "d5e6…", "title": "Library",
+      "source": { "kind": "library" }, "sort": "name", "iconSize": 64 },
+    { "id": "c9d4…", "title": "Screenshots",
+      "source": { "kind": "portal",
+                  "path": "D:\\Pictures\\Screenshots" },
+      "sort": "date" }
+  ],
+  "rules": [
+    { "id": "r1…", "enabled": true, "fenceId": "a1f3…",
+      "condition": { "kind": "game", "launcher": "folder",
+                     "folder": "D:\\GameLibrary" } }
+  ],
+  "library": { "folders": ["D:\\GameLibrary"], "hidden": ["steam:431960"] },
+  "layouts": {
+    "&lt;display fingerprint&gt;": {
+      "a1f3…": { "monitor": "&lt;device id&gt;",
+                 "x": 40, "y": 60, "w": 420, "h": 260 }
+    }
+  }
+}</pre>
+    </div>
+    <div class="stack">
+      <figure class="card">
+        <svg class="dia" viewBox="0 0 440 230" role="img" aria-label="The same layout on a 4K monitor and on a 1080p monitor: fence positions and sizes scale proportionally to the work area.">
+          <text x="10" y="18" class="t-h">4K · 150%</text>
+          <rect x="10" y="28" width="200" height="120" rx="4" class="box2"/>
+          <rect x="20" y="38" width="62" height="40" rx="3" class="hl"/><text x="51" y="62" text-anchor="middle" class="hl-t">Games</text>
+          <rect x="20" y="86" width="62" height="30" rx="3" class="box"/><text x="51" y="105" text-anchor="middle">Work</text>
+          <rect x="140" y="38" width="60" height="50" rx="3" class="box"/><text x="170" y="67" text-anchor="middle">Inbox</text>
+          <path d="M218 88 H 248" class="ln-a" marker-end="url(#arA)"/>
+          <text x="10" y="172" class="t-m">fingerprint A, saved</text>
+          <text x="256" y="18" class="t-h">1080P · 100%</text>
+          <rect x="256" y="40" width="150" height="90" rx="4" class="box2"/>
+          <rect x="263" y="47" width="47" height="30" rx="3" class="hl"/><text x="286" y="66" text-anchor="middle" class="hl-t">Games</text>
+          <rect x="263" y="83" width="47" height="23" rx="3" class="box"/><text x="286" y="99" text-anchor="middle">Work</text>
+          <rect x="361" y="47" width="45" height="38" rx="3" class="box"/><text x="383" y="70" text-anchor="middle">Inbox</text>
+          <text x="256" y="152" class="t-m">fingerprint B: scaled copy,</text>
+          <text x="256" y="168" class="t-m">saved separately</text>
+          <text x="10" y="210" class="t-b">Back on 4K: fingerprint A restored exactly.</text>
+        </svg>
+        <figcaption>Layouts are keyed by display fingerprint, which fixes Fences' most common complaint about scrambled layouts after a resolution change.</figcaption>
+      </figure>
+      <div class="card stack">
+        <h3>Item identity</h3>
+        <div class="scroll"><table>
+          <thead><tr><th>Event</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Renamed</td><td>Reference updated, stays in its fence</td></tr>
+            <tr><td>Deleted</td><td>Removed from its fence</td></tr>
+            <tr><td>New</td><td>Goes to Inbox; a matching rule files it into its fence (M11)</td></tr>
+            <tr><td>Changed while NeoFences was off</td><td>Startup reconcile: missing dropped, unknown to Inbox</td></tr>
+            <tr><td>Corrupt config</td><td>Try <code>.bak</code>, then newest backup, then fresh; corrupt file kept</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="sec-head"><div class="label">docs/FEATURES.md</div><h2>Features</h2>
+    <p class="muted">Fences 5/6 parity plus NeoFences extras. Status updates with the commit that changes it.</p></div>
+  <div class="filters" role="group" aria-label="Filter features">
+    <button type="button" data-f="all" aria-pressed="true">All</button>
+    <button type="button" data-f="v1" aria-pressed="false">v1</button>
+    <button type="button" data-f="v2" aria-pressed="false">v2+</button>
+    <button type="button" data-f="extra" aria-pressed="false">NeoFences extras</button>
+  </div>
+  <div class="card scroll"><table>
+    <thead><tr><th>Feature</th><th>In Fences</th><th>Target</th><th>Milestone</th><th>Status</th><th>Notes</th></tr></thead>
+    <tbody id="featRows"></tbody>
+  </table></div>
+</section>
+
+<!-- DECISIONS -->
+<section id="decisions">
+  <div class="sec-head"><div class="label">docs/DECISIONS.md</div><h2>Decisions</h2>
+    <p class="muted">Append-only. A changed decision gets a new ADR that supersedes the old one.</p></div>
+  <div class="stack" id="adrList" style="gap:10px"></div>
+</section>
+
+<!-- RESEARCH -->
+<section id="research">
+  <div class="sec-head"><div class="label">Findings with sources</div><h2>Research</h2></div>
+  <div class="grid g2" id="researchList"></div>
+</section>
+
+<!-- RISKS -->
+<section id="risks">
+  <div class="sec-head"><div class="label">Open questions and known risks</div><h2>Risks</h2></div>
+  <div class="card scroll"><table>
+    <thead><tr><th>Risk</th><th>Impact</th><th>Plan</th><th>Status</th></tr></thead>
+    <tbody id="riskRows"></tbody>
+  </table></div>
+</section>
+
+<!-- DOCS -->
+<section id="docs">
+  <div class="sec-head"><div class="label">Repository</div><h2>Documentation map</h2>
+    <p class="muted">Every Claude session reads <code>CLAUDE.md</code> first, then the roadmap and the latest log entries. This hub is rebuilt from these files at the end of each session.</p></div>
+  <div class="card scroll"><table>
+    <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+    <tbody id="docRows"></tbody>
+  </table></div>
+  <div class="card stack">
+    <h3>Session sync protocol</h3>
+    <ol class="rules">
+      <li><div>Pull, then read <code>git log</code>, <code>ROADMAP.md</code> and the last 3 <code>SESSION-LOG.md</code> entries.</div></li>
+      <li><div>Claim the task in <code>ROADMAP.md</code> and commit the claim alone, before starting.</div></li>
+      <li><div>Parallel sessions each use their own git worktree and branch.</div></li>
+      <li><div>New or changed decision: add or supersede an ADR.</div></li>
+      <li><div>Before ending: append a session log entry, update roadmap checkboxes, refresh this hub and republish it.</div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- LOG -->
+<section id="log">
+  <div class="sec-head"><div class="label">docs/SESSION-LOG.md · git history</div><h2>Activity log</h2></div>
+  <div class="grid g2">
+    <div class="stack" id="sessionList"></div>
+    <div class="card stack">
+      <h3>Commits</h3>
+      <div class="scroll"><table><tbody id="commitRows"></tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div id="stamp"></div>
+  <div>Canonical sources live in the repo under <code>docs/</code>. If this hub and the docs disagree, the docs win.</div>
+</footer>
+</div>
+
+<script>
+/* ===== HUB DATA — update this block each session to mirror docs/ ===== */
+const HUB = {
+  updated: "2026-10-04",
+  commit: "074e629",
+  phase: "v1.8.0",
+  current: "v1.8.0 public (github.com/CipherSnowden/neo-fences/releases) · auto-update on · next: your pick",
+  waiting: [
+    "NEW in v1.5.0 — Game Library: tray → New Game Library fence. Every installed game (Steam, Epic, GOG, Xbox, D:\\GameLibrary, game shortcuts on the Desktop) in one A–Z fence, Steam games with their covers. Right-click a game → Hide from library (e.g. Wallpaper Engine); Settings → Game Library for folders, sources and hidden games.",
+    "v1.4.0 Rules: Settings → Rules, e.g. Images → a fence, or Game shortcut / In a folder of mine → D:\\GameLibrary. New Desktop items are filed by themselves; \"Apply rules now\" tidies existing ones and can be undone (tray → Restore snapshot → Undo the last restore).",
+    "v1.3.0 Snapshots: tray → Take snapshot before you rearrange; tray → Restore snapshot puts it back. v1.2.0 Tabs: drag a fence by its title onto another fence's title to combine them; right-click a tab for Colour / Detach.",
+    "Hand checks still open, whenever convenient: real sign-out with icons hidden (C8); next upgrade by double-clicking Setup.exe (Q11); restore with a OneDrive Desktop offline (W9); the M2 checks listed under \"Open\" below."
+  ],
+  tasks: [
+    { group: "Open: your hand checks and things to try", items: [
+      { t: "You (optional): tray → New Game Library fence; right-click Wallpaper Engine → Hide from library", s: "todo" },
+      { t: "You (optional): add your rules in Settings → Rules — e.g. Game shortcut / In a folder of mine → D:\\GameLibrary", s: "todo" },
+      { t: "You (optional): try tabs — drag a title onto another fence, click tabs, right-click a tab → Colour / Detach, drag a tab out (V-checks)", s: "todo" },
+      { t: "You (optional): next upgrade, double-click Setup.exe — NeoFences should come back by itself, one copy (Q11)", s: "todo" },
+      { t: "Drops in from Explorer: written, but cannot be scripted (Explorer ignores synthetic drags) — your check K4", s: "todo" },
+      { t: "You: I10 labels over bright wallpaper, I12 scaling change", s: "todo" },
+      { t: "You (optional): H10 — huge video + disconnected network shortcut stay responsive", s: "todo" },
+      { t: "You: real sign-out (C8) with desktop icons hidden — they must be back after signing in", s: "todo" },
+      { t: "You: cancelled shutdown, drag smoothness, elevated Win+D", s: "todo" }
+    ]},
+    { group: "M13 · v1.6 carry-overs", items: [
+      { t: "You chose: v1.6 carry-overs in 3 batches, each released (M13a data safety, M13b Game Library + rules polish, M13c fence + Settings UX)", s: "done" },
+      { t: "M13a prototype: schema 2, newer snapshots refused, rule ids, library index, USB release, --exit stops a waiting copy — checked live (no input)", s: "done" },
+      { t: "M13a plan: 3 tasks, 373 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M13a review: no Critical/Important; a start right after --exit gave up (branch regression) — fixed; branch check passed; merged", s: "done" },
+      { t: "v1.6.0 released and installed (data safety; config now schema 2); restarted itself after Setup", s: "done" },
+      { t: "M13b prototype: Epic games only, Xbox names, no shortcut duplicates, shortcut copies, faster scans, remembered hidden games, power-cut safe library, rules editor guards — checked live", s: "done" },
+      { t: "M13b plan: 3 tasks, 392 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M13b review: hidden games splitting, launcher shortcuts merging wrongly, blurry covers, stuck program picks, read-only copies, unflushed shortcuts — fixed; branch smoke passed; merged", s: "done" },
+      { t: "v1.6.1 released and installed (Game Library + rules polish); restarted itself after Setup", s: "done" },
+      { t: "M13c prototype: title right-click menu, header click opens rolled-up boxes, snapshot results in Settings, one-line tray labels, layout key caps, Settings keeps focus, library follows Desktop shortcuts — live check passed", s: "done" },
+      { t: "M13c plan: 3 tasks, 402 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M13c review fixes applied; branch smoke passed; merged", s: "done" },
+      { t: "v1.6.2 released and installed (fence + Settings UX); restarted itself after Setup", s: "done" },
+      { t: "You chose: Appearance next (v1.7) — background strength, 3 colour styles as a preference, 8 colours + custom, title font with per-fence override, wallpaper accent from the WE wallpaper", s: "done" },
+      { t: "M14 prototype: Kara wallpaper → #385E94; three styles, Settings → Appearance; checked live (PiP window untouched)", s: "done" },
+      { t: "M14 plan: 3 tasks, 419 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M14 review fixes applied; branch check passed with your go; merged", s: "done" },
+      { t: "v1.7.0 released and installed (Appearance); restarted itself after Setup", s: "done" },
+      { t: "You chose: search palette next (v1.8) — items + actions, Enter opens / Shift+Enter shows, Ctrl+Alt+F, centred bar, in-memory search", s: "done" },
+      { t: "M15 prototype: \"fh6\" finds Forza Horizon 6; Shift+Enter reveals in the fence; a double-close crash found and fixed; checked live", s: "done" },
+      { t: "M15 plan approved, ran inline; review fixes (emoji crash, keyboard after Peek, stale Portals, slow search, over games) — 446 tests", s: "done" },
+      { t: "M15 parked by your choice: branch m15-search-palette kept, not merged; main stays v1.7.0", s: "done" },
+      { t: "You chose: v1.7.1 polish next; then: one title font for all fences, in Settings only (fence menu keeps Colour)", s: "done" },
+      { t: "M16 plan: 2 tasks, 429 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M16 review fixes applied; branch check passed with your go; merged", s: "done" },
+      { t: "v1.7.1 released and installed (polish); restarted itself after Setup", s: "done" },
+      { t: "You chose: auto-update for friends; one public repo (not open source), secrets kept secret; GitHub Actions; signing deferred", s: "done" },
+      { t: "Repo public: history scrubbed (noreply address, no hub link; scan of all commits: 0 hits), README, pushed", s: "done" },
+      { t: "M17 prototype: updater + Settings → Updates; local rehearsal 1.8.0 → 1.8.1 passed (restart in 1.6 s)", s: "done" },
+      { t: "M17 plan: 3 tasks, 438 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M17 review: Velopack's force-apply on start disabled (would kill NeoFences with icons hidden) + 5 more fixes; rehearsal 2 passed", s: "done" },
+      { t: "v1.8.0 published — the first public release (CI green; draft installed and checked; auto-update live)", s: "done" }
+    ]},
+    { group: "M12 · Game Library (v1.5)", items: [
+      { t: "M12 Game Library: you chose every game in one place; launchers, Xbox, D:\\GameLibrary, Desktop shortcuts; posters on disk; one A–Z fence; spec approved", s: "done" },
+      { t: "M12 prototype: 12 games found in 0.2 s; fence with Steam posters; live rescans; Hide / Show again — passed on your desktop", s: "done" },
+      { t: "M12 plan: 4 tasks, 361 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M12 review: failed Steam scans dropped games, ghost games, watchers blocked drive removal, damaged index — fixed; branch smoke passed; merged", s: "done" },
+      { t: "v1.5.0 released and installed (game library); restarted itself after Setup", s: "done" }
+    ]},
+    { group: "M11 · Rules auto-sort (v1.4)", items: [
+      { t: "M11 Rules: you chose file new items + Apply rules now, all four conditions, Settings → Rules list; spec approved", s: "done" },
+      { t: "M11 prototype: new items filed, editor, Apply rules now + undo, fence menu — passed on your desktop; you added a game folder (D:\\GameLibrary)", s: "done" },
+      { t: "M11 plan: 4 tasks, 340 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M11 review: huge day counts crashed, attribute changes re-filed items, Chrome downloads missed, odd hand-edited rules broke the config — fixed; smoke caught half-written shortcuts (now filed after a quiet moment); merged", s: "done" },
+      { t: "v1.4.0 released and installed (rules); restarted itself after Setup", s: "done" }
+    ]},
+    { group: "M10 · Snapshots (v1.3)", items: [
+      { t: "M10 Snapshots: you chose undo-a-messy-desktop, newer items stay put, tray + Settings; spec approved", s: "done" },
+      { t: "M10 prototype: take, restore, undo the restore, tray take, delete to the Recycle Bin — all passed on your desktop", s: "done" },
+      { t: "M10 plan: 4 tasks, 306 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M10 review: windows kept old titles after a restore, damaged files not logged, a folder error could crash the tray, renamed Before restore overwritten — fixed; branch smoke passed; merged", s: "done" },
+      { t: "v1.3.0 released and installed (snapshots); restarted itself after Setup", s: "done" }
+    ]},
+    { group: "M9 · Fence tabs (v1.2)", items: [
+      { t: "M9 Fence tabs: you chose combine-by-drag, drag-out to split, accent colours; spec approved", s: "done" },
+      { t: "M9 prototype: merge, switch, colour, restart, roll-up, drop on a tab, drag out — all passed on your desktop", s: "done" },
+      { t: "M9 plan: 4 tasks, 296 pre-verified tests — approved, ran inline", s: "done" },
+      { t: "M9 review: host-tab header drag moved the whole box, detached Portal tab empty, null tabs crash, Esc cancel — fixed; branch smoke passed; merged", s: "done" },
+      { t: "v1.2.0 released and installed (fence tabs); restarted itself after Setup", s: "done" }
+    ]},
+    { group: "M8 · v1.1: carry-overs + icon-only labels (v1.0.1–v1.1.2)", items: [
+      { t: "Carried over from M5: the first title double-click on a fence that just became foreground did nothing — fixed in M8b", s: "done" },
+      { t: "You chose: carry-overs in 4 batches (reliability first); labels per fence + Settings default; name pops under the icon", s: "done" },
+      { t: "Fence corners: square blur stuck out of the rounded border — Windows ignores the window region for the blur; fixed with Windows 11 rounded corners (prototype, 8x zoom checked)", s: "done" },
+      { t: "M8a plan: reliability batch, 5 tasks, 259 pre-verified tests", s: "done" },
+      { t: "You: review the M8a plan (approved, ran inline; v1.0.1 after the merge)", s: "done" },
+      { t: "Built M8a; corners checked at 8x zoom, M5 + M6a regressions passed", s: "done" },
+      { t: "Final review: quick-hide vs icons you hid yourself now one rule, locked files no longer look deleted — fixed and checked live; merged", s: "done" },
+      { t: "v1.0.1 installed on your PC (upgrade in place, 0.3 MB delta)", s: "done" },
+      { t: "You chose: shortcut arrows as a Settings switch (off by default)", s: "done" },
+      { t: "M8b prototype: icons-only fences with the name under the icon, arrows, own title double-click (first double-click now rolls up), key-cap hotkeys — smoke passed on your desktop", s: "done" },
+      { t: "M8b plan: fence UI + icon-only labels, 5 tasks, 276 pre-verified tests", s: "done" },
+      { t: "You: review the M8b plan (approved, ran inline)", s: "done" },
+      { t: "Built M8b: 5 tasks, 276 tests; a corrupted pack.ps1 block in the plan caught by its own check and fixed", s: "done" },
+      { t: "Final review: pop-under name kept inside narrow fences and steady between icons, newest icon size wins, hotkey warning kept, rename box survives list changes — fixed, smoke passed; merged", s: "done" },
+      { t: "v1.1.0 installed on your PC (upgrade in place, 0.25 MB delta); Setup did not restart NeoFences this time — started by hand, investigating in M8c", s: "done" },
+      { t: "You chose: v1.1.0 now; menu Rename with several selected renames the right-clicked item", s: "done" },
+      { t: "M8c prototype: rename acts on the right-clicked item, recycling off the UI thread, live special icons, drop rows, start after Setup — smoke passed on your desktop", s: "done" },
+      { t: "M8c plan: shell actions + drag-drop details, 4 tasks, 281 pre-verified tests", s: "done" },
+      { t: "You: review the M8c plan (approved, ran inline)", s: "done" },
+      { t: "Built M8c: 4 tasks, 281 tests", s: "done" },
+      { t: "Final review: 6 fixes (crash paths, drop slots, backoff, stuck opens, Explorer restart) — smoke passed; merged", s: "done" },
+      { t: "M8d prototype: Safely Remove works with a Portal on your LOCO_DUCK stick (v1.1.0 blocked it; the stick is now ejected — replug it), Portal keeps selection, Enter opens several", s: "done" },
+      { t: "M8d plan: Portal details, 3 tasks, 283 pre-verified tests", s: "done" },
+      { t: "You: review the M8d plan (approved after the power cut; nothing was lost)", s: "done" },
+      { t: "Built M8d: 3 tasks, 283 tests", s: "done" },
+      { t: "Final review: Portal stale after a game, watcher failing while arming, log flood on virtual drives — fixed; smoke incl. a second eject passed; merged", s: "done" },
+      { t: "v1.1.1 released and installed (M8c + M8d); your config kept", s: "done" },
+      { t: "Silent Setup upgrade left NeoFences stopped — fixed (install hook shows icons, starts NeoFences after Setup); proven with 1.1.2-beta.1", s: "done" },
+      { t: "v1.1.2: review (working folder, full paths, your hidden icons respected) — fixed; released; it restarted itself 3.9 s after Setup", s: "done" },
+      { t: "After M8d: release decision (v1.1.1 with M8c + M8d) — released", s: "done" }
+    ]},
+    { group: "M7 · Installer → v1.0", items: [
+      { t: "You chose: installer only for now (no auto-update source yet); uninstall keeps your data, icons always restored", s: "done" },
+      { t: "Prototype: Setup.exe (72 MB, self-contained, no admin) installed and uninstalled on your PC — icons restored, data kept, sign-in entry handled", s: "done" },
+      { t: "Found: Velopack deletes its install folder on uninstall — kept apart from your data folder (NeoFences.App vs NeoFences)", s: "done" },
+      { t: "M7 plan: 5 tasks, 248 pre-verified tests", s: "done" },
+      { t: "You: review the M7 plan (approved, ran inline)", s: "done" },
+      { t: "Built M7; installer built from the repo, install test passed again (dev builds no longer take over sign-in), M6a regression passed", s: "done" },
+      { t: "Final review: uninstall icon restore now retries + registry fallback, start-with-Windows points at the installed copy from any build, dead update hook removed — fixed and checked live; merged", s: "done" },
+      { t: "v1.0 installed on your PC (tag v1.0.0); it runs your fences and owns start-with-Windows", s: "done" },
+      { t: "You: uninstall + reinstall, About shows 1.0.0, autostart after a restart — all fine (Q2, Q3, Q6, Q8, Q10)", s: "done" }
+    ]},
+    { group: "M6b · Settings and animations", items: [
+      { t: "You chose: roll-up opens on hover or click (setting); no Appearance section until v2", s: "done" },
+      { t: "Prototype passed on your desktop: Fluent settings window, hotkey recorder, game-mode toggle, click mode, animated roll-up, quick-hide fade", s: "done" },
+      { t: "Found: screen readers toggle checkboxes without a click — the settings listen to Checked/Unchecked", s: "done" },
+      { t: "M6b plan: 4 tasks, 223 pre-verified tests", s: "done" },
+      { t: "You: review the M6b plan (approved, ran inline)", s: "done" },
+      { t: "Built M6b; settings smoke plus the M6a and M5 regressions passed on your desktop", s: "done" },
+      { t: "Final review: hotkey box could save Shift+Tab / Alt+F4 / Ctrl+C (now refused, Tab and Alt+F4 pass through); drag during roll-up saved a partial height — fixed and checked live; merged", s: "done" }
+    ]},
+    { group: "M6a · Game mode, tray, Pause", items: [
+      { t: "You chose: split M6 into M6a / M6b; game mode = go idle; tray left-click opens the menu", s: "done" },
+      { t: "New app icon (blue tile, three fence panels) for the exe and the tray", s: "done" },
+      { t: "Prototype passed on your desktop: tray menu, Pause/Resume, New fence, game mode with a stand-in full-screen game", s: "done" },
+      { t: "Found: the first tray icon call crashed the app at start (comctl32 v6) — fixed, and tray failures can no longer crash it", s: "done" },
+      { t: "M6a plan: 5 tasks, 210 pre-verified tests", s: "done" },
+      { t: "You: review the M6a plan (approved, ran inline)", s: "done" },
+      { t: "Built M6a; tray/Pause/game-mode smoke and the M5 regression passed on your desktop", s: "done" },
+      { t: "Final review: late full-screen games, tray after a busy Explorer, tray New fence while hidden, Pause restoring icons, game-time changes on exit — fixed and checked live; merged", s: "done" }
+    ]},
+    { group: "M5 · Desktop gestures", items: [
+      { t: "You chose: quick-hide hides fences + desktop icons; roll-up opens on hover", s: "done" },
+      { t: "Prototype passed on your desktop: right-click menu kept, right-drag draws a fence, quick-hide, Peek (hotkey/Esc/click outside), roll-up + hover", s: "done" },
+      { t: "Found in the prototype: only one fence rose on Peek (siblings restacked) — fixed", s: "done" },
+      { t: "M5 plan: 5 tasks, 188 pre-verified tests", s: "done" },
+      { t: "You: review the M5 plan (approved, ran inline)", s: "done" },
+      { t: "Built M5; smoke, extra checks (N3, N10–N12) and the M4 regression passed on your desktop", s: "done" },
+      { t: "Test scripts no longer type into Terminal (a stray Esc cancelled the run twice)", s: "done" },
+      { t: "Final review: Peek ended by fence menus + a blocking call in the mouse hook, stuck draw rectangle, hover timer leak, Peek vs Explorer restart — fixed and checked live; merged", s: "done" }
+    ]},
+    { group: "M4 · Portals", items: [
+      { t: "You chose: browse subfolders inside the Portal (Ctrl opens Explorer); new Portals newest first", s: "done" },
+      { t: "Prototype passed on your desktop: order, live updates, browse/Back, Explorer, sort, drag both ways, vanished folder, delete", s: "done" },
+      { t: "M4 plan: 5 tasks, 163 pre-verified tests", s: "done" },
+      { t: "You: review the M4 plan (approved, ran inline)", s: "done" },
+      { t: "Built M4; Portal smoke + M3a/M3b regressions passed on your desktop", s: "done" },
+      { t: "Final review: background listing, busy folders, sort crash, drive reconnect, no permanent delete on USB/network (your choice) — fixed; merged", s: "done" },
+      { t: "Power outage → empty desktop: start with Windows added (your choice, ADR-019)", s: "done" }
+    ]},
+    { group: "M3b · Drag-drop", items: [
+      { t: "Prototype: reorder, between fences, out to Explorer, onto Recycle Bin, rubber band — passed on your desktop", s: "done" },
+      { t: "M3b plan: 5 tasks, 147 pre-verified tests", s: "done" },
+      { t: "You: review the M3b plan (approved, ran inline)", s: "done" },
+      { t: "Built M3b; smoke on your desktop passed on the repo build", s: "done" },
+      { t: "Final review: Shift-drop on Recycle Bin could delete permanently (now always recycled), slow drops, drop-into zones + caret, rename drag — fixed and checked live; merged", s: "done" }
+    ]},
+    { group: "M3a · Item actions", items: [
+      { t: "Word-style safe-save keeps a document in its fence (deferred from the M2b review) — done", s: "done" },
+      { t: "Real sign-out test (from M0): tracked as your check C8 under Open", s: "done" },
+      { t: "You chose: split M3 into M3a/M3b; Shift+Del also goes to the Recycle Bin", s: "done" },
+      { t: "M3a plan: 5 tasks, 122 pre-verified tests, prototype smoke-tested on your desktop", s: "done" },
+      { t: "You: review the M3a plan (approved, ran inline)", s: "done" },
+      { t: "Built M3a: item menu, F2 rename, Del → Recycle Bin, open messages, safe-save memory", s: "done" },
+      { t: "Smoke passed on your desktop (F2, Del, menu, broken shortcut, Word-style save)", s: "done" },
+      { t: "Fixed your report: fences drew over apps after being clicked (now always at the bottom)", s: "done" },
+      { t: "Final review: crash in 7-Zip / Send to menus, Excel saves, '' in rename, rename vs refresh — fixed and checked live; merged", s: "done" }
+    ]},
+    { group: "M2c · Fence interactions", items: [
+      { t: "You chose: follow Windows light/dark; soft label shadow", s: "done" },
+      { t: "M2c plan: 5 tasks, 113 pre-verified tests, prototype smoke-tested on your desktop (4 prototype bugs found and fixed)", s: "done" },
+      { t: "You: review the M2c plan (approved, ran inline)", s: "done" },
+      { t: "Built M2c: fence menu, snapping, keyboard, scrollbar, label shadow, light/dark", s: "done" },
+      { t: "Verified I1–I9, I11 with scripted input (with your OK)", s: "done" },
+      { t: "Found: keyboard focus only when the desktop had focus first (ADR-015)", s: "done" },
+      { t: "Final review: outline-drag runaway + stuck rename box fixed, merged", s: "done" }
+    ]},
+    { group: "M2b · Desktop items", items: [
+      { t: "Merge M2a (1 critical + 5 important review fixes)", s: "done" },
+      { t: "You chose: ask once in the Inbox whether to hide desktop icons", s: "done" },
+      { t: "M2b plan: 5 tasks, 92 pre-verified tests, prototype smoke-tested on your real desktop", s: "done" },
+      { t: "You: review the M2b plan (approved, ran inline)", s: "done" },
+      { t: "Build M2b: real icons/thumbnails, live create/rename/delete, double-click open, first-run banner", s: "done" },
+      { t: "Verified H1–H9, H11: 29 items, 500-file burst, open in front, banner both ways", s: "done" },
+      { t: "Final review: 5 important fixed (unreadable Desktop folder, unhide, watcher re-arm, icon-thread crash loop, open freeze), merged", s: "done" }
+    ]},
+    { group: "M2a · Fence host", items: [
+      { t: "Core: pixel placement, unclamped layouts, session-end policy, readable JSON (87 tests)", s: "done" },
+      { t: "Shell: monitors by device path, Progman ownership, blur, rounded corners, detached watchdog", s: "done" },
+      { t: "App: fences on the desktop, debounced saves, display changes, --exit, single instance", s: "done" },
+      { t: "Verified: live blur, rounded corners, Win+D/corner/Win+M, Explorer restarts, UI freeze, kills, restart persistence", s: "done" },
+      { t: "Fixed: new fences appeared above apps until clicked", s: "done" },
+      { t: "Review: session end redone (ADR-013) — WPF exits on the query, icons now restored inside it; verified by scripted test", s: "done" },
+      { t: "Review: watchdog restores whenever icons are marked hidden; no maximize on title double-click; taskbar auto-hide check", s: "done" },
+      { t: "Tint: you approved the current one (preference later)", s: "done" }
+    ]},
+    { group: "M1 · Core + config", items: [
+      { t: "Final review of the M0 branch (0 critical, 6 important doc fixes applied), merged to main", s: "done" },
+      { t: "M1 implementation plan (Core + config, 58 pre-verified tests)", s: "done" },
+      { t: "You: review the M1 plan (approved, ran inline)", s: "done" },
+      { t: "M1: NeoFences.Core built test-first, 58/58 tests", s: "done" },
+      { t: "M1 review: 8 fixes test-first (locked config, bad monitor data, empty desktop listing...), 71/71", s: "done" },
+      { t: "Merge M1 to main", s: "done" },
+      { t: "M2 split into M2a / M2b / M2c; M2a plan written (87 pre-verified tests + smoke run)", s: "done" },
+      { t: "You: review the M2a plan (approved, ran inline)", s: "done" }
+    ]},
+    { group: "M0 · Spike: desktop layer (GO)", items: [
+      { t: "See-through fence over Wallpaper Engine: layered + accent blur (DWM backdrops failed)", s: "done" },
+      { t: "Survives Win+D, Show desktop, Win+M: owned by Progman (raise strategy failed)", s: "done" },
+      { t: "Re-attach after Explorer restart", s: "done" },
+      { t: "Hide and restore native icons (FWF_NOICONS)", s: "done" },
+      { t: "Watchdog: crash / kill restore in ~30 ms, 3-per-10-min limit", s: "done" },
+      { t: "Desktop double-click + right-drag with S2 suppression (S1 locked the desktop)", s: "done" },
+      { t: "Research note, TEST-CHECKLIST, ADR-011", s: "done" }
+    ]},
+    { group: "Kickoff · design and docs", items: [
+      { t: "Brainstorm and v1 design spec", s: "done" },
+      { t: "Docs scaffold: CLAUDE.md and docs/*", s: "done" },
+      { t: "Install .NET 10 SDK (10.0.401)", s: "done" },
+      { t: "Project hub artifact (this page)", s: "done" },
+      { t: "You: review the v1 spec (approved)", s: "done" },
+      { t: "M0 implementation plan (compile-verified, 8 tasks)", s: "done" },
+      { t: "You: review the M0 plan (approved, ran inline)", s: "done" }
+    ]}
+  ],
+  milestones: [
+    { id: "M0", name: "Desktop layer spike", goal: "GO: layered blur, owned by Progman, watchdog, S2 gestures", s: "done" },
+    { id: "M1", name: "Core + config", goal: "Model, safe config store, layouts, membership: 71 tests", s: "done" },
+    { id: "M2", name: "M2a–c: fences", goal: "M2a host, M2b your icons, M2c interactions — all merged", s: "done" },
+    { id: "M3", name: "Shell actions", goal: "M3a: item menu, rename, delete, open feedback, safe-save · M3b: drag-drop, rubber band — merged", s: "done" },
+    { id: "M4", name: "Portals", goal: "Folder fences (browse subfolders inside, newest first), sort for all fences — merged", s: "done" },
+    { id: "M5", name: "Gestures", goal: "Draw fence, quick-hide (fences + icons), Peek, roll-up with hover, smart placement — merged", s: "done" },
+    { id: "M6", name: "Polish", goal: "Game mode, tray, Pause, settings window, animations, autostart — merged", s: "done" },
+    { id: "M7", name: "Package", goal: "Velopack installer, uninstall restores icons → v1.0 — merged", s: "done" },
+    { id: "M8", name: "v1.1", goal: "Carry-overs in 4 batches + icon-only labels: all done (v1.0.1, v1.1.0, v1.1.1, v1.1.2)", s: "done" },
+    { id: "M9", name: "Fence tabs (v1.2)", goal: "Combine fences into one box with tabs; drag out to split; tab colours — released as v1.2.0", s: "done" },
+    { id: "M10", name: "Snapshots (v1.3)", goal: "Save the arrangement by name, restore it later (undoable); tray + Settings — released as v1.3.0", s: "done" },
+    { id: "M11", name: "Rules (v1.4)", goal: "New desktop items go to a fence by type, game launcher or folder, name, date or size; Apply rules now (undoable) — released as v1.4.0", s: "done" },
+    { id: "M12", name: "Game Library (v1.5)", goal: "One fence with every installed game (Steam, Epic, GOG, Ubisoft, EA, Battle.net, Xbox, game folders), Steam posters, hide, live rescans — released as v1.5.0", s: "done" },
+    { id: "M13", name: "v1.6 carry-overs", goal: "Review carry-overs in 3 batches: data safety (v1.6.0), Game Library + rules polish (v1.6.1), fence + Settings UX (v1.6.2)", s: "wip" },
+    { id: "v2", name: "Next version", goal: "Theme packs (Nanosuit, Animus), desktop pages, icon tint, per-fence colours and fonts, search palette — pick the next one", s: "todo" }
+  ],
+  versions: [
+    { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
+    { v: "v1.1 – v1.6", s: "done", scope: "v1.1 reliability + icon-only labels; v1.2 fence tabs; v1.3 snapshots; v1.4 rules auto-sort; v1.5 Game Library fence; v1.6.0 data safety; v1.6.1 Game Library + rules polish; v1.6.2 fence + Settings UX (2026-10-03/04)." },
+    { v: "v1.7", s: "done", scope: "Appearance (M14): background strength per tone, colour styles (accent edge / tinted glass / title strip), per-fence colours + custom, title fonts with per-fence override, wallpaper accent (Wallpaper Engine preview → Windows wallpaper → accent)." },
+    { v: "v1.8", s: "todo", scope: "Parked (branch m15-search-palette). Search palette (M15): Ctrl+Alt+F, items in every fence (hidden tabs, rolled-up, Portals, Game Library) and NeoFences actions; Enter opens, Shift+Enter shows in the fence." },
+    { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
+    { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
+  ],
+  hardRules: [
+    "<b>Never lose or hide user files.</b> Delete only via the Recycle Bin flow; removing a fence never touches files.",
+    "<b>Native desktop icons always come back</b>: clean exit, crash, Task Manager kill, Explorer restart.",
+    "<b>No DLL injection, no in-process global hooks.</b> Only out-of-context WinEvent hooks and the low-level mouse hook, removed in game mode.",
+    "<b>All Win32/COM goes through NeoFences.Shell.</b> Core stays pure; App is UI only.",
+    "<b>Bindings via CsWin32</b>, not hand-written DllImport.",
+    "<b>No new NuGet dependency</b> without an ADR.",
+    "<b>Shell failures degrade one feature</b>, never crash the app."
+  ],
+  deps: [
+    { n: ".NET 10 (LTS)", w: "Runtime and SDK. Supported to Nov 2028; the installer ships it self-contained." },
+    { n: "WPF + Fluent theme", w: "UI. Built into .NET; the Settings window follows Windows light/dark and accent." },
+    { n: "Microsoft.Windows.CsWin32", w: "Source-generated Win32/COM bindings (NativeMethods.txt). No runtime cost." },
+    { n: "Serilog + file sink", w: "Rolling logs in %LOCALAPPDATA%\\NeoFences\\logs." },
+    { n: "System.Text.Json", w: "In-box config, snapshot and library-index JSON; reflection-based so hand-edited files keep their defaults (ADR-006)." },
+    { n: "Velopack", w: "Installer and in-place upgrades (M7); Setup restarts NeoFences by itself (ADR-028)." },
+    { n: "xUnit", w: "Tests for NeoFences.Core (364 tests at v1.5.0)." }
+  ],
+  apis: [
+    ["Fence windows", "layered WPF windows owned by Progman; SetWindowCompositionAttribute accent blur; DwmSetWindowAttribute rounded corners"],
+    ["DesktopIcons", "IShellWindows, IFolderView2::SetCurrentFolderFlags (FWF_NOICONS)"],
+    ["ShellItems", "IShellFolder, IShellItemImageFactory, SHChangeNotifyRegister, FileSystemWatcher"],
+    ["ShellActions", "ShellExecuteEx, IContextMenu3, IFileOperation (Recycle Bin), SHDoDragDrop, IDropTarget"],
+    ["InputHook", "WH_MOUSE_LL on its own thread (removed in game mode); RegisterHotKey for Peek"],
+    ["GameDetector", "SHQueryUserNotificationState, SetWinEventHook (foreground), MonitorFromWindow"],
+    ["Displays", "EnumDisplayMonitors, EnumDisplayDevices, GetDpiForMonitor"],
+    ["Tray", "Shell_NotifyIcon, TrackPopupMenuEx with submenus and notices"],
+    ["Portals and drives", "FileSystemWatcher with backoff, RegisterDeviceNotification (Safely Remove)"],
+    ["Rules and Game Library", "IShellLinkW + IPersistFile (shortcut targets and files), registry (Steam, GOG, Ubisoft, uninstall entries, Xbox packages)"]
+  ],
+  journeys: [
+    { title: "First run", steps: [
+      { you: "Install and launch NeoFences", sys: "Starts watchdog, takes a config backup slot, registers autostart." },
+      { you: "Desktop icons vanish", sys: "Takeover hides native icons (FWF_NOICONS)." },
+      { you: "One Inbox fence appears", sys: "Every existing Desktop and Public Desktop item lands in Inbox." },
+      { you: "Right-drag on empty desktop", sys: "Rubber band draws a new fence; you name it “Games”." },
+      { you: "Drag shortcuts from Inbox to Games", sys: "Membership changes; no files move." }
+    ]},
+    { title: "Daily use", steps: [
+      { you: "Download a file to the Desktop", sys: "Change notification, item appears in Inbox." },
+      { you: "Double-click a fence title", sys: "Fence rolls up to its title bar (200 ms)." },
+      { you: "Hover the rolled-up fence", sys: "Expands after 300 ms, collapses on leave." },
+      { you: "Press Win+D", sys: "Apps minimise; fences stay on the desktop (owned by Progman)." },
+      { you: "Press Ctrl+Alt+Space", sys: "Peek: fences float above your open windows." }
+    ]},
+    { title: "Gaming night", steps: [
+      { you: "Launch AC Mirage (borderless)", sys: "Foreground covers the monitor: game mode on." },
+      { you: "Play for three hours", sys: "Mouse hook removed, no rendering, shell events queued. ~0% CPU." },
+      { you: "Screenshots saved to Desktop meanwhile", sys: "Queued, not processed." },
+      { you: "Alt+Tab out or quit", sys: "Game mode off; queued screenshots land in Inbox." }
+    ]},
+    { title: "Something breaks", alert: true, steps: [
+      { you: "NeoFences crashes or is killed", sys: "Main process gone without clean-shutdown marker." },
+      { you: "Your icons stay visible", sys: "Watchdog turns native icons back on within a second." },
+      { you: "NeoFences comes back", sys: "Watchdog restarts it (max 3 times in 10 minutes)." },
+      { you: "Explorer restarts instead", sys: "TaskbarCreated: re-find desktop, re-hide icons, re-attach hooks." },
+      { you: "Config file is damaged", sys: "Loads .bak or the newest backup; damaged copy kept." }
+    ]},
+    { title: "A new game", steps: [
+      { you: "Install a game in Steam", sys: "Steam writes its install file; NeoFences sees the library folder change." },
+      { you: "Wait a few seconds", sys: "The Game Library rescans after 5 quiet seconds and adds the game with its Steam cover." },
+      { you: "Double-click it", sys: "Steam starts the game (DRM, updates and cloud saves stay Steam's)." },
+      { you: "Right-click Wallpaper Engine", sys: "Hide from library: gone until Settings → Game Library → Show again." }
+    ]}
+  ],
+  features: [
+    ["Fences holding desktop icons", "1+", "v1", "M2", "done", "Takeover model, ADR-002; M2b (ADR-014)", "parity"],
+    ["Inbox fence for new items", "—", "v1", "M2", "done", "Fences leaves them on the open desktop", "parity"],
+    ["First-run prompt in the Inbox", "—", "v1", "M2", "done", "Asks once whether to hide desktop icons (your choice)", "extra"],
+    ["Move and resize, 8 px snap", "1+", "v1", "M2", "done", "Snaps to 8 px gaps and aligned edges; slow drags never stick", "parity"],
+    ["Scrolling inside fences", "2+", "v1", "M2", "done", "Thin scrollbar", "parity"],
+    ["Per-fence icon size", "5", "v1", "M2", "done", "32 / 48 / 64 / 96", "parity"],
+    ["Thumbnails for images and videos", "—", "v1", "M2", "done", "IShellItemImageFactory", "parity"],
+    ["Open and select", "1+", "v1", "M2", "done", "Double-click opens in front; Ctrl/Shift multi-select", "parity"],
+    ["Keyboard navigation in fences", "1+", "v1", "M2c", "done", "Arrows, Ctrl+A, Enter; after clicking the desktop or a fence (ADR-015); F2/Del in M3", "parity"],
+    ["Lock fences", "3+", "v1", "M2", "done", "", "parity"],
+    ["Icon-only fences (name on hover)", "6", "v1.1", "M8b", "done", "Per fence (menu → Labels) + Settings default and 'apply to all'; the name pops up under the hovered or selected icon (ADR-025)", "parity"],
+    ["Shortcut arrows", "—", "v1.1", "M8b", "done", "Settings switch, off by default; drawn by NeoFences (ADR-025)", "extra"],
+    ["Rename and delete fences", "1+", "v1", "M2", "done", "Delete moves items to the Inbox", "parity"],
+    ["Per-monitor layouts that survive resolution changes", "2+", "v1", "M1/M2", "wip", "Core (M1) + placement and persistence (M2a) done; real multi-monitor untested", "parity"],
+    ["Shell context menu on items", "1+", "v1", "M3", "done", "Classic menu; Win11 compact menu is Explorer-private", "parity"],
+    ["Rename, delete to Recycle Bin", "1+", "v1", "M3", "done", "F2 in place; Del and Shift+Del always recycle", "parity"],
+    ["Drag-drop in, out and between fences", "1+", "v1", "M3", "done", "Fence-to-fence never touches files; drops from Explorer: your check K4", "parity"],
+    ["Rubber-band selection", "1+", "v1", "M3", "done", "Ctrl adds", "parity"],
+    ["Folder Portals with subfolder navigation", "3+", "v1", "M4", "done", "Newest first; browse inside with Back; Ctrl opens Explorer", "parity"],
+    ["Sort by name, type, date", "2+", "v1", "M4", "done", "Portals live; desktop fences one-time", "parity"],
+    ["Draw fence by right-drag on desktop", "1+", "v1", "M5", "done", "S2 keeps the right-click menu", "parity"],
+    ["Quick-hide (double-click desktop)", "1+", "v1", "M5", "done", "fences + icons (your choice)", "parity"],
+    ["Peek (fences over windows)", "3+", "v1", "M5", "done", "Ctrl+Alt+Space", "parity"],
+    ["Roll-up, expand on hover or click", "2+ / 6.20", "v1", "M5", "done", "hover (default) or click, in Settings (M6b)", "parity"],
+    ["Smart placement spacing", "6.20", "v1", "M5", "done", "first free spot, 8 px gaps", "parity"],
+    ["Light/dark, acrylic look", "5", "v1", "M2/M6", "done", "Follows Windows live; label shadow (M2c, your choice)", "parity"],
+    ["Settings window and tray", "1+", "v1", "M6", "done", "tray + Pause (M6a); Fluent settings window (M6b)", "parity"],
+    ["Start with Windows", "1+", "v1", "M6", "done", "Brought forward after the power outage (ADR-019)", "parity"],
+    ["Rules auto-sort", "3+", "v1.4", "M11", "done", "Type, game (launchers or a folder of mine), name, date, size; Apply rules now can be undone (ADR-031)", "parity"],
+    ["Fence tabs (+ drop onto tab header, tab color)", "6", "v1.2", "M9", "done", "Combine by dragging a title onto another; drag a tab out to split (ADR-029)", "parity"],
+    ["Desktop pages", "3+", "v2", "—", "todo", "", "parity"],
+    ["Snapshots", "2+", "v1.3", "M10", "done", "Tray + Settings; a restore keeps newer items and can be undone (ADR-030)", "parity"],
+    ["Desktop icon colour tint", "6", "v2", "—", "todo", "", "parity"],
+    ["Per-fence colours and title fonts", "3+", "v2", "—", "todo", "v1 has global appearance", "parity"],
+    ["Game-mode idle (fullscreen + borderless)", "—", "v1", "M6", "done", "M6a: hook off, Peek ignored, file changes wait (ADR-021)", "extra"],
+    ["Watchdog: icons always restored", "—", "v1", "M0/M2", "wip", "M2a: detached watchdog verified on kills; sign-out pending", "extra"],
+    ["Live blur over Wallpaper Engine", "—", "v1", "M0/M2", "wip", "M2a: real fences blur the live wallpaper; tint approved", "extra"],
+    ["Blur tint preference", "—", "v2", "—", "todo", "Your request", "extra"],
+    ["Search palette across all fences", "—", "v2", "—", "todo", "", "extra"],
+    ["Game Library fence with cover art", "—", "v1.5", "M12", "done", "Launchers, Xbox, game folders, Desktop game shortcuts; Steam posters from disk; hide; live rescans (ADR-032)", "extra"],
+    ["Theme packs: Nanosuit, Animus", "—", "v2", "—", "todo", "", "extra"],
+    ["Custom compact context menu", "—", "v2", "—", "todo", "", "extra"],
+    ["Wallpaper-adaptive accent colour", "—", "v2+", "—", "todo", "", "extra"],
+    ["Optional local-AI auto-sort (llama.cpp)", "—", "idea", "—", "todo", "Only if rules fall short", "extra"],
+    ["Cross-platform via Avalonia", "—", "idea", "—", "todo", "Only if needed; Core is portable", "extra"]
+  ],
+  adrs: [
+    { id: "ADR-001", t: "Stack: C# / .NET 10 + WPF", s: "Accepted", d: "C# on .NET 10 LTS, WPF Fluent theme, CsWin32. Projects Core (pure), Shell (Win32/COM), App (WPF).", c: "Windows-only UI, ~80–150 MB. Core portable to Avalonia. ReadyToRun for startup (no Native AOT in WPF). Flutter re-evaluated and rejected for v1: no stable multi-window API in 3.44.8, COM servers would need a C++ plugin." },
+    { id: "ADR-002", t: "Icon model: Takeover + Portals, no injection", s: "Accepted", d: "NeoFences draws all items. Native icons hidden via FWF_NOICONS; unassigned items go to Inbox. Any fence can mirror a folder instead. Takeover never moves files.", c: "We implement open, menus, rename, delete, drag-drop via shell COM. Watchdog required. Classic context menu only." },
+    { id: "ADR-003", t: "Top-level bottom-of-z-order fence windows", s: "Partly superseded by ADR-011", d: "WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE windows at HWND_BOTTOM; foreground WinEvent hook raises them on Win+D. DWM acrylic on Win11, tinted on Win10.", c: "Live blur over Wallpaper Engine; immune to the 24H2 window-tree change. Fallback if M0 fails: parent to the desktop host and lose acrylic." },
+    { id: "ADR-004", t: "v1 scope", s: "Accepted", d: "Core fences, Takeover + Portals, drag-drop, shell menu, roll-up, scrolling, per-monitor layouts, tray, settings, game-mode idle, Quick-hide, Peek. First run: everything to Inbox. Look: acrylic card.", c: "Rules, game library, themes, tabs, pages, snapshots, tint, compact menu move to v2." },
+    { id: "ADR-005", t: "Watchdog process restores icons", s: "Accepted", d: "NeoFences.exe --watchdog <pid>. No clean-shutdown marker on exit: restore icons, restart (max 3 per 10 min).", c: "One extra small process. Covers crashes and Task Manager kills." },
+    { id: "ADR-006", t: "Single JSON config, atomic writes, backups", s: "Accepted, amended in M1", d: "%LOCALAPPDATA%\\NeoFences\\config.json, schemaVersion + migrations, 500 ms debounced tmp + File.Replace, daily backups (10), corrupt recovery chain. Layouts keyed by display fingerprint.", c: "No database; data is tiny. M1 amendment: reflection-based JSON (source-gen dropped defaults for missing init-only properties), camelCase enum values, layouts also store each monitor work area for scaling." },
+    { id: "ADR-007", t: "Low-level mouse hook only, no injection", s: "Accepted", d: "Desktop gestures via WH_MOUSE_LL on its own thread; out-of-context WinEvent hooks. Hook removed in game mode.", c: "Anti-cheat and antivirus friendly. Explorer menu suppression after right-drag is an M0 risk." },
+    { id: "ADR-008", t: "Docs and multi-session workflow", s: "Accepted", d: "CLAUDE.md rules + protocol; docs/ for architecture, decisions, features, roadmap with claims, session log, setup, test checklist, specs, plans. Git is the sync; worktrees for parallel sessions.", c: "Single-line Conventional Commits, no co-author trailer." },
+    { id: "ADR-009", t: "Project name (provisional)", s: "Accepted", d: "“NeoFences” for private use. “Fences” is a Stardock trademark: rename before any public release (Palisade, Bastion, Enclave).", c: "Rename is a mechanical find-replace." },
+    { id: "ADR-010", t: "Project hub artifact", s: "Accepted", d: "This page, source docs/hub/neofences-hq.html, mirrors docs/ and is republished at the end of every session.", c: "docs/ stay canonical; the hub is the easy-to-read view." },
+    { id: "ADR-011", t: "M0 results: desktop layer choices", s: "Accepted", d: "Layered fence window + accent blur; owner = Progman (verified via GW_OWNER); FWF_NOICONS + detached watchdog + session-end handling that survives a cancelled shutdown; S2 right-click suppression; game mode = QUNS busy AND a non-shell foreground app, re-checked after activation. Takeover stays off by default until a real sign-out test passes.", c: "Owner-by-Progman is undocumented and attaches input queues: M2 runs a UI-thread hang test. Most M0 checks ran on the old glass fence, so M2 re-verifies layered + owned first. Clicking a fence focuses it (needed for keyboard shortcuts)." },
+    { id: "ADR-012", t: "M2 split and fence-host mechanics", s: "Accepted", d: "M2 split into M2a/M2b/M2c. Watchdog launched through a short-lived hop so it is not a child of the app; restores icons only while NeoFences hid them. NeoFences.exe --exit for clean scripted exits. Monitors identified by device path. Fences sent to the bottom after every show.", c: "If NeoFences runs inside a job that kills children (some launchers, debuggers), the watchdog dies with it." },
+    { id: "ADR-013", t: "Session end through WPF; icon calls off the UI thread", s: "Accepted", d: "WPF's SessionEnding (inside WM_QUERYENDSESSION) saves, restores icons and writes session-ending; every Explorer COM call runs on a background thread with a 4 s limit; the watchdog restarts NeoFences only if the shutdown was cancelled; helper modes run without WPF.", c: "A cancelled shutdown restarts NeoFences after ~2 s instead of keeping it running. Supersedes the session-end part of ADR-011." },
+    { id: "ADR-014", t: "Desktop items: file-system listing, shell names and icons, ask-once first run", s: "Accepted", d: "Fences list the visible files of your Desktop and the Public Desktop plus enabled special icons (Recycle Bin…). If a Desktop folder can't be read (offline, unmounted), its items stay in their fences instead of being dropped. A file watcher keeps them live (including hide/unhide); after an error it re-arms and re-checks everything. Names and icons come from the shell on a background thread. Double-click opens in front. The Inbox asks once whether to hide desktop icons. Keyboard moves to M2c.", c: "Recycle Bin full/empty icon, special-icon toggles and DPI changes refresh only after a restart; no shortcut arrows." },
+    { id: "ADR-015", t: "Fence interactions: snapping on the unsnapped drag, theme veil drawn by the fence, activation limits", s: "Accepted", d: "Snapping (8 px gap, 12 px reach, aligned edges) tracks where the drag would be without snapping, so slow drags never stick. Lock swaps the whole window chrome. Fences follow Windows light/dark live; the blur ignores its tint, so light mode draws its own veil and dark mode stays as you approved. Icons reload once per real DPI change. Keyboard works once the fence is active.", c: "A click from another app does not give the fence keyboard focus (it follows the desktop's focus); mouse always works. Corrects ADR-014." },
+    { id: "ADR-016", t: "Item actions through Windows' own engine; delete always recycles; safe-save memory", s: "Accepted", d: "Right-click shows Windows' classic item menu (with your extensions); Rename and Delete from it are handled by NeoFences. Renames and deletes go through Windows' file engine (dialogs, Undo); delete always goes to the Recycle Bin, Shift+Del too (your choice). Items that cannot open show Windows' own message. A fenced document that vanishes and returns within 5 s (an editor's save) goes back to its place.", c: "NeoFences never deletes permanently; a real delete followed within 5 s by a new file with the same name lands where the old one was." },
+    { id: "ADR-017", t: "Drag-drop through Windows' own engine; drops between fences never touch files", s: "Accepted", d: "Dragging out uses Windows' own data for the items (apps get real files, Windows draws the drag image). Dropping on a fence: items already on the Desktop only change fence membership — nothing on disk moves; dropping on a folder or the Recycle Bin item lets that item handle it; files from elsewhere go to Windows (copy/move with progress and Undo) and land in the fence where you dropped them. Rubber band selects.", c: "A dropped file renamed by Windows on a name clash lands in the Inbox; dropping onto programs to open with them is not supported in fences." },
+    { id: "ADR-018", t: "Portals: live folder view, browse inside, newest first; sorting", s: "Accepted", d: "A Portal shows a folder live (visible files like Explorer), newest first by default, and browses into subfolders with a Back button (Ctrl+double-click opens Explorer). Sort by name/type/date: live for Portals, one-time for desktop fences. Menu, rename, delete and drag work on Portal items; drops on a Portal are real moves/copies by Windows. Deleting a Portal fence never touches the folder.", c: "Very large folders are re-listed on the UI thread; libraries and virtual folders can't be Portals." },
+    { id: "ADR-019", t: "Start with Windows, for power-loss recovery", s: "Accepted", d: "Hidden desktop icons survive a power cut, so NeoFences registers itself to start at sign-in (per user, no admin) and brings the fences back. Toggle: 'Start with Windows' in the fence menu. Test builds from the temp folder never register; Task Manager's Startup setting is respected.", c: "If NeoFences is removed without running, icons stay hidden until shown in Explorer (uninstaller in M7)." },
+    { id: "ADR-020", t: "Desktop gestures: quick-hide, draw a fence, Peek, roll-up", s: "Accepted", d: "One WH_MOUSE_LL with S2 right-click replay; quick-hide hides fences and icons through the marked path; Peek marks all fences then raises them topmost; roll-up keeps the full height stored and opens on hover." },
+    { id: "ADR-021", t: "Game mode, tray, Pause, and mouse-hook hardening", s: "Accepted", d: "Game mode = full-screen notification state while an app is in front (re-checked 1/2.5/5 s); idle: hook off, Peek ignored, file changes wait. Tray menu on any click; Pause gives the desktop back to Windows; the hook runs at Highest priority and is re-installed after Explorer restarts and on unlock." },
+    { id: "ADR-022", t: "Settings window, roll-up click mode, animations", s: "Accepted", d: "Fluent settings window (per-window ThemeMode) with General, Fences, Game mode, About; changes apply at once; hotkey recorder keeps the old hotkey if Windows refuses the new one. Roll-up opens on hover or click. 200 ms roll-up, 150 ms quick-hide fade, off with Windows animations or in game mode." },
+    { id: "ADR-023", t: "Installer: Velopack, self-contained, uninstall restores icons; sign-in follows the installed copy", s: "Accepted", d: "Per-user Setup.exe (no admin), program in NeoFences.App, data stays in NeoFences. Uninstall hook: clean stop, icons always shown, own sign-in entry removed, data kept. Dev builds never take start-with-Windows from an installed copy." },
+    { id: "ADR-024", t: "v1.1 reliability batch: reconcile recovery, unique monitors, rounded corners by Windows", s: "Accepted", d: "Reconcile returns safe-saved and moved-Desktop items to their fences; duplicate monitor ids made unique; backups never fail a save; fence corners rounded by Windows 11 (the blur ignores window regions)." },
+    { id: "ADR-025", t: "Fence UI batch: icon-only labels, shortcut arrows, NeoFences' own title double-click", s: "Accepted", d: "Labels per fence with a Settings default; the name is an overlay inside the fence window (never a popup); arrows drawn by NeoFences; title double-click recognised by NeoFences so the first one after another app works; Peek hotkey released while recording; keyboard focus after a click from another app stays a known limit." },
+    { id: "ADR-026", t: "Shell actions and drag-drop details: shell worker, special-icon notices, drop rows, start after Setup", s: "Accepted", d: "Open/recycle/rename on one STA worker; menu Rename acts on the right-clicked item; Recycle Bin and desktop-icon settings changes update live; zip drags not extracted on hover; watcher recovery coalesced; a new instance waits for an exiting one after Setup." },
+    { id: "ADR-027", t: "Portal details: Safely Remove, watcher backoff, Enter on several items", s: "Accepted", d: "Portals register their folder for removal notices and close their handles when Windows asks, so Safely Remove works (v1.1.0 blocked it); failing Portal watchers back off up to a minute; Enter on several items opens each." },
+    { id: "ADR-028", t: "NeoFences starts itself after Setup", s: "Accepted", d: "Setup closes the app, runs the install hook, force-stops the install folder and never starts the app: the hook now shows the icons and starts NeoFences ~4 s later via cmd.exe." },
+    { id: "ADR-029", t: "Fence tabs as boxes over ordinary fences", s: "Accepted", d: "Each tab stays a full fence; a host fence lists the box's tabs and owns window, placement, roll-up and lock; one window per box (FenceId = shown tab, BoxId = host); Core FenceTabs owns every edit; old configs unchanged." },
+    { id: "ADR-030", t: "Snapshots: one file each, restored against the live desktop", s: "Accepted", d: "Snapshot files in the data folder (temp-then-swap, damaged ones skipped); a pure Core restore keeps newer items in surviving fences; 'Before restore' is written first; tray + Settings; deletes go to the Recycle Bin." },
+    { id: "ADR-031", t: "Rules auto-sort: Core matching, Shell facts, filing new Inbox items", s: "Accepted", d: "Ordered rules in config.json, first match wins (desktop fences only); pure Core Rules (type, game launcher or a folder of mine, name, date, size; repair disables broken rules); Shell reads facts and shortcut targets on the shell worker; new Inbox items are filed; Apply rules now writes Before restore first." },
+    { id: "ADR-032", t: "Game Library: generated shortcuts shown like a Portal", s: "Accepted", d: "A library fence kind shows NeoFences' own library folder (one shortcut per game) as 2:3 tiles; pure Core catalog merges Steam, Epic, GOG, Ubisoft, EA, Battle.net, Xbox, game folders and Desktop game shortcuts; scans run off the UI thread; hide covers every source; nothing outside NeoFences' folder is changed." },
+    { id: "ADR-033", t: "Config schema version 2; data from a newer NeoFences is never rewritten", s: "Accepted", d: "Schema 2 is stamped on load so v1.5 and older stay read-only on it; snapshots from a newer version or over 16 MB are refused; duplicate rule ids renewed; the library index is settled after failed writes." },
+    { id: "ADR-034", t: "Game Library polish: shortcut copies, remembered hidden games, quiet watchers", s: "Accepted", d: "Epic games only, Xbox resource names, containment merge, shortcut games copied as is, remembered programs and directory-only watchers, hidden games stored with names, written-through index and temp sweep, a pre-schema-2 config copy." },
+    { id: "ADR-035", t: "Fence and Settings UX carry-overs; what stays as it is", s: "Accepted", d: "Title right-click opens the fence menu; header click opens a rolled-up box; snapshot results in Settings and warning notices; one-line tray labels; Settings keeps focus; layout key caps; Desktop shortcut changes rescan the library. Rules on the declined drag-drop, mixed-DPI and tab-strip items. Amends ADR-026." },
+    { id: "ADR-036", t: "Appearance: colour styles, per-tone strength, title fonts, wallpaper accent", s: "Accepted", d: "Pure look resolver (v1.6 defaults); three colour styles as one preference; background strength per Windows tone; one global title font (per-fence override removed in v1.7.1, ADR-038); accent from Wallpaper Engine's preview, then Windows' wallpaper, then Windows' accent — no screen capture; schema 3; Windows' colour picker for custom colours." },
+    { id: "ADR-038", t: "One title font for all fences; v1.7.1 polish", s: "Accepted", d: "The fence menu's Title font is gone (too deep; per-fence fonts too much): one font in Settings, old per-fence fonts dropped on save. Accent-edge titles pushed until readable; the M13c/M14 review carry-overs closed. Amends ADR-036." },
+    { id: "ADR-039", t: "Public repository, CI draft releases, Velopack auto-update; signing deferred", s: "Accepted", d: "One public repo (not open source), history scrubbed of the personal address and the hub link; CI builds every push and turns tags into draft releases; Velopack checks at start and daily (never in games, never when off), downloads quietly, applies after the clean exit; signing deferred." }
+  ],
+  research: [
+    { t: "Windows 11 24H2 changed the desktop window tree", b: "SHELLDLL_DefView stays a child of Progman, and Explorer's wallpaper layer is a WorkerW child of Progman below the icons. That WorkerW can appear late and is missed by plain enumeration. Wallpaper tools that parented into WorkerW broke.", impact: "Supports ADR-003: top-level fences don't depend on that tree.", src: [["kirie PR #11", "https://github.com/UnhingedSoftware/kirie/pull/11"], ["AutoHotkey forum: overlay broke after 24H2", "https://www.autohotkey.com/boards/viewtopic.php?style=7&t=135199"]] },
+    { t: "What Fences 6 added", b: "Tabs (multiple fence groups in one), icon colour tint, dropping files onto a tab header, tab colour when unfocused. 6.20 added click-to-open for rolled-up fences, hover-pause before expanding, and smart placement spacing.", impact: "Roll-up modes and smart spacing joined v1; tabs and tint are v2.", src: [["Now Announcing: Fences 6", "https://www.stardock.com/news/535050/now-announcing-fences-6-beta-available-now"], ["Fences 6 Beta 2", "https://www.stardock.com/news/535722/fences-6-beta-2-arrives-with-new-features"], ["Fences 6.20", "https://www.stardock.com/news/539869/releasing-fences-620-with-new-features-and-enhancements"]] },
+    { t: "Why not inject like Stardock does", b: "Fences hooks explorer.exe to control the real desktop list view. That breaks with Explorer updates and can be flagged by antivirus.", impact: "ADR-002: NeoFences draws items itself and hides native icons through the documented folder-view flag.", src: [] },
+    { t: "Borderless games evade the fullscreen check", b: "SHQueryUserNotificationState reports exclusive D3D fullscreen, but most modern games run borderless. Checking whether the foreground window covers its monitor catches those.", impact: "GameDetector uses both signals (spec §4.7).", src: [] },
+    { t: "Flutter for this project?", b: "Flutter 3.44.8 stable (July 2026) still has no public multi-window API; the windowing API is @internal on the main channel behind --enable-windowing. Every fence must be its own OS window. Since 3.35 Windows merges UI and platform threads, which helps Dart FFI, but COM servers like IDropTarget would still need a C++ plugin.", impact: "Stay on C#/WPF for v1 (ADR-001); revisit a Flutter UI only if windowing goes stable.", src: [["Flutter multi-window guide (Aug 2026)", "https://startdebugging.net/2026/08/how-to-enable-multi-window-support-in-a-flutter-desktop-app/"], ["Merged threads on Windows", "https://docs.flutter.dev/release/breaking-changes/macos-windows-merged-threads"]] },
+    { t: "Acrylic on windows that never activate (M0 result)", b: "Confirmed on 25H2: DWM system backdrops render flat grey on inactive windows, the WM_NCACTIVATE trick does not help, and accent blur has no effect on an extended-glass window. A layered window with accent blur works whether or not it is focused.", impact: "ADR-011: fences are layered windows with accent blur; tint-only fallback.", src: [] },
+    { t: "CsWin32 in a WPF project", b: "Version 0.3.335 only generates GetWindowLongPtr, IShellBrowser and IShellView when PlatformTarget is x64. Generated types are internal, VARIANT parameters become object, and IServiceProvider clashes with System.IServiceProvider.", impact: "Spike and src projects target x64 only; members exposing HWND stay internal.", src: [] },
+    { t: "M0: what keeps a fence on the desktop", b: "Win+D makes Progman the foreground window. Raising fences to HWND_TOP at that moment loses the race: Explorer raises the desktop afterwards. Making Progman the fence's owner keeps it just above the desktop through Win+D, the Show-desktop corner and Win+M, and it survived a forced Explorer kill. Graceful restarts and re-ownership are still to verify.", impact: "ADR-011 z-order strategy; M2 re-verification.", src: [] },
+    { t: "M0: right-drag without Explorer's menu", b: "Swallowing only the button release (S1) leaves Explorer's desktop stuck mid-drag, so the next click freezes. Swallowing the press and replaying a plain right-click when there was no drag (S2) is clean.", impact: "Draw-fence gesture uses S2.", src: [] },
+    { t: "M0: game detection surprises", b: "Only QUNS caught Assassin's Creed, and only about 1 s after it took focus; the cover-monitor check never fired. QUNS is also system-wide, so every foreground window looked like a game while it ran, and the lock screen covers the monitor without a caption.", impact: "M6: QUNS busy AND a non-shell foreground app, re-checked shortly after activation; exclude the lock screen.", src: [] },
+    { t: "M1 review: real-world inputs Core must survive", b: "Probe tests showed a zero or NaN monitor work area could permanently overwrite a saved layout or make every save throw, a config locked by antivirus could be overwritten with defaults, an empty desktop listing at boot would wipe every fence, and hand-edited nulls in layouts crashed startup.", impact: "All guarded in Core (71 tests); M2 must log ReconcileReport.Suspicious and skip a resolve that throws.", src: [] },
+    { t: "M2a on the real desktop", b: "Layered fences with accent blur show the live Wallpaper Engine animation (84% of sampled pixels changed within a second), the rounded region clips the blur, and ownership by Progman survives Win+D, the Show-desktop corner, Win+M, forced and graceful Explorer restarts and a frozen UI thread. A freshly shown fence sat above apps until it was sent to the bottom.", impact: "GO for M2b; real sign-out still gates Takeover.", src: [] },
+    { t: "M2a review: how WPF really ends a session", b: "WPF's own hidden window answers WM_QUERYENDSESSION and shuts the app down right then, before WM_ENDSESSION; and a COM call to Explorer inside that message fails with RPC_E_CANTCALLOUT_ININPUTSYNCCALL. The first design therefore never ran.", impact: "ADR-013: restore inside SessionEnding on a background thread; watchdog restarts after a cancel. Scripted test passes.", src: [] },
+    { t: "M2b on the real desktop", b: "All 29 desktop items reconciled into the Inbox with correct icons and alpha; a PNG shows a real thumbnail. 500 files written in 172 ms were all tracked (no lost events) and removed again. Items opened from a never-focused fence come to the front only after AllowSetForegroundWindow. A broken shortcut fails silently (logged).", impact: "M2b done; open-failure feedback goes to M3, scrollbar/labels/DPI to M2c.", src: [] },
+    { t: "M2c prototype findings", b: "Four bugs surfaced on the real desktop before the plan: a routed DpiChanged event made icon reloads loop (1.4 GB); snapping each WM_MOVING proposal pinned slow drags; editing the window chrome in place could not be undone; the accent blur ignores its tint colour. Later: a fence click from another app does not activate the fence.", impact: "All fixed in the plan except activation, which is documented (ADR-015) with a ROADMAP follow-up.", src: [] },
+    { t: "M8b prototype on the real desktop", b: "Icons-only fences fit 9 icons per row instead of 5; the name under the hovered icon and under the selected icon read cleanly; the first title double-click after Explorer was in front now rolls the fence up. Calling Activate() on a press still does not make a fence the foreground window.", impact: "ADR-025; keyboard focus after a click from another app stays a known limit (ADR-015).", src: [] },
+    { t: "M8c/M8d: shell work off the UI thread, and USB sticks", b: "Recycling and renaming moved to an STA shell worker; opening runs on its own thread, so an offline share never freezes fences. A Portal on a USB stick blocked Safely Remove until NeoFences registered for removal notices and let go of the folder (tested with the LOCO_DUCK stick).", impact: "ADR-026/027: one shell worker; Portals and later the Game Library register for removal notices.", src: [] },
+    { t: "Silent upgrades left NeoFences stopped", b: "Velopack’s silent Setup force-stops the install folder right after the install hook, so the app never came back after an upgrade. The hook now shows icons and starts NeoFences about 4 s later through cmd.exe; every release since restarted itself in about 4 s.", impact: "ADR-028, v1.1.2.", src: [] },
+    { t: "M9–M10 on the real desktop: tabs and snapshots", b: "Fence tabs became boxes over ordinary fences (one window per box), so every existing feature kept working per tab. Snapshots restore against the live desktop: deleted icons drop out, newer ones stay in a surviving fence, and “Before restore” makes every restore undoable.", impact: "ADR-029, ADR-030.", src: [] },
+    { t: "M11: what new desktop items really look like", b: "Chrome and Edge finish a download by renaming .crdownload to its final name; attribute changes (OneDrive, Read-only) arrive as “created”; installers write shortcuts in stages. Rules now file only items new to the Desktop, finished downloads included, 1.5 s after the last arrival.", impact: "ADR-031; review fixes in v1.4.0.", src: [] },
+    { t: "M12: where launchers keep their games", b: "Steam: libraryfolders.vdf + appmanifest_*.acf (installed = StateFlags bit 4) and cover art in appcache\\librarycache; Epic: ProgramData manifests (no art); GOG/Ubisoft: registry; Xbox: package repository + MicrosoftGame.config. On this PC: 12 games in 0.2 s; 6 of them live in D:\\GameLibrary outside any launcher.", impact: "ADR-032: one Game Library fence of generated shortcuts; a game folder of your own in M11 rules too.", src: [] }
+  ],
+  risks: [
+    ["Accent blur is an undocumented Windows API", "Blur could break in a future Windows update", "One wrapper function; layered tint-only fallback", "warn"],
+    ["Sign-out or shutdown while icons are hidden", "Empty desktop at next sign-in", "ADR-013: icons restored inside WPF SessionEnding (verified by scripted G9); the watchdog restores them too; real sign-out (C8) still your check", "warn"],
+    ["Fence owned by another process’s window", "A hung fence could freeze desktop input", "Checked in M2a: a frozen NeoFences UI does not block the desktop", "done"],
+    ["Whole process tree killed at once", "Watchdog dies too, icons stay hidden", "Watchdog starts detached (M2a), verified on kills", "done"],
+    ["Layered windows lose rounded corners", "Look and feel", "Windows 11 DWM rounded corners (M8a, checked at 8× zoom)", "done"],
+    ["Power cuts mid-save or with icons hidden", "Lost layout or a blank desktop after reboot", "Temp-then-swap saves with .bak and daily backups; start with Windows restores icons and fences (ADR-019)", "done"],
+    ["Launcher data formats change (Steam, Epic, Xbox)", "Games missing from the library", "Each scanner isolated and logged; a source that cannot be read keeps its games (ADR-032)", "warn"],
+    ["Windows 10 has no DWM rounded corners or acrylic", "Flatter look on Windows 10", "Square tinted fallback, logged once", "warn"],
+    ["“Fences” trademark", "Only matters if published", "Rename before any public release (ADR-009)", "warn"]
+  ],
+  docs: [
+    ["CLAUDE.md", "Auto-loaded each session: hard rules, repo map, sync protocol, commit style"],
+    ["docs/ARCHITECTURE.md", "Living technical design: layers, z-order, threads, data locations, one line per milestone"],
+    ["docs/DECISIONS.md", "ADR log (ADR-001 to ADR-032) with reasons; superseded, never rewritten"],
+    ["docs/FEATURES.md", "Fences parity matrix + extras with status (source of the Features table)"],
+    ["docs/ROADMAP.md", "Milestones, checkboxes, claims, carry-overs from every review"],
+    ["docs/SESSION-LOG.md", "Append-only log of every session"],
+    ["docs/SETUP.md", "Toolchain install, build/run, release (build\\pack.ps1), recovery"],
+    ["docs/TEST-CHECKLIST.md", "Manual shell/UI checks, sections A–Y, run at every milestone"],
+    ["docs/superpowers/specs/", "Approved designs: v1, fence tabs, snapshots, rules, game library (dated snapshots)"],
+    ["docs/superpowers/plans/", "One compile-verified plan per milestone (M0 to M12, v1.1.2)"],
+    ["docs/research/", "Live results per milestone (desktop-layer, m2a … m12-game-library)"],
+    ["spikes/M0.DesktopLayer/", "Throwaway M0 lab app (never referenced from src/)"],
+    ["docs/hub/neofences-hq.html", "Source of this page"]
+  ],
+  sessions: [
+    { date: "2026-10-02", topic: "Kickoff: stack, design, docs, hub", done: "Chose stack, icon model, v1 scope, look and first-run behaviour. Wrote spec, CLAUDE.md, architecture, ADR-001 to 010, features, roadmap, setup. Installed .NET 10 SDK. Built this hub. Evaluated Flutter (rejected for v1). Spec approved; wrote the compile-verified M0 plan.", next: "Plan review, then run the M0 spike." },
+    { date: "2026-10-02", topic: "M0 desktop layer spike: GO", done: "Built the throwaway lab and ran the checklist together, with AC Black Flag running in between. Win+D survival, icon hiding, crash recovery, Explorer restart and desktop gestures all pass. Blur needed a different window type (layered + accent). Fixed a watchdog bug found along the way.", next: "Branch review and merge, then the M1 plan." },
+    { date: "2026-10-02", topic: "M1 core + config", done: "Built NeoFences.Core test-first: config model with one Inbox, JSON format, repair of hand-edited configs, safe saves with .bak and 10 daily backups, recovery from corrupt files, per-monitor-setup layouts, and fence membership. 58/58 tests. A fresh review then found 8 real-world failure modes (locked config file, garbage monitor data, empty desktop listing at boot, duplicate after rename...), all fixed test-first: 71/71.", next: "Merge, then the M2 plan." },
+    { date: "2026-10-02", topic: "M2a fence host", done: "Built NeoFences.Shell and NeoFences.App: real blurred, rounded fences on the desktop, saved when moved, safe across Explorer restarts, kills and restarts. Verified together and, after you went remote, with automated input. Fixed fences appearing above apps.", next: "Review and merge M2a, then the M2b plan (your icons in fences)." },
+    { date: "2026-10-02", topic: "M2b desktop items", done: "Planned from a working prototype, you approved, built inline: your real desktop icons inside fences with thumbnails, live create/rename/delete, double-click open, multi-select, scroll, and the one-time Inbox question. Verified on your desktop with scripted input.", next: "Final review and merge, then the M2c plan (keyboard, snap, lock, icon size, rename, light/dark)." },
+    { date: "2026-10-02", topic: "M2c fence interactions", done: "You chose light/dark following Windows and soft label shadows. Prototype first (4 bugs caught), plan approved, built inline: fence menu (rename, icon size, lock, delete), snapping, keyboard, thin scrollbar, label shadow, live light/dark. Verified with scripted input on your desktop.", next: "Final review and merge, then the M3 plan (shell actions: item menu, rename/delete files, drag-drop)." },
+    { date: "2026-10-02", topic: "M3a item actions", done: "You split M3 and chose that Shift+Del recycles too. Prototype, plan, built inline: Windows' item menu, F2 rename, Del to the Recycle Bin, Windows' messages for items that can't open, documents stay in their fence when saved. Smoke on your desktop passed; your terminal was refocused afterwards.", next: "Final review and merge, then the M3b plan (drag-drop, rubber-band selection)." },
+    { date: "2026-10-03", topic: "M3b drag-drop", done: "While you were away: prototype (two bugs found and fixed), plan approved, built inline. Reorder, between fences, out to Explorer, onto Recycle Bin and rubber band pass on your desktop. Drops in from Explorer can't be scripted — your check.", next: "Final review and merge, then the M4 plan (Portals: fences that mirror a folder)." },
+    { date: "2026-10-03", topic: "M4 Portals", done: "You chose browse-inside and newest first. Prototype found a renamed folder going unnoticed (fixed), plan approved, built inline: Portal fences with live view, browsing, sorting, folder dialog, drags in and out. All smokes passed on your desktop.", next: "Final review and merge, then the M5 plan (desktop gestures: draw a fence, quick-hide, peek, roll-up)." },
+    { date: "2026-10-03", topic: "Power outage → start with Windows", done: "The outage showed hidden icons persist while NeoFences didn't restart (empty desktop). M4 review fixes merged (incl. your 'no permanent delete on USB/network'); NeoFences now starts with Windows.", next: "M5 plan: desktop gestures (draw a fence by right-drag, double-click to quick-hide, Peek hotkey, roll-up)." },
+    { date: "2026-10-03", topic: "M5 desktop gestures", done: "Quick-hide (fences + icons), right-drag to draw a fence, Peek over windows, roll-up with hover, smart placement. Prototype caught Peek raising only one fence.", next: "M6 game mode and tray" },
+    { date: "2026-10-03", topic: "M6a game mode, tray, Pause", done: "Go idle while a game runs (borderless too), tray menu with Pause, re-checks for late full-screen flips; tray icon crash at start found and fixed.", next: "M6b settings window" },
+    { date: "2026-10-03", topic: "M6b settings and animations", done: "Fluent Settings window (General, Fences, Game mode, About), hotkey recorder, click-to-open roll-up, short animations that switch off in game mode.", next: "M7 installer" },
+    { date: "2026-10-03", topic: "M7 installer → v1.0", done: "Velopack installer; uninstall restores icons and keeps your data. v1.0 installed and running your fences.", next: "v1.1 carry-overs" },
+    { date: "2026-10-03", topic: "M8 v1.1 (four batches)", done: "Reliability and rounded corners (v1.0.1), icon-only labels and shortcut arrows (v1.1.0), shell work off the UI thread and drag-drop details, Portals on USB sticks (v1.1.1), Setup restarting NeoFences (v1.1.2).", next: "Fence tabs" },
+    { date: "2026-10-03", topic: "M9 fence tabs (v1.2)", done: "Combine fences by dragging a title onto another, drag a tab out, tab colours. Review fixes and smoke passed; v1.2.0 installed.", next: "Snapshots" },
+    { date: "2026-10-03", topic: "M10 snapshots (v1.3)", done: "Take and restore arrangements from the tray and Settings; every restore can be undone. Review fixed stale windows and a rename that could be lost; v1.3.0 installed.", next: "Rules auto-sort" },
+    { date: "2026-10-03", topic: "M11 rules auto-sort (v1.4)", done: "New Desktop items filed by type, game, name, date or size; Apply rules now (undoable); you added a game folder of your own. Smoke caught half-written shortcuts; v1.4.0 installed.", next: "Game Library" },
+    { date: "2026-10-04", topic: "M12 Game Library (v1.5)", done: "One fence with every installed game (Steam, Epic, GOG, Xbox, D:\\GameLibrary, Desktop game shortcuts), Steam covers, hide, live rescans. Review fixed lost Steam games on a failed scan, ghost games and drive removal; v1.5.0 installed.", next: "Your pick: themes, desktop pages, icon tint or search" }
+  ],
+  commits: [
+    ["681de83", "docs: added v1 design spec"],
+    ["fccecdb", "docs: added CLAUDE.md with hard rules and session sync protocol"],
+    ["0690cd2", "docs: added architecture overview and decisions log"],
+    ["a6bfda9", "docs: added fences parity feature matrix and roadmap"],
+    ["af24b3f", "docs: added session log and setup guide"],
+    ["96d7c9a", "docs: marked .NET 10 SDK as installed in roadmap"],
+    ["9c1f247", "docs: added project hub artifact page"],
+    ["ff321ae", "docs: added hub refresh step to session protocol and ADR-010"],
+    ["f382333", "docs: added M0 desktop layer spike implementation plan"],
+    ["3df1eb4", "docs: recorded flutter evaluation in ADR-001 alternatives"],
+    ["cdf55c2", "docs: updated roadmap and session log for spec approval and M0 plan"],
+    ["2c8867d", "docs: refreshed hub with M0 plan, risks and research"],
+    ["c7dd7e7", "docs: claimed M0 desktop layer spike"],
+    ["3808903", "chore: scaffolded M0 desktop layer spike with lab window and test checklist"],
+    ["937a8c8", "feat: added desktop gesture tracker to M0 spike"],
+    ["a63f4f4", "feat: added watchdog restart throttle and fullscreen check to M0 spike"],
+    ["f26227e", "feat: added acrylic spike fence window with backdrop modes"],
+    ["e30d7c6", "feat: added z-order strategies and Win+D handling to M0 spike"],
+    ["d475750", "feat: added desktop icon hiding and watchdog to M0 spike"],
+    ["efd5618", "feat: added low-level mouse hook gestures and game detection logging to M0 spike"],
+    ["da2352b", "feat: added accent blur variants and backdrop auto reset to M0 spike"],
+    ["d5fe3e2", "docs: recorded M0 checklist results and extra findings"],
+    ["c398ff3", "feat: added layered accent-blur fence variant to M0 spike"],
+    ["8587a90", "docs: recorded M0 desktop layer findings and ADR-011"],
+    ["f377021", "docs: updated roadmap and session log after M0"],
+    ["bcb15bf", "docs: refreshed hub with M0 results and ADR-011"],
+    ["600672e", "docs: corrected M0 findings and ADR-011 after branch review"],
+    ["6aecce6", "docs: added M0 re-verification carry-overs to roadmap"],
+    ["41953b9", "docs: refreshed hub with review corrections"],
+    ["6682fb8", "docs: added M1 core and config implementation plan"],
+    ["805daa6", "docs: marked M0 merged and M1 plan written in roadmap"],
+    ["3e7e3d0", "docs: refreshed hub with M1 plan"],
+    ["3f16266", "docs: claimed M1 core and config"],
+    ["da75bd2", "feat: added core config model with inbox and default settings"],
+    ["8d07080", "feat: added config json serialization with camelcase enums"],
+    ["a1026ee", "feat: added config normalizer that repairs hand-edited configs"],
+    ["13ae2da", "feat: added config store with atomic saves, daily backups and recovery"],
+    ["54b0565", "feat: added display fingerprints and per-setup fence layouts"],
+    ["b5c7e26", "feat: added fence membership with reconcile and item events"],
+    ["52d70b3", "docs: amended ADR-006 and documented core config shape"],
+    ["4a4342d", "docs: updated roadmap, session log and hub after M1"],
+    ["aaaaec0", "fix: rejected unusable monitor work areas in layout engine"],
+    ["2099ac1", "fix: repaired broken layouts, enum values and portal inbox in config normalizer"],
+    ["5c92461", "fix: kept config read-only when locked and checked newer schema on every save"],
+    ["74e0484", "fix: kept memberships on incomplete desktop listings and deduped renames"],
+    ["ce0724d", "docs: recorded M1 review fixes, core contracts and M2 carry-overs"],
+    ["35fcdb3", "docs: refreshed hub with M1 review results"],
+    ["9aaaaa2", "docs: marked M1 merged in roadmap"],
+    ["c0c9564", "docs: added M2a fence host implementation plan"],
+    ["7cf98e4", "docs: recorded M2 split and M2a plan in roadmap"],
+    ["15b6141", "docs: refreshed hub with M2a plan"],
+    ["360c921", "docs: split M2 into M2a, M2b, M2c and claimed M2a"],
+    ["9dae6f7", "feat: added pixel placement and unclamped layout storage to core"],
+    ["c688a98", "feat: added session-end policy and restart throttle to core"],
+    ["cafdf4f", "fix: wrote config json without escaping plus and ampersand"],
+    ["cbf52c3", "feat: added shell layer for monitors, desktop ownership, blur, icons and watchdog"],
+    ["a5e6d81", "feat: added fence host app with layered desktop fences, saves and session handling"],
+    ["20e9e3e", "docs: fixed corrupted smoke script in M2a plan"],
+    ["bec4514", "fix: sent fences behind app windows after showing and re-attaching"],
+    ["b188b75", "docs: recorded M2a verification results so far"],
+    ["d256037", "docs: recorded automated M2a desktop-layer checks"],
+    ["e3a5f45", "docs: concluded M2a verification with open M2b gate items"],
+    ["e2c23a0", "docs: added ADR-012 and documented the M2a fence host"],
+    ["87a5873", "docs: updated roadmap, session log and hub after M2a"],
+    ["f35ffb2", "fix: planned watchdog recovery from markers and restored icons whenever takeover is marked"],
+    ["a2e9696", "fix: ran desktop icon calls off-thread and made the watchdog session-aware and crash-proof"],
+    ["2ea5997", "fix: restored icons on session end inside the query and ran helper modes without WPF"],
+    ["39bc0a4", "docs: added ADR-013 and recorded M2a review fixes and checks"],
+    ["9fa4288", "docs: updated roadmap and session log after M2a review"],
+    ["3b4dd5a", "docs: refreshed hub with M2a review results"],
+    ["4fe9605", "docs: marked M2a merged in roadmap"],
+    ["cd203e4", "docs: added M2b desktop items plan"],
+    ["1599355", "docs: refreshed hub with the M2b plan"],
+    ["fd59a77", "docs: claimed M2b and moved fence keyboard navigation to M2c"],
+    ["16d1ed4", "feat: added desktop change events and the first-run prompt flag to core"],
+    ["0583aa9", "feat: added desktop item listing, change watcher, shell names, icons and open"],
+    ["46f3948", "feat: added desktop items to fences with icons, live changes, open and first-run prompt"],
+    ["e7d215f", "docs: added M2b desktop item checks and results"],
+    ["e5309e7", "docs: added ADR-014 and synced docs for M2b"],
+    ["a977811", "docs: refreshed hub with M2b results"],
+    ["3e4880a", "fix: hardened desktop items against unreadable folders, unhidden files, stopped watchers, icon load errors and slow opens"],
+    ["2a015ae", "docs: recorded M2b review fixes and deferred items"],
+    ["059430d", "docs: corrected M2b attribute limitation after review fix"],
+    ["aed799f", "docs: corrected M2b roadmap carry-over"],
+    ["76772db", "docs: marked M2b merged in roadmap"],
+    ["01732dd", "docs: refreshed hub with M2b merge"],
+    ["695ab45", "docs: added M2c fence interactions plan"],
+    ["55ed04f", "docs: refreshed hub with the M2c plan"],
+    ["c9ad093", "docs: claimed M2c"],
+    ["b2f27b7", "feat: added fence edits and drag snapping to core"],
+    ["862468a", "feat: added drag rect helpers and windows app mode to shell"],
+    ["e4837de", "feat: added fence menu, rename, icon size, lock, snapping, keyboard open and light/dark"],
+    ["60dcdc8", "docs: added M2c fence interaction checks and results"],
+    ["87026a2", "docs: added ADR-015 and synced docs for M2c"],
+    ["4430d7a", "docs: refreshed hub with M2c results"],
+    ["1d86955", "fix: snapped drags from the last written rect and closed the rename box when the fence cannot take focus"],
+    ["39ab3a8", "docs: recorded M2c review fixes and deferred items"],
+    ["ca414da", "docs: marked M2c merged and split M3 into M3a and M3b"],
+    ["58af029", "docs: refreshed hub with M2c merge"],
+    ["c7e1d99", "docs: added M3a item actions plan"],
+    ["5fd8673", "docs: refreshed hub with the M3a plan"],
+    ["ff3ea2b", "docs: claimed M3a"],
+    ["f52bcb3", "feat: kept documents in their fence across editor safe-saves"],
+    ["0910130", "feat: added windows item menu, recycle, rename and open error ui to shell"],
+    ["81064bc", "feat: added item menu, in-place rename, recycle and open feedback to fences"],
+    ["e9963a1", "docs: added M3a item action checks and results"],
+    ["9e4ffc7", "docs: added ADR-016 and synced docs for M3a"],
+    ["ca4c3f7", "docs: refreshed hub with M3a results"],
+    ["d608388", "fix: kept fences below apps after they are activated"],
+    ["bbf4d8a", "docs: recorded the fence z-order fix"],
+    ["a438871", "fix: survived failing shell extensions, refused path-like renames, kept safe-saves with visible temp files and cancelled renames on rebuild"],
+    ["bb86ce0", "docs: recorded M3a review fixes and deferred items"],
+    ["75f905b", "docs: marked M3a merged"],
+    ["9887ec6", "docs: refreshed hub with M3a merge"],
+    ["f9f0fb7", "docs: added M3b drag-drop plan"],
+    ["2326090", "docs: refreshed hub with the M3b plan"],
+    ["55c5152", "docs: claimed M3b"],
+    ["a5ba6c5", "feat: added drop-index moves and expected drop arrivals to core"],
+    ["12dc747", "feat: added shell drag source and fence drop target"],
+    ["5c7db4a", "feat: added drag-drop and rubber-band selection to fences"],
+    ["ba3428f", "docs: added M3b drag-drop checks and results"],
+    ["b821650", "docs: added ADR-017 and synced docs for M3b"],
+    ["2bdc548", "docs: refreshed hub with M3b results"],
+    ["faed4ff", "fix: recycled drops on the Recycle Bin item, kept dropped files placed for minutes, limited drop-into to the item centre and stopped rename text drags"],
+    ["ca6d2c9", "docs: recorded M3b review fixes and deferred items"],
+    ["586584a", "docs: marked M3b merged and recorded Portal choices"],
+    ["2abf907", "docs: refreshed hub with M3b merge"],
+    ["4258658", "docs: marked M4 next in hub"],
+    ["13fb13a", "docs: added M4 portals plan"],
+    ["7abe232", "docs: refreshed hub with the M4 plan"],
+    ["f7498d9", "docs: claimed M4"],
+    ["de4e89f", "feat: added item sorting and portal fences to core"],
+    ["f95878e", "feat: added folder dialog, folder listing and watching, and portal drops to shell"],
+    ["b3b0119", "feat: added portal fences with live folder view, browsing, sorting and folder dialog"],
+    ["ed22b9a", "docs: added M4 portal checks and results"],
+    ["f03d01a", "docs: added ADR-018 and synced docs for M4"],
+    ["59a645f", "docs: refreshed hub with M4 results"],
+    ["ded2e04", "fix: listed portals off the UI thread, refreshed busy folders, retried unavailable ones, kept sorts crash-free and refused deletes on drives without a recycle bin"],
+    ["e4cff7c", "docs: recorded M4 review fixes and deferred items"],
+    ["0f6114f", "docs: marked M4 merged and queued start with Windows"],
+    ["6cd67b5", "feat: started NeoFences with Windows so the desktop recovers after a power loss"],
+    ["fba7e0a", "docs: added ADR-019 for start with Windows"],
+    ["5d6d91f", "docs: corrected the start with Windows milestone label"],
+    ["f421275", "docs: refreshed hub after the outage, M4 merge and start with Windows"],
+    ["0216d04", "docs: added M5 desktop gestures plan"],
+    ["2a68bd8", "docs: refreshed hub with the M5 plan"],
+    ["6403db8", "docs: claimed M5"],
+    ["fe9ffc0", "feat: added desktop gesture tracking, hotkey parsing, smart placement and roll-up to core"],
+    ["1aeb0d2", "feat: added desktop mouse hook, global hotkey and topmost chrome to shell"],
+    ["3f8a3a5", "feat: added quick-hide, draw a fence, peek and roll-up with hover to the app"],
+    ["4f6a981", "docs: added M5 desktop gesture checks and results"],
+    ["05f8a6d", "docs: added ADR-020 and synced docs for M5"],
+    ["8cb7220", "fix: kept peek through fence menus without blocking the mouse hook, ended lost fence drawings, stopped hover timers of deleted fences and ended peek on explorer restart"],
+    ["3916eaf", "docs: recorded M5 review fixes and deferred items"],
+    ["3c5dd9a", "docs: refreshed hub with the M5 merge"],
+    ["74f010b", "docs: split M6 into M6a and M6b with the user's choices"],
+    ["391f905", "docs: added M6a game mode and tray plan"],
+    ["072b652", "docs: refreshed hub with the M6a plan"],
+    ["42d76ed", "docs: claimed M6a"],
+    ["5764a9e", "feat: added game mode policy and run state rules to core"],
+    ["51424a6", "feat: added game detection, tray icon and menu, session notices and mouse hook hardening to shell"],
+    ["70a03da", "feat: added the tray icon and menu, pause, and game mode idle to the app"],
+    ["54343b1", "docs: added M6a game mode and tray checks and results"],
+    ["495966a", "docs: added ADR-021 and synced docs for M6a"],
+    ["c1d99b7", "fix: caught games that go full screen late, retried the tray icon with its click format, showed tray-made fences during quick-hide, restored stuck icons on pause and kept game-time desktop changes on exit"],
+    ["52d06b1", "docs: recorded M6a review fixes and deferred items"],
+    ["d1b6681", "docs: refreshed hub with the M6a merge"],
+    ["e8eb9d9", "docs: recorded the user's M6b choices"],
+    ["123fb02", "docs: added M6b settings window and animations plan"],
+    ["8ce76ee", "docs: refreshed hub with the M6b plan"],
+    ["eb539a9", "docs: claimed M6b"],
+    ["6163bf5", "feat: added roll-up click and hover expansion, digit hotkeys and the peek hotkey rule to core"],
+    ["6864712", "feat: added the settings window, roll-up click mode and roll-up and quick-hide animations"],
+    ["f28b78f", "docs: added M6b settings and animation checks and results"],
+    ["8649813", "docs: added ADR-022 and synced docs for M6b"],
+    ["3367606", "fix: refused peek hotkeys that would break typing or system keys, kept tab and alt+f4 working in the recorder and kept the full height when a fence is dragged during its roll-up animation"],
+    ["6957e5f", "docs: recorded M6b review fixes, deferred items and the user's M7 choices"],
+    ["6ccc88d", "docs: refreshed hub with the M6 merge"],
+    ["d94c406", "docs: added M7 installer plan"],
+    ["77f390a", "docs: refreshed hub with the M7 plan"],
+    ["6e6d48a", "docs: claimed M7"],
+    ["a1ec0e5", "feat: gave the installed copy ownership of the start with windows entry in core"],
+    ["6fc1c26", "feat: added velopack install hooks that restore desktop icons on uninstall, with ADR-023"],
+    ["5a76f10", "build: added the velopack packaging script and the vpk tool manifest"],
+    ["dce808a", "docs: added M7 installer checks and results"],
+    ["efb68e9", "docs: synced docs for M7 and v1.0"],
+    ["66a4003", "fix: pointed start with windows at the installed copy from any build, retried the uninstall icon restore with a registry fallback and dropped the unreachable update hook"],
+    ["fc3301b", "docs: recorded M7 review fixes and deferred items"],
+    ["bb31add", "docs: refreshed hub with the M7 merge and v1.0"],
+    ["5e46e04", "docs: recorded the v1.0 release and install"],
+    ["65fe7e7", "docs: recorded the user's uninstall and reinstall check of v1.0"],
+    ["4db8cb4", "docs: recorded the user's Q3 check and skipped the remaining hand checks for now"],
+    ["1a17576", "docs: recorded the restart check, the user's M8 choices and ticked stale carry-overs"],
+    ["fb22267", "docs: added M8a reliability plan"],
+    ["58aa372", "docs: refreshed hub with the M8a plan"],
+    ["4c42208", "docs: claimed M8a"],
+    ["45d9fd3", "feat: kept fence arrangements through lost events and moved desktop folders, made monitor ids unique and reported backup failures apart"],
+    ["2753a08", "feat: rounded fence corners with windows 11 corner preference, read unreadable watcher events as a reconcile and made monitor ids unique"],
+    ["5b80a94", "fix: started the watcher before the startup reconcile, used a monotonic memory clock, kept user-hidden icons through quick-hide, paused fences instantly, removed the tray on session end and capped the game-time queue"],
+    ["0ff6ff1", "build: validated the pack version first, refused an already packed version and kept the caller's folder"],
+    ["faaab66", "docs: added ADR-024, M8a checks and results, and ticked the M8a carry-overs"],
+    ["a40673d", "fix: kept icons the user hid in explorer out of quick-hide through run state and told locked desktop items apart from deleted ones"],
+    ["3773031", "docs: recorded M8a review fixes and deferred items"],
+    ["db03e60", "chore: bumped the version to 1.0.1"],
+    ["57ab95e", "docs: recorded the v1.0.1 release and upgrade"],
+    ["5e3fce6", "docs: added the M8b fence UI and icon-only labels plan"],
+    ["8b8431c", "docs: refreshed the hub with the M8b plan"],
+    ["e328f96", "docs: claimed M8b"],
+    ["bc486c4", "feat: added per-fence label modes with a default for new fences, key-cap hotkey names and a resize snap that keeps the minimum size"],
+    ["b6ca613", "fix: accepted icons of any bit depth, released shell items at once and treated a desktop icon's rename box as an icon"],
+    ["e122ce7", "feat: added icon-only fences with the name under the hovered icon, optional shortcut arrows, key-cap hotkeys in settings and a first-click title double-click"],
+    ["9645ab4", "build: refused pack versions with leading zeros"],
+    ["688f105", "docs: fixed the pack.ps1 block in the M8b plan"],
+    ["f3c691a", "docs: added ADR-025, M8b checks and results, and ticked the M8b carry-overs"],
+    ["27bb4f8", "fix: kept the pop-under name inside its fence and steady between icons, applied only the newest icon size and kept the not-active hotkey warning in settings"],
+    ["be0a0e7", "docs: recorded M8b review fixes and deferred items"],
+    ["319aa0e", "docs: refreshed the hub after the M8b merge"],
+    ["03512bb", "chore: bumped the version to 1.1.0"],
+    ["4136cfe", "docs: recorded the v1.1.0 release and upgrade"],
+    ["80fd759", "docs: added the M8c shell actions and drag-drop plan"],
+    ["eb63a97", "docs: refreshed the hub with the M8c plan"],
+    ["7fcb96e", "docs: claimed M8c"],
+    ["8c6db4c", "feat: reported the reconcile memories used and placed them by index, kept drop rows to their tallest item, numbered duplicate monitors stably and repaired unknown label modes"],
+    ["fa22052", "feat: watched the recycle bin and desktop icon settings, reached same-name public desktop items through their folder and refined the item menu, recycling and drops"],
+    ["2880858", "feat: ran open, recycle and rename on a shell worker, renamed the right-clicked item, refreshed special icons live, coalesced watcher recovery and waited for an exiting instance"],
+    ["92400d5", "docs: added ADR-026, M8c checks and results, and ticked the M8c carry-overs"],
+    ["b2c44b9", "fix: kept special-icon notices from crashing on a deleted key, placed dropped files and their shortcuts in one slot each, grew the watcher backoff to a minute, opened items on their own threads, validated virtual file lists and re-registered notices after explorer restarts"],
+    ["abbdbcc", "docs: recorded M8c review fixes and deferred items"],
+    ["ae94276", "docs: refreshed the hub after the M8c merge"],
+    ["0d03744", "docs: added the M8d portal details plan"],
+    ["c1934df", "docs: refreshed the hub with the M8d plan"],
+    ["3f0c731", "docs: claimed M8d"],
+    ["da0cca8", "feat: added drive removal notices for portal folders, told watcher failures apart and kept virtual drops from being extracted"],
+    ["4924921", "feat: released portal folders for safely remove, backed off failing portal watchers and opened every selected item on enter"],
+    ["a28b190", "docs: added ADR-027, M8d checks and results, and ticked the M8d carry-overs"],
+    ["8e775ca", "docs: moved the safely remove note to the folder portals row"],
+    ["c1eb941", "fix: re-listed portals whose watcher stopped during a game or while arming and logged a refused drive notice once"],
+    ["2e2a00b", "docs: recorded M8d review fixes and deferred items"],
+    ["a4c5ead", "chore: bumped the version to 1.1.1"],
+    ["708065a", "docs: recorded the v1.1.1 release and the silent setup restart finding"],
+    ["8b3d13f", "docs: refreshed the hub after the v1.1.1 release"],
+    ["91b8e57", "docs: added the v1.1.2 start after setup plan"],
+    ["7288023", "docs: claimed the v1.1.2 setup restart fix"],
+    ["1e47f7b", "fix: showed the desktop icons and started neofences again after setup"],
+    ["a44e977", "docs: added ADR-028 and the setup restart check"],
+    ["fd24c8e", "fix: started neofences after setup outside the install folder, by full paths, and only re-showed icons it had hidden"],
+    ["66a9f94", "chore: bumped the version to 1.1.2"],
+    ["f6de31f", "docs: recorded the v1.1.2 release"],
+    ["df62ceb", "docs: added the fence tabs design spec"],
+    ["c129bb9", "docs: clarified where the host sits in the tab order"],
+    ["553b77e", "docs: added the M9 fence tabs plan"],
+    ["e4e8801", "docs: refreshed the hub with the M9 plan"],
+    ["0fb8254", "docs: claimed M9"],
+    ["8ded8aa", "feat: added fence tabs to the core model with merge, detach, reorder, colours and load-time repair"],
+    ["754087c", "feat: let drops follow the tab shown while dragging over tab headers"],
+    ["c917c8f", "feat: added fence tabs with a tab strip, merging by title drag, switching, colours, reordering and dragging tabs out"],
+    ["8a747cf", "docs: added ADR-029, M9 checks and results, and recorded fence tabs"],
+    ["8dfb074", "fix: moved only the dragged tab when its header is the box's first, listed detached portal tabs, repaired null tabs, cleared joining fences' roll-up and let esc cancel tab drags"],
+    ["7e4c92b", "docs: recorded M9 review fixes and deferred items"],
+    ["f0cd88d", "chore: bumped the version to 1.2.0"],
+    ["b4e0b20", "docs: recorded the v1.2.0 release"],
+    ["45156ad", "docs: refreshed the hub after the v1.2.0 release"],
+    ["405ada2", "docs: added the snapshots design spec"],
+    ["c2fa355", "docs: added the M10 snapshots plan"],
+    ["22dcd18", "docs: escaped ampersands in tray snapshot names in the M10 plan"],
+    ["3578500", "docs: refreshed the hub with the M10 plan"],
+    ["23ccd58", "docs: claimed M10"],
+    ["5b72857", "feat: added snapshots to the core with safe snapshot files and a restore against the live desktop"],
+    ["50eb4ed", "feat: added tray submenus and tray notices"],
+    ["c6fbe65", "feat: added snapshots to the tray and settings with an undoable restore"],
+    ["540b0db", "docs: added ADR-030, M10 checks and results, and recorded snapshots"],
+    ["f9a4cbc", "fix: fixed stale fence windows after a restore, unlogged damaged snapshots, snapshot folder crashes and renamed before-restore loss"],
+    ["c2a2096", "docs: recorded M10 review fixes and deferred items"],
+    ["de9b6dd", "chore: bumped the version to 1.3.0"],
+    ["2cf15bf", "docs: recorded the v1.3.0 release"],
+    ["81a0083", "docs: refreshed the hub after the v1.3.0 release"],
+    ["b5cc0cb", "test: marked the snapshot folder access test as windows-only"],
+    ["da481b6", "docs: added the M11 rules plan"],
+    ["6368fa5", "docs: refreshed the hub with the M11 plan"],
+    ["8c516c5", "docs: claimed M11"],
+    ["6faca66", "feat: added rules to the core with type, game, name, date and size conditions and load-time repair"],
+    ["b56ae10", "feat: added item facts with shortcut targets for rules"],
+    ["fc0031b", "feat: added rules to settings and the fence menu, filing new desktop items and an undoable apply rules now"],
+    ["794d840", "docs: added ADR-031, M11 checks and results, and recorded rules"],
+    ["2bd6e61", "fix: fixed rules crashing on huge day counts, filing items on attribute changes, missing finished downloads and rejecting hand-edited rules"],
+    ["0bd3249", "fix: fixed half-written shortcuts missing their rule by filing arrivals after a quiet moment"],
+    ["60627f2", "docs: recorded M11 review fixes, branch smoke and deferred items"],
+    ["130e4ad", "chore: bumped the version to 1.4.0"],
+    ["20fe98d", "docs: recorded the v1.4.0 release"],
+    ["6ee1806", "docs: refreshed the hub after the v1.4.0 release"],
+    ["8368b52", "docs: fixed a path in the hub"],
+    ["5a2ad41", "docs: added the game library design spec"],
+    ["70ca24f", "docs: added the M12 game library plan"],
+    ["14f1984", "docs: refreshed the hub with the M12 plan"],
+    ["b1a3d6d", "docs: claimed M12"],
+    ["d07421e", "feat: added the game library catalog to the core with steam and epic parsing, merging and a shortcut file plan"],
+    ["817728b", "feat: added game scanners, shortcut files and library menu and drag options to the shell"],
+    ["e9a3c55", "feat: added the game library fence with poster tiles, hide from library, live rescans and a settings card"],
+    ["9572719", "docs: added ADR-032, M12 checks and results, and recorded the game library"],
+    ["550ba9c", "fix: fixed the game library losing steam games on a failed scan, ghost and queued games, watchers blocking drive removal and trusting a damaged index"],
+    ["254568b", "docs: recorded M12 review fixes, branch smoke and deferred items"],
+    ["4f327de", "chore: bumped the version to 1.5.0"],
+    ["37b4b8e", "docs: recorded the v1.5.0 release"],
+    ["2971e9c", "docs: refreshed the hub after the v1.5.0 release"],
+    ["a02de1e", "docs: corrected the hub: regrouped tasks, ordered milestones and decisions, current versions, dependencies, risks, sessions and flows"],
+    ["9d23f24", "docs: added the M13a data safety plan"],
+    ["8c29c45", "docs: refreshed the hub with the M13a plan"],
+    ["84d8113", "docs: claimed M13a"],
+    ["e07db1c", "fix: fixed older builds saving over new config fields, half-read newer snapshots, shared rule ids and a library index out of step after failures"],
+    ["1d45c69", "fix: fixed one bad epic or xbox entry hiding a source, sticks vetoed by portal refreshes, library work after exit and a waiting copy ignoring --exit"],
+    ["3057ffa", "docs: added ADR-033, M13a checks and results, and recorded the data safety batch"],
+    ["dc0743f", "fix: fixed a start right after --exit giving up instead of waiting for the exiting copy"],
+    ["45aec75", "docs: recorded M13a review fix, branch check and deferred items"],
+    ["65a9685", "chore: bumped the version to 1.6.0"],
+    ["f77049b", "docs: recorded the v1.6.0 release"],
+    ["9d512a3", "docs: refreshed the hub after the v1.6.0 release"],
+    ["21b81a2", "docs: added the M13b library polish plan"],
+    ["a67b3b6", "docs: refreshed the hub with the M13b plan"],
+    ["3dd476f", "docs: claimed M13b"],
+    ["d2c3a8e", "fix: fixed epic add-ons listed as games, shortcut duplicates of launcher games, hidden games losing their names and the pre-schema-2 config rotating out"],
+    ["3ab79c0", "fix: fixed xbox package names, shortcut games losing their icon, rescans on every game folder write, library orphans after power cuts, ejects vetoed by listings in flight and rules editor edits lost"],
+    ["b622cc6", "docs: added ADR-034, M13b checks and results, and recorded the library polish batch"],
+    ["b4ee08d", "fix: fixed hidden games splitting while a source is away, launcher shortcuts merging into the wrong game, blurry covers after a size change, stuck program picks, read-only shortcut copies and unflushed shortcut files"],
+    ["18771de", "docs: recorded M13b review fixes, branch check and deferred items"],
+    ["5b375b8", "chore: bumped the version to 1.6.1"],
+    ["12b4047", "docs: recorded the v1.6.1 release"],
+    ["bddf5c8", "docs: refreshed the hub after the v1.6.1 release"],
+    ["ce6af31", "docs: added the M13c fence and settings UX plan"],
+    ["1b169f4", "docs: refreshed the hub with the M13c plan"],
+    ["f903b8a", "docs: claimed M13c"],
+    ["2210aee", "feat: added one-line tray snapshot labels, layout key caps for hotkeys and no-op tab reorders"],
+    ["2bedb27", "fix: fixed the title right-click menu, rolled-up boxes ignoring header clicks, snapshot failures shown only in the tray, settings losing focus on refreshes and the library missing desktop shortcut changes"],
+    ["1709b29", "docs: added ADR-035, M13c checks and results, and recorded the fence and settings UX batch"],
+    ["239a64d", "fix: fixed a failed pre-schema-2 config copy never being retried"],
+    ["22af5a9", "fix: fixed locked fence titles opening no menu, snapshot rename focus jumping back, stale snapshot failure lines and silent rename or delete failures"],
+    ["bc9ab23", "docs: recorded M13c review fixes, branch check and deferred items"],
+    ["ed9d324", "chore: bumped the version to 1.6.2"],
+    ["311ef91", "docs: recorded the v1.6.2 release"],
+    ["20dc752", "docs: refreshed the hub after the v1.6.2 release"],
+    ["c57b58a", "chore: ignored the superpowers scratch folder"],
+    ["9fdaceb", "docs: added the appearance design spec"],
+    ["a810f9e", "docs: added the M14 appearance plan"],
+    ["e08f393", "docs: refreshed the hub with the M14 plan"],
+    ["066df67", "docs: claimed M14"],
+    ["40916fe", "feat: added the fence look resolver, wallpaper accent colour, wallpaper engine files and config schema 3"],
+    ["23a887f", "feat: added appearance settings, fence colour styles, custom colours, title fonts and the wallpaper accent"],
+    ["2f01052", "docs: added ADR-036, appearance checks and results, and recorded M14"],
+    ["7bd0316", "fix: fixed white titles that were hard to read on green, teal and other mid-bright fence colours"],
+    ["7672a09", "fix: fixed title font picks losing earlier choices, the accent stopping on a half-written image, slider stutter, new fences without the accent, custom colours missing from tab headers and the colour dialog acting on a gone fence"],
+    ["0712653", "docs: recorded M14 review fixes, branch check and deferred items"],
+    ["f3dd221", "chore: bumped the version to 1.7.0"],
+    ["33fee94", "docs: recorded the v1.7.0 release"],
+    ["09929af", "docs: refreshed the hub after the v1.7.0 release"],
+    ["2eaae00", "docs: added the search palette design spec"],
+    ["3cb621c", "docs: added the M15 search palette plan"],
+    ["e964d67", "docs: refreshed the hub with the M15 plan"],
+    ["47032fd", "docs: parked the search palette on its branch"],
+    ["a51401a", "docs: refreshed the hub after parking the search palette"],
+    ["6215ec4", "docs: added the M16 v1.7.1 polish plan"],
+    ["fabe4e7", "docs: refreshed the hub with the M16 plan"],
+    ["1aca2a7", "docs: claimed M16"],
+    ["375b461", "fix: fixed unreadable titles with some custom colours, emoji cut in tray labels and the review carry-overs, and moved title fonts to settings only"],
+    ["c644bf2", "docs: added ADR-038, v1.7.1 checks and results, and recorded M16"],
+    ["9383401", "fix: fixed the pink swatch title changing in dark mode"],
+    ["4056288", "fix: fixed the hotkey label missing layout switches within one language and recorded ADR-036's amendment"],
+    ["7728c84", "docs: recorded M16 review fixes, branch check and deferred items"],
+    ["24d0550", "chore: bumped the version to 1.7.1"],
+    ["fda6607", "docs: recorded the v1.7.1 release"],
+    ["38c1a1b", "docs: recorded the v1.7.1 release"],
+    ["f449ab8", "docs: refreshed the hub after the v1.7.1 release"],
+    ["7ea7dab", "docs: added the public releases and auto-update design spec"],
+    ["9778eb4", "docs: added the README and moved the private hub link out of the repo"],
+    ["a5b0bdd", "docs: added the M17 public releases and auto-update plan"],
+    ["6407ab2", "docs: refreshed the hub with the M17 plan"],
+    ["ea18a13", "docs: claimed M17"],
+    ["1e1a3d8", "feat: added the update schedule and the auto-update setting"],
+    ["5ed7c4c", "feat: added auto-update from github releases, settings updates and the release workflows"],
+    ["91ffb6c", "docs: added ADR-039, update checks and results, and recorded M17"],
+    ["634ecd2", "fix: fixed downloaded updates being applied by force at startup, updates ending the icon restore, and updates continuing after being switched off or during games"],
+    ["240eb03", "docs: recorded M17 review fixes, the second rehearsal and deferred items"],
+    ["074e629", "chore: bumped the version to 1.8.0"]
+  ]
+};
+/* ===== END HUB DATA ===== */
+
+const $ = (sel) => document.querySelector(sel);
+const esc = (text) => String(text).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const STATUS_LABEL = { done: "Done", wip: "In progress", next: "Next", todo: "Planned", blocked: "Blocked", risk: "Risk", warn: "Watch", you: "Your turn" };
+const chip = (status, text) => `<span class="chip s-${status}">${esc(text || STATUS_LABEL[status] || status)}</span>`;
+
+const allTasks = HUB.tasks.flatMap((taskGroup) => taskGroup.items);
+const doneCount = allTasks.filter((task) => task.s === "done").length;
+const v1Features = HUB.features.filter((feature) => feature[2] === "v1");
+const v1Done = v1Features.filter((feature) => feature[4] === "done").length;
+
+$("#hud").innerHTML = [
+  ["Phase", HUB.phase, true],
+  ["Current step", HUB.current, true],
+  ["Tasks done", `${doneCount} / ${allTasks.length}`],
+  ["v1 features shipped", `${v1Done} / ${v1Features.length}`],
+  ["Decisions", HUB.adrs.length],
+  ["Synced to", HUB.commit, true]
+].map(([label, value, small]) => `<div><span class="label">${esc(label)}</span><span class="v${small ? " small" : ""}">${esc(value)}</span></div>`).join("");
+
+$("#waiting").innerHTML = HUB.waiting.length ? `<div class="callout"><span class="label">Waiting on you</span>${HUB.waiting.map((line) => `<p>${esc(line)}</p>`).join("")}</div>` : "";
+
+$("#tasklists").innerHTML = HUB.tasks.map((taskGroup) => `
+  <div class="card stack"><h3>${esc(taskGroup.group)}</h3><ul class="tasks">
+  ${taskGroup.items.map((task) => `<li><span class="tick ${task.s}" aria-label="${esc(STATUS_LABEL[task.s])}">${task.s === "done" ? "✓" : ""}</span><span class="${task.s === "done" ? "done-text" : ""}">${esc(task.t)} ${task.s === "wip" ? chip("wip") : ""}</span></li>`).join("")}
+  </ul></div>`).join("");
+
+$("#track").innerHTML = HUB.milestones.map((milestone) => `
+  <div class="ms ${milestone.s}"><span class="dot"></span><span class="id">${esc(milestone.id)}</span><span class="nm">${esc(milestone.name)}</span><span class="gl">${esc(milestone.goal)}</span><div style="text-align:center">${chip(milestone.s)}</div></div>`).join("");
+
+$("#versions").innerHTML = HUB.versions.map((version) => `<div class="card stack"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>${esc(version.v)}</h3>${chip(version.s)}</div><p class="muted">${esc(version.scope)}</p></div>`).join("");
+
+$("#hardrules").innerHTML = HUB.hardRules.map((rule) => `<li><div>${rule}</div></li>`).join("");
+$("#deps").innerHTML = HUB.deps.map((dep) => `<div class="card dep"><span class="nm">${esc(dep.n)}</span><span class="why">${esc(dep.w)}</span></div>`).join("");
+$("#apis").innerHTML = HUB.apis.map(([component, apis]) => `<tr><td><b>${esc(component)}</b></td><td class="mono">${esc(apis)}</td></tr>`).join("");
+
+$("#journeyList").innerHTML = HUB.journeys.map((journey) => `
+  <div class="journey"><h3>${esc(journey.title)}</h3><div class="steps">
+  ${journey.steps.map((step, stepIdx) => `<div class="step${journey.alert ? " alert" : ""}"><span class="n">${stepIdx + 1}</span><span class="you">${esc(step.you)}</span><span class="sys">${esc(step.sys)}</span></div>`).join("")}
+  </div></div>`).join("");
+
+function renderFeatures(filterKey) {
+  const rows = HUB.features.filter((feature) => {
+    if (filterKey === "v1") return feature[2] === "v1";
+    if (filterKey === "v2") return feature[2] !== "v1";
+    if (filterKey === "extra") return feature[6] === "extra";
+    return true;
+  });
+  $("#featRows").innerHTML = rows.map(([name, inFences, target, milestone, status, notes, kind]) => `
+    <tr><td>${esc(name)}${kind === "extra" ? ` <span class="chip s-wip">Extra</span>` : ""}</td><td class="mono">${esc(inFences)}</td><td>${esc(target)}</td><td class="mono">${esc(milestone)}</td><td>${chip(status)}</td><td class="muted">${esc(notes)}</td></tr>`).join("");
+}
+renderFeatures("all");
+document.querySelectorAll(".filters button").forEach((filterButton) => filterButton.addEventListener("click", () => {
+  document.querySelectorAll(".filters button").forEach((otherButton) => otherButton.setAttribute("aria-pressed", String(otherButton === filterButton)));
+  renderFeatures(filterButton.dataset.f);
+}));
+
+$("#adrList").innerHTML = HUB.adrs.map((adr) => `
+  <details class="adr"><summary><span class="aid">${esc(adr.id)}</span><span class="at">${esc(adr.t)}</span>${chip(adr.s.startsWith("Accepted, pending") ? "wip" : "done", adr.s)}</summary>
+  <div class="body"><div><span class="label">Decision</span><p>${esc(adr.d)}</p></div><div><span class="label">Consequences</span><p class="muted">${esc(adr.c)}</p></div></div></details>`).join("");
+
+$("#researchList").innerHTML = HUB.research.map((finding) => `
+  <div class="card stack"><h3>${esc(finding.t)}</h3><p>${esc(finding.b)}</p><p><b>Impact:</b> ${esc(finding.impact)}</p>
+  ${finding.src.length ? `<p class="muted" style="font-size:var(--step--1)">Sources: ${finding.src.map(([label, href]) => `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(label)}</a>`).join(" · ")}</p>` : ""}</div>`).join("");
+
+$("#riskRows").innerHTML = HUB.risks.map(([risk, impact, plan, level]) => `<tr><td><b>${esc(risk)}</b></td><td>${esc(impact)}</td><td class="muted">${esc(plan)}</td><td>${chip(level)}</td></tr>`).join("");
+$("#docRows").innerHTML = HUB.docs.map(([path, purpose]) => `<tr><td class="mono">${esc(path)}</td><td>${esc(purpose)}</td></tr>`).join("");
+$("#sessionList").innerHTML = HUB.sessions.slice().reverse().map((session) => `
+  <div class="card stack"><div class="label">${esc(session.date)}</div><h3>${esc(session.topic)}</h3><p>${esc(session.done)}</p><p class="muted"><b>Next:</b> ${esc(session.next)}</p></div>`).join("");
+$("#commitRows").innerHTML = HUB.commits.slice().reverse().map(([hash, message]) => `<tr><td class="mono" style="color:var(--accent)">${esc(hash)}</td><td class="mono">${esc(message)}</td></tr>`).join("");
+$("#stamp").textContent = `Last updated ${HUB.updated} · synced to commit ${HUB.commit}`;
+</script>
