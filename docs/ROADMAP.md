@@ -16,7 +16,9 @@ Milestone details and exit criteria: spec §9.
   - [x] Shell: drops create items (link, never move), drag-out copies, pickers, target probe, Windows' menu with its header line
   - [x] App: items in fences, item menu, Properties / Add item…, Locate…, target watching, "Hide desktop icons while NeoFences runs"
   - [x] Docs: ARCHITECTURE, FEATURES, TEST-CHECKLIST section AD
-  - [ ] Live check (TEST-CHECKLIST AD, `research/m18-virtual-items.md`), final review, merge, release 0.9.0
+  - [x] Final review (Opus) and its fix pass; live check: TEST-CHECKLIST AD 32/32 pass, five bugs fixed on the way (`research/m18-virtual-items.md`)
+  - [x] Merged to main (fast-forward), version 0.9.0
+  - [ ] Release 0.9.0: push main → CI → tag v0.9.0 → draft → install check → publish (each step asked)
 - [ ] M19 — customization polish (bulk re-locate of missing items, Store/UWP apps as items, deferred M18 minors)
 - [ ] M20 — dynamic collections (read-only folder views, auto-collect rules) — later
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.

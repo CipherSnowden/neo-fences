@@ -464,3 +464,23 @@ workflows. Local update rehearsal 1.8.0 → 1.8.1 passed with the user's go. Pla
 
 **Done:** hand check K4 passed (cross-drive drop copies, by Windows' rule); K5 found a real bug (a Desktop file dropped from Explorer → Windows "same source and destination" dialog). The user rethought the product: fences hold virtual items, never file operations, native icons visible (optional hide), dynamic fences later; versions restart at 0.x; GitHub repo reset; installed build removed. Recorded in docs/PIVOT-2026-10-04.md and ADR-040; CLAUDE.md hard rules updated.
 **Next:** reset (bundle, one commit 0.8.0, GitHub cleanup), uninstall, then M18 spec. See PIVOT §Next steps.
+
+## 2026-10-04 — M18 Virtual items (0.9.0)
+
+**Done:** brainstorm (user: storage approach A — item records — but config and items in separate files), spec + ADR-041,
+plan (9,125 lines, compile-verified patches), native inline execution on branch `m18-virtual-items` (Core items, watch
+plan, schema 5 + `items.json`; Membership/Rules/Portals/Inbox/Takeover removed; Shell drops as links, drag-out copies,
+pickers, target probe; App items, Properties, Locate…, target watching, "Hide desktop icons while NeoFences runs").
+Final Opus review "with fixes": C1 (editor saves re-pointed items at temp files) and I1–I7 fixed test-first, minors
+deferred to M19. Live check with the user (TEST-CHECKLIST AD, 32/32 pass): five bugs found and fixed — desktop-icon
+double-click quick-hid everything (UIA sees the web wallpaper; now Explorer's folder view answers), drag-out made nothing
+(shell item array data object), drops now read as shell items, a rename flashed Missing, a stick pulled without Safely
+remove left a deaf watcher (DBT_DEVICEREMOVECOMPLETE now releases it). A power cut mid-check: the test build came back at
+sign-in with every item intact. Merged to main (fast-forward), worktree removed, version 0.9.0.
+**Decisions:** ADR-041 (separate `items.json`; amended: saves never prune item lists). Rulings: plan patches applied from
+the verified scratch files (byte-identical); Task 0 baseline was 438 tests, not 329; final review ran before the remaining
+live checks so they covered the final build; the reviewer's "declined to judge" items stand as the spec decides
+(drag-out "x - Copy", Run as administrator offered for any file, 7-Zip temp paths go Missing).
+**Next:** release 0.9.0 (push main → CI → tag → draft → install check → publish, each step asked); hub refresh; then M19.
+**Open:** an unreachable share item shows no icon; one unreproduced blank website icon after many restarts (both in
+`research/m18-virtual-items.md`).
