@@ -1142,3 +1142,17 @@ Versions restart at **0.x** (reset codebase 0.8.0, virtual items 0.9.0, sharing 
 one fresh commit; full history kept in a local bundle.
 
 **Consequences.** Big removal of risky shell code in M18; v1.x mentions in older docs mean pre-reset dev builds.
+
+## ADR-041 — Virtual items live in their own file, `items.json`
+**Date:** 2026-10-04 · **Status:** Accepted · **Spec:** `docs/superpowers/specs/2026-10-04-virtual-items-design.md`
+
+**Context.** M18 turns fence items into virtual-item records (ADR-040). They could live inside `config.json` or in a file
+of their own; real `.lnk` files per fence were rejected (two sources of truth, power-cut risk).
+
+**Decision.** Items are stored in `%LOCALAPPDATA%\NeoFences\items.json` (`{ schema, fences: { fenceId: [items] } }`),
+fences and settings stay in `config.json` (schema 5). Both use the same safe save and backups; snapshots hold both.
+Orphan item lists (fence id unknown) are kept until the next items save; a fence without an entry is empty; deleting a
+fence saves the config before the items. Custom icon images are copied into `icons\`.
+
+**Consequences.** A damaged items file never takes settings or layout with it (and the other way round). Two files can
+disagree after a power cut — handled by the rules above, covered by Core tests.
