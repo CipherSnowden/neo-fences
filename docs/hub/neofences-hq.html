@@ -736,9 +736,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-04",
-  commit: "074e629",
-  phase: "v1.8.0",
-  current: "v1.8.0 public (github.com/CipherSnowden/neo-fences/releases) · auto-update on · next: your pick",
+  commit: "736065b",
+  phase: "0.8.0 — pivot",
+  current: "PIVOT (ADR-040): fences hold virtual items, never file operations · repo reset to 0.8.0 · nothing installed · next: M18 virtual items spec (see docs/PIVOT-2026-10-04.md)",
   waiting: [
     "NEW in v1.5.0 — Game Library: tray → New Game Library fence. Every installed game (Steam, Epic, GOG, Xbox, D:\\GameLibrary, game shortcuts on the Desktop) in one A–Z fence, Steam games with their covers. Right-click a game → Hide from library (e.g. Wallpaper Engine); Settings → Game Library for folders, sources and hidden games.",
     "v1.4.0 Rules: Settings → Rules, e.g. Images → a fence, or Game shortcut / In a folder of mine → D:\\GameLibrary. New Desktop items are filed by themselves; \"Apply rules now\" tidies existing ones and can be undone (tray → Restore snapshot → Undo the last restore).",
@@ -789,7 +789,11 @@ const HUB = {
       { t: "M17 prototype: updater + Settings → Updates; local rehearsal 1.8.0 → 1.8.1 passed (restart in 1.6 s)", s: "done" },
       { t: "M17 plan: 3 tasks, 438 pre-verified tests — approved, ran inline", s: "done" },
       { t: "M17 review: Velopack's force-apply on start disabled (would kill NeoFences with icons hidden) + 5 more fixes; rehearsal 2 passed", s: "done" },
-      { t: "v1.8.0 published — the first public release (CI green; draft installed and checked; auto-update live)", s: "done" }
+      { t: "v1.8.0 published — the first public release (CI green; draft installed and checked; auto-update live)", s: "done" },
+      { t: "Hand check K4 passed; K5 found a real bug (Desktop file dropped from Explorer → Windows file dialog)", s: "done" },
+      { t: "PIVOT: fences hold virtual items (own name/icon/path), no file operations, native icons visible (optional hide), dynamic fences later — ADR-040", s: "done" },
+      { t: "Installed build + data removed (backed up); repo reset to one commit 0.8.0; GitHub release/tags/branch deleted; history in a local bundle", s: "done" },
+      { t: "M18 — Virtual items (0.9.0): spec → plan → execute → review → release", s: "todo" }
     ]},
     { group: "M12 · Game Library (v1.5)", items: [
       { t: "M12 Game Library: you chose every game in one place; launchers, Xbox, D:\\GameLibrary, Desktop shortcuts; posters on disk; one A–Z fence; spec approved", s: "done" },
