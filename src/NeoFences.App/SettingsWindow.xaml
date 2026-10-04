@@ -42,10 +42,10 @@
             </Border>
             <Border Style="{StaticResource Card}">
                 <DockPanel>
-                    <CheckBox x:Name="TakeoverBox" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Hide desktop icons" />
+                    <CheckBox x:Name="HideIconsBox" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Hide desktop icons while NeoFences runs" />
                     <StackPanel>
-                        <TextBlock Text="Hide desktop icons" TextWrapping="Wrap" />
-                        <TextBlock x:Name="TakeoverDescription" Style="{StaticResource Description}" Text="Show your desktop items only in fences. They are back on the desktop whenever NeoFences is paused or closed." />
+                        <TextBlock Text="Hide desktop icons while NeoFences runs" TextWrapping="Wrap" />
+                        <TextBlock x:Name="HideIconsDescription" Style="{StaticResource Description}" Text="Windows' own desktop icons go away while NeoFences runs and come back when it is paused, closed, or stops unexpectedly. Your files stay where they are." />
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -234,62 +234,6 @@
                         <Button x:Name="DeleteSnapshotButton" Content="Delete" Margin="0,0,8,6" IsEnabled="False" />
                         <Button x:Name="OpenSnapshotsButton" Content="Open snapshots folder" Margin="0,0,0,6" />
                     </WrapPanel>
-                </StackPanel>
-            </Border>
-
-            <TextBlock Text="Rules" Style="{StaticResource SectionHeader}" />
-            <Border x:Name="RulesCard" Style="{StaticResource Card}">
-                <StackPanel>
-                    <TextBlock x:Name="RulesDescription" Style="{StaticResource Description}" Margin="0,0,0,8"
-                               Text="New Desktop items go to the fence of the first rule they match; the rest go to the Inbox. Rules only choose fences: files are never moved or changed." />
-                    <ListBox x:Name="RuleList" MaxHeight="220" AutomationProperties.Name="Rules">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <DockPanel>
-                                    <CheckBox IsChecked="{Binding Enabled, Mode=OneWay}" Tag="{Binding Id}" Checked="OnRuleToggled" Unchecked="OnRuleToggled"
-                                              VerticalAlignment="Center" Margin="0,0,8,0" AutomationProperties.Name="{Binding ToggleName}" />
-                                    <TextBlock Text="{Binding Text}" Opacity="{Binding Opacity}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                </DockPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                                <Setter Property="AutomationProperties.Name" Value="{Binding Spoken}" />
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                    </ListBox>
-                    <StackPanel x:Name="RuleEditor" Visibility="Collapsed" Margin="0,10,0,0">
-                        <WrapPanel>
-                            <TextBlock Text="When" VerticalAlignment="Center" Margin="0,0,8,6" />
-                            <ComboBox x:Name="RuleKindBox" Width="170" Margin="0,0,8,6" AutomationProperties.Name="Rule condition">
-                                <ComboBoxItem Content="Type of file" Tag="Type" />
-                                <ComboBoxItem Content="Game shortcut" Tag="Game" />
-                                <ComboBoxItem Content="Name" Tag="Name" />
-                                <ComboBoxItem Content="Date modified" Tag="Age" />
-                                <ComboBoxItem Content="Size" Tag="Size" />
-                            </ComboBox>
-                            <ComboBox x:Name="RuleChoiceBox" Width="190" Margin="0,0,8,6" />
-                            <TextBox x:Name="RuleTextBox" Width="150" Margin="0,0,8,6" />
-                            <Button x:Name="RuleBrowseButton" Content="Choose…" Margin="0,0,8,6" Visibility="Collapsed" AutomationProperties.Name="Choose the game folder" />
-                            <TextBlock x:Name="RuleUnitText" VerticalAlignment="Center" Margin="0,0,8,6" />
-                        </WrapPanel>
-                        <WrapPanel>
-                            <TextBlock Text="Put in" VerticalAlignment="Center" Margin="0,0,8,6" />
-                            <ComboBox x:Name="RuleFenceBox" Width="220" Margin="0,0,8,6" DisplayMemberPath="Title" AutomationProperties.Name="Put in fence" />
-                            <Button x:Name="SaveRuleButton" Content="Save rule" Margin="0,0,8,6" IsDefault="False" />
-                            <Button x:Name="CancelRuleButton" Content="Cancel" Margin="0,0,8,6" />
-                        </WrapPanel>
-                        <TextBlock x:Name="RuleHint" Style="{StaticResource Description}" />
-                    </StackPanel>
-                    <WrapPanel Margin="0,10,0,0">
-                        <Button x:Name="AddRuleButton" Content="Add" Margin="0,0,8,6" />
-                        <Button x:Name="EditRuleButton" Content="Edit" Margin="0,0,8,6" IsEnabled="False" />
-                        <Button x:Name="DeleteRuleButton" Content="Delete" Margin="0,0,8,6" IsEnabled="False" />
-                        <Button x:Name="MoveRuleUpButton" Content="Move up" Margin="0,0,8,6" IsEnabled="False" />
-                        <Button x:Name="MoveRuleDownButton" Content="Move down" Margin="0,0,8,6" IsEnabled="False" />
-                        <Button x:Name="ApplyRulesButton" Content="Apply rules now" Margin="0,0,0,6" />
-                    </WrapPanel>
-                    <TextBlock x:Name="RulesStatus" Style="{StaticResource Description}" Visibility="Collapsed" />
                 </StackPanel>
             </Border>
 

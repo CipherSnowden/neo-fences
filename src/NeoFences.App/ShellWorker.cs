@@ -4,7 +4,7 @@ using Serilog;
 namespace NeoFences.App;
 
 /// <summary>
-/// One STA thread for shell operations that can block or show Windows' dialogs (open, recycle, rename): the fences keep
+/// One STA thread for shell operations that can block or show Windows' dialogs (recycling a snapshot): the fences keep
 /// responding meanwhile, and shell handlers get the apartment they expect (M3a review). Operations run in order; a
 /// failure is logged, never thrown.
 /// </summary>

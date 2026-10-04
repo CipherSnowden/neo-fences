@@ -10,6 +10,7 @@ using System.Windows.Shapes;
 using System.Windows.Shell;
 using NeoFences.Core.Appearance;
 using NeoFences.Core.Config;
+using NeoFences.Core.Items;
 using NeoFences.Core.Layouts;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
@@ -27,6 +28,8 @@ public partial class FenceWindow : Window
     private const int WmNcLeftButtonDown = 0x00A1;
     private const int WmNcLeftButtonDoubleClick = 0x00A3;
     private const int WmNcRightButtonUp = 0x00A5;
+    private const int WmDeviceChange = 0x0219;
+    private const int DbtDeviceArrival = 0x8000, DbtDeviceRemoveComplete = 0x8004;
     private const int HitTestCaption = 2;
     private const double CornerRadiusDips = 8;
     private double _captionHeightDips = 30; // follows the title font (M14: 26 / 30 / 34 / 38)
@@ -41,7 +44,6 @@ public partial class FenceWindow : Window
     private int _iconSizeDips;
     private bool _renaming;
     private string _title = "";
-    private bool _isPortal; // the shown tab is a Portal (changes with the tab, M9)
     private bool _isLibrary; // the shown tab is the Game Library (M12): tiles, its own menu items
     private IReadOnlyDictionary<string, (string Path, bool IsPoster)> _libraryArt = new Dictionary<string, (string, bool)>();
     private DragTracker? _drag;
@@ -119,36 +121,32 @@ public partial class FenceWindow : Window
     public event Action<FenceWindow, PixelRect>? MovedByUser;
 
     public event Action? NewFenceRequested;
-    public event Action<bool>? TakeoverToggled;
     public event Action? ExitRequested;
+    /// <summary>Double-click or Enter on one item (its key).</summary>
     public event Action<string>? OpenRequested;
-    /// <summary>Enter with several items selected: open each (a Portal does not browse into one of several folders, M8d).</summary>
+    /// <summary>Enter with several items selected: open each.</summary>
     public event Action<IReadOnlyList<string>>? OpenManyRequested;
-    /// <summary>The first-run question was answered: true = hide the desktop icons.</summary>
-    public event Action<bool>? TakeoverPromptAnswered;
     public event Action<string>? RenameRequested;
     public event Action<int>? IconSizeRequested;
     public event Action<bool>? LockToggled;
     public event Action? DeleteRequested;
-    /// <summary>Right-click (or the menu key) on items: show Windows' item menu for these refs at this screen point (px).</summary>
-    /// <summary>Right-click or menu key on items: refs (the clicked item first), screen point, opened from the keyboard.</summary>
+    /// <summary>Right-click or menu key on items: keys (the clicked item first), screen point, opened from the keyboard.</summary>
     public event Action<IReadOnlyList<string>, int, int, bool>? ItemMenuRequested;
-    /// <summary>Del: send these items to the Recycle Bin.</summary>
-    public event Action<IReadOnlyList<string>>? RecycleRequested;
-    /// <summary>An in-place rename was confirmed: item ref, new name as typed.</summary>
-    public event Action<string, string>? ItemRenameRequested;
+    /// <summary>Del: take these items out of the fence (their targets are never touched, ADR-040).</summary>
+    public event Action<IReadOnlyList<string>>? RemoveRequested;
+    /// <summary>F2 (true: the name selected) or Alt+Enter on one item: its Properties.</summary>
+    public event Action<string, bool>? PropertiesRequested;
     /// <summary>The user started dragging these items out of the fence (M3b).</summary>
     public event Action<IReadOnlyList<string>>? DragRequested;
-    /// <summary>Portal (M4): back to the parent folder (Back button, Backspace).</summary>
-    public event Action? BackRequested;
-    public event Action? NewPortalRequested;
     public event Action<FenceSort>? SortRequested;
-    public event Action? OpenFolderRequested;
-    /// <summary>Fence menu → "New Game Library fence" / "Refresh library" (M12).</summary>
+    /// <summary>Fence menu → "Add item…" (M18).</summary>
+    public event Action? AddItemRequested;
+    /// <summary>Fence menu → "Refresh": the items' targets are checked again and their icons reloaded (the library rescans).</summary>
+    public event Action? RefreshRequested;
+    /// <summary>Fence menu → "New Game Library fence" (M12).</summary>
     public event Action? NewLibraryRequested;
-    public event Action? RefreshLibraryRequested;
-    /// <summary>Fence menu → "Rules for this fence…" (M11): Settings opens at Rules with a new rule for this fence.</summary>
-    public event Action? RulesRequested;
+    /// <summary>A drive arrived or was removed (Windows tells top-level windows): missing and unavailable items are checked again.</summary>
+    public event Action? DrivesChanged;
     /// <summary>The "Start with Windows" toggle changed (ADR-019).</summary>
     public event Action<bool>? StartupToggled;
     /// <summary>"Settings…" in the fence menu (M6b).</summary>
@@ -167,7 +165,7 @@ public partial class FenceWindow : Window
     private (uint At, Point Where)? _lastCaptionPress; // a title double-click recognised by NeoFences itself (M8b); message time
     private uint? _recognisedDoubleClickAt;
 
-    public FenceWindow(Fence fence, bool takeoverActive, bool lightTheme, IconLoader iconLoader, RollupExpand rollupExpand)
+    public FenceWindow(Fence fence, bool lightTheme, IconLoader iconLoader, RollupExpand rollupExpand)
     {
         _expansion = new RollUpExpansion(rollupExpand);
         FenceId = fence.Id;
@@ -197,13 +195,9 @@ public partial class FenceWindow : Window
         DetachTabItem.Click += (_, _) => DetachTabRequested?.Invoke();
         TitleBar.SizeChanged += (_, _) => UpdateTabStripWidth();
         PreviewKeyDown += OnTabKeys;
-        NewPortalItem.Click += (_, _) => NewPortalRequested?.Invoke();
-        OpenFolderItem.Click += (_, _) => OpenFolderRequested?.Invoke();
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
-        RefreshLibraryItem.Click += (_, _) => RefreshLibraryRequested?.Invoke();
-        RulesItem.Click += (_, _) => RulesRequested?.Invoke();
-        BackButton.Click += (_, _) => BackRequested?.Invoke();
-        TakeoverItem.IsChecked = takeoverActive;
+        AddItemItem.Click += (_, _) => AddItemRequested?.Invoke();
+        RefreshItem.Click += (_, _) => RefreshRequested?.Invoke();
         foreach (var size in ConfigNormalizer.IconSizes)
         {
             var sizeItem = new MenuItem { Header = IconSizeNames.GetValueOrDefault(size, $"{size} px"), Tag = size, IsCheckable = true };
@@ -214,7 +208,6 @@ public partial class FenceWindow : Window
         RenameItem.Click += (_, _) => BeginRename();
         LockItem.Click += (_, _) => LockToggled?.Invoke(LockItem.IsChecked);
         DeleteItem.Click += (_, _) => DeleteRequested?.Invoke();
-        TakeoverItem.Click += (_, _) => TakeoverToggled?.Invoke(TakeoverItem.IsChecked);
         ExitItem.Click += (_, _) => ExitRequested?.Invoke();
         StartupItem.Click += (_, _) => StartupToggled?.Invoke(StartupItem.IsChecked);
         SettingsItem.Click += (_, _) => SettingsRequested?.Invoke();
@@ -237,8 +230,6 @@ public partial class FenceWindow : Window
         TitleBar.MouseRightButtonUp += (_, click) => { click.Handled = true; OpenFenceMenu(); };
         TitleBox.KeyDown += OnTitleBoxKeyDown;
         TitleBox.LostKeyboardFocus += (_, _) => EndRename(commit: true);
-        PromptHideButton.Click += (_, _) => TakeoverPromptAnswered?.Invoke(true);
-        PromptLaterButton.Click += (_, _) => TakeoverPromptAnswered?.Invoke(false);
 #if DEBUG
         // Checklist B11: a hung fence UI thread must not freeze the desktop or taskbar (owner input-queue attachment, ADR-011).
         var freezeItem = new MenuItem { Header = "Debug: freeze this UI thread for 10 s (B11)" };
@@ -278,30 +269,19 @@ public partial class FenceWindow : Window
         };
     }
 
-    public void SetTakeoverChecked(bool active) => TakeoverItem.IsChecked = active;
-
     public void SetStartupChecked(bool startWithWindows) => StartupItem.IsChecked = startWithWindows;
 
-    /// <summary>Everything the window shows of one fence: title, Portal bits, menu state, icon size, labels.</summary>
+    /// <summary>Everything the window shows of one fence: title, menu state, icon size, labels.</summary>
     private void ApplyFence(Fence fence)
     {
         _title = fence.Title;
         TitleText.Text = fence.Title;
-        _isPortal = fence.Source.Kind == FenceSourceKind.Portal;
-        _isLibrary = fence.Source.Kind == FenceSourceKind.Library;
-        OpenFolderItem.Visibility = _isPortal ? Visibility.Visible : Visibility.Collapsed;
-        RulesItem.Visibility = fence.Source.Kind == FenceSourceKind.Desktop ? Visibility.Visible : Visibility.Collapsed; // rules fill desktop fences only (M11)
-        RefreshLibraryItem.Visibility = _isLibrary ? Visibility.Visible : Visibility.Collapsed;
-        SortItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible; // the library is always A–Z
-        DeleteItem.Header = _isLibrary ? "Delete fence (your games are not touched)"
-            : _isPortal ? "Delete fence (the folder is not touched)" : "Delete fence (items go to the Inbox)";
-        DeleteItem.Visibility = fence.IsInbox ? Visibility.Collapsed : Visibility.Visible;
-        // Desktop fences sort once (dragging keeps working); Portals keep the chosen order live, so it is checked.
-        foreach (var sortItem in SortItem.Items.OfType<MenuItem>())
-        {
-            sortItem.IsCheckable = _isPortal;
-            sortItem.IsChecked = _isPortal && (FenceSort)sortItem.Tag == fence.Sort;
-        }
+        _isLibrary = fence.IsLibrary;
+        // The library is NeoFences' own A–Z list of games: no items to add or sort (M12).
+        AddItemItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible;
+        SortItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible;
+        DeleteItem.Header = _isLibrary ? "Delete fence (your games are not touched)" : "Delete fence (your files are not touched)";
+        UpdateEmptyHint();
         _labelMode = fence.Labels;
         SetIconSize(fence.IconSize);
         SetLabelMode(fence.Labels);
@@ -320,7 +300,7 @@ public partial class FenceWindow : Window
     private void ApplyArt(FenceItemView view)
     {
         view.IsTile = _isLibrary;
-        if (!_isLibrary || !_libraryArt.TryGetValue(view.ItemRef, out var art))
+        if (!_isLibrary || !_libraryArt.TryGetValue(view.Key, out var art))
         {
             view.ArtPath = null;
             view.Art = null;
@@ -365,8 +345,8 @@ public partial class FenceWindow : Window
     public void Refresh(Fence fence) => ApplyFence(fence);
 
     /// <summary>
-    /// Another tab of this box is shown (M9): its look and menus; its items follow from the host (or its Portal). An open
-    /// rename of the previous tab is cancelled.
+    /// Another tab of this box is shown (M9): its look and menus; its items follow from the host. An open rename of the
+    /// previous tab is cancelled.
     /// </summary>
     public void ShowTab(Fence fence)
     {
@@ -375,8 +355,7 @@ public partial class FenceWindow : Window
         FenceId = fence.Id;
         ApplyFence(fence);
         _items.Clear();
-        ShowPortalMessage(null);
-        BackButton.Visibility = Visibility.Collapsed;
+        UpdateEmptyHint();
     }
 
     /// <summary>The box's tabs in order and the shown one (M9). One tab: the plain title (with its colour bar, if any).</summary>
@@ -597,87 +576,73 @@ public partial class FenceWindow : Window
         return _tabs[Math.Clamp((int)(point.X / (TabStrip.ActualWidth / _tabs.Count)), 0, _tabs.Count - 1)].Id;
     }
 
-    public void ShowTakeoverPrompt(bool visible) => TakeoverPrompt.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-
     public void SetTitle(string title)
     {
         _title = title;
         TitleText.Text = title;
     }
 
-    /// <summary>Portal (M4): what the title shows while browsing ("Downloads › Mods"), and whether Back is offered.</summary>
-    public void SetPortalLocation(string breadcrumb, bool canGoBack)
-    {
-        TitleText.Text = breadcrumb;
-        BackButton.Visibility = canGoBack ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    /// <summary>Portal (M4): a message instead of items (folder missing or unreadable); null hides it.</summary>
-    public void ShowPortalMessage(string? message)
-    {
-        PortalMessage.Text = message ?? "";
-        PortalMessage.Visibility = message is null ? Visibility.Collapsed : Visibility.Visible;
-    }
-
-    /// <summary>Portal (M4): the sort shown as checked.</summary>
-    public void SetSortChecked(FenceSort sort)
-    {
-        foreach (var sortItem in SortItem.Items.OfType<MenuItem>()) sortItem.IsChecked = _isPortal && (FenceSort)sortItem.Tag == sort;
-    }
-
     /// <summary>
     /// Shows exactly these items in this order, by moving, adding and removing views in place: items already shown keep
-    /// their name, icon, selection and the scroll position (M2b review carry-over; duplicate refs are tolerated).
+    /// their icon, selection and the scroll position (M2b review carry-over); a changed target, name or icon reloads only
+    /// that item's icon and name.
     /// </summary>
-    public void SetItems(IReadOnlyList<string> itemRefs)
+    public void SetItems(IReadOnlyList<ShownItem> shownItems)
     {
-        if (_items.Select(view => view.ItemRef).SequenceEqual(itemRefs, StringComparer.Ordinal)) return;
-        var wanted = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var itemRef in itemRefs) wanted[itemRef] = wanted.GetValueOrDefault(itemRef) + 1;
+        var wanted = shownItems.Select(shown => shown.Key).ToHashSet(StringComparer.Ordinal);
         for (var index = _items.Count - 1; index >= 0; index--)
         {
-            var itemRef = _items[index].ItemRef;
-            if (wanted.GetValueOrDefault(itemRef) > 0) wanted[itemRef]--;
-            else RemoveItemAt(index);
+            if (!wanted.Contains(_items[index].Key)) _items.RemoveAt(index);
         }
         // ponytail: O(n²) moves in the worst case (a full reorder of hundreds of items); a keyed diff when that shows up.
         var iconSizePx = IconSizePx;
-        for (var index = 0; index < itemRefs.Count; index++)
+        for (var index = 0; index < shownItems.Count; index++)
         {
-            if (index < _items.Count && _items[index].ItemRef == itemRefs[index]) continue;
+            var shown = shownItems[index];
             var found = -1;
-            for (var later = index + 1; later < _items.Count && found < 0; later++)
+            for (var at = index; at < _items.Count && found < 0; at++)
             {
-                if (_items[later].ItemRef == itemRefs[index]) found = later;
+                if (_items[at].Key == shown.Key) found = at;
             }
             if (found >= 0)
             {
-                CancelRename(_items[found]);
-                _items.Move(found, index);
+                if (found != index) _items.Move(found, index);
+                if (_items[index].Update(shown) && IsLoaded) _iconLoader.Request(_items[index], iconSizePx);
                 continue;
             }
-            var view = new FenceItemView(itemRefs[index]);
+            var view = new FenceItemView(shown);
             ApplyArt(view);
             if (IsLoaded) _iconLoader.Request(view, iconSizePx); // before that, Loaded requests them at the right DPI (M2b review)
             _items.Insert(index, view);
         }
+        UpdateEmptyHint();
         // Cells may have shifted under a shown name without a scroll or selection event (final review I3).
         Dispatcher.BeginInvoke(UpdateHoverLabel, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
-    /// <summary>
-    /// A rename whose own item is moved or removed would lose its box (and commit half-typed text): cancel only that one,
-    /// right before. An item that merely shifts keeps its box (M3a review I3; final review M1).
-    /// </summary>
-    private static void CancelRename(FenceItemView view)
+    /// <summary>An empty fence (not the library) says how to fill it (spec §5).</summary>
+    private void UpdateEmptyHint() => EmptyHint.Visibility = !_isLibrary && _items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>These items selected and scrolled into view: a drop of what the fence already holds shows where it is (spec §2).</summary>
+    public void SelectItems(IReadOnlyCollection<string> keys)
     {
-        if (view.IsEditing) view.IsEditing = false;
+        ItemList.SelectedItems.Clear();
+        foreach (var view in _items.Where(view => keys.Contains(view.Key))) ItemList.SelectedItems.Add(view);
+        if (ItemList.SelectedItems.Count > 0) ItemList.ScrollIntoView(ItemList.SelectedItems[0]);
     }
 
-    private void RemoveItemAt(int index)
+    private ContextMenu? _itemMenu;
+
+    /// <summary>The host's item menu (M18 spec §3), at the pointer, or at the item for the menu key.</summary>
+    public void ShowItemMenu(ContextMenu menu, bool fromKeyboard)
     {
-        CancelRename(_items[index]);
-        _items.RemoveAt(index);
+        _itemMenu = menu;
+        var selected = ItemList.SelectedItem is { } item ? ItemList.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem : null;
+        menu.PlacementTarget = fromKeyboard && selected is not null ? selected : ItemList;
+        menu.Placement = fromKeyboard && selected is not null
+            ? System.Windows.Controls.Primitives.PlacementMode.Center
+            : System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+        menu.IsOpen = true;
     }
 
     private int IconSizePx => (int)Math.Round(_iconSizeDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
@@ -723,12 +688,6 @@ public partial class FenceWindow : Window
 
     private void ApplyItemWidth()
     {
-        Resources["EditItemWidth"] = LabelledItemWidth;
-        ApplyCellWidth();
-    }
-
-    private void ApplyCellWidth()
-    {
         // Game Library tiles are 2:3, 1.5 × the icon size wide (M12).
         Resources["TileWidth"] = Math.Round(_iconSizeDips * 1.5);
         Resources["TileHeight"] = Math.Round(_iconSizeDips * 2.25);
@@ -760,7 +719,7 @@ public partial class FenceWindow : Window
     {
         var container = _labelMode != LabelMode.OnHover ? null
             : _hoveredContainer ?? (ItemList.SelectedItems.Count == 1 ? ItemList.ItemContainerGenerator.ContainerFromItem(ItemList.SelectedItem) as ListBoxItem : null);
-        if (container is not { DataContext: FenceItemView { IsEditing: false } view, IsVisible: true })
+        if (container is not { DataContext: FenceItemView view, IsVisible: true })
         {
             HoverLabel.Visibility = Visibility.Collapsed;
             return;
@@ -930,7 +889,7 @@ public partial class FenceWindow : Window
     private void OnHoverTick()
     {
         if (Handle == 0 || !_rolledUp) return;
-        if (_drag is not null || BodyContextMenu.IsOpen || _renaming || _items.Any(view => view.IsEditing)) return; // never close under the user
+        if (_drag is not null || BodyContextMenu.IsOpen || _itemMenu?.IsOpen == true || _renaming) return; // never close under the user
         var (cursorX, cursorY) = FenceWindowChrome.GetCursorPosition();
         var rect = FenceWindowChrome.GetPixelRect(Handle);
         // While the height animates, judge "inside" against where the fence is going, so it does not flicker shut.
@@ -1051,11 +1010,11 @@ public partial class FenceWindow : Window
     public void ReloadSpecialIcons()
     {
         var iconSizePx = IconSizePx;
-        foreach (var view in _items.Where(view => view.ItemRef.StartsWith("::", StringComparison.Ordinal))) _iconLoader.Request(view, iconSizePx);
+        foreach (var view in _items.Where(view => view.Target.StartsWith("::", StringComparison.Ordinal))) _iconLoader.Request(view, iconSizePx);
     }
 
-    /// <summary>New size or DPI: every icon is requested again in place; names, selection and renames stay (M2c review carry-over).</summary>
-    private void ReloadIcons()
+    /// <summary>New size or DPI, or "Refresh": every icon and name is requested again in place; selection stays (M2c review carry-over).</summary>
+    public void ReloadIcons()
     {
         var iconSizePx = IconSizePx;
         foreach (var view in _items) _iconLoader.Request(view, iconSizePx);
@@ -1098,24 +1057,24 @@ public partial class FenceWindow : Window
 
     private void OnItemListKeyDown(object sender, KeyEventArgs args)
     {
-        if (args.OriginalSource is TextBox) return; // keys typed into the rename box
         var selected = ItemList.SelectedItems.OfType<FenceItemView>().ToList();
-        switch (args.Key)
+        var key = args.Key == Key.System ? args.SystemKey : args.Key; // Alt+Enter arrives as Key.System
+        switch (key)
         {
+            case Key.Enter when Keyboard.Modifiers == ModifierKeys.Alt && selected.Count == 1 && !_isLibrary:
+                PropertiesRequested?.Invoke(selected[0].Key, false);
+                break;
             case Key.Enter when selected.Count == 1:
-                OpenRequested?.Invoke(selected[0].ItemRef);
+                OpenRequested?.Invoke(selected[0].Key);
                 break;
             case Key.Enter when selected.Count > 1:
-                OpenManyRequested?.Invoke(selected.Select(view => view.ItemRef).ToList());
+                OpenManyRequested?.Invoke(selected.Select(view => view.Key).ToList());
                 break;
             case Key.Delete when selected.Count > 0:
-                RecycleRequested?.Invoke(selected.Select(view => view.ItemRef).ToList()); // Shift+Del too: always the Recycle Bin
-                break;
-            case Key.Back when _isPortal:
-                BackRequested?.Invoke();
+                RemoveRequested?.Invoke(selected.Select(view => view.Key).ToList()); // Shift+Del too: only the item goes
                 break;
             case Key.F2 when selected.Count == 1 && !_isLibrary: // library shortcuts are named by their game (M12)
-                BeginItemRename(selected[0].ItemRef);
+                PropertiesRequested?.Invoke(selected[0].Key, true);
                 break;
             default:
                 return;
@@ -1123,53 +1082,7 @@ public partial class FenceWindow : Window
         args.Handled = true;
     }
 
-    /// <summary>Starts renaming one item in place (F2, or Rename in Windows' item menu). Special items cannot be renamed.</summary>
-    public void BeginItemRename(string itemRef)
-    {
-        var view = _items.FirstOrDefault(candidate => candidate.ItemRef == itemRef);
-        if (view is null || itemRef.StartsWith("::", StringComparison.Ordinal)) return;
-        ItemList.ScrollIntoView(view);
-        view.EditName = view.Label;
-        view.IsEditing = true; // the box shows; OnLabelBoxVisibleChanged focuses it
-    }
-
-    private void OnLabelBoxVisibleChanged(object sender, DependencyPropertyChangedEventArgs args)
-    {
-        if (sender is not TextBox { IsVisible: true, DataContext: FenceItemView view } box) return;
-        Activate();
-        // Without focus typing would go to another app and the box could never close (ADR-015): give up instead.
-        if (!box.Focus() || !IsActive)
-        {
-            view.IsEditing = false;
-            return;
-        }
-        // Like Explorer: select the name, not the extension.
-        var extensionStart = box.Text.LastIndexOf('.');
-        box.Select(0, extensionStart > 0 ? extensionStart : box.Text.Length);
-    }
-
-    private void OnLabelBoxKeyDown(object sender, KeyEventArgs args)
-    {
-        if (sender is not TextBox { DataContext: FenceItemView view } || args.Key is not (Key.Enter or Key.Escape)) return;
-        EndItemRename(view, commit: args.Key == Key.Enter);
-        ItemList.Focus();
-        args.Handled = true;
-    }
-
-    private void OnLabelBoxLostFocus(object sender, KeyboardFocusChangedEventArgs args)
-    {
-        if (sender is TextBox { DataContext: FenceItemView view }) EndItemRename(view, commit: true);
-    }
-
-    private void EndItemRename(FenceItemView view, bool commit)
-    {
-        if (!view.IsEditing) return;
-        view.IsEditing = false;
-        var newName = view.EditName.Trim();
-        if (commit && newName.Length > 0 && newName != view.Label) ItemRenameRequested?.Invoke(view.ItemRef, newName);
-    }
-
-    /// <summary>Right-click on an item opens Windows' item menu instead of the fence menu.</summary>
+    /// <summary>Right-click on an item opens the item menu (the host builds it) instead of the fence menu.</summary>
     private void OnBodyContextMenuOpening(object sender, ContextMenuEventArgs args)
     {
         if (ItemsControl.ContainerFromElement(ItemList, (DependencyObject)args.OriginalSource) is not ListBoxItem { DataContext: FenceItemView clicked } container) return;
@@ -1181,53 +1094,38 @@ public partial class FenceWindow : Window
         }
         // From the mouse, or (menu key: CursorLeft < 0) from the item's corner. PointToScreen gives physical pixels.
         var anchor = args.CursorLeft >= 0 ? PointToScreen(Mouse.GetPosition(this)) : container.PointToScreen(new Point(container.ActualWidth / 2, container.ActualHeight / 2));
-        // The clicked item first: menu → Rename renames it, whatever else is selected (user choice 2026-10-03).
-        List<string> refs = [clicked.ItemRef, .. ItemList.SelectedItems.OfType<FenceItemView>().Select(view => view.ItemRef).Where(itemRef => itemRef != clicked.ItemRef)];
-        ItemMenuRequested?.Invoke(refs, (int)anchor.X, (int)anchor.Y, args.CursorLeft < 0);
+        // The clicked item first: Properties and Locate… act on it, whatever else is selected (user choice 2026-10-03).
+        List<string> keys = [clicked.Key, .. ItemList.SelectedItems.OfType<FenceItemView>().Select(view => view.Key).Where(key => key != clicked.Key)];
+        ItemMenuRequested?.Invoke(keys, (int)anchor.X, (int)anchor.Y, args.CursorLeft < 0);
     }
 
-    /// <summary>The item under a screen point (physical pixels) and the index to insert before when dropping there.</summary>
-    public FenceDropPoint HitTest(int screenX, int screenY)
+    /// <summary>The index to insert before when dropping at a screen point (physical pixels).</summary>
+    public int HitTest(int screenX, int screenY)
     {
         // Over a tab header: show that tab now, so the drop lands in it (M9).
         if (TabHeaderAt(screenX, screenY) is { } hoveredTab && hoveredTab != FenceId) TabSelected?.Invoke(hoveredTab);
         var point = ItemList.PointFromScreen(new Point(screenX, screenY));
-        string? hovered = null;
         var cells = new List<(double Left, double Top, double Width, double Height)>();
         var cellIndexes = new List<int>();
         for (var index = 0; index < _items.Count; index++)
         {
             if (ItemList.ItemContainerGenerator.ContainerFromIndex(index) is not ListBoxItem container) continue;
             var bounds = container.TransformToAncestor(ItemList).TransformBounds(new Rect(container.RenderSize));
-            // Only the middle of an item means "into it" (folders, Recycle Bin); its edges reorder (M3b review I2).
-            if (DropZones.IsInto(bounds.Left, bounds.Top, bounds.Width, bounds.Height, point.X, point.Y)) hovered = _items[index].ItemRef;
             cells.Add((bounds.Left, bounds.Top, bounds.Width, bounds.Height));
             cellIndexes.Add(index);
         }
         // Rows reach down to their tallest item (mixed label heights, M3b review).
         var cellAt = DropZones.InsertIndex(cells, point.X, point.Y);
-        return new FenceDropPoint(hovered, cellAt < cellIndexes.Count ? cellIndexes[cellAt] : _items.Count);
+        return cellAt < cellIndexes.Count ? cellIndexes[cellAt] : _items.Count;
     }
 
-    /// <summary>Shows where a drag would land: a caret before the insert position, or a highlight on the container taking it.</summary>
-    public void ShowDropFeedback(FenceDropPoint? drop, bool into)
+    /// <summary>Shows where a drag would land: a caret before the insert position (null hides it).</summary>
+    public void ShowDropFeedback(int? insertAt)
     {
         InsertCaret.Visibility = Visibility.Collapsed;
-        DropHighlight.Visibility = Visibility.Collapsed;
-        if (drop is not { } point) return;
-        if (into && _items.FirstOrDefault(view => view.ItemRef == point.ItemRef) is { } target
-            && ItemList.ItemContainerGenerator.ContainerFromItem(target) is ListBoxItem targetContainer)
-        {
-            var cell = targetContainer.TransformToAncestor(ItemList).TransformBounds(new Rect(targetContainer.RenderSize));
-            Canvas.SetLeft(DropHighlight, cell.Left);
-            Canvas.SetTop(DropHighlight, cell.Top);
-            DropHighlight.Width = cell.Width;
-            DropHighlight.Height = cell.Height;
-            DropHighlight.Visibility = Visibility.Visible;
-            return;
-        }
+        if (insertAt is not { } position) return;
         // Caret at the left edge of the item it goes before, or after the last item.
-        var before = point.InsertAt < _items.Count ? ItemList.ItemContainerGenerator.ContainerFromIndex(point.InsertAt) as ListBoxItem : null;
+        var before = position < _items.Count ? ItemList.ItemContainerGenerator.ContainerFromIndex(position) as ListBoxItem : null;
         var anchor = before ?? (_items.Count > 0 ? ItemList.ItemContainerGenerator.ContainerFromIndex(_items.Count - 1) as ListBoxItem : null);
         if (anchor is null) return;
         var bounds = anchor.TransformToAncestor(ItemList).TransformBounds(new Rect(anchor.RenderSize));
@@ -1249,7 +1147,7 @@ public partial class FenceWindow : Window
     private void OnListPress(object sender, MouseButtonEventArgs args)
     {
         if (args.OriginalSource is DependencyObject source && FindAncestor<System.Windows.Controls.Primitives.ScrollBar>(source) is not null) return;
-        // Text selection in the rename box must never start a drag of the file (M3b review I3).
+        // Text selection in a text box must never start a drag (M3b review I3).
         if (args.OriginalSource is DependencyObject pressed && FindAncestor<TextBox>(pressed) is not null) return;
         var container = args.OriginalSource is DependencyObject element ? FindAncestor<ListBoxItem>(element) : null;
         if (container is null)
@@ -1300,7 +1198,7 @@ public partial class FenceWindow : Window
         _pressPoint = null;
         _deferredSelect = null;
         _deferredToggle = null; // dragged: the item stays selected
-        var dragged = ItemList.SelectedItems.OfType<FenceItemView>().Select(view => view.ItemRef).ToList();
+        var dragged = ItemList.SelectedItems.OfType<FenceItemView>().Select(view => view.Key).ToList();
         if (dragged.Count > 0) DragRequested?.Invoke(dragged); // returns when the drag ends (Windows' modal loop)
     }
 
@@ -1352,10 +1250,8 @@ public partial class FenceWindow : Window
     private void OnItemDoubleClick(object sender, MouseButtonEventArgs args)
     {
         if (args.ChangedButton != MouseButton.Left) return;
-        // A double-click in the rename box selects a word; it must not open the file (M3a review carry-over).
-        if (args.OriginalSource is DependencyObject source && FindAncestor<TextBox>(source) is not null) return;
         if (ItemsControl.ContainerFromElement(ItemList, (DependencyObject)args.OriginalSource) is ListBoxItem { DataContext: FenceItemView view })
-            OpenRequested?.Invoke(view.ItemRef);
+            OpenRequested?.Invoke(view.Key);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs args)
@@ -1379,6 +1275,9 @@ public partial class FenceWindow : Window
         {
             case WmWindowPosChanging:
                 if (!Peeking) FenceWindowChrome.KeepAtBottom(lParam); // fences never rise above apps, except during Peek
+                break;
+            case WmDeviceChange when wParam is DbtDeviceArrival or DbtDeviceRemoveComplete:
+                DrivesChanged?.Invoke(); // a USB stick plugged back in: its items come back by themselves (spec §4)
                 break;
             // Click mode: the first press on a rolled-up title opens it instead of starting a move (M6b).
             case WmNcLeftButtonDown when wParam == HitTestCaption && IsSecondCaptionClick(lParam):

@@ -42,7 +42,7 @@ public sealed partial class FenceHost
     {
         if (!Appearance.WallpaperAccent) return null;
         var fallback = (_accents.Count > 0 ? _accents[0].Accent : null) ?? _windowsAccent;
-        if (window.Handle == 0) return fallback; // a fence being created (drawn, a new Portal): restyled on its first move (final review M1)
+        if (window.Handle == 0) return fallback; // a fence being created (drawn): restyled on its first move (final review M1)
         var rect = FenceWindowChrome.GetPixelRect(window.Handle);
         var (centerX, centerY) = (rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
         var under = _accents.FirstOrDefault(entry => centerX >= entry.Monitor.Left && centerX < entry.Monitor.Right

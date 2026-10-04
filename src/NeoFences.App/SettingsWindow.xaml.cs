@@ -9,10 +9,9 @@ namespace NeoFences.App;
 /// <param name="PeekHotkey">As a person reads it (key caps).</param>
 /// <param name="PeekHotkeyActive">False when Windows refused it (another app owns it): the window says so.</param>
 public sealed record SettingsView(
-    bool StartWithWindows, bool Takeover, string PeekHotkey, bool PeekHotkeyActive, RollupExpand RollupExpand,
+    bool StartWithWindows, bool HideDesktopIcons, string PeekHotkey, bool PeekHotkeyActive, RollupExpand RollupExpand,
     bool GameModeEnabled, bool GameModeActive, string Version, string DataFolder, LabelMode DefaultLabels, bool ShowShortcutArrows,
-    IReadOnlyList<NeoFences.Core.Config.SnapshotEntry> Snapshots, IReadOnlyList<Rule> Rules, IReadOnlyList<string> RuleLines,
-    IReadOnlyList<RuleFence> RuleFences, LibraryView Library, AppearanceView Appearance, UpdatesView Updates);
+    IReadOnlyList<NeoFences.Core.Config.SnapshotEntry> Snapshots, LibraryView Library, AppearanceView Appearance, UpdatesView Updates);
 
 /// <summary>One row of the Snapshots list (M10).</summary>
 public sealed record SnapshotRow(string Path, string Name, string When)
@@ -29,7 +28,8 @@ public partial class SettingsWindow : Window
     private bool _updating; // filling the controls from the host must not report changes back
 
     public event Action<bool>? StartWithWindowsChanged;
-    public event Action<bool>? TakeoverChanged;
+    /// <summary>"Hide desktop icons while NeoFences runs" (M18).</summary>
+    public event Action<bool>? HideDesktopIconsChanged;
     /// <summary>A new Peek hotkey was pressed in the box (text like "Ctrl+Alt+P"); answer with <see cref="ShowHotkeyResult"/>.</summary>
     public event Action<string>? PeekHotkeyChosen;
     /// <summary>Settings → Updates (M17).</summary>
@@ -58,7 +58,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         // Checked/Unchecked, not Click: UI Automation (Narrator, Toggle) changes the box without a click (M6b smoke).
         OnToggled(StartupBox, isChecked => StartWithWindowsChanged?.Invoke(isChecked));
-        OnToggled(TakeoverBox, isChecked => TakeoverChanged?.Invoke(isChecked));
+        OnToggled(HideIconsBox, isChecked => HideDesktopIconsChanged?.Invoke(isChecked));
         OnToggled(GameModeBox, isChecked => GameModeChanged?.Invoke(isChecked));
         RollupBox.SelectionChanged += (_, _) =>
         {
@@ -80,7 +80,7 @@ public partial class SettingsWindow : Window
         LabelsApplyAllButton.Click += (_, _) => LabelsAppliedToAll?.Invoke(SelectedLabels);
         // Screen readers read each setting's description with it (M6b review carry-over).
         foreach (var (control, description) in new (UIElement, TextBlock)[]
-                 { (StartupBox, StartupDescription), (TakeoverBox, TakeoverDescription), (HotkeyBox, HotkeyDescription),
+                 { (StartupBox, StartupDescription), (HideIconsBox, HideIconsDescription), (HotkeyBox, HotkeyDescription),
                    (LabelsBox, LabelsDescription), (ArrowsBox, ArrowsDescription), (RollupBox, RollupDescription), (GameModeBox, GameModeDescription) })
         {
             System.Windows.Automation.AutomationProperties.SetHelpText(control, description.Text);
@@ -108,7 +108,6 @@ public partial class SettingsWindow : Window
         };
         SnapshotNameBox.LostKeyboardFocus += (_, _) => EndSnapshotRename(commit: true, backToRow: false); // the user went elsewhere: focus stays there
         System.Windows.Automation.AutomationProperties.SetHelpText(SnapshotList, SnapshotsDescription.Text);
-        InitializeRules();
         InitializeLibrary();
         InitializeAppearance();
         OnToggled(AutoUpdateBox, isChecked => AutoUpdateChanged?.Invoke(isChecked)); // M17
@@ -213,7 +212,6 @@ public partial class SettingsWindow : Window
     public void Show(SettingsView view)
     {
         ShowSnapshots(view.Snapshots);
-        ShowRules(view);
         _updating = true;
         LabelsBox.SelectedIndex = view.DefaultLabels == LabelMode.OnHover ? 1 : 0;
         ArrowsBox.IsChecked = view.ShowShortcutArrows;
@@ -222,7 +220,7 @@ public partial class SettingsWindow : Window
             ShowHotkeyResult(saved: false, message: $"{view.PeekHotkey} is not active: Windows or another app owns it. Record another combination.");
         }
         StartupBox.IsChecked = view.StartWithWindows;
-        TakeoverBox.IsChecked = view.Takeover;
+        HideIconsBox.IsChecked = view.HideDesktopIcons;
         HotkeyBox.Text = view.PeekHotkey;
         RollupBox.SelectedIndex = view.RollupExpand == RollupExpand.Click ? 1 : 0;
         GameModeBox.IsChecked = view.GameModeEnabled;

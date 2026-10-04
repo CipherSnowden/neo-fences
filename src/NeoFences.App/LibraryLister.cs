@@ -6,13 +6,11 @@ using NeoFences.Shell;
 namespace NeoFences.App;
 
 /// <summary>
-/// One Portal fence at runtime (M4): the folder it mirrors, the subfolder it shows now (browsing is not saved; a restart
-/// shows the Portal's own folder again), and its watcher. Listing and watcher setup run off the UI thread, since a
-/// network or USB folder can block for seconds (M4 review I1); bursts of changes become one re-list at most every
-/// 250 ms, even while a file keeps being written (I2); an unavailable or unwatched folder is retried every few
-/// seconds, so a Portal comes back when its drive does (I4).
+/// The Game Library fence's folder listing (M12; Portals' code until M18): NeoFences' own library folder and its watcher.
+/// Listing and watcher setup run off the UI thread (M4 review I1); bursts of changes become one re-list at most every
+/// 250 ms (I2); an unavailable or unwatched folder is retried every few seconds (I4).
 /// </summary>
-public sealed class PortalState : IDisposable
+public sealed class LibraryLister : IDisposable
 {
     private static readonly TimeSpan RefreshDelay = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(7);
@@ -22,13 +20,12 @@ public sealed class PortalState : IDisposable
     private readonly Action<IReadOnlyList<ItemInfo>?> _show;
     private readonly Action<Exception> _logFailure;
     private FolderWatcher? _watcher;
-    private DeviceRemovalNotice? _removal;   // asks before the Portal's drive is removed (USB stick, M8d)
+    private DeviceRemovalNotice? _removal;   // asks before the library drive is removed (USB stick, M8d)
     private readonly nint _noticeOwner;
     private volatile bool _noticeFailureLogged;
     private readonly DispatcherTimer _backoffTimer;
     private TimeSpan _failureDelay = NeoFences.Core.Lifecycle.WatcherBackoff.First;
     private DateTime _lastArm = DateTime.MinValue;
-    private HashSet<string> _listedFolders = new(StringComparer.OrdinalIgnoreCase);
     private int _generation;
     private bool _refreshing;   // a listing is running in the background (a network folder may take seconds)
     private bool _disposed;
@@ -39,15 +36,11 @@ public sealed class PortalState : IDisposable
     private DateTime _releasedUntil = DateTime.MinValue; // just let go of a drive being removed: no re-opening for a moment (M13a)
     private static readonly TimeSpan ReleaseGrace = TimeSpan.FromSeconds(5);
 
-    public string Root { get; }
-
-    public string Current { get; private set; }
-
-    public bool CanGoBack => !string.Equals(Current, Root, StringComparison.OrdinalIgnoreCase);
+    public string Folder { get; }
 
     /// <param name="show">Called on the UI thread with the shown folder's items, or null when it cannot be read.</param>
     /// <param name="noticeOwner">The window that receives "may this drive be removed?" (the app's message window).</param>
-    public PortalState(string root, nint noticeOwner, Action<IReadOnlyList<ItemInfo>?> show, Action<Exception> logFailure)
+    public LibraryLister(string folder, nint noticeOwner, Action<IReadOnlyList<ItemInfo>?> show, Action<Exception> logFailure)
     {
         _noticeOwner = noticeOwner;
         _backoffTimer = new DispatcherTimer();
@@ -57,8 +50,7 @@ public sealed class PortalState : IDisposable
             if (_paused) _missedChanges = true; // re-listed when the game ends (M8d review I1)
             else Refresh();
         };
-        Root = Normalize(root);
-        Current = Root;
+        Folder = folder.TrimEnd('\\');
         _show = show;
         _logFailure = logFailure;
         _refreshTimer = new DispatcherTimer { Interval = RefreshDelay };
@@ -69,31 +61,6 @@ public sealed class PortalState : IDisposable
         };
         _retryTimer = new DispatcherTimer { Interval = RetryDelay };
         _retryTimer.Tick += (_, _) => { if (!_refreshing && !_paused) Refresh(); }; // never pile up blocked listings
-        Refresh();
-    }
-
-    /// <summary>"Downloads › Mods › Old" while browsing below the Portal's folder.</summary>
-    public string Breadcrumb(string title)
-    {
-        var below = Path.GetRelativePath(Root, Current);
-        return below == "." ? title : title + " › " + below.Replace("\\", " › ");
-    }
-
-    /// <summary>True when the last listing showed this ref as a folder (no disk access: a network folder may block).</summary>
-    public bool IsListedFolder(string itemRef) => _listedFolders.Contains(itemRef);
-
-    /// <summary>Shows a subfolder of the Portal (double-click on a folder inside it).</summary>
-    public void Browse(string folder)
-    {
-        Current = Normalize(folder);
-        Refresh();
-    }
-
-    /// <summary>One level up, never above the Portal's own folder.</summary>
-    public void Back()
-    {
-        if (!CanGoBack) return;
-        Current = Path.GetDirectoryName(Current) is { } parent ? Normalize(parent) : Root;
         Refresh();
     }
 
@@ -111,7 +78,7 @@ public sealed class PortalState : IDisposable
         }
         _refreshing = true;
         var generation = ++_generation;
-        var folder = Current;
+        var folder = Folder;
         var dispatcher = _refreshTimer.Dispatcher;
         Task.Run(() =>
         {
@@ -138,9 +105,6 @@ public sealed class PortalState : IDisposable
                 watcher.Changed += () => dispatcher.BeginInvoke(ScheduleRefresh);
                 watcher.Failed += () => dispatcher.BeginInvoke(OnWatcherFailed);
                 if (watcher.HasFailed) OnWatcherFailed(); // it failed while arming, before this subscription (M8d review I2)
-                _listedFolders = items is null
-                    ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                    : new HashSet<string>(items.Where(item => item.IsFolder).Select(item => item.ItemRef), StringComparer.OrdinalIgnoreCase);
                 // Unreadable or unwatched (drive not there yet): try again every few seconds until it is.
                 if (items is null || !watcher.IsWatching) _retryTimer.Start();
                 else _retryTimer.Stop();
@@ -149,7 +113,7 @@ public sealed class PortalState : IDisposable
         });
     }
 
-    /// <summary>Game mode (spec §4.7): while paused, folder changes only mark the Portal stale; resuming re-lists once.</summary>
+    /// <summary>Game mode (spec §4.7): while paused, folder changes only mark the listing stale; resuming re-lists once.</summary>
     public void SetPaused(bool paused)
     {
         _paused = paused;
@@ -159,9 +123,9 @@ public sealed class PortalState : IDisposable
     }
 
     /// <summary>
-    /// Windows asks to remove the drive holding this handle: close everything the Portal holds there, so "Safely Remove"
-    /// and Eject work while it is shown (M8d). The Portal shows the folder as unavailable and comes back by itself when
-    /// the drive does, or the removal was refused (the 7 s retry timer).
+    /// Windows asks to remove the drive holding this handle: close everything the lister holds there, so "Safely Remove"
+    /// and Eject work (M8d). It shows nothing and comes back by itself when the drive does, or the removal was refused
+    /// (the 7 s retry timer).
     /// </summary>
     public bool ReleaseForRemoval(nint handle)
     {
@@ -186,7 +150,6 @@ public sealed class PortalState : IDisposable
         _watcher = null;
         _removal.Dispose();
         _removal = null;
-        _listedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         _releasedUntil = DateTime.UtcNow + ReleaseGrace;
         _show(null);
         _retryTimer.Start(); // every 7 s, after the grace: back when the drive is, or when the removal was refused
@@ -213,7 +176,7 @@ public sealed class PortalState : IDisposable
         _failureDelay = NeoFences.Core.Lifecycle.WatcherBackoff.Next(_failureDelay, lastRearm: _lastArm, failureAt: DateTime.UtcNow);
         _backoffTimer.Interval = _failureDelay;
         _backoffTimer.Start();
-        Serilog.Log.Information("Portal folder watcher stopped ({Folder}); re-listing after {Delay}", Current, _failureDelay);
+        Serilog.Log.Information("library folder watcher stopped ({Folder}); re-listing after {Delay}", Folder, _failureDelay);
     }
 
     private void ScheduleRefresh()
@@ -223,15 +186,8 @@ public sealed class PortalState : IDisposable
             _missedChanges = true;
             return;
         }
-        // Not restarted by every event: a file that keeps being written still refreshes the Portal every 250 ms.
+        // Not restarted by every event: a file that keeps being written still re-lists every 250 ms.
         if (!_disposed && !_refreshTimer.IsEnabled) _refreshTimer.Start();
-    }
-
-    /// <summary>A path without a trailing separator, except a drive root ("D:\").</summary>
-    private static string Normalize(string folder)
-    {
-        var trimmed = folder.TrimEnd('\\', '/');
-        return trimmed.Length == 2 && trimmed[1] == ':' ? trimmed + "\\" : trimmed;
     }
 
     public void Dispose()

@@ -4,9 +4,9 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using NeoFences.Core.Config;
 using NeoFences.Core.Input;
+using NeoFences.Core.Items;
 using NeoFences.Core.Layouts;
 using NeoFences.Core.Lifecycle;
-using NeoFences.Core.Membership;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
 using Serilog;
@@ -14,10 +14,11 @@ using Serilog;
 namespace NeoFences.App;
 
 /// <summary>
-/// Owns the fences on the desktop: loads the config, places one <see cref="FenceWindow"/> per fence on the current
-/// monitors, keeps fence contents in step with the Desktop folders (reconcile at start, then watcher events),
-/// saves changes (debounced 500 ms, ADR-006), and keeps everything attached through display changes,
-/// Explorer restarts and sign-out (ADR-011, ADR-013). Every Win32/COM call goes through NeoFences.Shell.
+/// Owns the fences on the desktop: loads the config and the items, places one <see cref="FenceWindow"/> per box on the
+/// current monitors, shows each fence's virtual items (ADR-040) and keeps their targets checked (FenceHost.Watching),
+/// saves changes (debounced 500 ms, ADR-006, ADR-041), and keeps everything attached through display changes, Explorer
+/// restarts and sign-out (ADR-011, ADR-013). Nothing here touches a user's file; every Win32/COM call goes through
+/// NeoFences.Shell.
 /// </summary>
 public sealed partial class FenceHost
 {
@@ -33,33 +34,28 @@ public sealed partial class FenceHost
     private const int TrayRetryAttempts = 15;
 
     private readonly ConfigStore _store = new(AppPaths.DataDirectory);
+    private readonly ItemStore _itemStore = new(AppPaths.DataDirectory); // ADR-041: the items in a file of their own
     private readonly Watchdog _watchdog = new(AppPaths.DataDirectory, message => Log.Information("watchdog: {Message}", message));
     private readonly SystemMessageWindow _messages = new();
     private readonly Dictionary<string, FenceWindow> _windows = new(StringComparer.Ordinal);
     private readonly DispatcherTimer _saveTimer;
     private readonly IconLoader _iconLoader = new(Dispatcher.CurrentDispatcher);
-    private DesktopWatcher? _desktopWatcher;
-    private readonly ShellWorker _shellWorker = new(); // open, recycle, rename: off the UI thread, on STA (M3a review)
+    private readonly ShellWorker _shellWorker = new(); // recycling snapshots: off the UI thread, on STA (M3a review)
     private SpecialIconNotifications? _specialIcons;
     private bool _specialIconsDeferred;
     private readonly SnapshotStore _snapshots = new(Path.Combine(AppPaths.DataDirectory, "snapshots")); // M10
     private readonly HashSet<string> _loggedSnapshotProblems = new(StringComparer.OrdinalIgnoreCase);
     private readonly DispatcherTimer _specialIconsTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
-    // Rules wait until arrivals are quiet: a shortcut or file still being written reads wrong (M11 smoke X4, review M3).
-    private readonly DispatcherTimer _filingTimer = new() { Interval = TimeSpan.FromMilliseconds(1500) };
-    private readonly List<string> _pendingArrivals = [];
-    // Watcher trouble arrives in bursts: one re-arm and one reconcile per burst; a watcher that fails again at once waits longer (M8a review).
-    private readonly DispatcherTimer _watcherRecoveryTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
-    private bool _rearmWatcher;
-    private DateTime _lastWatcherRearm = DateTime.MinValue;
-    private TimeSpan _watcherRearmDelay = WatcherBackoff.First;
-    // Safe-save memory and expected drop arrivals (FenceMembership.SafeSaveWindow).
-    private IReadOnlyList<RememberedPlacement> _rememberedPlacements = [];
     private readonly Dictionary<string, IDisposable> _dropRegistrations = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, PortalState> _portals = new(StringComparer.Ordinal); // M4: Portal fences by id
+    private LibraryLister? _libraryLister; // the Game Library fence's folder (M12), while that fence exists
     private NeoFencesConfig _config = NeoFencesConfig.CreateDefault();
+    private ItemsDocument _items = new();
+    /// <summary>
+    /// False when this session's config is only a fallback (fresh, or read-only): its fence ids are not the real ones, so
+    /// item lists it does not know are kept rather than dropped at save (ADR-041).
+    /// </summary>
+    private bool _pruneItemLists;
     private IReadOnlyList<MonitorPlacement> _monitors = [];
-    private bool _takeoverActive;
     private bool _lightTheme = SystemTheme.AppsUseLightTheme();
     private bool _sessionEnding;
     // M5 desktop gestures
@@ -81,9 +77,6 @@ public sealed partial class FenceHost
     private bool _gameMode;                  // a full-screen app is in front: idle (spec §4.7, ADR-021)
     private ForegroundWatcher? _foregroundWatcher;
     private TrayIcon? _trayIcon;
-    private readonly List<DesktopChange> _deferredDesktopChanges = [];
-    private bool _reconcileDeferred;
-    private const int MaxDeferredDesktopChanges = 500;
     private const int TrayNewFence = 1, TrayQuickHide = 2, TrayPeek = 3, TrayPause = 4, TrayExit = 5, TraySettings = 6;
     // Snapshots (M10): "Restore snapshot" lists the newest few by id TrayRestoreFirst + index.
     private const int TrayTakeSnapshot = 7, TrayRestoreMenu = 8, TrayRestoreBefore = 9, TrayRestoreFirst = 100, TrayRestoreCount = 10;
@@ -107,15 +100,11 @@ public sealed partial class FenceHost
         _messages.SpecialIconsChanged += ScheduleSpecialIconRefresh;
         _messages.DeviceRemovalRequested += handle =>
         {
-            foreach (var (fenceId, portal) in _portals)
-            {
-                if (portal.ReleaseForRemoval(handle)) Log.Information("drive of Portal {FenceId} is being removed: released it", fenceId);
-            }
+            if (_libraryLister?.ReleaseForRemoval(handle) == true) Log.Information("the library folder's drive is being removed: released it");
             if (ReleaseLibraryForRemoval(handle)) Log.Information("a drive the game library watches is being removed: released it");
+            if (ReleaseTargetWatcherForRemoval(handle)) Log.Information("a drive holding item targets is being removed: released it");
         };
         _specialIconsTimer.Tick += (_, _) => RefreshSpecialIcons();
-        _filingTimer.Tick += (_, _) => FilePendingArrivals();
-        _watcherRecoveryTimer.Tick += (_, _) => RecoverDesktopWatcher();
     }
 
     public void Start()
@@ -124,21 +113,27 @@ public sealed partial class FenceHost
         Log.Information("config loaded from {Source} (read-only: {IsReadOnly}, corrupt copy: {CorruptCopyPath})",
             loaded.Source, loaded.IsReadOnly, loaded.CorruptCopyPath);
         _config = loaded.Config;
+        var loadedItems = _itemStore.Load();
+        Log.Information("items loaded from {Source} (read-only: {IsReadOnly}, corrupt copy: {CorruptCopyPath}): {Count} item(s)",
+            loadedItems.Source, loadedItems.IsReadOnly, loadedItems.CorruptCopyPath, loadedItems.Document.Fences.Values.Sum(items => items.Count));
+        _items = loadedItems.Document;
+        _pruneItemLists = loaded.KnowsTheFences;
+        if (!_pruneItemLists && _items.Fences.Count > 0) Log.Warning("config is a fallback this session: item lists of unknown fences are kept");
+        if (loadedItems.Source == ConfigLoadSource.Primary && !loadedItems.IsReadOnly) CleanUnusedPictures(ItemEdits.ImagesInUse(_items));
         _watchdog.LaunchDetached(Environment.ProcessId);
         ApplyStartup(); // after a power loss NeoFences must come back by itself (ADR-019)
 
         RefreshMonitors();
         foreach (var box in FenceTabs.Boxes(_config)) OpenWindow(box); // one window per box (M9)
-        EnsurePortals();
-        StartDesktopWatcher(); // first: an item created while the startup reconcile lists the desktop is not missed (M8a)
-        ReconcileDesktop();
+        EnsureLibraryLister();
+        RefreshWindows();
         StartSpecialIconNotifications();
         ApplyLayout();
-        if (_config.Settings.Takeover) SetTakeover(true);
-        else if (_watchdog.IsTakeoverActiveMarked)
+        if (_config.Settings.HideDesktopIcons) SetIconsHidden(true);
+        else if (_watchdog.IsIconsHiddenMarked)
         {
-            // Icons may still be hidden from a run whose Takeover-off never got saved (both processes killed): show them.
-            Log.Warning("takeover-active marker found while Takeover is off; showing desktop icons");
+            // Icons may still be hidden from a run whose "show" never happened (both processes killed): show them.
+            Log.Warning("icons-hidden marker found while hiding is off; showing desktop icons");
             SetIconsHidden(false);
         }
         StartGestures();
@@ -153,21 +148,22 @@ public sealed partial class FenceHost
             Log.Error(failure, "tray icon unavailable; fences and gestures keep working"); // hard rule 7: only the tray is lost
         }
         StartGameMode();
+        StartWatching(); // M18: states fill in as the checks finish (spec §4)
         StartUpdates(); // M17: the first check a minute after start
         if (Appearance.WallpaperAccent) UpdateAccents(); // M14: the accent is read once at start, then on wallpaper changes
         ScheduleSave();
     }
 
     /// <summary>
-    /// The clock for safe-save and drop memory: wall time at start plus a monotonic stopwatch, so a clock change (time
-    /// sync, daylight saving, the user) cannot expire or extend a memory early (M8a).
+    /// The clock for refresh throttling: wall time at start plus a monotonic stopwatch, so a clock change (time sync,
+    /// daylight saving, the user) cannot stall or rush a refresh (M8a).
     /// </summary>
     private static readonly DateTimeOffset ClockStart = DateTimeOffset.Now;
     private static readonly System.Diagnostics.Stopwatch Clock = System.Diagnostics.Stopwatch.StartNew();
     private static DateTimeOffset Now => ClockStart + Clock.Elapsed;
 
     /// <summary>All of NeoFences' run-time modes together (Core rules: which fences, icons and hooks they imply).</summary>
-    private RunState Current => new(Takeover: _takeoverActive, QuickHidden: _quickHidden, Paused: _paused, GameMode: _gameMode,
+    private RunState Current => new(HideIcons: _config.Settings.HideDesktopIcons, QuickHidden: _quickHidden, Paused: _paused, GameMode: _gameMode,
         IconsHiddenByUser: _iconsHiddenByUser);
 
     /// <summary>
@@ -178,9 +174,9 @@ public sealed partial class FenceHost
     public void OnSessionEnding()
     {
         _sessionEnding = true;
-        ApplyDeferredShellWork(); // Desktop changes queued during a game must be saved too (M6a review M2)
+        ApplyDeferredShellWork(); // renames seen during a game must be saved too (M6a review M2)
         SaveNow();
-        if (Current.IconsHidden || _watchdog.IsTakeoverActiveMarked) SetIconsHidden(false);
+        if (Current.IconsHidden || _watchdog.IsIconsHiddenMarked) SetIconsHidden(false);
         TryMarker(() => _watchdog.MarkSessionEnding(Environment.ProcessId), what: "session-ending marker");
     }
 
@@ -189,21 +185,21 @@ public sealed partial class FenceHost
     {
         WatchWallpaperEngine(watch: false); // M14
         _libraryStopped = true; // also on session end: a library scan finishing now writes and re-arms nothing (M13a review)
-        ApplyDeferredShellWork(); // Desktop changes queued during a game must be saved too (M6a review M2)
+        ApplyDeferredShellWork(); // renames seen during a game must be saved too (M6a review M2)
         SaveNow();
         _trayIcon?.Dispose(); // also on session end: a cancelled shutdown restarts us, and the old icon would linger (M8a)
         _trayIcon = null;
         if (_sessionEnding) return; // OnSessionEnding already restored and marked; no clean marker, so a cancel restarts us
         // The marker also catches a show that failed earlier (quick-hide ending while Explorer was busy; M5 review M6).
-        if (Current.IconsHidden || _watchdog.IsTakeoverActiveMarked) SetIconsHidden(false);
+        if (Current.IconsHidden || _watchdog.IsIconsHiddenMarked) SetIconsHidden(false);
         TryMarker(() => _watchdog.MarkCleanShutdown(Environment.ProcessId), what: "clean-shutdown marker");
         _foregroundWatcher?.Dispose();
         _mouseHook?.Dispose();
         _peekHotkey?.Dispose();
         _peekEscapeHotkey?.Dispose();
-        _desktopWatcher?.Dispose();
-        _desktopWatcher = null;
+        StopWatching();
         _specialIcons?.Dispose();
+        _libraryLister?.Dispose();
         StopLibraryWatchers();
         _libraryTimer?.Stop();
         _shellWorker.Dispose();
@@ -216,14 +212,14 @@ public sealed partial class FenceHost
     /// <summary>Best effort from the crash handler; the watchdog restores too.</summary>
     public void EmergencyRestoreIcons()
     {
-        if (Current.IconsHidden || _watchdog.IsTakeoverActiveMarked) DesktopIcons.TrySetHidden(false);
+        if (Current.IconsHidden || _watchdog.IsIconsHiddenMarked) DesktopIcons.TrySetHidden(false);
     }
 
     /// <summary>One window per box (M9): it shows the box's active tab; roll-up and lock are the box's.</summary>
     private void OpenWindow(Fence box)
     {
         var shown = FenceTabs.ActiveOf(_config, box.Id);
-        var window = new FenceWindow(shown with { RolledUp = box.RolledUp, Locked = box.Locked }, takeoverActive: _takeoverActive,
+        var window = new FenceWindow(shown with { RolledUp = box.RolledUp, Locked = box.Locked },
             lightTheme: _lightTheme, iconLoader: _iconLoader, rollupExpand: _config.Settings.RollupExpand)
         {
             // Spec §6: no animations when Windows' "Animation effects" are off; spec §4.7: none while gaming.
@@ -254,33 +250,26 @@ public sealed partial class FenceHost
         window.LockToggled += locked => SetFenceLocked(window, locked);
         window.DeleteRequested += () => DeleteFence(window);
         window.NewFenceRequested += CreateFence;
-        window.TakeoverToggled += SetTakeover;
         window.ExitRequested += () => ExitRequested?.Invoke();
-        window.OpenRequested += itemRef => OpenOrBrowse(window, itemRef);
-        window.OpenManyRequested += itemRefs =>
+        window.OpenRequested += key => OpenKey(window, key);
+        window.OpenManyRequested += keys =>
         {
-            foreach (var itemRef in itemRefs) OpenItem(itemRef, ownerHandle: window.Handle); // folders open in Explorer
-            SetPeek(false);
+            foreach (var key in keys) OpenKey(window, key);
         };
-        window.ItemMenuRequested += (itemRefs, screenX, screenY, fromKeyboard) => ShowItemMenu(window, itemRefs, screenX, screenY, fromKeyboard);
-        window.RecycleRequested += itemRefs => RecycleItems(window, itemRefs);
-        window.ItemRenameRequested += (itemRef, newName) => RenameItem(window, itemRef, newName);
-        window.BackRequested += () => BrowsePortal(window, back: true);
-        window.NewPortalRequested += () => CreatePortal(window);
+        window.ItemMenuRequested += (keys, screenX, screenY, fromKeyboard) => ShowItemMenu(window, keys, screenX, screenY, fromKeyboard);
+        window.RemoveRequested += keys => RemoveItems(window, keys);
+        window.PropertiesRequested += (key, focusName) => ShowProperties(window, key, focusName);
+        window.AddItemRequested += () => AddItem(window);
+        window.RefreshRequested += () => RefreshFence(window);
+        window.DrivesChanged += OnDrivesChanged;
         window.NewLibraryRequested += CreateLibraryFence;
-        window.RefreshLibraryRequested += () => ScanLibrary(full: true);
         window.StartupToggled += SetStartWithWindows;
         window.SettingsRequested += OpenSettings;
-        window.RulesRequested += () => OpenRulesFor(window.FenceId);
         window.LabelModeRequested += labels => SetFenceLabels(window, labels);
         window.SetShortcutArrows(_config.Settings.ShowShortcutArrows);
         window.SetStartupChecked(_config.Settings.StartWithWindows);
         window.SortRequested += sort => SortFence(window, sort);
-        window.OpenFolderRequested += () => { if (_portals.TryGetValue(window.FenceId, out var portal)) OpenItem(portal.Current, ownerHandle: window.Handle); };
-        window.DragRequested += itemRefs =>
-            ShellDragDrop.TryDrag(window.Handle, itemRefs, logFailure: failure => Log.Warning(failure, "could not start dragging {ItemRefs}", itemRefs),
-                copyOnly: window.IsLibrary); // a game dragged out of the library is copied, never moved (M12)
-        window.TakeoverPromptAnswered += AnswerTakeoverPrompt;
+        window.DragRequested += keys => DragItems(window, keys);
         window.RollUpToggled += () => ToggleRollUp(window);
         new WindowInteropHelper(window).EnsureHandle(); // HWND exists (styles, blur) before the first Show
         if (window.CornersUnavailable && !_cornersLogged)
@@ -291,77 +280,8 @@ public sealed partial class FenceHost
         RegisterDrops(window); // needs the HWND
         if (!DesktopHost.AttachToDesktop(window.Handle)) Log.Warning("fence {FenceId}: not attached to the desktop yet (no Progman)", box.Id);
         _windows[box.Id] = window;
-        // A Portal tab that gets a window of its own (detached, or its host deleted) lists its folder now (final review I1).
-        if (_portals.TryGetValue(shown.Id, out var shownPortal)) shownPortal.Refresh();
-    }
-
-    /// <summary>Full pass over the Desktop folders: at start and whenever watcher events were lost.</summary>
-    private void ReconcileDesktop()
-    {
-        var listing = DesktopItems.Enumerate();
-        var (reconciled, report) = FenceMembership.Reconcile(_config, listing.ItemRefs, listing.UnavailableFolders,
-            remembered: _rememberedPlacements, now: Now);
-        _config = reconciled;
-        _rememberedPlacements = [.. _rememberedPlacements.Except(report.UsedMemories)]; // each memory places one item once (M8a review)
-        if (listing.UnavailableFolders.Count > 0) Log.Warning("desktop folders not readable: {Folders}", listing.UnavailableFolders);
-        if (report.Suspicious) Log.Warning("kept fenced items from an unreadable or empty desktop listing until a later reconcile");
-        Log.Information("desktop reconciled: {AddedCount} added to the Inbox, {RemovedCount} removed", report.AddedToInbox.Count, report.Removed.Count);
-        RefreshWindows();
-        ScheduleSave();
-        FileNewItems(report.AddedToInbox);
-        OnDesktopShortcutsChanged([.. report.Removed, .. report.AddedToInbox]); // a game-mode flood, lost watcher events, start (M16)
-    }
-
-    private void StartDesktopWatcher()
-    {
-        // A folder that cannot be watched degrades to "its changes show after a restart" (hard rule 7).
-        _desktopWatcher = new DesktopWatcher((folder, failure) => Log.Error(failure, "cannot watch {Folder}; its changes show after a restart", folder));
-        var dispatcher = Dispatcher.CurrentDispatcher;
-        _desktopWatcher.Changed += change => dispatcher.BeginInvoke(() => OnDesktopChanged(change));
-        _desktopWatcher.Overflowed += () => dispatcher.BeginInvoke(() => OnDesktopWatcherTrouble(rearm: true));
-        _desktopWatcher.ReconcileNeeded += () => dispatcher.BeginInvoke(() => OnDesktopWatcherTrouble(rearm: false));
-    }
-
-    /// <summary>
-    /// Events were lost or the watcher stopped (re-arm: .NET disables it after a non-overflow error), or one event could
-    /// not be read (reconcile only). Bursts are gathered into one recovery (M8a review).
-    /// </summary>
-    private void OnDesktopWatcherTrouble(bool rearm)
-    {
-        if (_desktopWatcher is null) return; // shut down meanwhile
-        if (rearm && !_rearmWatcher)
-        {
-            _rearmWatcher = true;
-            // Measured when the failure arrives: the wait itself is not quiet time (Core WatcherBackoff, M8c review I3).
-            _watcherRearmDelay = WatcherBackoff.Next(_watcherRearmDelay, lastRearm: _lastWatcherRearm, failureAt: DateTime.UtcNow);
-            _watcherRecoveryTimer.Stop(); // a reconcile-only recovery already waiting now waits for the re-arm delay
-            _watcherRecoveryTimer.Interval = _watcherRearmDelay;
-            _watcherRecoveryTimer.Start();
-            return;
-        }
-        if (_watcherRecoveryTimer.IsEnabled) return;
-        _watcherRecoveryTimer.Interval = WatcherBackoff.First;
-        _watcherRecoveryTimer.Start();
-    }
-
-    private void RecoverDesktopWatcher()
-    {
-        _watcherRecoveryTimer.Stop();
-        if (_desktopWatcher is null) return;
-        if (_rearmWatcher)
-        {
-            _rearmWatcher = false;
-            _lastWatcherRearm = DateTime.UtcNow;
-            Log.Warning("desktop watcher lost events or stopped; re-armed after {Delay} and reconciling", _watcherRearmDelay);
-            _desktopWatcher.Dispose();
-            StartDesktopWatcher();
-        }
-        else
-        {
-            Log.Information("a desktop change could not be read; reconciling");
-        }
-        if (Current.ShellWorkDeferred) _reconcileDeferred = true; // after the game
-        else ReconcileDesktop();
+        // The library tab gets a window of its own (detached, or its host deleted): it lists its folder now (final review I1).
+        if (shown.IsLibrary) _libraryLister?.Refresh();
     }
 
     /// <summary>Also after an Explorer restart: Explorer brokers the shell's change notices and forgets them (M8c review I6).</summary>
@@ -380,7 +300,7 @@ public sealed partial class FenceHost
         _specialIconsTimer.Start();
     }
 
-    /// <summary>"Desktop icon settings" changed (reconcile), or the Recycle Bin turned full or empty (new icon) (M8c).</summary>
+    /// <summary>The Recycle Bin turned full or empty: a Recycle Bin item shows the new icon (M8c).</summary>
     private void RefreshSpecialIcons()
     {
         _specialIconsTimer.Stop();
@@ -389,249 +309,50 @@ public sealed partial class FenceHost
             _specialIconsDeferred = true; // games get every bit of the machine: after the game (M8c review)
             return;
         }
-        var shown = DesktopItems.SpecialIconRefs().ToHashSet(ItemRef.Comparer);
-        var fenced = _config.Fences.Where(fence => fence.Source.Kind == FenceSourceKind.Desktop).SelectMany(fence => fence.Items)
-            .Where(itemRef => itemRef.StartsWith("::", StringComparison.Ordinal)).ToHashSet(ItemRef.Comparer);
-        if (!shown.SetEquals(fenced))
-        {
-            Log.Information("desktop icon settings changed; reconciling");
-            ReconcileDesktop(); // game mode returned early above: no deferral needed here (M13c, dead branch removed)
-        }
         foreach (var window in _windows.Values) window.ReloadSpecialIcons();
         Log.Information("special icons refreshed");
     }
 
-    private void OnDesktopChanged(DesktopChange change)
-    {
-        if (Current.ShellWorkDeferred)
-        {
-            // Applied in order when the game is left; a flood (a big download unpacking) becomes one reconcile instead (M8a).
-            if (_deferredDesktopChanges.Count < MaxDeferredDesktopChanges) _deferredDesktopChanges.Add(change);
-            else _reconcileDeferred = true;
-            return;
-        }
-        var arrival = ArrivalOf(change); // before Apply: was the item fenced already?
-        (_config, _rememberedPlacements) = FenceMembership.Apply(_config, change, _rememberedPlacements, Now);
-        RefreshWindows();
-        ScheduleSave();
-        if (arrival is not null) FileNewItems([arrival]);
-        OnDesktopShortcutChange(change);
-    }
-
-    /// <summary>
-    /// The item a change brings that rules may file (M11): a created item no fence holds yet (an attribute change on an
-    /// existing item also arrives as "created", final review I1), or a download that just got its final name (I2).
-    /// </summary>
-    private string? ArrivalOf(DesktopChange change) => change switch
-    {
-        DesktopChange.Created created when !_config.Fences.Any(fence => fence.Items.Contains(created.ItemRef, ItemRef.Comparer)) => created.ItemRef,
-        DesktopChange.Renamed renamed when Rules.IsDownloadRename(renamed.OldRef) => renamed.NewRef,
-        _ => null,
-    };
-
-    /// <summary>
-    /// Rules auto-sort (M11, spec §3): new items that landed in the Inbox go to the fence of the first rule they match.
-    /// Their facts are read on the shell worker (a shortcut to an offline share can be slow); an item moved or deleted
-    /// meanwhile stays put. Membership only: no file is touched.
-    /// </summary>
-    private void FileNewItems(IReadOnlyList<string> itemRefs)
-    {
-        if (itemRefs.Count == 0 || !_config.Rules.Any(rule => rule.Enabled)) return;
-        _pendingArrivals.AddRange(itemRefs);
-        _filingTimer.Stop(); // a burst (an unpack, an installer) is one read, 1.5 s after the last arrival
-        _filingTimer.Start();
-    }
-
-    private void FilePendingArrivals()
-    {
-        _filingTimer.Stop();
-        var inbox = _config.Inbox.Items.ToHashSet(ItemRef.Comparer);
-        var arrivals = _pendingArrivals.Distinct(ItemRef.Comparer).Where(inbox.Contains).ToList(); // a safe-save memory or a drop placed it already
-        _pendingArrivals.Clear();
-        if (arrivals.Count == 0) return;
-        ReadFactsThen(arrivals, facts =>
-        {
-            var stillInInbox = _config.Inbox.Items.ToHashSet(ItemRef.Comparer);
-            var filed = Rules.File(_config, [.. facts.Where(fact => stillInInbox.Contains(fact.ItemRef))], DateTimeOffset.Now);
-            if (ReferenceEquals(filed, _config)) return;
-            var moved = _config.Inbox.Items.Except(filed.Inbox.Items, ItemRef.Comparer).ToList();
-            Log.Information("rules filed {Count} new item(s): {ItemRefs}", moved.Count, moved);
-            _config = filed;
-            RefreshWindows();
-            ScheduleSave();
-        });
-    }
-
-    /// <summary>Reads item facts on the shell worker, then continues on the UI thread.</summary>
-    private void ReadFactsThen(IReadOnlyList<string> itemRefs, Action<IReadOnlyList<ItemFacts>> then)
-    {
-        var dispatcher = Dispatcher.CurrentDispatcher;
-        _shellWorker.Run(() =>
-        {
-            var facts = ItemFactsReader.Read(itemRefs, logFailure: (itemRef, failure) => Log.Warning(failure, "rules: {ItemRef} could not be read", itemRef));
-            dispatcher.BeginInvoke(() => then(facts));
-        });
-    }
-
-    /// <summary>
-    /// Settings → "Apply rules now" (M11, spec §3): every desktop item, hand-placed ones too. "Before restore" is written
-    /// first, so tray → "Undo the last restore" puts everything back; nothing moves without it.
-    /// </summary>
-    private void ApplyRulesNow()
-    {
-        var itemRefs = _config.Fences.Where(fence => fence.Source.Kind == FenceSourceKind.Desktop).SelectMany(fence => fence.Items).ToList();
-        ReadFactsThen(itemRefs, facts =>
-        {
-            var now = DateTimeOffset.Now;
-            var moves = Rules.CountMoves(_config, facts, now);
-            if (moves == 0)
-            {
-                _settingsWindow?.ShowRulesResult("Nothing to move: every item is where the rules want it.");
-                return;
-            }
-            if (_snapshots.Save(Snapshots.Take(_config, name: $"Before applying rules ({now:d MMM HH:mm})", now: now), SnapshotStore.BeforeRestoreFileName) is null)
-            {
-                Log.Warning(_snapshots.LastFailure, "rules not applied: 'Before restore' could not be saved");
-                _settingsWindow?.ShowRulesResult("Nothing moved: NeoFences could not save 'Before restore' first (see the log).");
-                return;
-            }
-            _config = Rules.File(_config, facts, now);
-            Log.Information("rules applied: {Count} item(s) moved", moves);
-            SaveNow();
-            RefreshWindows();
-            RefreshSettings();
-            var message = $"{moves} item{(moves == 1 ? "" : "s")} moved. Tray → Restore snapshot → Undo the last restore puts them back.";
-            _settingsWindow?.ShowRulesResult(message);
-            _trayIcon?.ShowBalloon("Rules applied", message);
-        });
-    }
-
+    /// <summary>Every window shows its fence's items as they are now (the library lists itself, LibraryLister).</summary>
     private void RefreshWindows()
     {
-        var showPrompt = !_config.Settings.TakeoverPromptAnswered && !_takeoverActive;
-        foreach (var window in _windows.Values)
-        {
-            if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { } shown) continue;
-            if (!_portals.ContainsKey(shown.Id)) window.SetItems(shown.Items); // Portals refresh on their own (M4 review I1)
-            window.ShowTakeoverPrompt(showPrompt && shown.IsInbox);
-        }
+        foreach (var window in _windows.Values) RefreshWindow(window);
     }
 
-    private void OpenItem(string itemRef, nint ownerHandle)
+    private void RefreshWindow(FenceWindow window)
+    {
+        if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { IsLibrary: false } shown) return;
+        window.SetItems([.. _items.Of(shown.Id).Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note, StateOf(item.Target)))]);
+    }
+
+    /// <summary>Opens a path NeoFences knows (a library game, the logs or data folder).</summary>
+    private static void OpenItem(string target, nint ownerHandle)
     {
         // Off the UI thread: ShellExecute can block on a network timeout or a UAC prompt, freezing every fence (M2b review I6);
         // on an STA thread, as shell handlers and Windows' error dialog expect (M3a review).
         // Each open on its own thread: one waiting on an offline share (and its error dialog) holds up nothing else (M8c review I4).
         ShellWorker.RunAlone(() =>
         {
-            if (!ShellItems.TryOpen(itemRef, ownerHandle)) Log.Warning("could not open {ItemRef}", itemRef);
+            if (!ShellItems.TryOpen(target, ownerHandle)) Log.Warning("could not open {Target}", target);
         }, name: "NeoFences open");
     }
 
-    /// <summary>Makes the fence accept drops (M3b): fence items and Desktop files move membership; other files go to Windows.</summary>
+    /// <summary>Makes the fence accept drops (M3b; M18: drops create or move items, never a file operation).</summary>
     private void RegisterDrops(FenceWindow window)
     {
         try
         {
             _dropRegistrations[window.BoxId] = ShellDragDrop.RegisterFence(window.Handle, new FenceDropHandlers(
                 HitTest: window.HitTest,
-                MoveItems: (itemRefs, insertAt) =>
-                {
-                    _config = FenceMembership.MoveItems(_config, itemRefs, window.FenceId, insertAt);
-                    RefreshWindows();
-                    ScheduleSave();
-                },
-                ExpectArrivals: (itemRefs, insertAt) =>
-                    _rememberedPlacements = FenceMembership.ExpectArrivals(_rememberedPlacements, itemRefs, window.FenceId, insertAt, Now),
-                Recycle: itemRefs => RecycleItems(window, itemRefs),
+                AcceptsDrops: () => !window.IsLibrary, // the library shows NeoFences' own shortcuts only (M12)
+                ItemsDropped: (keys, insertAt, duplicate) => OnItemsDropped(window, keys, insertAt, duplicate),
+                TargetsDropped: (targets, insertAt) => OnTargetsDropped(window, targets, insertAt),
                 ShowFeedback: window.ShowDropFeedback,
-                LogFailure: failure => Log.Warning(failure, "drop on fence {FenceId} failed", window.FenceId),
-                AcceptsDrops: () => !window.IsLibrary), // the library shows NeoFences' own shortcuts only (M12)
-                portalFolder: () => _portals.TryGetValue(window.FenceId, out var portal) ? portal.Current : null);
+                LogFailure: failure => Log.Warning(failure, "drop on fence {FenceId} failed", window.FenceId)));
         }
         catch (Exception failure) when (failure is not OutOfMemoryException)
         {
             Log.Error(failure, "fence {FenceId} cannot accept drops", window.FenceId); // degrade: everything else still works
-        }
-    }
-
-    private void ShowItemMenu(FenceWindow window, IReadOnlyList<string> itemRefs, int screenX, int screenY, bool fromKeyboard)
-    {
-        // Shift+right-click is the extended menu; Shift+F10 is just the keyboard's normal menu (M3a review).
-        var extended = !fromKeyboard && System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift);
-        if (window.IsLibrary)
-        {
-            ShowLibraryItemMenu(window, itemRefs, screenX, screenY, extended);
-            return;
-        }
-        var choice = ShellItemMenu.Show(window.Handle, itemRefs, screenX, screenY, extended,
-            logFailure: failure => Log.Warning(failure, "item menu or its command failed for {ItemRefs}", itemRefs));
-        switch (choice)
-        {
-            case ItemMenuChoice.Rename:
-                window.BeginItemRename(itemRefs[0]); // the right-clicked item (it comes first)
-                break;
-            case ItemMenuChoice.Delete:
-                RecycleItems(window, itemRefs); // always the Recycle Bin, even with Shift held (hard rule 1)
-                break;
-        }
-    }
-
-    /// <summary>
-    /// Windows moves them to the Recycle Bin (with its own dialogs) on the shell worker, so a long recycle never freezes
-    /// the fences (M3a review); the watcher then removes them from the fence.
-    /// </summary>
-    private void RecycleItems(FenceWindow window, IReadOnlyList<string> itemRefs)
-    {
-        if (window.IsLibrary)
-        {
-            HideGames(itemRefs); // Delete in the library hides the game; its shortcut is NeoFences' own (M12)
-            return;
-        }
-        Log.Information("recycling {Count} item(s)", itemRefs.Count);
-        var ownerHandle = window.Handle;
-        var dispatcher = Dispatcher.CurrentDispatcher;
-        _shellWorker.Run(() =>
-        {
-            var (started, refused, missing) = ShellFileOps.TryRecycle(LiveOwner(ownerHandle), itemRefs);
-            if (!started) Log.Warning("recycle did not run or was cancelled: {ItemRefs}", itemRefs);
-            if (missing.Count > 0) Log.Information("skipped {Count} item(s) that no longer exist: {ItemRefs}", missing.Count, missing);
-            if (refused.Count > 0) dispatcher.BeginInvoke(() => ExplainRefusedRecycle(window, refused));
-        });
-    }
-
-    /// <summary>No owner when the fence was deleted while the operation waited: Windows' dialogs then stand alone (M8c review).</summary>
-    private static nint LiveOwner(nint ownerHandle) => FenceWindowChrome.IsLiveWindow(ownerHandle) ? ownerHandle : 0;
-
-    private static void ExplainRefusedRecycle(FenceWindow window, IReadOnlyList<string> refused)
-    {
-        Log.Information("not deleting {Count} item(s) on drives without a Recycle Bin", refused.Count);
-        System.Windows.MessageBox.Show(window,
-            (refused.Count == 1 ? $"\"{Path.GetFileName(refused[0])}\" is" : $"{refused.Count} items are") +
-            " on a drive without a Recycle Bin (a USB stick or network drive), so NeoFences won't delete it." +
-            " Deleting there would be permanent; if you really mean it, delete it in Explorer.",
-            "NeoFences", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
-    }
-
-    /// <summary>Windows renames the file (on the shell worker: its conflict dialogs); the watcher keeps it in its fence and position.</summary>
-    private void RenameItem(FenceWindow window, string itemRef, string newName)
-    {
-        var ownerHandle = window.Handle;
-        _shellWorker.Run(() =>
-        {
-            if (!ShellFileOps.TryRename(LiveOwner(ownerHandle), itemRef, newName)) Log.Warning("rename did not run or was cancelled: {ItemRef}", itemRef);
-        });
-    }
-
-    private void AnswerTakeoverPrompt(bool hideIcons)
-    {
-        Log.Information("first-run question answered: hide desktop icons {HideIcons}", hideIcons);
-        if (hideIcons) SetTakeover(true);
-        else
-        {
-            _config = _config with { Settings = _config.Settings with { TakeoverPromptAnswered = true } };
-            RefreshWindows();
-            SaveNow();
         }
     }
 
@@ -727,7 +448,6 @@ public sealed partial class FenceHost
         _config = FenceEdits.Rename(_config, window.FenceId, title);
         window.SetTitle(_config.Fences.First(fence => fence.Id == window.FenceId).Title);
         RefreshTabs(window);
-        RefreshPortal(window); // a Portal browsing a subfolder shows its breadcrumb again
         ScheduleSave();
     }
 
@@ -745,11 +465,23 @@ public sealed partial class FenceHost
         ScheduleSave();
     }
 
-    /// <summary>Removes the fence; its items go to the Inbox. Files are never touched (hard rule 1).</summary>
+    /// <summary>
+    /// Removes the shown tab's fence and its items (asked first when it has any). Their targets are never touched (hard
+    /// rule 1). The config is saved before the items: a crash in between leaves only an unused list (ADR-041).
+    /// </summary>
     private void DeleteFence(FenceWindow window)
     {
-        _config = FenceMembership.DeleteFence(_config, window.FenceId); // the shown tab; the rest of its box stays (M9)
-        SyncBoxes(); // closes the window when its box is gone; a deleted Portal's watcher ends (the folder is never touched)
+        var fence = _config.Fences.First(candidate => candidate.Id == window.FenceId);
+        var count = _items.Of(fence.Id).Count;
+        if (count > 0 && MessageBox.Show(window,
+                $"Delete \"{fence.Title}\" and its {count} item{(count == 1 ? "" : "s")}?\n\nYour files, folders and apps are not touched.",
+                "NeoFences", MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel) != MessageBoxResult.OK) return;
+        Log.Information("fence {FenceId} deleted with {Count} item(s)", fence.Id, count);
+        _config = FenceEdits.DeleteFence(_config, fence.Id); // the shown tab; the rest of its box stays (M9)
+        _items = ItemEdits.RemoveFence(_items, fence.Id);
+        SaveNow();
+        SyncBoxes(); // closes the window when its box is gone
+        UpdateWatching();
     }
 
     private void OnThemeChanged()
@@ -769,18 +501,6 @@ public sealed partial class FenceHost
         ApplyLayout();
         if (Appearance.WallpaperAccent) UpdateAccents(); // M14: monitors and their wallpapers may have changed
         ScheduleSave();
-    }
-
-    /// <summary>"New Portal fence…": Windows' folder dialog, then a fence that mirrors the folder (M4).</summary>
-    private void CreatePortal(FenceWindow owner)
-    {
-        var folder = FolderPicker.TryPick(owner.Handle, "Choose the folder for the new Portal fence",
-            logFailure: failure => Log.Warning(failure, "folder dialog failed"));
-        if (folder is null) return;
-        var title = Path.GetFileName(folder.TrimEnd('\\')) is { Length: > 0 } name ? name : folder;
-        (_config, _) = FenceMembership.CreatePortal(_config, title: title, folderPath: folder);
-        Log.Information("Portal fence created for {Folder}", folder);
-        SyncBoxes();
     }
 
     /// <summary>
@@ -807,7 +527,7 @@ public sealed partial class FenceHost
             window.Close();
         }
         foreach (var box in boxes.Where(box => !_windows.ContainsKey(box.Id))) OpenWindow(box);
-        EnsurePortals();
+        EnsureLibraryLister();
         foreach (var box in boxes)
         {
             var window = _windows[box.Id];
@@ -815,7 +535,8 @@ public sealed partial class FenceHost
             if (window.FenceId != active.Id)
             {
                 window.ShowTab(active);
-                if (_portals.TryGetValue(active.Id, out var portal)) portal.Refresh();
+                if (active.IsLibrary) _libraryLister?.Refresh();
+                else CheckFence(active.Id); // a fence becoming visible is checked again (spec §4)
             }
             window.SetTabs(FenceTabs.TabsOf(_config, box.Id), active.Id);
             window.SetLocked(box.Locked);
@@ -825,33 +546,6 @@ public sealed partial class FenceHost
         ApplyLayout();
         RestyleAll(); // M14: after placing, so each fence takes its own monitor's accent
         ScheduleSave();
-    }
-
-    /// <summary>A watcher per Portal fence, shown or not (a hidden Portal tab keeps watching, M9); gone ones end.</summary>
-    private void EnsurePortals()
-    {
-        var portalFences = _config.Fences.Where(fence => fence.Source is { Kind: FenceSourceKind.Portal, Path: not null } or { Kind: FenceSourceKind.Library }).ToList();
-        foreach (var goneId in _portals.Keys.Where(fenceId => portalFences.All(fence => fence.Id != fenceId)).ToList())
-        {
-            _portals[goneId].Dispose(); // the folder itself is never touched
-            _portals.Remove(goneId);
-        }
-        foreach (var fence in portalFences.Where(fence => !_portals.ContainsKey(fence.Id)))
-        {
-            var fenceId = fence.Id;
-            var root = fence.Source.Kind == FenceSourceKind.Library ? AppPaths.LibraryDirectory : fence.Source.Path!;
-            if (fence.Source.Kind == FenceSourceKind.Library) TryCreateFolder(root);
-            _portals[fenceId] = new PortalState(root, noticeOwner: _messages.Handle, show: items => ShowPortalTab(fenceId, items),
-                logFailure: failure => Log.Warning(failure, "cannot watch Portal folder of {FenceId}", fenceId));
-            if (_gameMode) _portals[fenceId].SetPaused(true);
-        }
-        UpdateLibrary(); // M12: the library scans while its fence exists
-    }
-
-    /// <summary>A Portal's listing goes to the window showing it; a hidden Portal tab re-lists when shown.</summary>
-    private void ShowPortalTab(string fenceId, IReadOnlyList<ItemInfo>? items)
-    {
-        if (_windows.Values.FirstOrDefault(window => window.FenceId == fenceId) is { } window) ShowPortal(window, items);
     }
 
     private void RefreshTabs(FenceWindow window)
@@ -867,8 +561,9 @@ public sealed partial class FenceHost
         _config = FenceTabs.SetActive(_config, fenceId);
         window.ShowTab(tab);
         RefreshTabs(window);
-        if (_portals.TryGetValue(fenceId, out var portal)) portal.Refresh();
-        RefreshWindows();
+        if (tab.IsLibrary) _libraryLister?.Refresh();
+        else CheckFence(fenceId); // a fence becoming visible is checked again (spec §4)
+        RefreshWindow(window);
         ScheduleSave();
     }
 
@@ -929,74 +624,6 @@ public sealed partial class FenceHost
         SyncBoxes();
     }
 
-    /// <summary>Asks a Portal to re-list its folder (in the background; ShowPortal follows).</summary>
-    private void RefreshPortal(FenceWindow window)
-    {
-        if (_portals.TryGetValue(window.FenceId, out var portal)) portal.Refresh();
-    }
-
-    /// <summary>Shows a Portal's listing (null: the folder cannot be read) in its sort order (M4).</summary>
-    private void ShowPortal(FenceWindow window, IReadOnlyList<ItemInfo>? items)
-    {
-        if (!_portals.TryGetValue(window.FenceId, out var portal)) return;
-        if (_config.Fences.FirstOrDefault(candidate => candidate.Id == window.FenceId) is not { } fence) return;
-        window.SetPortalLocation(portal.Breadcrumb(fence.Title), portal.CanGoBack);
-        window.SetSortChecked(fence.Sort);
-        if (fence.Source.Kind == FenceSourceKind.Library)
-        {
-            window.ShowPortalMessage(null);
-            window.SetLibraryArt(LibraryArt());
-            window.SetItems(items is null ? [] : LibraryOrder(items)); // A–Z by game, only NeoFences' own shortcuts (M12)
-            return;
-        }
-        window.ShowPortalMessage(items is null ? $"This folder is not available right now:\n{portal.Current}" : null);
-        window.SetItems(items is null ? [] : ItemSorting.Order(items, fence.Sort));
-    }
-
-    /// <summary>Double-click / Enter: inside a Portal a folder is browsed in place (Ctrl opens it in Explorer, user choice 2026-10-03).</summary>
-    private void OpenOrBrowse(FenceWindow window, string itemRef)
-    {
-        var inExplorer = System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control);
-        if (_portals.TryGetValue(window.FenceId, out var portal) && !inExplorer && portal.IsListedFolder(itemRef))
-        {
-            portal.Browse(itemRef); // re-lists in the background
-            return;
-        }
-        OpenItem(itemRef, ownerHandle: window.Handle);
-        SetPeek(false); // like Fences: Peek ends once something is opened from it
-    }
-
-    private void BrowsePortal(FenceWindow window, bool back)
-    {
-        if (!back || !_portals.TryGetValue(window.FenceId, out var portal) || !portal.CanGoBack) return;
-        portal.Back(); // re-lists in the background
-    }
-
-    /// <summary>"Sort by": a Portal keeps the order live; a desktop fence is sorted once (M4).</summary>
-    private void SortFence(FenceWindow window, FenceSort sort)
-    {
-        var fence = _config.Fences.First(candidate => candidate.Id == window.FenceId);
-        if (_portals.ContainsKey(fence.Id))
-        {
-            _config = FenceEdits.SetSort(_config, fence.Id, sort);
-            RefreshPortal(window);
-        }
-        else
-        {
-            try
-            {
-                _config = FenceEdits.SetItemOrder(_config, fence.Id, ItemSorting.Order(FolderItems.Describe(fence.Items), sort));
-            }
-            catch (ArgumentException mismatch)
-            {
-                Log.Warning(mismatch, "sort of fence {FenceId} refused: the sorted list did not match its items", fence.Id); // never crash (M4 review I3)
-                return;
-            }
-            RefreshWindows();
-        }
-        ScheduleSave();
-    }
-
     private void ApplyStartup() =>
         StartupRegistration.Apply(_config.Settings.StartWithWindows, Environment.ProcessPath ?? "", log: message => Log.Information("{Message}", message));
 
@@ -1011,39 +638,36 @@ public sealed partial class FenceHost
 
     private void CreateFence()
     {
-        (_config, _) = FenceMembership.CreateFence(_config, "New fence");
+        (_config, _) = FenceEdits.CreateFence(_config, "New fence");
         SyncBoxes();
     }
 
-    private void SetTakeover(bool active)
+    /// <summary>Settings → "Hide desktop icons while NeoFences runs" (M18): Windows' own setting, restored on every exit (hard rule 2).</summary>
+    private void SetHideDesktopIcons(bool hide)
     {
         SetQuickHidden(false); // an explicit icons choice ends quick-hide first, so the two never disagree
-        _takeoverActive = active;
-        // Any explicit choice (banner or menu) answers the first-run question.
-        _config = _config with { Settings = _config.Settings with { Takeover = active, TakeoverPromptAnswered = true } };
+        _config = _config with { Settings = _config.Settings with { HideDesktopIcons = hide } };
         SetIconsHidden(Current.IconsHidden);
-        foreach (var window in _windows.Values) window.SetTakeoverChecked(active);
         RefreshSettings();
-        RefreshWindows();
-        SaveNow(); // not debounced: the saved setting must match the takeover-active marker if we are killed next
+        SaveNow(); // not debounced: the saved setting must match the icons-hidden marker if we are killed next
     }
 
     /// <returns>True when Windows confirmed the new state.</returns>
     private bool SetIconsHidden(bool hidden)
     {
         // The watchdog must know whenever icons may be hidden: mark before hiding, unmark only after a confirmed show.
-        if (hidden) TryMarker(() => _watchdog.SetTakeoverActive(true), what: "takeover-active marker");
+        if (hidden) TryMarker(() => _watchdog.SetIconsHiddenMarker(true), what: "icons-hidden marker");
         var applied = DesktopIcons.TrySetHidden(hidden);
-        if (applied && !hidden) TryMarker(() => _watchdog.SetTakeoverActive(false), what: "takeover-active marker");
+        if (applied && !hidden) TryMarker(() => _watchdog.SetIconsHiddenMarker(false), what: "icons-hidden marker");
         if (applied) Log.Information("desktop icons hidden: {Hidden}", hidden);
         else Log.Warning("could not set desktop icons hidden: {Hidden}", hidden);
         return applied;
     }
 
-    /// <summary>Icons as they should be: hidden while Takeover is on, shown (and unmarked) otherwise.</summary>
+    /// <summary>Icons as they should be: hidden while the setting (or quick-hide) wants it, shown (and unmarked) otherwise.</summary>
     private bool EnsureIconState() =>
         Current.IconsHidden ? SetIconsHidden(true)
-        : !_watchdog.IsTakeoverActiveMarked || SetIconsHidden(false);
+        : !_watchdog.IsIconsHiddenMarked || SetIconsHidden(false);
 
     private static void TryMarker(Action writeMarker, string what)
     {
@@ -1167,7 +791,7 @@ public sealed partial class FenceHost
         }
         var window = new SettingsWindow();
         window.StartWithWindowsChanged += SetStartWithWindows;
-        window.TakeoverChanged += SetTakeover;
+        window.HideDesktopIconsChanged += SetHideDesktopIcons;
         window.PeekHotkeyChosen += text =>
         {
             var (saved, message) = SetPeekHotkey(text);
@@ -1187,14 +811,6 @@ public sealed partial class FenceHost
             RefreshSettings();
         };
         window.DeleteSnapshotRequested += DeleteSnapshot;
-        window.RulesChanged += rules =>
-        {
-            _config = _config with { Rules = rules };
-            Log.Information("rules changed: {Count} rule(s)", rules.Count);
-            SaveNow();
-            RefreshSettings();
-        };
-        window.ApplyRulesRequested += ApplyRulesNow;
         WireLibrarySettings(window);
         window.OpenSnapshotsRequested += () =>
         {
@@ -1257,7 +873,7 @@ public sealed partial class FenceHost
 
     private void RefreshSettings() => _settingsWindow?.Show(new SettingsView(
         StartWithWindows: _config.Settings.StartWithWindows,
-        Takeover: _takeoverActive,
+        HideDesktopIcons: _config.Settings.HideDesktopIcons,
         PeekHotkey: PeekHotkeyDisplay,
         PeekHotkeyActive: _peekHotkeyProblem is null,
         RollupExpand: _config.Settings.RollupExpand,
@@ -1268,19 +884,9 @@ public sealed partial class FenceHost
         DefaultLabels: _config.Settings.DefaultLabels,
         ShowShortcutArrows: _config.Settings.ShowShortcutArrows,
         Snapshots: ListSnapshots(),
-        Rules: _config.Rules,
-        RuleLines: [.. _config.Rules.Select(rule => Rules.Describe(rule, _config))],
-        RuleFences: [.. _config.Fences.Where(fence => fence.Source.Kind == FenceSourceKind.Desktop).Select(fence => new RuleFence(fence.Id, fence.Title))],
         Library: LibrarySettingsView(),
         Appearance: AppearanceView(),
         Updates: UpdatesView()));
-
-    /// <summary>Fence menu → "Rules for this fence…" (M11): Settings at Rules, a new rule for that fence.</summary>
-    private void OpenRulesFor(string fenceId)
-    {
-        OpenSettings();
-        _settingsWindow?.BeginNewRule(fenceId);
-    }
 
     /// <summary>The Peek hotkey as a person reads it ("Ctrl+Shift+=", not "Ctrl+Shift+OemPlus").</summary>
     private string PeekHotkeyDisplay =>
@@ -1292,11 +898,11 @@ public sealed partial class FenceHost
             ? KeyboardLayout.CharacterOf(System.Windows.Input.KeyInterop.VirtualKeyFromKey(wpfKey))
             : null;
 
-    /// <summary>Saves the arrangement now, named by date and time (M10); renamed in Settings if wanted.</summary>
+    /// <summary>Saves the arrangement and its items now, named by date and time (M10); renamed in Settings if wanted.</summary>
     private void TakeSnapshot()
     {
         var now = DateTimeOffset.Now;
-        var snapshot = Snapshots.Take(_config, name: $"Snapshot {now:d MMM HH:mm}", now: now);
+        var snapshot = Snapshots.Take(_config, _items, name: $"Snapshot {now:d MMM HH:mm}", now: now);
         if (_snapshots.Save(snapshot) is { } path)
         {
             Log.Information("snapshot saved: {Path}", path);
@@ -1312,8 +918,8 @@ public sealed partial class FenceHost
     }
 
     /// <summary>
-    /// Puts a snapshot's arrangement back (M10, spec §3): only with a complete desktop listing, and only after "Before
-    /// restore" was written, so the restore itself can be undone. One config change, saved at once.
+    /// Puts a snapshot's arrangement and items back (M10, spec §3; M18): only after "Before restore" was written, so the
+    /// restore itself can be undone. One change, saved at once.
     /// </summary>
     private void RestoreSnapshot(string path)
     {
@@ -1323,22 +929,15 @@ public sealed partial class FenceHost
             SnapshotFailure("Snapshot not restored", "The snapshot file could not be read.");
             return;
         }
-        var listing = DesktopItems.Enumerate();
-        if (listing.UnavailableFolders.Count > 0)
-        {
-            Log.Warning("snapshot not restored: desktop folders not readable {Folders}", listing.UnavailableFolders);
-            SnapshotFailure("Snapshot not restored", "A Desktop folder cannot be read right now. Try again in a moment.");
-            return;
-        }
         var now = DateTimeOffset.Now;
-        if (_snapshots.Save(Snapshots.Take(_config, name: $"Before restore ({now:d MMM HH:mm})", now: now), SnapshotStore.BeforeRestoreFileName) is null)
+        if (_snapshots.Save(Snapshots.Take(_config, _items, name: $"Before restore ({now:d MMM HH:mm})", now: now), SnapshotStore.BeforeRestoreFileName) is null)
         {
             Log.Warning(_snapshots.LastFailure, "snapshot not restored: 'Before restore' could not be saved");
             SnapshotFailure("Snapshot not restored", "NeoFences could not save 'Before restore' first (see the log).");
             return;
         }
         Log.Information("restoring snapshot {Name} from {Path}", snapshot.Name, path);
-        _config = Snapshots.Restore(_config, snapshot, listing.ItemRefs);
+        (_config, _items) = Snapshots.Restore(_config, snapshot);
         SaveNow();
         SyncBoxes();
         // Windows that kept their fence still show its old title, icon size and labels (final review I1).
@@ -1346,8 +945,9 @@ public sealed partial class FenceHost
         {
             if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { } shown) continue;
             window.Refresh(shown);
-            RefreshPortal(window); // the Portal breadcrumb replaces the plain title again
+            window.SetTitle(shown.Title);
         }
+        CheckAllTargets(); // the restored items' targets may have changed since
         _settingsWindow?.ShowSnapshotNotice($"Restored \"{snapshot.Name}\".", failed: false); // replaces an earlier failure line (final review M1)
         RefreshSettings();
     }
@@ -1371,7 +971,7 @@ public sealed partial class FenceHost
         _settingsWindow?.ShowSnapshotNotice($"{title}: {reason}", failed: true);
     }
 
-    /// <summary>A snapshot file goes to the Recycle Bin, never deleted for good (hard rule 1).</summary>
+    /// <summary>A snapshot file (NeoFences' own) goes to the Recycle Bin, never deleted for good.</summary>
     private void DeleteSnapshot(string path)
     {
         var dispatcher = Dispatcher.CurrentDispatcher;
@@ -1379,7 +979,7 @@ public sealed partial class FenceHost
         var owner = _settingsWindow is { } settings ? new WindowInteropHelper(settings).Handle : 0;
         _shellWorker.Run(() =>
         {
-            var (started, refused, missing) = ShellFileOps.TryRecycle(LiveOwner(owner), [path]);
+            var (started, refused, missing) = ShellFileOps.TryRecycle(FenceWindowChrome.IsLiveWindow(owner) ? owner : 0, [path]);
             if (!started || refused.Count > 0)
             {
                 Log.Warning("snapshot {Path} could not be moved to the Recycle Bin", path);
@@ -1491,14 +1091,14 @@ public sealed partial class FenceHost
             StopUpdateDownload(); // M17: no network while a game is in front
         }
         UpdateMouseHook();
-        foreach (var portal in _portals.Values) portal.SetPaused(gameMode);
+        _libraryLister?.SetPaused(gameMode);
         if (!gameMode) ApplyDeferredShellWork();
         UpdatePeekHotkey();
         _trayIcon?.SetTooltip(TrayTooltip());
         RefreshSettings();
     }
 
-    /// <summary>The game was left: Desktop changes made meanwhile apply in order (or one reconcile if events were lost).</summary>
+    /// <summary>The game was left: the library scan, special icons, target checks and renames that waited (spec §4.7).</summary>
     private void ApplyDeferredShellWork()
     {
         if (_libraryDeferred)
@@ -1511,26 +1111,7 @@ public sealed partial class FenceHost
             _specialIconsDeferred = false;
             ScheduleSpecialIconRefresh();
         }
-        if (_reconcileDeferred)
-        {
-            _reconcileDeferred = false;
-            _deferredDesktopChanges.Clear();
-            ReconcileDesktop();
-            return;
-        }
-        if (_deferredDesktopChanges.Count == 0) return;
-        Log.Information("applying {Count} desktop change(s) from game mode", _deferredDesktopChanges.Count);
-        var arrivals = new List<string>();
-        foreach (var change in _deferredDesktopChanges)
-        {
-            if (ArrivalOf(change) is { } arrival) arrivals.Add(arrival);
-            (_config, _rememberedPlacements) = FenceMembership.Apply(_config, change, _rememberedPlacements, Now);
-            OnDesktopShortcutChange(change);
-        }
-        _deferredDesktopChanges.Clear();
-        RefreshWindows();
-        ScheduleSave();
-        FileNewItems(arrivals);
+        ApplyDeferredWatching();
     }
 
     /// <summary>Pause (tray): the desktop goes back to Windows — fences hidden, icons shown, the hook gone — until resumed.</summary>
@@ -1651,9 +1232,9 @@ public sealed partial class FenceHost
         if (hidden == _quickHidden) return;
         if (hidden) SetPeek(false);
         // Icons the user had hidden through Explorer stay theirs: quick-hide neither hides nor later shows them (M8a).
-        // Hidden now without the takeover-active marker: the user hid them in Explorer, so they stay the user's. With the marker
+        // Hidden now without the icons-hidden marker: the user hid them in Explorer, so they stay the user's. With the marker
         // set, NeoFences hid them (an earlier show failed) and the end of this quick-hide retries the show (M8a review I1).
-        if (hidden && !_takeoverActive) _iconsHiddenByUser = DesktopIcons.TryIsHidden() == true && !_watchdog.IsTakeoverActiveMarked;
+        if (hidden && !_config.Settings.HideDesktopIcons) _iconsHiddenByUser = DesktopIcons.TryIsHidden() == true && !_watchdog.IsIconsHiddenMarked;
         var iconsWereHidden = Current.IconsHidden;
         _quickHidden = hidden;
         foreach (var window in _windows.Values)
@@ -1694,7 +1275,7 @@ public sealed partial class FenceHost
         SetQuickHidden(false);
         var pixels = DrawFenceOverlay.Between(_drawStart, (endX, endY));
         var monitor = FencePlacement.ContainingMonitor(pixels, _monitors);
-        (_config, var fence) = FenceMembership.CreateFence(_config, "New fence");
+        (_config, var fence) = FenceEdits.CreateFence(_config, "New fence");
         // Too small a drag still makes a usable fence: the layout clamps it to the minimum size.
         _config = LayoutEngine.WithFenceRect(_config, fingerprint: fingerprint, fenceId: fence.Id, rect: FencePlacement.FromPixels(pixels, monitor));
         Log.Information("fence drawn on the desktop at {Pixels}", pixels);
@@ -1743,6 +1324,7 @@ public sealed partial class FenceHost
             _peekEscapeHotkey = new GlobalHotkey(_messages.Handle, PeekEscapeHotkeyId);
             if (!_peekEscapeHotkey.TryRegister(new Hotkey(Ctrl: false, Alt: false, Shift: false, Win: false, Key: "Escape"), virtualKey: 0x1B))
                 Log.Warning("Esc is taken by another app; Peek ends with its hotkey or a click outside");
+            foreach (var window in _windows.Values) CheckFence(window.FenceId); // the shown fences are checked again (spec §4)
         }
         Log.Information("peek: {Peeking}", peeking);
     }
@@ -1753,6 +1335,7 @@ public sealed partial class FenceHost
         var rolledUp = !_config.Fences.First(fence => fence.Id == window.BoxId).RolledUp; // the box's (M9)
         _config = FenceEdits.SetRolledUp(_config, window.BoxId, rolledUp);
         window.SetRolledUp(rolledUp);
+        if (!rolledUp) CheckFence(window.FenceId); // unrolled: its items are checked again (spec §4)
         ScheduleSave();
     }
 
@@ -1779,6 +1362,7 @@ public sealed partial class FenceHost
         _saveTimer.Start();
     }
 
+    /// <summary>Both files, the config first (ADR-041): a fence deleted just before a power cut leaves only an unused item list.</summary>
     private void SaveNow()
     {
         _saveTimer.Stop();
@@ -1791,6 +1375,18 @@ public sealed partial class FenceHost
         {
             Log.Error(failure, "config save failed");
         }
+        try
+        {
+            var toSave = _pruneItemLists ? ItemEdits.Prune(_items, _config.Fences.Select(fence => fence.Id).ToHashSet(StringComparer.Ordinal)) : _items;
+            if (!ReferenceEquals(toSave, _items)) Log.Information("dropped item lists of {Count} fence(s) that no longer exist", _items.Fences.Count - toSave.Fences.Count);
+            _items = toSave;
+            if (!_itemStore.Save(_items)) Log.Warning("items not saved: items.json is read-only this session");
+            else if (_itemStore.LastBackupFailure is { } backupFailure) Log.Warning(backupFailure, "items saved, but the daily backups could not be written or pruned");
+        }
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
+        {
+            Log.Error(failure, "items save failed");
+        }
     }
 
     private static void TryCreateFolder(string folder)
@@ -1801,7 +1397,7 @@ public sealed partial class FenceHost
         }
         catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
         {
-            Log.Warning(failure, "cannot create {Folder}", folder); // the fence then shows "not available" (hard rule 7)
+            Log.Warning(failure, "cannot create {Folder}", folder); // the fence then shows nothing (hard rule 7)
         }
     }
 }

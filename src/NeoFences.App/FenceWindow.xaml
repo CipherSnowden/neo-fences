@@ -14,32 +14,12 @@
     <Window.Resources>
         <sys:Double x:Key="IconSize" xmlns:sys="clr-namespace:System;assembly=System.Runtime">48</sys:Double>
         <sys:Double x:Key="ItemWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">76</sys:Double>
-        <sys:Double x:Key="EditItemWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">76</sys:Double>
         <!-- Icon-only fences (M8b): labels collapse, the name pops under the hovered or selected icon instead. -->
         <Visibility x:Key="LabelVisibility">Visible</Visibility>
         <sys:Boolean x:Key="ItemToolTips" xmlns:sys="clr-namespace:System;assembly=System.Runtime">True</sys:Boolean>
         <Visibility x:Key="ShortcutArrowVisibility">Collapsed</Visibility>
         <sys:Double x:Key="TileWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">72</sys:Double>
         <sys:Double x:Key="TileHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">108</sys:Double>
-        <Style x:Key="BannerButton" TargetType="Button">
-            <Setter Property="Foreground" Value="{DynamicResource FenceText}" />
-            <Setter Property="Padding" Value="10,3" />
-            <Setter Property="Margin" Value="0,0,6,0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Chrome" Background="{DynamicResource FenceHover}" CornerRadius="4" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceSelected}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
         <!-- Thin scrollbar (spec §6): no arrows, a rounded thumb that brightens under the mouse. -->
         <Style TargetType="ScrollBar">
             <Setter Property="Width" Value="6" />
@@ -80,10 +60,6 @@
             <!-- Title strip style (M14): the coloured title bar, rounded with the window's top corners. -->
             <Border x:Name="TitleStripFill" CornerRadius="7,7,0,0" Background="Transparent" IsHitTestVisible="False" />
             <DockPanel x:Name="TitleBar" Background="Transparent">
-                <!-- Portal browsing (M4): back to the parent folder. Hit-testable inside the caption area. -->
-                <Button x:Name="BackButton" DockPanel.Dock="Left" Visibility="Collapsed" Content="‹" ToolTip="Back (Backspace)"
-                        Margin="6,3,0,3" Padding="8,0" FontSize="16" Style="{StaticResource BannerButton}"
-                        WindowChrome.IsHitTestVisibleInChrome="True" />
                 <!-- Fence tabs (M9): one header per tab, built in code; the space right of them stays caption (move, roll-up). -->
                 <UniformGrid x:Name="TabStrip" DockPanel.Dock="Left" Rows="1" Visibility="Collapsed" HorizontalAlignment="Left" Margin="6,3,0,0" />
                 <TextBlock x:Name="TitleText" Foreground="{DynamicResource FenceTitleText}" FontWeight="SemiBold" Margin="12,0"
@@ -97,25 +73,13 @@
                      VerticalContentAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True"
                      Foreground="{DynamicResource FenceText}" Background="{DynamicResource FenceHover}"
                      BorderBrush="{DynamicResource FenceBorder}" CaretBrush="{DynamicResource FenceText}" />
-            <!-- First run (Inbox only): ask once whether NeoFences should take over the desktop icons. -->
-            <Border x:Name="TakeoverPrompt" Grid.Row="1" Visibility="Collapsed" Background="{DynamicResource FenceHover}"
-                    Margin="8,0,8,6" Padding="10,8" CornerRadius="6">
-                <StackPanel>
-                    <TextBlock Foreground="{DynamicResource FenceText}" TextWrapping="Wrap"
-                               Text="Hide the desktop icons and keep them only in fences?" />
-                    <TextBlock Foreground="{DynamicResource FenceSubtleText}" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,6"
-                               Text="Your files stay where they are. Turn it off any time from the right-click menu." />
-                    <StackPanel Orientation="Horizontal">
-                        <Button x:Name="PromptHideButton" Content="Hide them" Style="{StaticResource BannerButton}" />
-                        <Button x:Name="PromptLaterButton" Content="Not now" Style="{StaticResource BannerButton}" />
-                    </StackPanel>
-                </StackPanel>
-            </Border>
             <Border x:Name="Body" Grid.Row="2" BorderBrush="{DynamicResource FenceDivider}" BorderThickness="0,1,0,0" Background="#01000000">
                 <Border.ContextMenu>
                     <ContextMenu x:Name="BodyContextMenu">
+                        <MenuItem x:Name="AddItemItem" Header="Add item…" />
+                        <MenuItem x:Name="RefreshItem" Header="Refresh" />
+                        <Separator />
                         <MenuItem x:Name="NewFenceItem" Header="New fence" />
-                        <MenuItem x:Name="NewPortalItem" Header="New Portal fence…" />
                         <MenuItem x:Name="NewLibraryItem" Header="New Game Library fence" />
                         <MenuItem x:Name="RenameItem" Header="Rename fence" />
                         <MenuItem x:Name="IconSizeItem" Header="Icon size" />
@@ -126,13 +90,9 @@
                         <MenuItem x:Name="SortItem" Header="Sort by" />
                         <MenuItem x:Name="TabColorItem" Header="Colour" />
                         <MenuItem x:Name="DetachTabItem" Header="Detach tab" Visibility="Collapsed" />
-                        <MenuItem x:Name="OpenFolderItem" Header="Open folder in Explorer" Visibility="Collapsed" />
-                        <MenuItem x:Name="RefreshLibraryItem" Header="Refresh library" Visibility="Collapsed" />
-                        <MenuItem x:Name="RulesItem" Header="Rules for this fence…" />
                         <MenuItem x:Name="LockItem" Header="Lock position" IsCheckable="True" />
-                        <MenuItem x:Name="DeleteItem" Header="Delete fence (items go to the Inbox)" />
+                        <MenuItem x:Name="DeleteItem" Header="Delete fence (your files are not touched)" />
                         <Separator />
-                        <MenuItem x:Name="TakeoverItem" Header="Hide desktop icons" IsCheckable="True" />
                         <MenuItem x:Name="StartupItem" Header="Start with Windows" IsCheckable="True" />
                         <MenuItem x:Name="SettingsItem" Header="Settings…" />
                         <Separator />
@@ -150,7 +110,7 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
-                                <Setter Property="ToolTip" Value="{Binding Label}" />
+                                <Setter Property="ToolTip" Value="{Binding ToolTipText}" />
                                 <Setter Property="ToolTipService.IsEnabled" Value="{DynamicResource ItemToolTips}" />
                                 <EventSetter Event="MouseEnter" Handler="OnItemMouseEnter" />
                                 <EventSetter Event="MouseLeave" Handler="OnItemMouseLeave" />
@@ -183,7 +143,14 @@
                             <DataTemplate>
                                 <StackPanel x:Name="Cell" Width="{DynamicResource ItemWidth}">
                                     <Grid x:Name="IconGrid" HorizontalAlignment="Center">
-                                        <Image Source="{Binding Icon}" Width="{DynamicResource IconSize}" Height="{DynamicResource IconSize}" />
+                                        <Image x:Name="ItemIcon" Source="{Binding Icon}" Width="{DynamicResource IconSize}" Height="{DynamicResource IconSize}" />
+                                        <!-- Missing target (M18 spec §4): a small warning badge on the dimmed icon. -->
+                                        <Border x:Name="MissingBadge" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                                Width="16" Height="16" CornerRadius="8" Background="#FFE8A33D" BorderBrush="#FF3A2A10" BorderThickness="1"
+                                                IsHitTestVisible="False">
+                                            <TextBlock Text="!" Foreground="#FF3A2A10" FontWeight="Bold" FontSize="11"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
                                         <!-- Shortcut arrow (M8b, Settings switch): a white tile with a blue curved arrow, like Windows draws. -->
                                         <Viewbox x:Name="ShortcutArrow" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Bottom"
                                                  Width="{DynamicResource ArrowSize}" Height="{DynamicResource ArrowSize}" IsHitTestVisible="False">
@@ -202,17 +169,10 @@
                                             <Image x:Name="TilePoster" Source="{Binding Art}" Stretch="UniformToFill" Visibility="Collapsed" />
                                         </Grid>
                                     </Border>
-                                    <Grid Margin="0,4,0,0">
-                                        <TextBlock x:Name="Label" Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="12"
-                                                   Visibility="{DynamicResource LabelVisibility}"
-                                                   TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                                                   MaxHeight="32" Effect="{DynamicResource LabelShadow}" />
-                                        <!-- In-place rename (M3a): Enter renames through Windows, Esc cancels. -->
-                                        <TextBox x:Name="LabelBox" Visibility="Collapsed" FontSize="12" TextAlignment="Center" TextWrapping="Wrap"
-                                                 MaxHeight="48" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
-                                                 KeyDown="OnLabelBoxKeyDown" LostKeyboardFocus="OnLabelBoxLostFocus"
-                                                 IsVisibleChanged="OnLabelBoxVisibleChanged" />
-                                    </Grid>
+                                    <TextBlock x:Name="Label" Margin="0,4,0,0" Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="12"
+                                               Visibility="{DynamicResource LabelVisibility}"
+                                               TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                                               MaxHeight="32" Effect="{DynamicResource LabelShadow}" />
                                 </StackPanel>
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding IsTile}" Value="True">
@@ -230,24 +190,28 @@
                                     <DataTrigger Binding="{Binding IsShortcut}" Value="True">
                                         <Setter TargetName="ShortcutArrow" Property="Visibility" Value="{DynamicResource ShortcutArrowVisibility}" />
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                                        <Setter TargetName="LabelBox" Property="Visibility" Value="Visible" />
-                                        <Setter TargetName="Label" Property="Visibility" Value="Hidden" />
-                                        <!-- Icons-only cells are narrow: the rename box gets a labelled cell's width (M8b review). -->
-                                        <Setter TargetName="Cell" Property="Width" Value="{DynamicResource EditItemWidth}" />
+                                    <DataTrigger Binding="{Binding State}" Value="Missing">
+                                        <Setter TargetName="ItemIcon" Property="Opacity" Value="0.45" />
+                                        <Setter TargetName="Label" Property="Opacity" Value="0.6" />
+                                        <Setter TargetName="MissingBadge" Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding State}" Value="Unavailable">
+                                        <Setter TargetName="ItemIcon" Property="Opacity" Value="0.45" />
+                                        <Setter TargetName="Label" Property="Opacity" Value="0.6" />
                                     </DataTrigger>
                                 </DataTemplate.Triggers>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <!-- Portal whose folder cannot be read (missing, offline, denied). -->
-                    <TextBlock x:Name="PortalMessage" Visibility="Collapsed" Margin="12" TextWrapping="Wrap"
-                               Foreground="{DynamicResource FenceSubtleText}" IsHitTestVisible="False" />
+                    <!-- An empty fence says how to fill it (M18 spec §5). -->
+                    <TextBlock x:Name="EmptyHint" Visibility="Collapsed" Margin="12" TextWrapping="Wrap" TextAlignment="Center"
+                               VerticalAlignment="Center" Foreground="{DynamicResource FenceSubtleText}" IsHitTestVisible="False"
+                               Text="Drop files, folders or links here — or right-click → Add item…" />
                     <!-- Rubber-band selection (M3b): drawn while dragging on empty space. -->
                     <Canvas IsHitTestVisible="False" ClipToBounds="True">
                         <Rectangle x:Name="SelectionBand" Visibility="Collapsed" Fill="{DynamicResource FenceHover}"
                                    Stroke="{DynamicResource FenceSubtleText}" StrokeThickness="1" RadiusX="2" RadiusY="2" />
-                        <!-- Drag-drop feedback (M3b review I2): where a drop lands, or which folder takes it. -->
+                        <!-- Drag-drop feedback (M3b review I2): where a drop lands. -->
                         <Rectangle x:Name="InsertCaret" Visibility="Collapsed" Width="2" Fill="{DynamicResource FenceText}" RadiusX="1" RadiusY="1" />
                         <!-- Icon-only fences (M8b): the hovered or selected item's name, under its icon, over the neighbours. -->
                         <Border x:Name="HoverLabel" Visibility="Collapsed" CornerRadius="4" Padding="6,2"
@@ -255,8 +219,6 @@
                             <TextBlock x:Name="HoverLabelText" Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="12"
                                        TextAlignment="Center" TextWrapping="Wrap" MaxWidth="180" />
                         </Border>
-                        <Rectangle x:Name="DropHighlight" Visibility="Collapsed" Fill="{DynamicResource FenceSelected}"
-                                   Stroke="{DynamicResource FenceText}" StrokeThickness="1" RadiusX="4" RadiusY="4" />
                     </Canvas>
                 </Grid>
             </Border>

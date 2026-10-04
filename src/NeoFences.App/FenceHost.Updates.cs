@@ -151,7 +151,7 @@ public sealed partial class FenceHost
         if (_updates is not { } updates || _readyUpdate is not { } ready) return;
         // Updates switched off: a plain Exit does not install (an explicit "Restart to update" still does; final review M2).
         if (!_restartAfterUpdate && !_config.Settings.AutoUpdate) return;
-        if (_watchdog.IsTakeoverActiveMarked)
+        if (_watchdog.IsIconsHiddenMarked)
         {
             // The icons could not be shown just now: the watchdog is still restoring them, and Update.exe would end it
             // (hard rule 2). The update waits for the next exit (final review M1).

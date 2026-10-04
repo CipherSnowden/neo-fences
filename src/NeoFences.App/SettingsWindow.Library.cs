@@ -45,7 +45,7 @@ public partial class SettingsWindow
         }
         AddGameFolderButton.Click += (_, _) =>
         {
-            var folder = FolderPicker.TryPick(new WindowInteropHelper(this).Handle, "Choose a folder whose sub-folders are games",
+            var folder = PathPicker.TryPickFolder(new WindowInteropHelper(this).Handle, "Choose a folder whose sub-folders are games",
                 logFailure: failure => Log.Warning(failure, "game library: the folder picker failed"));
             if (folder is not null && !_libraryFolders.Contains(folder, StringComparer.OrdinalIgnoreCase)) LibraryFoldersChanged?.Invoke([.. _libraryFolders, folder]);
         };

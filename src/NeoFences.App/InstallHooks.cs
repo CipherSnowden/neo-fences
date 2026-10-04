@@ -41,8 +41,8 @@ public static class InstallHooks
     /// </summary>
     private static void OnAfterInstall() => WithLog(() =>
     {
-        // Only icons NeoFences hid itself (its takeover-active marker): icons the user hid in Explorer stay theirs (M8a, final review).
-        if (new Watchdog(AppPaths.DataDirectory, _ => { }).IsTakeoverActiveMarked)
+        // Only icons NeoFences hid itself (its icons-hidden marker): icons the user hid in Explorer stay theirs (M8a, final review).
+        if (new Watchdog(AppPaths.DataDirectory, _ => { }).IsIconsHiddenMarked)
         {
             Log.Information("install: showing the desktop icons NeoFences had hidden");
             DesktopIcons.ShowWithRetry(giveUpAfter: InstallIconRetryLimit, log: message => Log.Information("install: {Message}", message));

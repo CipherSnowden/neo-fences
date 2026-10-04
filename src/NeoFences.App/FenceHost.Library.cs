@@ -1,7 +1,6 @@
 using System.IO;
 using System.Windows.Threading;
 using NeoFences.Core.Library;
-using NeoFences.Core.Membership;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
 using Serilog;
@@ -11,7 +10,7 @@ namespace NeoFences.App;
 /// <summary>
 /// The Game Library fence (M12, spec 2026-10-03-game-library-design, ADR-032): scans the launchers, the Xbox app, the
 /// user's game folders and Desktop game shortcuts on its own STA thread, merges them (Core <see cref="GameCatalog"/>),
-/// keeps one shortcut per game in <see cref="AppPaths.LibraryDirectory"/> and shows that folder like a Portal, as tiles.
+/// keeps one shortcut per game in <see cref="AppPaths.LibraryDirectory"/> and shows that folder (LibraryLister) as tiles.
 /// Nothing is started or changed outside NeoFences' own folder.
 /// </summary>
 public sealed partial class FenceHost
@@ -27,9 +26,36 @@ public sealed partial class FenceHost
     private bool _libraryFullScan; // the next scan searches every game folder again (final review I4)
     private string _libraryStatus = "Not scanned yet.";
 
-    private bool HasLibraryFence => _config.Fences.Any(fence => fence.Source.Kind == FenceSourceKind.Library);
+    private bool HasLibraryFence => _config.Fences.Any(fence => fence.IsLibrary);
 
-    /// <summary>Starts the library when its fence appears, stops watching when it goes (EnsurePortals calls this).</summary>
+    /// <summary>The library folder's lister while the Game Library fence exists (a hidden library tab keeps listing, M9).</summary>
+    private void EnsureLibraryLister()
+    {
+        var hasFence = HasLibraryFence;
+        if (!hasFence && _libraryLister is not null)
+        {
+            _libraryLister.Dispose(); // NeoFences' own folder stays as it is
+            _libraryLister = null;
+        }
+        else if (hasFence && _libraryLister is null)
+        {
+            TryCreateFolder(AppPaths.LibraryDirectory);
+            _libraryLister = new LibraryLister(AppPaths.LibraryDirectory, noticeOwner: _messages.Handle, show: ShowLibrary,
+                logFailure: failure => Log.Warning(failure, "cannot watch the game library folder"));
+            if (_gameMode) _libraryLister.SetPaused(true);
+        }
+        UpdateLibrary(); // M12: the library scans while its fence exists
+    }
+
+    /// <summary>The library folder's listing (null: unreadable) in catalog order, as tiles, in the window showing the library.</summary>
+    private void ShowLibrary(IReadOnlyList<ItemInfo>? listed)
+    {
+        if (_windows.Values.FirstOrDefault(window => window.IsLibrary) is not { } window) return;
+        window.SetLibraryArt(LibraryArt());
+        window.SetItems(listed is null ? [] : [.. LibraryOrder(listed).Select(path => new ShownItem(path, path))]); // A–Z by game (M12)
+    }
+
+    /// <summary>Starts the library when its fence appears, stops watching when it goes (EnsureLibraryLister calls this).</summary>
     private void UpdateLibrary()
     {
         if (HasLibraryFence == _libraryActive) return;
@@ -112,7 +138,7 @@ public sealed partial class FenceHost
                          + (unreadable.Count > 0 ? $"; not readable right now: {string.Join(", ", unreadable.Select(GameCatalog.SourceName))}" : ".");
         if (state is null || !_libraryActive) DisposeWatchers(watch); // a failed scan keeps the watchers it had (final review I2)
         else ReplaceLibraryWatchers(watch);
-        foreach (var window in _windows.Values.Where(window => window.IsLibrary)) RefreshPortal(window); // new art, order
+        _libraryLister?.Refresh(); // new art, order
         RefreshSettings();
         if (!_libraryScanAgain) return;
         _libraryScanAgain = false;
@@ -167,28 +193,6 @@ public sealed partial class FenceHost
         }
     }
 
-    /// <summary>
-    /// A Desktop shortcut created, changed, renamed or deleted: the library's shortcut games follow, after 5 quiet seconds
-    /// (M13c; the library watches no Desktop folder of its own).
-    /// </summary>
-    private void OnDesktopShortcutChange(DesktopChange change)
-    {
-        OnDesktopShortcutsChanged(change switch
-        {
-            DesktopChange.Created created => [created.ItemRef],
-            DesktopChange.Deleted deleted => [deleted.ItemRef],
-            DesktopChange.Renamed renamed => [renamed.OldRef, renamed.NewRef],
-            _ => [],
-        });
-    }
-
-    /// <summary>Any of these Desktop items is a shortcut: the library's shortcut games follow after 5 quiet seconds.</summary>
-    private void OnDesktopShortcutsChanged(IReadOnlyList<string> itemRefs)
-    {
-        if (!_libraryActive || !_config.Library.Sources.DesktopShortcuts) return;
-        if (itemRefs.Any(itemRef => Path.GetExtension(itemRef).ToLowerInvariant() is ".lnk" or ".url")) ScheduleLibraryScan();
-    }
-
     private void ScheduleLibraryScan()
     {
         if (_libraryTimer is null)
@@ -238,13 +242,13 @@ public sealed partial class FenceHost
     /// <summary>Tray / fence menu → "New Game Library fence": one at most; with one already, its tab is shown.</summary>
     private void CreateLibraryFence()
     {
-        if (_config.Fences.FirstOrDefault(fence => fence.Source.Kind == FenceSourceKind.Library) is { } existing)
+        if (_config.Fences.FirstOrDefault(fence => fence.IsLibrary) is { } existing)
         {
             if (FenceTabs.HostOf(_config, existing.Id) is { } host && _windows.TryGetValue(host.Id, out var window)) SwitchTab(window, existing.Id);
             return;
         }
         SetQuickHidden(false); // a new fence must show (as "New fence" does)
-        var fence = Fence.Create("Games", FenceSource.Library) with { Sort = FenceSort.Name, IconSize = 64, Labels = _config.Settings.DefaultLabels };
+        var fence = Fence.Create("Games", isLibrary: true) with { IconSize = 64, Labels = _config.Settings.DefaultLabels };
         _config = _config with { Fences = [.. _config.Fences, fence] };
         Log.Information("Game Library fence created");
         SyncBoxes();
@@ -281,11 +285,12 @@ public sealed partial class FenceHost
         else Log.Information("game library: no install folder known for {ItemRef}", itemRef);
     }
 
+    /// <summary>Windows' menu for NeoFences' own game shortcuts (M12): Delete only hides the game, nothing goes to the Recycle Bin.</summary>
     private void ShowLibraryItemMenu(FenceWindow window, IReadOnlyList<string> itemRefs, int screenX, int screenY, bool extended)
     {
         var choice = ShellItemMenu.Show(window.Handle, itemRefs, screenX, screenY, extended,
             logFailure: failure => Log.Warning(failure, "item menu or its command failed for {ItemRefs}", itemRefs),
-            customCommands: ["Hide from library", "Open install folder"], canRename: false, out var custom);
+            header: null, customCommands: ["Hide from library", "Open install folder"], handDeleteBack: true, out var custom);
         if (choice == ItemMenuChoice.Delete || (choice == ItemMenuChoice.Custom && custom == 0)) HideGames(itemRefs); // nothing goes to the Recycle Bin
         else if (choice == ItemMenuChoice.Custom && custom == 1) OpenInstallFolder(window, itemRefs[0]);
     }

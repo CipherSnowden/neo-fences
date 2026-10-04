@@ -1,69 +1,129 @@
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Windows.Media;
+using NeoFences.Core.Items;
 
 namespace NeoFences.App;
 
-/// <summary>One desktop item as a fence shows it. Label and icon start as placeholders and fill in from <see cref="IconLoader"/>.</summary>
-public sealed class FenceItemView(string itemRef) : INotifyPropertyChanged
+/// <summary>
+/// What a fence shows of one item (M18): a virtual item (key = its id), or a Game Library shortcut (key = its path).
+/// The host builds these from its data; the window shows them in place (<see cref="FenceWindow.SetItems"/>).
+/// </summary>
+public sealed record ShownItem(string Key, string Target, string? Name = null, ItemIcon? Icon = null, string? Note = null,
+    TargetState State = TargetState.Ok);
+
+/// <summary>One item as a fence shows it. Label and icon start as placeholders and fill in from <see cref="IconLoader"/>.</summary>
+public sealed class FenceItemView : INotifyPropertyChanged
 {
-    public string ItemRef { get; } = itemRef;
+    public FenceItemView(ShownItem shown)
+    {
+        Key = shown.Key;
+        Target = shown.Target;
+        Update(shown);
+    }
+
+    public string Key { get; }
+
+    public string Target
+    {
+        get;
+        private set { field = value; Changed(); Changed(nameof(IsShortcut)); }
+    } = "";
+
+    /// <summary>The item's own name: it always wins over Windows' name for the target.</summary>
+    public string? OwnName { get; private set; }
+
+    /// <summary>The item's own icon, or null for the target's.</summary>
+    public ItemIcon? OwnIcon { get; private set; }
+
+    public string? Note { get; private set; }
 
     /// <summary>A shortcut (.lnk, .url, .pif): gets the arrow overlay when Settings shows shortcut arrows (M8b).</summary>
-    public bool IsShortcut { get; } = Path.GetExtension(itemRef).ToLowerInvariant() is ".lnk" or ".url" or ".pif";
+    public bool IsShortcut => Path.GetExtension(Target).ToLowerInvariant() is ".lnk" or ".url" or ".pif";
 
     public string Label
     {
         get;
-        set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Label))); }
-    } = itemRef.StartsWith("::", StringComparison.Ordinal) ? "" : Path.GetFileNameWithoutExtension(itemRef);
+        set { field = value; Changed(); Changed(nameof(ToolTipText)); }
+    } = "";
 
-    /// <summary>The icon size last requested (UI thread): a slower, older load of another size never wins (final review I4).</summary>
-    public int WantedSizePx { get; set; }
+    public TargetState State
+    {
+        get;
+        private set { field = value; Changed(); Changed(nameof(ToolTipText)); }
+    }
+
+    /// <summary>The note, or what is wrong with the target (spec §4); the name otherwise.</summary>
+    public string ToolTipText => State switch
+    {
+        TargetState.Missing => $"Missing: {Target}",
+        TargetState.Unavailable => TargetChecks.IsNetworkPath(Target) ? $"Network location not reachable: {Target}"
+            : $"Drive {TargetChecks.RootOf(Target)?.TrimEnd('\\') ?? "?"} is not connected: {Target}",
+        _ => Note is { Length: > 0 } note ? $"{Label}\n{note}" : Label,
+    };
+
+    /// <summary>
+    /// Takes the host's latest data. True when the icon must load again: another target or icon, or a name that is no
+    /// longer the item's own (Windows' name for the target comes with the icon).
+    /// </summary>
+    public bool Update(ShownItem shown)
+    {
+        var reload = !string.Equals(Target, shown.Target, StringComparison.Ordinal) || OwnIcon != shown.Icon
+                     || (OwnName is not null && shown.Name is null);
+        Target = shown.Target;
+        OwnIcon = shown.Icon;
+        OwnName = string.IsNullOrWhiteSpace(shown.Name) ? null : shown.Name;
+        Note = shown.Note;
+        State = shown.State;
+        if (OwnName is not null) Label = OwnName;
+        else if (reload || Label.Length == 0) Label = PlaceholderName(Target);
+        else Changed(nameof(ToolTipText));
+        return reload;
+    }
+
+    /// <summary>Until Windows' display name arrives: the file name, a website's host; nothing for special items.</summary>
+    private static string PlaceholderName(string target) => ItemKinds.Of(target) switch
+    {
+        ItemKind.Website => ItemKinds.WebsiteName(target),
+        ItemKind.Special => "",
+        _ => Path.GetFileNameWithoutExtension(target.TrimEnd('\\')) is { Length: > 0 } name ? name : target,
+    };
+
+    /// <summary>Counts icon requests (UI thread): a slower, older load (another size or target) never wins (final review I4).</summary>
+    public int IconRequest { get; set; }
 
     public ImageSource? Icon
     {
         get;
-        set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Icon))); }
+        set { field = value; Changed(); }
     }
-
-    /// <summary>The label is being renamed in place (F2 or the item menu's Rename).</summary>
-    public bool IsEditing
-    {
-        get;
-        set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsEditing))); }
-    }
-
-    /// <summary>Text in the rename box.</summary>
-    public string EditName
-    {
-        get;
-        set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditName))); }
-    } = "";
 
     /// <summary>A Game Library tile (M12): a 2:3 tile with a poster, a logo or the icon centred.</summary>
     public bool IsTile
     {
         get;
-        set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsTile))); }
+        set { field = value; Changed(); }
     }
 
     /// <summary>The tile's poster or logo, once loaded.</summary>
     public ImageSource? Art
     {
         get;
-        set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Art))); }
+        set { field = value; Changed(); }
     }
 
     /// <summary>"Poster" (fills the tile), "Logo" (centred) or "None" (the icon).</summary>
     public string ArtKind
     {
         get;
-        set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ArtKind))); }
+        set { field = value; Changed(); }
     } = "None";
 
     /// <summary>The art file requested last (UI thread): a slower, older load never wins.</summary>
     public string? ArtPath { get; set; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void Changed([CallerMemberName] string? property = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
 }
