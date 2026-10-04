@@ -26,4 +26,43 @@
 
 ## Live check results
 
-(Task 6 of the plan fills this in.)
+2026-10-05, test build of the branch after the final review's fix pass (commit `3c3033c`), the installed 0.9.0 stopped
+and its data backed up and restored afterwards; test files only in `%USERPROFILE%\NeoFences-m19-test\` and
+`G:\NeoFences-test\` (both removed). Hand steps by the user: AE4, AD8, the pendrive.
+
+| ID | Result | Notes |
+|---|---|---|
+| AE1 | PASS | the app list fills in the background; search "Sticky" finds Sticky Notes |
+| AE2 | PASS | target `shell:AppsFolder\Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe!App`, name filled, "● Found (an app).", Arguments and admin greyed |
+| AE3 | PASS | double-click opens Sticky Notes |
+| AE4 | PASS | the user dragged Paint from Start → All: `shell:AppsFolder\Microsoft.Paint_8wekyb3d8bbwe!App`, no "drop failed" warning |
+| AE5 | PASS | typed bogus app: "● Not installed: …", item Missing with the label "NotAnApp.Bogus" |
+| AE6 | PASS | Locate… on it opens the app list (no file dialog); Calculator chosen, the item points there |
+| AE7 | PASS | "Fix 2 more items? They were in …\old and are now in …\new." (b, c); Fix: both re-pointed, `before-restore.json` written |
+| AE8 | PASS | tray "Undo the last restore or fix": b and c back in `old` (a stays) |
+| AE9 | PASS | d.txt deleted from `new`: not offered |
+| AE10 | PASS | Locate… to a file with another name: no bulk question |
+| AE11 | PASS | listed in 0.14 s: Games 5, Apps 24, Folders and files 2; all ticked; "New fence: …" |
+| AE12 | PASS | 31 items into 3 new fences; items point at the desktop entries |
+| AE13 | PASS | second run: 0 of 31 ticked, Add greyed |
+| AE14 | PASS | with `D:\GameLibrary` as a game folder: Games 10, Apps 19 |
+| AE15 | PASS | "Hide desktop icons" ticked: HideIcons 1, marker, setting on (switched off afterwards) |
+| AE16 | PASS | Shift+right-click a dead-share item: "Network location not reachable" after 1.8 s, fence responsive |
+| AE17 | PASS | Browse → file dialog after 1.8 s, icon picker after 0.9 s; log "did not answer" |
+| AE18 | PASS | a.txt + a dead-share item dragged out: only a.txt copied |
+| AE19 | PASS | OK greyed while "Checking…", enabled with "● Network location not reachable." |
+| AE20 | PASS | restart with share items: the other icons load normally |
+| AE21 | PASS (adapted) | the arming race cannot be hit by hand; pulled without Safely remove while running: Unavailable, released, no errors; re-plugged: Ok, `g.txt` rename followed and back |
+| AE22 | PASS (Core) | stale-record clean-up covered by `StaleEntries` tests; no errors in the whole run |
+| AE23 | PASS | 10 items on the dead share: the Games fence had its icons within 3 s of start |
+| AE24 | PASS | an app id with spaces opens (quoted): GPUView from the Windows Kits started; the PDF example had no handler on this PC |
+| AE25 | not run | no mapped network drive on this PC |
+| AE26 | PASS (reading) | `AppList.Exists` treats only not-found as uninstalled (Core test) |
+| AD2 | PASS | a file dropped from Explorer becomes an item; the file stays |
+| AD8 | PASS | by hand: one item dragged out to Explorer is copied. A scripted single-item drag copied nothing — the same with the installed 0.9.0, and two items copy fine by script: a quirk of the scripted drag |
+| AD14 | PASS | rename while running followed both ways, no Missing |
+| AD18 | PASS | Shift+right-click: Windows' menu with its header line |
+
+Script lessons (memory `feedback-desktop-automation`): dialogs can open behind other windows (bring to front and
+uncover first); a double-click on an item scrolled out of view lands on the desktop and quick-hides everything (scroll
+the item into view and check the point is on the fence first); a restore can recreate fence windows (look them up again).
