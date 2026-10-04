@@ -64,13 +64,14 @@ public sealed class FenceItemView : INotifyPropertyChanged
     };
 
     /// <summary>
-    /// Takes the host's latest data. True when the icon must load again: another target or icon, or a name that is no
-    /// longer the item's own (Windows' name for the target comes with the icon).
+    /// Takes the host's latest data. True when the icon must load again: another target or icon, a name that is no longer
+    /// the item's own (Windows' name for the target comes with the icon), or a target that is back (missing or unplugged).
     /// </summary>
     public bool Update(ShownItem shown)
     {
         var reload = !string.Equals(Target, shown.Target, StringComparison.Ordinal) || OwnIcon != shown.Icon
-                     || (OwnName is not null && shown.Name is null);
+                     || (OwnName is not null && shown.Name is null)
+                     || (State != TargetState.Ok && shown.State == TargetState.Ok); // back: its real icon and name (final review I5)
         Target = shown.Target;
         OwnIcon = shown.Icon;
         OwnName = string.IsNullOrWhiteSpace(shown.Name) ? null : shown.Name;

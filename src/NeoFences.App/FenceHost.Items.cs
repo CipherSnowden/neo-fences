@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using NeoFences.Core.Config;
 using NeoFences.Core.Items;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
@@ -60,7 +61,8 @@ public sealed partial class FenceHost
     private void AskAboutMissing(FenceWindow window, string itemId, TargetState state)
     {
         if (_items.Find(itemId) is not { } item) return;
-        var question = new MissingItemWindow(DisplayName(item), item.Target, state) { Owner = window };
+        // The fence's window may have closed meanwhile (its box merged into another): then the question stands alone (final review M1).
+        var question = new MissingItemWindow(DisplayName(item), item.Target, state) { Owner = _windows.ContainsValue(window) ? window : null };
         if (question.ShowDialog() != true) return;
         if (question.Choice == MissingItemChoice.Locate) Locate(window, itemId);
         else if (question.Choice == MissingItemChoice.Remove) RemoveItems(window, [itemId]);
@@ -261,13 +263,22 @@ public sealed partial class FenceHost
         }
     }
 
-    /// <summary>At start: pictures in the icons folder no item uses any more (replaced, or their item removed) go. NeoFences' own files only.</summary>
-    private static void CleanUnusedPictures(IReadOnlySet<string> inUse) =>
+    /// <summary>
+    /// At start: pictures in the icons folder that neither an item nor a snapshot uses (replaced, or their item removed)
+    /// go — a snapshot's pictures stay, so restoring it brings them back (final review I7). NeoFences' own files only.
+    /// </summary>
+    private static void CleanUnusedPictures(IReadOnlySet<string> itemPictures, string snapshotsDirectory) =>
         Task.Run(() =>
         {
             try
             {
                 if (!Directory.Exists(AppPaths.IconsDirectory)) return;
+                var snapshots = new SnapshotStore(snapshotsDirectory);
+                var inUse = itemPictures.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var entry in snapshots.List())
+                {
+                    if (snapshots.Load(entry.Path) is { } snapshot) inUse.UnionWith(ItemEdits.ImagesInUse(new ItemsDocument { Fences = snapshot.Items }));
+                }
                 foreach (var picture in Directory.GetFiles(AppPaths.IconsDirectory, "*.png").Where(path => !inUse.Contains(Path.GetFileName(path))))
                 {
                     File.Delete(picture);
@@ -345,25 +356,31 @@ public sealed partial class FenceHost
     private void SortFence(FenceWindow window, FenceSort sort)
     {
         if (window.IsLibrary) return;
-        try
+        var fenceId = window.FenceId;
+        var items = _items.Of(fenceId);
+        // Targets not seen OK are sorted without asking their disk (a dead share answers only after its timeout).
+        var reachable = items.Where(item => CheckOf(item.Target).State == TargetState.Ok).Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
+        // Off the UI thread: the targets' facts come from their disks (final review I2).
+        Task.Run(() => ItemSorting.Order([.. items.Select(item => FactsOf(item, askDisk: reachable.Contains(item.Id)))], sort)).ContinueWith(sorted =>
         {
-            // ponytail: reads each target's facts on the UI thread (a sleeping disk stalls the sort); off-thread if fences get big.
-            var facts = _items.Of(window.FenceId).Select(FactsOf).ToList();
-            _items = ItemEdits.Reorder(_items, window.FenceId, ItemSorting.Order(facts, sort));
-        }
-        catch (Exception failure) when (failure is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException)
-        {
-            Log.Warning(failure, "sort of fence {FenceId} failed; its order stays", window.FenceId); // never crash (M4 review I3)
-            return;
-        }
-        RefreshWindow(window);
-        ScheduleSave();
+            try
+            {
+                _items = ItemEdits.Reorder(_items, fenceId, sorted.Result); // the fence changed meanwhile: ArgumentException, its order stays
+            }
+            catch (Exception failure) when (failure is ArgumentException or AggregateException)
+            {
+                Log.Warning(failure, "sort of fence {FenceId} failed; its order stays", fenceId); // never crash (M4 review I3)
+                return;
+            }
+            RefreshWindows();
+            ScheduleSave();
+        }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     /// <summary>What sorting needs about one item: its target's facts (a file on disk), its own name first.</summary>
-    private static ItemInfo FactsOf(VirtualItem item)
+    private static ItemInfo FactsOf(VirtualItem item, bool askDisk)
     {
-        if (item.Kind == ItemKind.Path && TargetChecks.RootOf(item.Target) is not null)
+        if (askDisk && item.Kind == ItemKind.Path && TargetChecks.RootOf(item.Target) is not null)
         {
             var described = FolderItems.Describe([item.Target])[0];
             return described with { ItemRef = item.Id, Name = item.OwnName ?? described.Name };

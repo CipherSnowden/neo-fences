@@ -29,6 +29,8 @@ public sealed partial class FenceHost
     private readonly List<(string OldPath, string NewPath)> _seenRenames = []; // settled once quiet, or after a game (final review C1)
     private DispatcherTimer? _folderChangeTimer, _recheckTimer, _drivesTimer, _renameTimer;
     private bool _checksDeferred, _watchingStopped;
+    private int _checkBatch; // numbers each batch of checks: an older batch finishing late never overwrites a newer answer (final review I6)
+    private readonly Dictionary<string, int> _checkBatchOf = new(ItemKinds.Comparer);
 
     /// <summary>The last check of a target; Ok while it was never checked (fences show at once, states fill in).</summary>
     private TargetCheck CheckOf(string target) => _targetChecks.TryGetValue(target, out var check) ? check : TargetCheck.Ok;
@@ -232,17 +234,20 @@ public sealed partial class FenceHost
             _checksDeferred = true; // games get every bit of the machine: all of them after the game (spec §4.7)
             return;
         }
-        Task.Run(() => targets.Select(target => (target, TargetProbe.Check(target))).ToList())
-            .ContinueWith(checks => ApplyChecks(checks.Result), TaskScheduler.FromCurrentSynchronizationContext());
+        var batch = ++_checkBatch;
+        Task.Run(() => TargetProbe.CheckAll(targets))
+            .ContinueWith(checks => ApplyChecks(checks.Result, batch), TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     /// <summary>New states: the fences holding a target whose state changed refresh (at most once every 2 s each).</summary>
-    private void ApplyChecks(IReadOnlyList<(string Target, TargetCheck Check)> checks)
+    private void ApplyChecks(IReadOnlyList<(string Target, TargetCheck Check)> checks, int batch = int.MaxValue)
     {
         if (_watchingStopped) return;
         var changed = new HashSet<string>(ItemKinds.Comparer);
         foreach (var (target, check) in checks)
         {
+            if (_checkBatchOf.TryGetValue(target, out var newest) && newest > batch) continue; // a newer answer is already there
+            _checkBatchOf[target] = Math.Min(batch, _checkBatch);
             if (_targetChecks.TryGetValue(target, out var before) && before == check) continue;
             if (check.State != TargetState.Ok || before is { State: not TargetState.Ok })
                 Log.Information("target {Target}: {State}", target, check.State);
