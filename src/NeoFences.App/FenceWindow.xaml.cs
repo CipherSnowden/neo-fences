@@ -141,6 +141,8 @@ public partial class FenceWindow : Window
     public event Action<FenceSort>? SortRequested;
     /// <summary>Fence menu → "Add item…" (M18).</summary>
     public event Action? AddItemRequested;
+    /// <summary>Fence menu → "Add from desktop…" (M19).</summary>
+    public event Action? AddFromDesktopRequested;
     /// <summary>Fence menu → "Refresh": the items' targets are checked again and their icons reloaded (the library rescans).</summary>
     public event Action? RefreshRequested;
     /// <summary>Fence menu → "New Game Library fence" (M12).</summary>
@@ -197,6 +199,7 @@ public partial class FenceWindow : Window
         PreviewKeyDown += OnTabKeys;
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
         AddItemItem.Click += (_, _) => AddItemRequested?.Invoke();
+        AddFromDesktopItem.Click += (_, _) => AddFromDesktopRequested?.Invoke();
         RefreshItem.Click += (_, _) => RefreshRequested?.Invoke();
         foreach (var size in ConfigNormalizer.IconSizes)
         {
@@ -279,6 +282,7 @@ public partial class FenceWindow : Window
         _isLibrary = fence.IsLibrary;
         // The library is NeoFences' own A–Z list of games: no items to add or sort (M12).
         AddItemItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible;
+        AddFromDesktopItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible;
         SortItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible;
         DeleteItem.Header = _isLibrary ? "Delete fence (your games are not touched)" : "Delete fence (your files are not touched)";
         UpdateEmptyHint();

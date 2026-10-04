@@ -71,6 +71,8 @@ public sealed partial class FenceHost
     private static string DisplayName(VirtualItem item) => item.OwnName ?? item.Kind switch
     {
         ItemKind.Website => ItemKinds.WebsiteName(item.Target),
+        _ when ItemKinds.AppIdOf(item.Target) is { } appId => appId.Split('_', '!')[0], // "SpotifyAB.SpotifyMusic" until Windows names it
+
         _ => Path.GetFileNameWithoutExtension(item.Target.TrimEnd('\\')) is { Length: > 0 } name ? name : item.Target,
     };
 
@@ -131,13 +133,31 @@ public sealed partial class FenceHost
         window.ShowItemMenu(menu, fromKeyboard);
     }
 
-    /// <summary>Windows' full menu for the real target (spec §3): only here can a real delete or rename happen, and it says so.</summary>
-    private static void ShowWindowsMenu(FenceWindow window, VirtualItem item, int screenX, int screenY)
+    /// <summary>
+    /// Windows' full menu for the real target (spec §3): only here can a real delete or rename happen, and it says so. The
+    /// target is checked off the UI thread first (M19 R2): Windows builds the menu on the UI thread, and a dead share would
+    /// freeze the fence; not reachable within 2 s, a one-line menu says so.
+    /// </summary>
+    private void ShowWindowsMenu(FenceWindow window, VirtualItem item, int screenX, int screenY)
     {
         if (item.Kind == ItemKind.Website) return; // a website has no Windows menu
-        ShellItemMenu.Show(window.Handle, [item.Target], screenX, screenY, extended: true,
-            logFailure: failure => Log.Warning(failure, "Windows' menu or its command failed for {Target}", item.Target),
-            header: "Windows menu — acts on the real file", customCommands: [], handDeleteBack: false, out _);
+        Task.Run(() => TargetProbe.Check(item.Target)).ContinueWith(checking =>
+        {
+            if (checking.Result.State == TargetState.Unavailable)
+            {
+                var menu = new ContextMenu();
+                menu.Items.Add(new MenuItem
+                {
+                    Header = TargetChecks.IsNetworkPath(item.Target) ? "Network location not reachable" : "Drive not connected",
+                    IsEnabled = false,
+                });
+                window.ShowItemMenu(menu, fromKeyboard: false);
+                return;
+            }
+            ShellItemMenu.Show(window.Handle, [item.Target], screenX, screenY, extended: true,
+                logFailure: failure => Log.Warning(failure, "Windows' menu or its command failed for {Target}", item.Target),
+                header: "Windows menu — acts on the real file", customCommands: [], handDeleteBack: false, out _);
+        }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     private static void ShowInFolder(string target) =>
@@ -200,10 +220,19 @@ public sealed partial class FenceHost
         window.SelectItems(added.AddedIds.Count > 0 ? added.AddedIds : added.AlreadyThereIds); // already there: it flashes
     }
 
-    /// <summary>Locate… (spec §4): a picker at the nearest folder that still exists; only the target changes.</summary>
+    /// <summary>
+    /// Locate… (spec §4): a picker at the nearest folder that still exists; only the target changes. A missing app opens
+    /// the app list (M19 §1). Afterwards the other items from the same old place are offered (M19 §2).
+    /// </summary>
     private void Locate(FenceWindow window, string itemId)
     {
         if (_items.Find(itemId) is not { } item) return;
+        if (ItemKinds.IsApp(item.Target))
+        {
+            var picker = new AppPickerWindow(_iconLoader) { Owner = window };
+            if (picker.ShowDialog() == true && picker.Chosen is { } app) Relocated(window, itemId, ItemKinds.AppTarget(app.AppId));
+            return;
+        }
         var name = DisplayName(item);
         var asFolder = !Path.HasExtension(item.Target.TrimEnd('\\')); // ponytail: a folder named "x.y" opens the file picker; Properties → Browse covers it
         // Off the UI thread: the old drive may be a sleeping disk or a share that does not answer.
@@ -213,15 +242,66 @@ public sealed partial class FenceHost
             var picked = asFolder
                 ? PathPicker.TryPickFolder(window.Handle, $"Where is \"{name}\" now?", LogFailure, found.Result)
                 : PathPicker.TryPickFile(window.Handle, $"Where is \"{name}\" now?", LogFailure, found.Result);
-            if (picked is null || _items.Find(itemId) is not { } current) return;
-            _items = ItemEdits.Replace(_items, current with { Target = picked });
-            Log.Information("item {ItemId} located at {Target}", itemId, picked);
-            ItemsChanged(checkTargets: [picked]);
+            if (picked is not null) Relocated(window, itemId, picked);
         }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
+    /// <summary>One item now points at its new place; then the bulk fix is offered for its neighbours.</summary>
+    private void Relocated(FenceWindow window, string itemId, string newTarget)
+    {
+        if (_items.Find(itemId) is not { } current) return;
+        var oldTarget = current.Target;
+        _items = ItemEdits.Replace(_items, current with { Target = newTarget });
+        Log.Information("item {ItemId} located at {Target}", itemId, newTarget);
+        ItemsChanged(checkTargets: [newTarget]);
+        OfferRelocation(window, itemId, oldTarget, newTarget);
+    }
+
+    /// <summary>
+    /// The bulk fix (M19 §2, ADR-042): the other missing or unavailable items under the same old place whose files are at
+    /// the new place are offered in one question; Fix saves an undo snapshot first.
+    /// </summary>
+    private void OfferRelocation(FenceWindow window, string locatedId, string oldTarget, string newTarget)
+    {
+        if (Relocation.Find(oldTarget, newTarget) is not { } bases) return;
+        var moves = Relocation.Candidates(_items, StateOf, bases, exceptItemId: locatedId);
+        if (moves.Count == 0) return;
+        // Off the UI thread: each new place is checked (a share answers within 2 s or does not count).
+        Task.Run(() => TargetProbe.CheckAll([.. moves.Select(move => move.NewTarget)])).ContinueWith(checking =>
+        {
+            if (checking.IsFaulted) return;
+            var found = moves.Where((_, index) => checking.Result[index].Check.State == TargetState.Ok).ToList();
+            if (found.Count == 0) return;
+            var labels = found.Select(move => _items.Find(move.ItemId)).OfType<VirtualItem>().Select(DisplayName).ToList();
+            var question = new RelocateWindow(found.Count, bases, labels) { Owner = _windows.ContainsValue(window) ? window : null };
+            if (question.ShowDialog() == true) FixItems(found, bases);
+        }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
+    /// <summary>"Fix": an undo snapshot first (tray → "Undo the last restore or fix"); not saved: nothing changes.</summary>
+    private void FixItems(IReadOnlyList<Relocation.Move> moves, Relocation.Bases bases)
+    {
+        var now = DateTimeOffset.Now;
+        if (_snapshots.Save(Snapshots.Take(_config, _items, name: $"Before fixing {moves.Count} items ({now:d MMM HH:mm})", now: now),
+                SnapshotStore.BeforeRestoreFileName) is null)
+        {
+            Log.Warning(_snapshots.LastFailure, "items not fixed: the undo snapshot could not be saved");
+            SnapshotFailure("Items not fixed", "NeoFences could not save the undo snapshot first (see the log).");
+            return;
+        }
+        // Only items still pointing where they did when asked (one may have been removed or changed meanwhile).
+        var newTargets = moves.Where(move => _items.Find(move.ItemId) is { } item && ItemKinds.Comparer.Equals(item.Target, move.OldTarget))
+            .ToDictionary(move => move.ItemId, move => move.NewTarget, StringComparer.Ordinal);
+        _items = ItemEdits.Relocate(_items, newTargets);
+        Log.Information("{Count} item(s) fixed: {OldBase} -> {NewBase}", newTargets.Count, bases.OldBase, bases.NewBase);
+        ItemsChanged(checkTargets: [.. newTargets.Values]);
+        RefreshSettings(); // the snapshot list shows the undo snapshot
     }
 
     private static string? NearestExistingFolder(string target)
     {
+        // A drive or share that does not answer within 2 s: the dialog opens at Windows' default place (M19 R2).
+        if (TargetChecks.RootOf(target) is { } root && TargetProbe.Check(root).State != TargetState.Ok) return null;
         try
         {
             for (var folder = Path.GetDirectoryName(target.TrimEnd('\\')); folder is not null; folder = Path.GetDirectoryName(folder))
@@ -297,6 +377,7 @@ public sealed partial class FenceHost
         RefreshWindows();
         ScheduleSave();
         UpdateWatching();
+        ForgetGoneTargets();
         if (checkTargets.Count > 0) CheckTargets(checkTargets);
     }
 
@@ -343,8 +424,13 @@ public sealed partial class FenceHost
         else
         {
             var items = keys.Select(_items.Find).OfType<VirtualItem>().ToList();
-            files = [.. items.Where(item => item.Kind == ItemKind.Path && TargetChecks.RootOf(item.Target) is not null && CheckOf(item.Target).State == TargetState.Ok)
-                .Select(item => item.Target)];
+            var onDisk = items.Where(item => item.Kind == ItemKind.Path && TargetChecks.RootOf(item.Target) is not null && CheckOf(item.Target).State == TargetState.Ok)
+                .Select(item => item.Target).ToList();
+            // Asked again now, at most 2 s per drive (M19 R2): Windows parses each one on this thread, and a share that went
+            // away since its last check would freeze the fence. A target that does not answer is left out of the drag.
+            var answers = onDisk.Count > 0 ? TargetProbe.CheckAll(onDisk) : [];
+            files = [.. answers.Where(answer => answer.Check.State == TargetState.Ok).Select(answer => answer.Target)];
+            foreach (var (target, _) in answers.Where(answer => answer.Check.State != TargetState.Ok)) Log.Information("{Target} left out of the drag: not reachable", target);
             urls = [.. items.Where(item => item.Kind == ItemKind.Website).Select(item => item.Target)];
         }
         ShellDragDrop.TryDrag(window.Handle, keys, files, urls, logFailure: failure => Log.Warning(failure, "could not start dragging {Keys}", keys));

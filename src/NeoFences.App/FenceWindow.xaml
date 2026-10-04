@@ -77,6 +77,7 @@
                 <Border.ContextMenu>
                     <ContextMenu x:Name="BodyContextMenu">
                         <MenuItem x:Name="AddItemItem" Header="Add item…" />
+                        <MenuItem x:Name="AddFromDesktopItem" Header="Add from desktop…" />
                         <MenuItem x:Name="RefreshItem" Header="Refresh" />
                         <Separator />
                         <MenuItem x:Name="NewFenceItem" Header="New fence" />

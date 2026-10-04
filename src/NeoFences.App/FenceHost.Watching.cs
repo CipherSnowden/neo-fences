@@ -23,6 +23,9 @@ public sealed partial class FenceHost
     private readonly Dictionary<string, (FolderWatcher Watcher, DeviceRemovalNotice? Notice)> _targetWatchers = new(ItemKinds.Comparer);
     private HashSet<string> _wantedFolders = new(ItemKinds.Comparer);
     private readonly HashSet<string> _armingFolders = new(ItemKinds.Comparer); // watchers being opened off the UI thread
+    // Removal notices registered by a batch still arming, by handle (M19 R1, like LibraryLister._inFlight): a drive removed
+    // meanwhile is let go of at once; the batch then drops that folder.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<nint, (FolderWatcher Watcher, DeviceRemovalNotice Notice)> _armingNotices = new();
     private readonly RefreshThrottle _refreshThrottle = new();
     private readonly Dictionary<string, DispatcherTimer> _fenceRefreshTimers = new(StringComparer.Ordinal);
     private readonly HashSet<string> _changedFolders = new(ItemKinds.Comparer);
@@ -60,6 +63,12 @@ public sealed partial class FenceHost
             notice?.Dispose();
         }
         _targetWatchers.Clear();
+        foreach (var (watcher, notice) in _armingNotices.Values)
+        {
+            watcher.Dispose();
+            notice.Dispose();
+        }
+        _armingNotices.Clear();
     }
 
     /// <summary>Watches the folders the plan picks now; watchers no longer wanted, not watching or stopped (final review I3) are replaced.</summary>
@@ -78,40 +87,69 @@ public sealed partial class FenceHost
         var noticeOwner = _messages.Handle;
         var dispatcher = Dispatcher.CurrentDispatcher;
         // Off the UI thread: opening a watcher on a sleeping disk or a share can take seconds (final review I2).
-        Task.Run(() => toArm.Select(folder => (Folder: folder, Watch: Watch(folder, noticeOwner))).ToList()).ContinueWith(armed =>
+        Task.Run(() => toArm.Select(folder => (Folder: folder, Watch: TryWatch(folder, noticeOwner))).ToList()).ContinueWith(armed =>
         {
+            if (armed.IsFaulted)
+            {
+                // Never silently lost (M19 R4): logged, and the next UpdateWatching (an edit, a drive, the 5-minute check) retries.
+                Log.Warning(armed.Exception, "watchers for {Count} folder(s) could not be armed; retried at the next check", toArm.Count);
+                foreach (var folder in toArm) _armingFolders.Remove(folder);
+                return;
+            }
             foreach (var (folder, watch) in armed.Result)
             {
                 _armingFolders.Remove(folder);
+                if (watch is null) continue; // logged in TryWatch; retried at the next check
+                var released = watch.Value.Notice is { } armedNotice && !_armingNotices.TryRemove(armedNotice.Handle, out _);
+                if (released) continue; // its drive was removed while it armed: already let go of (M19 R1)
                 if (_watchingStopped || !_wantedFolders.Contains(folder) || _targetWatchers.ContainsKey(folder))
                 {
-                    watch.Watcher.Dispose();
-                    watch.Notice?.Dispose();
+                    watch.Value.Watcher.Dispose();
+                    watch.Value.Notice?.Dispose();
                     continue;
                 }
-                watch.Watcher.Changed += () => dispatcher.BeginInvoke(() => OnTargetFolderChanged(folder));
-                watch.Watcher.Renamed += (oldPath, newPath) => dispatcher.BeginInvoke(() => OnTargetRenamed(oldPath, newPath));
+                var (watcher, _) = watch.Value;
+                watcher.Changed += () => dispatcher.BeginInvoke(() => OnTargetFolderChanged(folder));
+                watcher.Renamed += (oldPath, newPath) => dispatcher.BeginInvoke(() => OnTargetRenamed(oldPath, newPath));
                 // Events were lost or it stopped: its targets are checked now; the next UpdateWatching (an edit, a drive, the 5-minute check) re-arms it.
-                watch.Watcher.Failed += () => dispatcher.BeginInvoke(() => OnTargetFolderChanged(folder));
-                _targetWatchers[folder] = watch;
+                watcher.Failed += () => dispatcher.BeginInvoke(() => OnTargetFolderChanged(folder));
+                _targetWatchers[folder] = watch.Value;
             }
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
-    /// <summary>A watcher, with a removal notice where Windows offers one, so "Safely remove" still works (M8d). Off the UI thread.</summary>
-    private static (FolderWatcher Watcher, DeviceRemovalNotice? Notice) Watch(string folder, nint noticeOwner)
+    /// <summary>
+    /// A watcher, with a removal notice where Windows offers one, so "Safely remove" still works (M8d). Off the UI thread.
+    /// Null when arming failed in a way FolderWatcher does not handle (logged; M19 R4): the batch goes on without it.
+    /// </summary>
+    private (FolderWatcher Watcher, DeviceRemovalNotice? Notice)? TryWatch(string folder, nint noticeOwner)
     {
-        // Names only: a game writing logs and caches next to its .exe must not wake NeoFences on every write (final review I4).
-        var watcher = new FolderWatcher(folder, failure => Log.Debug(failure, "cannot watch {Folder}; its items are checked every few minutes", folder), namesOnly: true);
-        var notice = watcher.HeldFolder is { } held
-            ? DeviceRemovalNotice.TryRegister(noticeOwner, held, failure => Log.Debug(failure, "no removal notice for {Folder}", held))
-            : null;
-        return (watcher, notice);
+        try
+        {
+            // Names only: a game writing logs and caches next to its .exe must not wake NeoFences on every write (final review I4).
+            var watcher = new FolderWatcher(folder, failure => Log.Debug(failure, "cannot watch {Folder}; its items are checked every few minutes", folder), namesOnly: true);
+            var notice = watcher.HeldFolder is { } held
+                ? DeviceRemovalNotice.TryRegister(noticeOwner, held, failure => Log.Debug(failure, "no removal notice for {Folder}", held))
+                : null;
+            if (notice is not null) _armingNotices[notice.Handle] = (watcher, notice);
+            return (watcher, notice);
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            Log.Warning(failure, "could not watch {Folder}; retried at the next check", folder);
+            return null;
+        }
     }
 
-    /// <summary>Windows asks to remove a drive holding a watched folder (the test stick, G:): let go of it now.</summary>
+    /// <summary>Windows asks to remove a drive holding a watched folder (the test stick, G:), or it was pulled: let go of it now.</summary>
     private bool ReleaseTargetWatcherForRemoval(nint handle)
     {
+        if (_armingNotices.TryRemove(handle, out var arming))
+        {
+            arming.Watcher.Dispose(); // still arming (M19 R1): the batch sees it gone and drops the folder
+            arming.Notice.Dispose();
+            return true;
+        }
         if (_targetWatchers.FirstOrDefault(entry => entry.Value.Notice?.Handle == handle) is not { Key: { } folder, Value: var (watcher, notice) }) return false;
         watcher.Dispose();
         notice?.Dispose();
@@ -222,12 +260,29 @@ public sealed partial class FenceHost
     }
 
     private void CheckFence(string fenceId) =>
-        CheckTargets([.. _items.Of(fenceId).Where(item => item.Kind == ItemKind.Path).Select(item => item.Target).Distinct(ItemKinds.Comparer)]);
+        CheckTargets([.. _items.Of(fenceId).Where(item => item.Kind == ItemKind.Path || ItemKinds.IsApp(item.Target))
+            .Select(item => item.Target).Distinct(ItemKinds.Comparer)]);
 
     private void CheckAllTargets()
     {
         UpdateWatching();
-        CheckTargets(ItemEdits.PathTargets(_items));
+        CheckTargets(ItemEdits.CheckedTargets(_items)); // files, folders and apps (M19)
+    }
+
+    /// <summary>
+    /// Records of targets and fences that are gone (M19 R5): their last check, check batch and refresh timer. After an items
+    /// change and after Delete fence, so a long session does not keep every target it ever saw.
+    /// </summary>
+    private void ForgetGoneTargets()
+    {
+        var live = ItemEdits.CheckedTargets(_items);
+        foreach (var target in StaleEntries.Gone(_targetChecks.Keys, live, ItemKinds.Comparer)) _targetChecks.Remove(target);
+        foreach (var target in StaleEntries.Gone(_checkBatchOf.Keys, live, ItemKinds.Comparer)) _checkBatchOf.Remove(target);
+        foreach (var fenceId in StaleEntries.Gone(_fenceRefreshTimers.Keys, _config.Fences.Select(fence => fence.Id), StringComparer.Ordinal))
+        {
+            _fenceRefreshTimers[fenceId].Stop();
+            _fenceRefreshTimers.Remove(fenceId);
+        }
     }
 
     /// <summary>Checks these targets off the UI thread (a share answers within 2 s or counts as Unavailable); games defer it.</summary>

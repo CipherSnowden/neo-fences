@@ -40,8 +40,9 @@
             <Button x:Name="BrowseButton" Grid.Row="1" Grid.Column="2" Content="Browse ▾" Margin="0,0,0,10" AutomationProperties.Name="Browse for the target">
                 <Button.ContextMenu>
                     <ContextMenu>
-                        <MenuItem x:Name="BrowseFileItem" Header="A file or app…" />
+                        <MenuItem x:Name="BrowseFileItem" Header="A file or program…" />
                         <MenuItem x:Name="BrowseFolderItem" Header="A folder…" />
+                        <MenuItem x:Name="BrowseAppItem" Header="An app…" />
                     </ContextMenu>
                 </Button.ContextMenu>
             </Button>

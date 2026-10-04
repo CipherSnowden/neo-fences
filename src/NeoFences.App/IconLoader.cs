@@ -47,10 +47,13 @@ public sealed class IconLoader : IDisposable
             try
             {
                 var kind = ItemKinds.Of(request.Target);
+                // A share is asked first, at most 2 s (M19 R7): a dead one would hold this worker in the shell for minutes.
+                var reachable = kind != ItemKind.Path || !TargetChecks.IsNetworkPath(request.Target)
+                                || TargetProbe.Check(request.Target).State == TargetState.Ok;
                 var label = !request.WantsName ? null
                     : kind == ItemKind.Website ? ItemKinds.WebsiteName(request.Target)
-                    : ShellItems.TryGetDisplayName(request.Target);
-                var icon = OwnIcon(request) ?? TargetIcon(request, kind);
+                    : reachable ? ShellItems.TryGetDisplayName(request.Target) : null;
+                var icon = OwnIcon(request) ?? (reachable ? TargetIcon(request, kind) : null) ?? GenericIcon(request, kind);
                 _uiDispatcher.BeginInvoke(() =>
                 {
                     if (request.Number != request.View.IconRequest) return; // a newer request (size, target, icon) is on its way
@@ -93,6 +96,25 @@ public sealed class IconLoader : IDisposable
         kind == ItemKind.Website
             ? ShellItems.DefaultBrowserPath() is { } browser ? Frozen(ShellItems.TryGetImage(browser, request.SizePx)) : null
             : Frozen(ShellItems.TryGetImage(request.Target, request.SizePx));
+
+    private static bool _websiteIconFailureLogged;
+
+    /// <summary>
+    /// No icon from the shell (M19 R8): a file or folder (missing, unreachable) or an app (uninstalled) gets Windows' icon for
+    /// its type, by name only; a website's failed browser icon is logged once (the unreproduced blank icon of the M18 check).
+    /// </summary>
+    private static BitmapSource? GenericIcon(LoadRequest request, ItemKind kind)
+    {
+        if (kind == ItemKind.Website)
+        {
+            if (!_websiteIconFailureLogged) Log.Information("no browser icon for website {Target}; it shows without one", request.Target);
+            _websiteIconFailureLogged = true;
+            return null;
+        }
+        if (kind != ItemKind.Path && !ItemKinds.IsApp(request.Target)) return null; // a special item without an icon stays as it is
+        var looksLikeFolder = kind == ItemKind.Path && !Path.HasExtension(request.Target.TrimEnd('\\')); // ponytail: by its name; the check knows better
+        return Frozen(ShellItems.TryGetGenericImage(request.Target, looksLikeFolder));
+    }
 
     private static BitmapSource? Frozen(ShellImage? image)
     {

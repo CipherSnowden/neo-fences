@@ -83,10 +83,14 @@ public sealed class FenceItemView : INotifyPropertyChanged
         return reload;
     }
 
-    /// <summary>Until Windows' display name arrives: the file name, a website's host; nothing for special items.</summary>
+    /// <summary>
+    /// Until Windows' display name arrives: the file name, a website's host, an app's id front (an uninstalled app is never
+    /// named by Windows, M19); nothing for other special items.
+    /// </summary>
     private static string PlaceholderName(string target) => ItemKinds.Of(target) switch
     {
         ItemKind.Website => ItemKinds.WebsiteName(target),
+        _ when ItemKinds.AppIdOf(target) is { } appId => appId.Split('_', '!')[0],
         ItemKind.Special => "",
         _ => Path.GetFileNameWithoutExtension(target.TrimEnd('\\')) is { Length: > 0 } name ? name : target,
     };

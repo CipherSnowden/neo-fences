@@ -54,6 +54,7 @@ public partial class ItemPropertiesWindow : Window
         ChangeIconButton.Click += (_, _) => OpenMenu(ChangeIconButton);
         BrowseFileItem.Click += (_, _) => Browse(folder: false);
         BrowseFolderItem.Click += (_, _) => Browse(folder: true);
+        BrowseAppItem.Click += (_, _) => PickApp();
         IconFromFileItem.Click += (_, _) => PickIconFromFile();
         IconFromPictureItem.Click += (_, _) => PickPicture();
         ResetIconItem.Click += (_, _) => SetIcon(icon: null, picture: null);
@@ -61,6 +62,7 @@ public partial class ItemPropertiesWindow : Window
         {
             _checkDelay.Stop(); // typed: checked once the typing pauses
             _checkDelay.Start();
+            OkButton.IsEnabled = false; // until this target's check says file or folder (M19 R6)
         };
         _checkDelay.Tick += (_, _) =>
         {
@@ -93,11 +95,23 @@ public partial class ItemPropertiesWindow : Window
     private void Browse(bool folder)
     {
         var start = CurrentTarget is { } target && ItemKinds.Of(target) == ItemKind.Path ? Path.GetDirectoryName(target.TrimEnd('\\')) : null;
-        void LogFailure(Exception failure) => Log.Warning(failure, "Browse dialog failed");
-        var picked = folder
-            ? PathPicker.TryPickFolder(Handle, "Choose a folder", LogFailure, start)
-            : PathPicker.TryPickFile(Handle, "Choose a file or app", LogFailure, start);
-        if (picked is not null) TargetBox.Text = picked; // checked by TextChanged
+        WhenReachable(start, reachable =>
+        {
+            void LogFailure(Exception failure) => Log.Warning(failure, "Browse dialog failed");
+            var picked = folder
+                ? PathPicker.TryPickFolder(Handle, "Choose a folder", LogFailure, reachable)
+                : PathPicker.TryPickFile(Handle, "Choose a file or program", LogFailure, reachable);
+            if (picked is not null) TargetBox.Text = picked; // checked by TextChanged
+        });
+    }
+
+    /// <summary>"An app…" (M19 §1): Start's All apps; the name box takes the app's name when it is empty.</summary>
+    private void PickApp()
+    {
+        var picker = new AppPickerWindow(_iconLoader) { Owner = this };
+        if (picker.ShowDialog() != true || picker.Chosen is not { } app) return;
+        TargetBox.Text = ItemKinds.AppTarget(app.AppId);
+        if (string.IsNullOrWhiteSpace(NameBox.Text)) NameBox.Text = app.Name;
     }
 
     /// <summary>Windows' icon picker, opening at the item's icon file, else its target (an .exe or .dll offers its own icons).</summary>
@@ -105,8 +119,31 @@ public partial class ItemPropertiesWindow : Window
     {
         var target = CurrentTarget;
         var start = _icon?.File ?? (target is not null && Path.GetExtension(target).ToLowerInvariant() is ".exe" or ".dll" or ".ico" ? target : null);
-        if (IconPicker.TryPick(Handle, start, _icon?.Index ?? 0) is not { } chosen) return;
-        SetIcon(new ItemIcon { File = chosen.File, Index = chosen.Index }, picture: null);
+        WhenReachable(start, reachable =>
+        {
+            if (IconPicker.TryPick(Handle, reachable, _icon?.Index ?? 0) is not { } chosen) return;
+            SetIcon(new ItemIcon { File = chosen.File, Index = chosen.Index }, picture: null);
+        });
+    }
+
+    /// <summary>
+    /// A dialog's start place is checked off the UI thread first (M19 R2): Windows' pickers parse it on the UI thread, and a
+    /// dead share would freeze the window. Not reachable within 2 s: the dialog opens at Windows' default place.
+    /// </summary>
+    private void WhenReachable(string? path, Action<string?> open)
+    {
+        if (path is null || TargetChecks.RootOf(path) is null)
+        {
+            open(path);
+            return;
+        }
+        IsEnabled = false; // no second click while the check runs (at most 2 s)
+        Task.Run(() => TargetProbe.Check(path).State == TargetState.Ok).ContinueWith(checking =>
+        {
+            IsEnabled = true;
+            if (!checking.Result) Log.Information("{Path} did not answer; the dialog opens at its default place", path);
+            open(checking.Result ? path : null);
+        }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     private void PickPicture()
@@ -166,13 +203,15 @@ public partial class ItemPropertiesWindow : Window
             return;
         }
         var kind = ItemKinds.Of(target);
-        if (kind != ItemKind.Path)
+        var isApp = ItemKinds.IsApp(target);
+        if (kind != ItemKind.Path && !isApp)
         {
+            _checkNumber++; // an older path check still running must not overwrite this
             ShowStatus(kind == ItemKind.Website ? "A website: opens in your browser." : "A Windows item.", takesArguments: false);
             return;
         }
         var number = ++_checkNumber;
-        ShowStatus("Checking…", takesArguments: true);
+        ShowStatus("Checking…", takesArguments: !isApp, checking: true);
         Task.Run(() => TargetProbe.Check(target)).ContinueWith(checking =>
         {
             if (number != _checkNumber) return;
@@ -180,19 +219,23 @@ public partial class ItemPropertiesWindow : Window
             _isFolder = check.IsFolder;
             ShowStatus(check.State switch
             {
+                TargetState.Missing when isApp => "● Not installed: Windows no longer has this app.",
                 TargetState.Missing => "● Missing: nothing is there now.",
                 TargetState.Unavailable => TargetChecks.IsNetworkPath(target) ? "● Network location not reachable." : "● Drive not connected.",
+                _ when isApp => "● Found (an app).",
                 _ when TargetChecks.RootOf(target) is null => "Opens through Windows.",
                 _ => check.IsFolder ? "● Found (a folder)." : "● Found.",
             }, takesArguments: ItemKinds.TakesArguments(kind, check.IsFolder));
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
-    private void ShowStatus(string text, bool takesArguments)
+    /// <param name="checking">A check is running: OK waits for it (M19 R6), at most 2 s, so the folder answer it saves is this target's.</param>
+    private void ShowStatus(string text, bool takesArguments, bool checking = false)
     {
         TargetStatus.Text = text;
         ArgumentsBox.IsEnabled = takesArguments;
         AdminBox.IsEnabled = takesArguments;
+        OkButton.IsEnabled = !checking;
     }
 
     private void Accept()

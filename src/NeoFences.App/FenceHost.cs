@@ -77,6 +77,7 @@ public sealed partial class FenceHost
     private const int TrayTakeSnapshot = 7, TrayRestoreMenu = 8, TrayRestoreBefore = 9, TrayRestoreFirst = 100, TrayRestoreCount = 10;
     private const int TrayNewLibrary = 11; // M12
     private const int TraySnapshotsSettings = 12; // M13c: "More in Settings…" opens the Snapshots card
+    private const int TrayAddFromDesktop = 14; // M19 §3 (13 is TrayRestartToUpdate)
     private SettingsWindow? _settingsWindow; // M6b: one at a time
 
     public event Action? ExitRequested;
@@ -253,6 +254,7 @@ public sealed partial class FenceHost
         window.RemoveRequested += keys => RemoveItems(window, keys);
         window.PropertiesRequested += (key, focusName) => ShowProperties(window, key, focusName);
         window.AddItemRequested += () => AddItem(window);
+        window.AddFromDesktopRequested += ShowDesktopFill;
         window.RefreshRequested += () => RefreshFence(window);
         window.DrivesChanged += OnDrivesChanged;
         window.NewLibraryRequested += CreateLibraryFence;
@@ -475,6 +477,7 @@ public sealed partial class FenceHost
         SaveNow();
         SyncBoxes(); // closes the window when its box is gone
         UpdateWatching();
+        ForgetGoneTargets();
     }
 
     private void OnThemeChanged()
@@ -1153,7 +1156,7 @@ public sealed partial class FenceHost
         if (beforeRestore is not null)
         {
             if (restoreItems.Count > 0) restoreItems.Add(TrayMenuItem.Separator); // never a separator first (M13c)
-            restoreItems.Add(new TrayMenuItem(TrayRestoreBefore, "Undo the last restore"));
+            restoreItems.Add(new TrayMenuItem(TrayRestoreBefore, "Undo the last restore or fix")); // a bulk fix shares the slot (M19 §2)
         }
         if (restoreItems.Count > 0) restoreItems.Add(TrayMenuItem.Separator);
         restoreItems.Add(new TrayMenuItem(TraySnapshotsSettings, "More in Settings…"));
@@ -1162,6 +1165,7 @@ public sealed partial class FenceHost
             .. UpdateTrayItems(), // M17: "Restart to update to v…" first while an update waits
             new TrayMenuItem(TrayNewFence, "New fence", Enabled: !_paused),
             new TrayMenuItem(TrayNewLibrary, "New Game Library fence", Enabled: !_paused),
+            new TrayMenuItem(TrayAddFromDesktop, "Add from desktop…", Enabled: !_paused),
             new TrayMenuItem(TrayQuickHide, "Quick-hide", Checked: _quickHidden, Enabled: !_paused),
             new TrayMenuItem(TrayPeek, $"Peek\t{PeekHotkeyDisplay}", Checked: _peeking, Enabled: !_paused),
             TrayMenuItem.Separator,
@@ -1180,6 +1184,10 @@ public sealed partial class FenceHost
                 CreateFence();
                 break;
             case TrayNewLibrary: CreateLibraryFence(); break;
+            case TrayAddFromDesktop:
+                SetQuickHidden(false); // the new items must be seen landing
+                ShowDesktopFill();
+                break;
             case TrayQuickHide: SetQuickHidden(!_quickHidden); break;
             case TrayPeek: SetPeek(!_peeking); break;
             case TrayPause: SetPaused(!_paused); break;
