@@ -29,6 +29,7 @@ public sealed partial class FenceHost
     private readonly List<(string OldPath, string NewPath)> _seenRenames = []; // settled once quiet, or after a game (final review C1)
     private DispatcherTimer? _folderChangeTimer, _recheckTimer, _drivesTimer, _renameTimer;
     private bool _checksDeferred, _watchingStopped;
+    private int _renamesSettling; // settles still running off the UI thread: folder-change checks wait for them
     private int _checkBatch; // numbers each batch of checks: an older batch finishing late never overwrites a newer answer (final review I6)
     private readonly Dictionary<string, int> _checkBatchOf = new(ItemKinds.Comparer);
 
@@ -134,7 +135,7 @@ public sealed partial class FenceHost
             _folderChangeTimer.Tick += (_, _) =>
             {
                 // A rename still settling: check after it, or the renamed target flashes Missing first (M18 live check AD14).
-                if (_seenRenames.Count > 0 || _renameTimer?.IsEnabled == true) return;
+                if (_seenRenames.Count > 0 || _renameTimer?.IsEnabled == true || _renamesSettling > 0) return;
                 _folderChangeTimer.Stop();
                 var targets = ItemEdits.PathTargets(_items).Where(target => WatchPlan.ParentOf(target) is { } parent && _changedFolders.Contains(parent)).ToList();
                 _changedFolders.Clear();
@@ -173,9 +174,11 @@ public sealed partial class FenceHost
         if (_seenRenames.Count == 0) return;
         var seen = _seenRenames.ToList();
         _seenRenames.Clear();
+        _renamesSettling++;
         Task.Run(() => Renames.Settle(seen, TargetProbe.Exists)).ContinueWith(settled =>
         {
-            if (_watchingStopped) return;
+            _renamesSettling--;
+            if (_watchingStopped || settled.IsFaulted) return;
             foreach (var (oldPath, newPath) in settled.Result) FollowRename(oldPath, newPath);
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
