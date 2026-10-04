@@ -3,9 +3,9 @@ using NeoFences.Core.Model;
 namespace NeoFences.Core.Config;
 
 /// <summary>
-/// Repairs a loaded (possibly hand-edited) config without losing items: exactly one Inbox, unique fence
-/// ids, no nulls, supported icon sizes and enum values, each desktop item in at most one fence, no items on
-/// portal fences, the Inbox always a desktop fence, and layouts free of null or non-finite entries.
+/// Repairs a loaded (possibly hand-edited) config: unique fence ids, no nulls, supported icon sizes and enum values, at
+/// most one Game Library fence, consistent tabs, and layouts free of null or non-finite entries. Items are items.json's
+/// (ItemEdits.Repair).
 /// </summary>
 public static class ConfigNormalizer
 {
@@ -24,50 +24,32 @@ public static class ConfigNormalizer
         };
 
         var seenFenceIds = new HashSet<string>(StringComparer.Ordinal);
-        var seenItems = new HashSet<string>(ItemRef.Comparer);
-        var inboxFound = false;
         var libraryFound = false; // M12: at most one Game Library fence
         var fences = new List<Fence>();
 
         foreach (var loadedFence in config.Fences ?? [])
         {
             if (loadedFence is null) continue;
-            var isInbox = loadedFence.IsInbox && !inboxFound;
-            var source = loadedFence.Source is { } loadedSource && Enum.IsDefined(loadedSource.Kind) ? loadedSource : FenceSource.Desktop;
-            if (source.Kind == FenceSourceKind.Library && (libraryFound || loadedFence.IsInbox)) source = FenceSource.Desktop;
-            libraryFound |= source.Kind == FenceSourceKind.Library;
             var fence = loadedFence with
             {
                 Id = string.IsNullOrWhiteSpace(loadedFence.Id) || !seenFenceIds.Add(loadedFence.Id) ? Fence.NewId() : loadedFence.Id,
                 Title = loadedFence.Title ?? "",
-                Source = isInbox ? FenceSource.Desktop : source,
-                IsInbox = isInbox,
-                Sort = Enum.IsDefined(loadedFence.Sort) ? loadedFence.Sort : FenceSort.Manual,
+                IsLibrary = loadedFence.IsLibrary && !libraryFound,
                 Labels = Enum.IsDefined(loadedFence.Labels) ? loadedFence.Labels : LabelMode.Always, // a hand-edited number (M8b review)
                 Tabs = loadedFence.Tabs ?? [], // a hand-edited "tabs": null (M9 final review)
                 IconSize = IconSizes.Contains(loadedFence.IconSize) ? loadedFence.IconSize : 48,
                 CustomColor = Appearance.Argb.FromHex(loadedFence.CustomColor)?.ToHex(), // M14: a broken colour is none
             };
             seenFenceIds.Add(fence.Id);
-            inboxFound |= fence.IsInbox;
-
-            var items = fence.Source.Kind == FenceSourceKind.Desktop
-                ? (loadedFence.Items ?? []).Where(itemRef => !string.IsNullOrWhiteSpace(itemRef) && seenItems.Add(itemRef)).ToList()
-                : [];
-            fences.Add(fence with { Items = items });
-        }
-
-        if (!inboxFound)
-        {
-            fences.Insert(0, Fence.Create("Inbox") with { IsInbox = true });
+            libraryFound |= fence.IsLibrary;
+            fences.Add(fence);
         }
 
         return config with
         {
-            SchemaVersion = NeoFencesConfig.CurrentSchemaVersion, // an older file is saved in today's format (M13a)
+            SchemaVersion = NeoFencesConfig.CurrentSchemaVersion,
             Settings = settings,
             Fences = FenceTabs.Repair(fences), // M9: one consistent box per tab
-            Rules = UniqueIds((config.Rules ?? []).Where(rule => rule is not null).Select(Rules.Repair)), // M11: a broken rule is disabled
             Layouts = NormalizeLayouts(config.Layouts),
             Library = NormalizeLibrary(config.Library),
         };
@@ -89,13 +71,6 @@ public static class ConfigNormalizer
                 font?.Size is { } size && TitleFont.Sizes.Contains(size) ? size : defaults.TitleFont.Size,
                 font?.Weight is { } weight && Enum.IsDefined(weight) ? weight : defaults.TitleFont.Weight),
         };
-    }
-
-    /// <summary>A rule block copied in a hand edit keeps its id: the copies get new ones, or one action would hit all (M13a).</summary>
-    private static List<Rule> UniqueIds(IEnumerable<Rule> rules)
-    {
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        return rules.Select(rule => seen.Add(rule.Id) ? rule : rule with { Id = Guid.NewGuid().ToString("N") }).ToList();
     }
 
     private static LibrarySettings NormalizeLibrary(LibrarySettings? library) => new()

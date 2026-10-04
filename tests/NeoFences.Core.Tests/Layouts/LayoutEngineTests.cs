@@ -14,7 +14,7 @@ public class LayoutEngineTests
     {
         var games = Fence.Create("Games");
         var config = NeoFencesConfig.CreateDefault();
-        return (config with { Fences = [config.Inbox, games] }, games);
+        return (config with { Fences = [config.Fences[0], games] }, games);
     }
 
     private static NeoFencesConfig WithSavedLayout(NeoFencesConfig config, string fingerprint, Layout layout) =>
@@ -35,7 +35,7 @@ public class LayoutEngineTests
 
         var (resolved, layout) = LayoutEngine.Resolve(config, [Lg, Dell4K]);
 
-        Assert.Equal(new FenceRect("DELL", 24, 24, 320, 220), layout.Fences[config.Inbox.Id]);
+        Assert.Equal(new FenceRect("DELL", 24, 24, 320, 220), layout.Fences[config.Fences[0].Id]);
         // M5 smart placement: beside the Inbox with an 8 DIP gap, never stacked on top of it (the old cascade overlapped).
         Assert.Equal(new FenceRect("DELL", 352, 24, 320, 220), layout.Fences[games.Id]);
         Assert.Equal("2mon:DELL-3840x2160@150%+LG-1920x1080@100%", resolved.LastLayoutFingerprint);
@@ -51,7 +51,7 @@ public class LayoutEngineTests
             Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(2560, 1400), ["LG"] = new(1920, 1032) },
             Fences = new Dictionary<string, FenceRect>
             {
-                [config.Inbox.Id] = new("LG", 100, 200, 400, 300),
+                [config.Fences[0].Id] = new("LG", 100, 200, 400, 300),
                 [games.Id] = new("DELL", 1000, 500, 420, 260),
             },
         };
@@ -59,7 +59,7 @@ public class LayoutEngineTests
 
         var (_, layout) = LayoutEngine.Resolve(config, [Dell4K, Lg]);
 
-        Assert.Equal(saved.Fences[config.Inbox.Id], layout.Fences[config.Inbox.Id]);
+        Assert.Equal(saved.Fences[config.Fences[0].Id], layout.Fences[config.Fences[0].Id]);
         Assert.Equal(saved.Fences[games.Id], layout.Fences[games.Id]);
     }
 
@@ -73,14 +73,14 @@ public class LayoutEngineTests
             Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(2560, 1400) },
             Fences = new Dictionary<string, FenceRect>
             {
-                [config.Inbox.Id] = new("DELL", 0, 0, 640, 350),
+                [config.Fences[0].Id] = new("DELL", 0, 0, 640, 350),
                 [games.Id] = new("DELL", 1280, 700, 512, 280),
             },
         });
 
         var (resolved, layout) = LayoutEngine.Resolve(config, [Dell1080]);
 
-        Assert.Equal(new FenceRect("DELL", 0, 0, 320, 175), layout.Fences[config.Inbox.Id]);
+        Assert.Equal(new FenceRect("DELL", 0, 0, 320, 175), layout.Fences[config.Fences[0].Id]);
         Assert.Equal(new FenceRect("DELL", 640, 350, 256, 140), layout.Fences[games.Id]);
         Assert.True(resolved.Layouts.ContainsKey(fourKFingerprint)); // going back to 4K restores the original
 
@@ -116,7 +116,7 @@ public class LayoutEngineTests
             Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(2560, 1400) },
             Fences = new Dictionary<string, FenceRect>
             {
-                [config.Inbox.Id] = new("DELL", 500, 500, 300, 200),
+                [config.Fences[0].Id] = new("DELL", 500, 500, 300, 200),
                 ["deleted-fence"] = new("DELL", 0, 0, 300, 200),
             },
         });
@@ -124,7 +124,7 @@ public class LayoutEngineTests
         var (_, layout) = LayoutEngine.Resolve(config, [Dell4K]);
 
         Assert.False(layout.Fences.ContainsKey("deleted-fence"));
-        Assert.Equal(new FenceRect("DELL", 500, 500, 300, 200), layout.Fences[config.Inbox.Id]);
+        Assert.Equal(new FenceRect("DELL", 500, 500, 300, 200), layout.Fences[config.Fences[0].Id]);
         Assert.Equal(new FenceRect("DELL", 24, 24, 320, 220), layout.Fences[games.Id]);
     }
 
@@ -204,7 +204,7 @@ public class LayoutEngineTests
         var updated = LayoutEngine.WithFenceRect(resolved, fingerprint: resolved.LastLayoutFingerprint!, fenceId: games.Id, rect: moved);
 
         Assert.Equal(moved, updated.Layouts[resolved.LastLayoutFingerprint!].Fences[games.Id]);
-        Assert.Equal(resolved.Layouts[resolved.LastLayoutFingerprint!].Fences[config.Inbox.Id], updated.Layouts[resolved.LastLayoutFingerprint!].Fences[config.Inbox.Id]);
+        Assert.Equal(resolved.Layouts[resolved.LastLayoutFingerprint!].Fences[config.Fences[0].Id], updated.Layouts[resolved.LastLayoutFingerprint!].Fences[config.Fences[0].Id]);
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public class LayoutEngineTests
             Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(1280, 700) },
             Fences = new Dictionary<string, FenceRect>
             {
-                [config.Inbox.Id] = new("DELL", 24, 24, 1232, 220), // the whole top row
+                [config.Fences[0].Id] = new("DELL", 24, 24, 1232, 220), // the whole top row
             },
         });
 
@@ -234,7 +234,7 @@ public class LayoutEngineTests
         config = WithSavedLayout(config, fingerprint, new Layout
         {
             Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(1280, 700) },
-            Fences = new Dictionary<string, FenceRect> { [config.Inbox.Id] = new("DELL", 0, 0, 1280, 700) },
+            Fences = new Dictionary<string, FenceRect> { [config.Fences[0].Id] = new("DELL", 0, 0, 1280, 700) },
         });
 
         var (_, layout) = LayoutEngine.Resolve(config, [Dell1080]);
@@ -254,11 +254,11 @@ public class LayoutEngineTests
         {
             Layouts = new Dictionary<string, Layout>
             {
-                [fourK] = new() { Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(2560, 1400) }, Fences = new Dictionary<string, FenceRect> { [config.Inbox.Id] = new("DELL", 0, 0, 640, 350) } },
+                [fourK] = new() { Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(2560, 1400) }, Fences = new Dictionary<string, FenceRect> { [config.Fences[0].Id] = new("DELL", 0, 0, 640, 350) } },
                 [fullHd] = new()
                 {
                     Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(1280, 700) },
-                    Fences = new Dictionary<string, FenceRect> { [config.Inbox.Id] = new("DELL", 0, 0, 320, 175), [games.Id] = new("DELL", 640, 350, 256, 140) },
+                    Fences = new Dictionary<string, FenceRect> { [config.Fences[0].Id] = new("DELL", 0, 0, 320, 175), [games.Id] = new("DELL", 640, 350, 256, 140) },
                 },
             },
             LastLayoutFingerprint = fullHd,
@@ -267,7 +267,7 @@ public class LayoutEngineTests
         var (resolved, layout) = LayoutEngine.Resolve(config, [Dell4K]);
 
         Assert.Equal(new FenceRect("DELL", 1280, 700, 512, 280), layout.Fences[games.Id]); // scaled ×2 from the 1080p layout
-        Assert.Equal(new FenceRect("DELL", 0, 0, 640, 350), layout.Fences[config.Inbox.Id]); // the known rect stays exact
+        Assert.Equal(new FenceRect("DELL", 0, 0, 640, 350), layout.Fences[config.Fences[0].Id]); // the known rect stays exact
         Assert.Equal(new FenceRect("DELL", 1280, 700, 512, 280), resolved.Layouts[fourK].Fences[games.Id]);
     }
 

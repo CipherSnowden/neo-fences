@@ -248,17 +248,17 @@ public class GameLibraryTests
     public void Config_LibrarySettingsDefaults_AndOneLibraryFenceAtMost()
     {
         var config = ConfigNormalizer.Normalize(ConfigJson.Deserialize("""
-            { "schemaVersion": 1,
-              "fences": [ { "id": "a", "title": "Games", "source": { "kind": "library" } },
-                          { "id": "b", "title": "Games 2", "source": { "kind": "library" } } ],
+            { "schemaVersion": 5,
+              "fences": [ { "id": "a", "title": "Games", "isLibrary": true },
+                          { "id": "b", "title": "Games 2", "isLibrary": true } ],
               "library": { "folders": null, "hidden": [ "steam:431960" ] } }
             """));
 
-        Assert.Equal([FenceSourceKind.Library, FenceSourceKind.Desktop], config.Fences.Where(fence => !fence.IsInbox).Select(fence => fence.Source.Kind));
+        Assert.Equal([true, false], config.Fences.Select(fence => fence.IsLibrary));
         Assert.Empty(config.Library.Folders);
         Assert.True(config.Library.Sources.Steam && config.Library.Sources.DesktopShortcuts);
         Assert.Equal(["steam:431960"], config.Library.Hidden);
-        Assert.Contains("\"kind\": \"library\"", ConfigJson.Serialize(config));
-        Assert.Empty(ConfigNormalizer.Normalize(ConfigJson.Deserialize("""{ "schemaVersion": 1, "fences": [] }""")).Library.Hidden);
+        Assert.Contains("\"isLibrary\": true", ConfigJson.Serialize(config));
+        Assert.Empty(ConfigNormalizer.Normalize(ConfigJson.Deserialize("""{ "schemaVersion": 5, "fences": [] }""")).Library.Hidden);
     }
 }

@@ -4,7 +4,7 @@ namespace NeoFences.Core.Model;
 public sealed record ItemInfo(string ItemRef, string Name, bool IsFolder, string TypeName, DateTimeOffset Modified);
 
 /// <summary>
-/// Item order for Portals (live) and for "Sort by" on desktop fences (one time). Name and Type put folders first, like
+/// Item order for "Sort by" (one time) and the library's listing. Name and Type put folders first, like
 /// Explorer; Date is newest first with folders mixed in, so the latest file is always on top (user choice 2026-10-03).
 /// </summary>
 public static class ItemSorting

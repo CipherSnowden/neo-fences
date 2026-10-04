@@ -203,7 +203,7 @@ public class AppearanceTests
     [Fact]
     public void Edits_ASwatchClearsTheCustomColour()
     {
-        var config = new NeoFencesConfig { Fences = [Fence.Create("Inbox") with { IsInbox = true }, Plain] };
+        var config = new NeoFencesConfig { Fences = [Fence.Create("Inbox"), Plain] };
 
         var custom = FenceEdits.SetCustomColor(config, Plain.Id, "#e84855");
         Assert.Equal("#E84855", custom.Fences[1].CustomColor);

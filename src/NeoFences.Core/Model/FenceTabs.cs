@@ -6,8 +6,8 @@ namespace NeoFences.Core.Model;
 public enum TabColor { Red, Orange, Yellow, Green, Teal, Blue, Purple, Pink }
 
 /// <summary>
-/// Fence tabs (M9, spec 2026-10-03-fence-tabs-design): fences combined into one box. Every tab stays a full fence (items,
-/// source, sort, icon size, labels). The host — the fence whose <see cref="Fence.Tabs"/> lists two or more ids, itself
+/// Fence tabs (M9, spec 2026-10-03-fence-tabs-design): fences combined into one box. Every tab stays a full fence (its own
+/// items, icon size, labels). The host — the fence whose <see cref="Fence.Tabs"/> lists two or more ids, itself
 /// included — owns the box: its window, its placement in every layout, roll-up and lock. Members have no placement.
 /// Every edit returns a new config; nothing changes items or files.
 /// </summary>

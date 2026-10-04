@@ -6,7 +6,7 @@ public class FenceEditsTests
 {
     private static (NeoFencesConfig Config, Fence Games) Sample()
     {
-        var inbox = Fence.Create("Inbox") with { IsInbox = true };
+        var inbox = Fence.Create("Inbox");
         var games = Fence.Create("Games");
         return (new NeoFencesConfig { Fences = [inbox, games] }, games);
     }

@@ -1,11 +1,12 @@
 using NeoFences.Core.Config;
+using NeoFences.Core.Items;
 using NeoFences.Core.Layouts;
 using NeoFences.Core.Model;
 using NeoFences.Core.Tests.TestSupport;
 
 namespace NeoFences.Core.Tests.Model;
 
-/// <summary>Snapshots (M10, spec 2026-10-03-snapshots-design): save an arrangement by name, restore it later.</summary>
+/// <summary>Snapshots (M10, spec 2026-10-03-snapshots-design; M18: with the virtual items): save an arrangement, restore it later.</summary>
 public class SnapshotsTests
 {
     private const string Desktop = @"C:\Users\cipher\Desktop\";
@@ -13,47 +14,53 @@ public class SnapshotsTests
     private static readonly DateTimeOffset Taken = new(2026, 10, 3, 22, 45, 10, TimeSpan.FromHours(5.5));
     private static readonly FenceRect Box = new("mon", 100, 100, 320, 220);
 
-    private static (NeoFencesConfig Config, Fence Inbox, Fence Games, Fence Tools) Sample()
+    private static VirtualItem Item(string id, string target, string? name = null) => new() { Id = id, Target = target, Name = name };
+
+    private static (NeoFencesConfig Config, ItemsDocument Items, Fence Notes, Fence Games, Fence Tools) Sample()
     {
-        var inbox = Fence.Create("Inbox") with { IsInbox = true, Items = [Desktop + "notes.txt"] };
-        var games = Fence.Create("Games") with { Items = [Desktop + "a.lnk", Desktop + "b.lnk"], IconSize = 64 };
-        var tools = Fence.Create("Tools") with { Items = [Desktop + "t.lnk"], TabColor = TabColor.Blue };
+        var notes = Fence.Create("Notes");
+        var games = Fence.Create("Games") with { IconSize = 64 };
+        var tools = Fence.Create("Tools") with { TabColor = TabColor.Blue };
         var layout = new Layout
         {
             Monitors = new Dictionary<string, MonitorArea> { ["mon"] = new(1920, 1040) },
-            Fences = new Dictionary<string, FenceRect> { [inbox.Id] = Box with { X = 1000 }, [games.Id] = Box, [tools.Id] = Box with { X = 500 } },
+            Fences = new Dictionary<string, FenceRect> { [notes.Id] = Box with { X = 1000 }, [games.Id] = Box, [tools.Id] = Box with { X = 500 } },
         };
         var config = new NeoFencesConfig
         {
             Settings = new Settings { PeekHotkey = "Ctrl+Alt+P" },
-            Fences = [inbox, games, tools],
+            Fences = [notes, games, tools],
             Layouts = new Dictionary<string, Layout> { [Setup] = layout },
             LastLayoutFingerprint = Setup,
         };
-        return (config, inbox, games, tools);
+        var items = new ItemsDocument()
+            .With(notes.Id, [Item("n", Desktop + "notes.txt")])
+            .With(games.Id, [Item("a", Desktop + "a.lnk", name: "Alpha"), Item("b", Desktop + "b.lnk")])
+            .With(tools.Id, [Item("t", Desktop + "t.lnk")]);
+        return (config, items, notes, games, tools);
     }
 
     private static Fence Get(NeoFencesConfig config, Fence fence) => config.Fences.Single(candidate => candidate.Id == fence.Id);
 
-    private static string[] DesktopOf(NeoFencesConfig config) =>
-        config.Fences.SelectMany(fence => fence.Items).ToArray();
+    private static string[] Ids(ItemsDocument items, Fence fence) => [.. items.Of(fence.Id).Select(item => item.Id)];
 
     [Fact]
-    public void TakeThenRestore_BringsBackFencesPlacesAndIcons()
+    public void TakeThenRestore_BringsBackFencesPlacesAndItems()
     {
-        var (config, inbox, games, tools) = Sample();
-        var snapshot = Snapshots.Take(config, name: "Clean desk", now: Taken);
+        var (config, items, notes, games, tools) = Sample();
+        var snapshot = Snapshots.Take(config, items, name: "Clean desk", now: Taken);
 
-        // Shuffled: Tools merged into Games as a tab, b.lnk moved to the Inbox, Games moved and resized.
+        // Shuffled: Tools merged into Games as a tab, b moved to Notes, a renamed, Games moved and resized.
         var shuffled = FenceTabs.Merge(config, movingFenceId: tools.Id, targetFenceId: games.Id);
-        shuffled = shuffled.WithFence(Get(shuffled, games) with { Items = [Desktop + "a.lnk"] })
-                           .WithFence(Get(shuffled, inbox) with { Items = [Desktop + "notes.txt", Desktop + "b.lnk"] });
         shuffled = LayoutEngine.WithFenceRect(shuffled, Setup, games.Id, Box with { X = 1400, W = 500 });
+        var shuffledItems = ItemEdits.Move(items, ["b"], notes.Id, insertAt: 1);
+        shuffledItems = ItemEdits.Replace(shuffledItems, Item("a", Desktop + "a.lnk", name: "Renamed"));
 
-        var restored = Snapshots.Restore(shuffled, snapshot, desktopNow: DesktopOf(config));
+        var (restored, restoredItems) = Snapshots.Restore(shuffled, snapshot);
 
-        Assert.Equal([Desktop + "a.lnk", Desktop + "b.lnk"], Get(restored, games).Items);
-        Assert.Equal([Desktop + "notes.txt"], Get(restored, inbox).Items);
+        Assert.Equal(["a", "b"], Ids(restoredItems, games));
+        Assert.Equal(["n"], Ids(restoredItems, notes));
+        Assert.Equal("Alpha", restoredItems.Find("a")!.Name);
         Assert.Empty(Get(restored, games).Tabs); // the tab merge is undone
         Assert.Equal(TabColor.Blue, Get(restored, tools).TabColor);
         Assert.Equal(64, Get(restored, games).IconSize);
@@ -62,29 +69,27 @@ public class SnapshotsTests
     }
 
     [Fact]
-    public void Restore_DropsDeletedIcons_AndKeepsNewOnesWhereTheyAre()
+    public void Restore_FencesMadeAfterTheSnapshotGo_WithTheirItems()
     {
-        var (config, inbox, games, tools) = Sample();
-        var snapshot = Snapshots.Take(config, name: "Clean desk", now: Taken);
-        // Since then: b.lnk deleted; new.lnk appeared in Tools; drop.zip appeared in a fence made after the snapshot.
-        var later = Fence.Create("Later") with { Items = [Desktop + "drop.zip"] };
+        var (config, items, _, games, _) = Sample();
+        var snapshot = Snapshots.Take(config, items, name: "Clean desk", now: Taken);
+        var later = Fence.Create("Later");
         var now = config with { Fences = [.. config.Fences, later] };
-        now = now.WithFence(Get(now, tools) with { Items = [Desktop + "t.lnk", Desktop + "new.lnk"] });
-        string[] desktopNow = [Desktop + "notes.txt", Desktop + "a.lnk", Desktop + "t.lnk", Desktop + "new.lnk", Desktop + "drop.zip"];
+        var nowItems = items.With(later.Id, [Item("z", Desktop + "drop.zip")]);
 
-        var restored = Snapshots.Restore(now, snapshot, desktopNow);
+        var (restored, restoredItems) = Snapshots.Restore(now, snapshot);
 
-        Assert.Equal([Desktop + "a.lnk"], Get(restored, games).Items); // b.lnk is gone
-        Assert.Equal([Desktop + "t.lnk", Desktop + "new.lnk"], Get(restored, tools).Items); // stays in its surviving fence
-        Assert.DoesNotContain(restored.Fences, fence => fence.Id == later.Id); // made after the snapshot
-        Assert.Equal([Desktop + "notes.txt", Desktop + "drop.zip"], Get(restored, inbox).Items); // its fence is gone: Inbox
+        Assert.DoesNotContain(restored.Fences, fence => fence.Id == later.Id);
+        Assert.Null(restoredItems.Find("z"));
+        Assert.Equal(["a", "b"], Ids(restoredItems, games));
+        Assert.Single(nowItems.Of(later.Id)); // the current document itself is untouched
     }
 
     [Fact]
     public void Restore_KeepsSettingsAndOtherSetups()
     {
-        var (config, _, games, _) = Sample();
-        var snapshot = Snapshots.Take(config, name: "Clean desk", now: Taken);
+        var (config, items, _, games, _) = Sample();
+        var snapshot = Snapshots.Take(config, items, name: "Clean desk", now: Taken);
         var otherSetup = new Layout { Monitors = new Dictionary<string, MonitorArea> { ["dock"] = new(2560, 1400) },
             Fences = new Dictionary<string, FenceRect> { [games.Id] = new("dock", 10, 10, 300, 200) } };
         var now = config with
@@ -94,7 +99,7 @@ public class SnapshotsTests
             LastLayoutFingerprint = "2mon:dock",
         };
 
-        var restored = Snapshots.Restore(now, snapshot, desktopNow: DesktopOf(config));
+        var (restored, _) = Snapshots.Restore(now, snapshot);
 
         Assert.Equal("Alt+F9", restored.Settings.PeekHotkey);
         Assert.Equal("2mon:dock", restored.LastLayoutFingerprint);
@@ -103,16 +108,24 @@ public class SnapshotsTests
     }
 
     [Fact]
-    public void Restore_ADamagedSnapshotWithoutAnInbox_StillHasOne()
+    public void Restore_ADamagedSnapshot_DropsItemsOfFencesItDoesNotHave_AndRepairsIds()
     {
-        var (config, _, games, _) = Sample();
-        var snapshot = Snapshots.Take(config, name: "x", now: Taken) with { Fences = [Get(config, games)] };
+        var (config, items, _, games, _) = Sample();
+        var snapshot = Snapshots.Take(config, items, name: "x", now: Taken) with
+        {
+            Fences = [Get(config, games)],
+            Items = new Dictionary<string, IReadOnlyList<VirtualItem>>
+            {
+                [games.Id] = [Item("same", Desktop + "a.lnk"), Item("same", Desktop + "b.lnk")],
+                ["gone"] = [Item("g", Desktop + "g.lnk")],
+            },
+        };
 
-        var restored = Snapshots.Restore(config, snapshot, desktopNow: DesktopOf(config));
+        var (restored, restoredItems) = Snapshots.Restore(config, snapshot);
 
-        Assert.Single(restored.Fences, fence => fence.IsInbox);
-        Assert.Contains(Desktop + "notes.txt", restored.Inbox.Items);
-        Assert.Contains(Desktop + "t.lnk", restored.Inbox.Items); // Tools is not in this snapshot
+        Assert.Equal(games.Id, Assert.Single(restored.Fences).Id);
+        Assert.Equal(2, restoredItems.Of(games.Id).Select(item => item.Id).Distinct().Count());
+        Assert.Equal([games.Id], restoredItems.Fences.Keys);
     }
 
     [Fact]
@@ -120,17 +133,18 @@ public class SnapshotsTests
     {
         using var folder = new TempDirectory();
         var store = new SnapshotStore(folder.Path);
-        var (config, _, games, _) = Sample();
+        var (config, items, _, games, _) = Sample();
 
-        var older = store.Save(Snapshots.Take(config, name: "Older", now: Taken));
-        var newer = store.Save(Snapshots.Take(config, name: "Newer", now: Taken.AddMinutes(5)));
-        var sameSecond = store.Save(Snapshots.Take(config, name: "Same second", now: Taken.AddMinutes(5)));
+        var older = store.Save(Snapshots.Take(config, items, name: "Older", now: Taken));
+        var newer = store.Save(Snapshots.Take(config, items, name: "Newer", now: Taken.AddMinutes(5)));
+        var sameSecond = store.Save(Snapshots.Take(config, items, name: "Same second", now: Taken.AddMinutes(5)));
 
         Assert.NotNull(older);
         Assert.NotEqual(newer, sameSecond); // two in the same second get different files
         Assert.Equal(3, store.List().Count);
         Assert.Equal("Older", store.List()[^1].Name); // newest first
         Assert.Equal(64, store.Load(older!)!.Fences.Single(fence => fence.Id == games.Id).IconSize);
+        Assert.Equal("Alpha", store.Load(older!)!.Items[games.Id][0].Name);
 
         Assert.True(store.Rename(older!, "Clean desk"));
         Assert.Equal("Clean desk", store.Load(older!)!.Name);
@@ -142,8 +156,8 @@ public class SnapshotsTests
     {
         using var folder = new TempDirectory();
         var store = new SnapshotStore(folder.Path);
-        var (config, _, _, _) = Sample();
-        store.Save(Snapshots.Take(config, name: "Good", now: Taken));
+        var (config, items, _, _, _) = Sample();
+        store.Save(Snapshots.Take(config, items, name: "Good", now: Taken));
         File.WriteAllText(folder.File("snapshot-broken.json"), "{ not json");
         File.WriteAllText(folder.File("snapshot-half.json.tmp"), "{ \"name\": \"Half");
 
@@ -159,10 +173,10 @@ public class SnapshotsTests
     {
         using var folder = new TempDirectory();
         var store = new SnapshotStore(folder.Path);
-        var (config, _, _, _) = Sample();
+        var (config, items, _, _, _) = Sample();
 
-        store.Save(Snapshots.Take(config, name: "Before restore 1", now: Taken), SnapshotStore.BeforeRestoreFileName);
-        store.Save(Snapshots.Take(config, name: "Before restore 2", now: Taken.AddMinutes(1)), SnapshotStore.BeforeRestoreFileName);
+        store.Save(Snapshots.Take(config, items, name: "Before restore 1", now: Taken), SnapshotStore.BeforeRestoreFileName);
+        store.Save(Snapshots.Take(config, items, name: "Before restore 2", now: Taken.AddMinutes(1)), SnapshotStore.BeforeRestoreFileName);
 
         Assert.Equal(["Before restore 2"], store.List().Select(entry => entry.Name));
         Assert.True(store.List()[0].IsBeforeRestore);
@@ -173,11 +187,11 @@ public class SnapshotsTests
     {
         using var folder = new TempDirectory();
         var store = new SnapshotStore(folder.Path);
-        var (config, _, _, _) = Sample();
-        var path = store.Save(Snapshots.Take(config, name: "Before restore 1", now: Taken), SnapshotStore.BeforeRestoreFileName)!;
+        var (config, items, _, _, _) = Sample();
+        var path = store.Save(Snapshots.Take(config, items, name: "Before restore 1", now: Taken), SnapshotStore.BeforeRestoreFileName)!;
 
         Assert.True(store.Rename(path, "Good layout"));
-        store.Save(Snapshots.Take(config, name: "Before restore 2", now: Taken.AddMinutes(1)), SnapshotStore.BeforeRestoreFileName);
+        store.Save(Snapshots.Take(config, items, name: "Before restore 2", now: Taken.AddMinutes(1)), SnapshotStore.BeforeRestoreFileName);
 
         // final review I4: the renamed one is kept, not overwritten by the next restore
         Assert.Equal([("Before restore 2", true), ("Good layout", false)], store.List().Select(entry => (entry.Name, entry.IsBeforeRestore)));

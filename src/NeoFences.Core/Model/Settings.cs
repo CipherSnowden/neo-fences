@@ -4,10 +4,11 @@ public enum RollupExpand { Hover, Click }
 
 public sealed record Settings
 {
-    /// <summary>Hide native desktop icons and show them in fences. Off by default until the M2 sign-out test passes (ADR-011).</summary>
-    public bool Takeover { get; init; }
-    /// <summary>The user answered the one-time "hide desktop icons?" banner in the Inbox (M2b first run).</summary>
-    public bool TakeoverPromptAnswered { get; init; }
+    /// <summary>
+    /// "Hide desktop icons while NeoFences runs" (M18, off by default): Windows' own setting, shown again on exit, crash and
+    /// Task Manager kill (the watchdog, hard rule 2).
+    /// </summary>
+    public bool HideDesktopIcons { get; init; }
     public string PeekHotkey { get; init; } = "Ctrl+Alt+Space";
     public bool StartWithWindows { get; init; } = true;
     public bool GameMode { get; init; } = true;

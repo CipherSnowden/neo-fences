@@ -5,22 +5,19 @@ namespace NeoFences.Core.Tests.Model;
 public class NeoFencesConfigTests
 {
     [Fact]
-    public void Default_HasExactlyOneEmptyInbox()
+    public void Default_HasExactlyOneOrdinaryFence()
     {
-        var config = NeoFencesConfig.CreateDefault();
-
-        var inbox = Assert.Single(config.Fences);
-        Assert.True(inbox.IsInbox);
-        Assert.Equal("Inbox", inbox.Title);
-        Assert.Empty(inbox.Items);
-        Assert.Same(inbox, config.Inbox);
+        // First run (M18 spec §5): one empty fence; its hint says how to fill it. No Inbox, no auto-fill.
+        var fence = Assert.Single(NeoFencesConfig.CreateDefault().Fences);
+        Assert.Equal("Fence", fence.Title);
+        Assert.False(fence.IsLibrary);
     }
 
     [Fact]
-    public void Default_TakeoverIsOff_UntilSignOutTestPasses()
+    public void Default_KeepsTheDesktopIconsVisible()
     {
-        // ADR-011: Takeover must not ship enabled by default until C8 passes.
-        Assert.False(NeoFencesConfig.CreateDefault().Settings.Takeover);
+        // ADR-040: native desktop icons stay visible unless the user switches "Hide desktop icons" on.
+        Assert.False(NeoFencesConfig.CreateDefault().Settings.HideDesktopIcons);
     }
 
     [Fact]
@@ -44,18 +41,11 @@ public class NeoFencesConfigTests
     public void WithFence_ReplacesByIdAndKeepsOrder()
     {
         var games = Fence.Create("Games");
-        var config = NeoFencesConfig.CreateDefault() with { Fences = [NeoFencesConfig.CreateDefault().Inbox, games] };
+        var config = NeoFencesConfig.CreateDefault() with { Fences = [Fence.Create("Tools"), games] };
 
         var updated = config.WithFence(games with { Title = "Games 2" });
 
-        Assert.Equal(["Inbox", "Games 2"], updated.Fences.Select(fence => fence.Title));
+        Assert.Equal(["Tools", "Games 2"], updated.Fences.Select(fence => fence.Title));
         Assert.Equal("Games", config.Fences[1].Title); // original untouched
-    }
-
-    [Fact]
-    public void Default_TakeoverPromptNotAnsweredYet()
-    {
-        // M2b first run: the Inbox asks once whether to hide desktop icons (user decision 2026-10-02).
-        Assert.False(NeoFencesConfig.CreateDefault().Settings.TakeoverPromptAnswered);
     }
 }

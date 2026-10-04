@@ -93,7 +93,7 @@ public class RollUpTests
     public void SetRolledUp_IsStored_AndUnrollRestores()
     {
         var games = Fence.Create("Games");
-        var config = new NeoFencesConfig { Fences = [Fence.Create("Inbox") with { IsInbox = true }, games] };
+        var config = new NeoFencesConfig { Fences = [Fence.Create("Inbox"), games] };
 
         var rolled = FenceEdits.SetRolledUp(config, games.Id, rolledUp: true);
 

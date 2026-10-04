@@ -1,5 +1,4 @@
 using NeoFences.Core.Config;
-using NeoFences.Core.Membership;
 using NeoFences.Core.Model;
 
 namespace NeoFences.Core.Tests.Model;
@@ -10,7 +9,7 @@ public class LabelsTests
     private static (NeoFencesConfig Config, Fence Games) Sample()
     {
         var games = Fence.Create("Games");
-        return (new NeoFencesConfig { Fences = [Fence.Create("Inbox") with { IsInbox = true }, games] }, games);
+        return (new NeoFencesConfig { Fences = [Fence.Create("Inbox"), games] }, games);
     }
 
     [Fact]
@@ -38,7 +37,7 @@ public class LabelsTests
         var (config, games) = Sample();
         var changed = FenceEdits.SetLabels(config, games.Id, LabelMode.OnHover);
         Assert.Equal(LabelMode.OnHover, changed.Fences.Single(fence => fence.Id == games.Id).Labels);
-        Assert.Equal(LabelMode.Always, changed.Inbox.Labels);
+        Assert.Equal(LabelMode.Always, changed.Fences[0].Labels);
     }
 
     [Fact]
@@ -51,12 +50,11 @@ public class LabelsTests
     }
 
     [Fact]
-    public void NewFencesAndPortals_TakeTheDefault()
+    public void NewFences_TakeTheDefault()
     {
         var (config, _) = Sample();
         config = config with { Settings = config.Settings with { DefaultLabels = LabelMode.OnHover } };
-        Assert.Equal(LabelMode.OnHover, FenceMembership.CreateFence(config, "Tools").Fence.Labels);
-        Assert.Equal(LabelMode.OnHover, FenceMembership.CreatePortal(config, title: "Shots", folderPath: @"D:\Shots").Fence.Labels);
+        Assert.Equal(LabelMode.OnHover, FenceEdits.CreateFence(config, "Tools").Fence.Labels);
     }
 
     [Fact]

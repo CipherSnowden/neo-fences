@@ -1,7 +1,7 @@
 namespace NeoFences.Core.Lifecycle;
 
 /// <summary>
-/// Start with Windows (ADR-019, refined by ADR-023). Takeover's hidden desktop icons survive a hard power loss (Explorer
+/// Start with Windows (ADR-019, refined by ADR-023). Desktop icons NeoFences hid survive a hard power loss (Explorer
 /// persists them), so NeoFences has to come back at sign-in by itself to show fences, or the desktop is empty.
 /// </summary>
 public static class StartupPolicy

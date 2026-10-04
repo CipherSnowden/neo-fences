@@ -2,7 +2,7 @@ using NeoFences.Core.Config;
 
 namespace NeoFences.Core.Model;
 
-/// <summary>Changes to one fence's own settings (title, icon size, lock). Pure: each returns a new config.</summary>
+/// <summary>Changes to fences (title, icon size, lock, new, delete). Pure: each returns a new config; none touches a file.</summary>
 public static class FenceEdits
 {
     public const int MaxTitleLength = 64;
@@ -53,22 +53,23 @@ public static class FenceEdits
             Settings = config.Settings with { DefaultLabels = labels },
         };
 
-    public static NeoFencesConfig SetSort(NeoFencesConfig config, string fenceId, FenceSort sort) =>
-        config.WithFence(Require(config, fenceId) with { Sort = sort });
+    /// <summary>A new empty fence (fence menu, tray, or one drawn on the desktop), with the default labels.</summary>
+    public static (NeoFencesConfig Config, Fence Fence) CreateFence(NeoFencesConfig config, string title)
+    {
+        var fence = Fence.Create(title) with { Labels = config.Settings.DefaultLabels };
+        return (config with { Fences = [.. config.Fences, fence] }, fence);
+    }
 
     /// <summary>
-    /// "Sort by" on a desktop fence: a one-time reorder (dragging still works afterwards). The new order must hold exactly
-    /// the fence's items (compared ignoring case; the stored spelling is kept), so a sort can never drop or add an item.
+    /// Deletes a fence (a tab leaves its box first; a host hands the box to the next tab, M9). Its items go with it from
+    /// items.json; their targets are never touched (hard rule 1).
     /// </summary>
-    /// <exception cref="ArgumentException">The order is not a permutation of the fence's items.</exception>
-    public static NeoFencesConfig SetItemOrder(NeoFencesConfig config, string fenceId, IReadOnlyList<string> orderedRefs)
+    /// <exception cref="ArgumentException">No fence with that id.</exception>
+    public static NeoFencesConfig DeleteFence(NeoFencesConfig config, string fenceId)
     {
-        var fence = Require(config, fenceId);
-        var spelling = fence.Items.ToDictionary(itemRef => itemRef, ItemRef.Comparer);
-        if (orderedRefs.Count != fence.Items.Count || orderedRefs.Distinct(ItemRef.Comparer).Count() != orderedRefs.Count
-            || !orderedRefs.All(spelling.ContainsKey))
-            throw new ArgumentException("The new order must contain exactly the fence's items.", nameof(orderedRefs));
-        return config.WithFence(fence with { Items = orderedRefs.Select(itemRef => spelling[itemRef]).ToList() });
+        Require(config, fenceId);
+        config = FenceTabs.Leave(config, fenceId);
+        return config with { Fences = config.Fences.Where(fence => fence.Id != fenceId).ToList() };
     }
 
     private static Fence Require(NeoFencesConfig config, string fenceId) =>

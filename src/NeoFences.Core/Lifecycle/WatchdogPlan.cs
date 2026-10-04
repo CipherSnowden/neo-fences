@@ -15,10 +15,10 @@ public sealed record WatchdogPlan(bool RestoreIcons, WatchdogRestart Restart)
 {
     /// <param name="cleanShutdown">Main wrote <c>clean-shutdown-&lt;pid&gt;</c> (orderly exit).</param>
     /// <param name="sessionEnding">Main wrote <c>session-ending-&lt;pid&gt;</c> (Windows asked to end the session).</param>
-    /// <param name="takeoverActive"><c>takeover-active</c> exists: the icons may still be hidden.</param>
-    public static WatchdogPlan For(bool cleanShutdown, bool sessionEnding, bool takeoverActive) => new(
+    /// <param name="iconsHidden"><c>icons-hidden</c> exists: NeoFences may have left the icons hidden.</param>
+    public static WatchdogPlan For(bool cleanShutdown, bool sessionEnding, bool iconsHidden) => new(
         // Restoring is idempotent, so it never depends on how main exited: a marker alone must not leave icons hidden.
-        RestoreIcons: takeoverActive,
+        RestoreIcons: iconsHidden,
         Restart: cleanShutdown ? WatchdogRestart.Never
             : sessionEnding ? WatchdogRestart.IfSessionContinues
             : WatchdogRestart.Throttled);

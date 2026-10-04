@@ -19,11 +19,8 @@ public static class ConfigJson
         // Hand-edited file, never embedded in HTML: write + and & as-is instead of + and &.
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        // Rule enums first (M11 final review I3): an unknown name in a hand-edited rule disables that rule, never the file.
         Converters =
         {
-            new LenientEnumConverter<RuleKind>(), new LenientEnumConverter<TypeGroup>(), new LenientEnumConverter<GameLauncher>(),
-            new LenientEnumConverter<RuleCompare>(),
             // Appearance enums (M14): a hand-edited style or weight is repaired by the normalizer, never fails the file.
             new LenientEnumConverter<ColourStyle>(), new LenientEnumConverter<TitleWeight>(),
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
@@ -38,6 +35,13 @@ public static class ConfigJson
     /// <exception cref="JsonException">The text is not a snapshot document.</exception>
     public static Snapshot DeserializeSnapshot(string json) =>
         JsonSerializer.Deserialize<Snapshot>(json, Options) ?? throw new JsonException("the snapshot file contains null");
+
+    /// <summary>items.json (M18, ADR-041): the same names and leniency as config.json.</summary>
+    public static string SerializeItems(Items.ItemsDocument document) => JsonSerializer.Serialize(document, Options);
+
+    /// <exception cref="JsonException">The text is not an items document.</exception>
+    public static Items.ItemsDocument DeserializeItems(string json) =>
+        JsonSerializer.Deserialize<Items.ItemsDocument>(json, Options) ?? throw new JsonException("items.json contains null");
 
     /// <summary>The library folder's index (M12): the same names and enums as config.json.</summary>
     public static string SerializeLibrary(Library.LibraryState state) => JsonSerializer.Serialize(state, Options);
@@ -54,8 +58,8 @@ public static class ConfigJson
 }
 
 /// <summary>
-/// A camelCase enum that reads an unknown name (or anything else odd) as an undefined value instead of failing, so
-/// <see cref="Rules.Repair"/> can disable the rule (M11 final review I3). Undefined values are written as numbers.
+/// A camelCase enum that reads an unknown name (or anything else odd) as an undefined value instead of failing, so the
+/// normalizer can repair it (M11 final review I3, M14). Undefined values are written as numbers.
 /// </summary>
 internal sealed class LenientEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
 {

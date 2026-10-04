@@ -1,4 +1,5 @@
 using NeoFences.Core.Config;
+using NeoFences.Core.Items;
 using NeoFences.Core.Library;
 using NeoFences.Core.Model;
 using NeoFences.Core.Tests.TestSupport;
@@ -7,7 +8,7 @@ namespace NeoFences.Core.Tests.Config;
 
 /// <summary>
 /// M13a (v1.6.0) data safety: carry-overs from the M9–M12 reviews — the schema version, snapshots from newer versions,
-/// duplicate rule ids, the library index after failed writes, and the M10 test gaps.
+/// the library index after failed writes, and the M10 test gaps (M18: with virtual items).
 /// </summary>
 public class DataSafetyTests : IDisposable
 {
@@ -17,10 +18,10 @@ public class DataSafetyTests : IDisposable
 
     public void Dispose() => _directory.Dispose();
 
-    // ---------- schema version (M9 carry-over: an older build would save over tabs, rules and the library) ----------
+    // ---------- schema version (M9 carry-over: an older build would save over newer fields) ----------
 
     [Fact]
-    public void Schema_IsCurrent_AndAnOldConfigIsUpgradedWhenNormalized() // 2 in v1.6, 3 since v1.7 (M14)
+    public void Schema_IsCurrent_AndAnOldConfigIsUpgradedWhenNormalized()
     {
         var old = ConfigJson.Deserialize("""{ "schemaVersion": 1, "fences": [] }""");
         Assert.Equal(1, old.SchemaVersion);
@@ -28,7 +29,7 @@ public class DataSafetyTests : IDisposable
     }
 
     [Fact]
-    public void Schema_AVersionOneFileLoads_AndIsSavedAsCurrent_WhileANewerFileIsNeverOverwritten()
+    public void Schema_AnOlderFileStartsFresh_AndIsSavedAsCurrent_WhileANewerFileIsNeverOverwritten()
     {
         var store = new ConfigStore(_directory.Path, new FixedTimeProvider(Taken));
         File.WriteAllText(store.ConfigPath, """{ "schemaVersion": 1, "fences": [ { "id": "a", "title": "Games" } ] }""");
@@ -44,25 +45,12 @@ public class DataSafetyTests : IDisposable
         Assert.False(newer.Save(NeoFencesConfig.CreateDefault()));
     }
 
-    // ---------- rules (M11 carry-over) ----------
-
-    [Fact]
-    public void Rules_DuplicateIdsGetNewOnes_TheFirstKeepsItsId()
-    {
-        var images = Rule.Create(new RuleCondition { Kind = RuleKind.Type, Group = TypeGroup.Images }, "fence") with { Id = "same" };
-        var config = ConfigNormalizer.Normalize(new NeoFencesConfig { Rules = [images, images with { FenceId = "other" }, images] });
-
-        Assert.Equal("same", config.Rules[0].Id);
-        Assert.Equal(3, config.Rules.Select(rule => rule.Id).Distinct().Count());
-    }
-
     // ---------- snapshots (M10 carry-overs and test gaps) ----------
 
-    private static NeoFencesConfig Sample(out Fence inbox, out Fence games)
+    private static (NeoFencesConfig Config, ItemsDocument Items) Sample()
     {
-        inbox = Fence.Create("Inbox") with { IsInbox = true, Items = [Desktop + "a.txt"] };
-        games = Fence.Create("Games") with { Items = [Desktop + "Game.lnk"] };
-        return new NeoFencesConfig { Fences = [inbox, games] };
+        var games = Fence.Create("Games");
+        return (new NeoFencesConfig { Fences = [games] }, new ItemsDocument().With(games.Id, [VirtualItem.Create(Desktop + "Game.lnk")]));
     }
 
     [Fact]
@@ -74,6 +62,19 @@ public class DataSafetyTests : IDisposable
 
         Assert.Null(store.Load(path)); // a rename would rewrite it without the fields this version does not know
         Assert.NotNull(store.LastFailure);
+        Assert.Empty(store.List());
+        Assert.Equal([path], store.Problems.Select(problem => problem.Path));
+    }
+
+    [Fact]
+    public void Snapshots_FromBeforeTheVirtualItemsAreRefused()
+    {
+        // M18: a schema-4 snapshot's fences held Desktop files; restoring it would bring back empty Inbox and Portal fences.
+        var store = new SnapshotStore(_directory.Path);
+        var path = Path.Combine(_directory.Path, "snapshot-old.json");
+        File.WriteAllText(path, """{ "schemaVersion": 4, "name": "Old", "takenAt": "2026-10-03T12:00:00+05:30", "fences": [ { "id": "i", "title": "Inbox", "isInbox": true } ] }""");
+
+        Assert.Null(store.Load(path));
         Assert.Empty(store.List());
         Assert.Equal([path], store.Problems.Select(problem => problem.Path));
     }
@@ -94,29 +95,11 @@ public class DataSafetyTests : IDisposable
     {
         var store = new SnapshotStore(_directory.Path);
         Directory.CreateDirectory(Path.Combine(_directory.Path, "blocked.json")); // a folder where the file should go
+        var (config, items) = Sample();
 
-        Assert.Null(store.Save(Snapshots.Take(Sample(out _, out _), name: "x", now: Taken), "blocked.json"));
+        Assert.Null(store.Save(Snapshots.Take(config, items, name: "x", now: Taken), "blocked.json"));
         Assert.NotNull(store.LastFailure);
         Assert.Empty(Directory.GetFiles(_directory.Path, "*.tmp"));
-    }
-
-    [Fact]
-    public void Snapshots_RestoreKeepsAPortal_MatchesRefsIgnoringCase_AndOrdersNewcomers()
-    {
-        var current = Sample(out var inbox, out var games);
-        var portal = Fence.Create("Downloads", FenceSource.Portal(@"D:\Downloads"));
-        var snapshot = Snapshots.Take(current with { Fences = [.. current.Fences, portal] }, name: "s", now: Taken);
-        // Since then: Game.lnk renamed in case only, a.txt moved by hand into Games, three new unfenced items.
-        current = current
-            .WithFence(inbox with { Items = [] })
-            .WithFence(games with { Items = [Desktop + "a.txt", Desktop + "new-in-games.txt"] });
-        string[] desktopNow = [Desktop + "z.txt", Desktop + "GAME.LNK", Desktop + "y.txt", Desktop + "a.txt", Desktop + "new-in-games.txt", Desktop + "x.txt"];
-
-        var restored = Snapshots.Restore(current, snapshot, desktopNow);
-
-        Assert.Empty(restored.Fences.Single(fence => fence.Title == "Downloads").Items);
-        Assert.Equal([Desktop + "Game.lnk", Desktop + "new-in-games.txt"], restored.Fences.Single(fence => fence.Id == games.Id).Items);
-        Assert.Equal([Desktop + "a.txt", Desktop + "z.txt", Desktop + "y.txt", Desktop + "x.txt"], restored.Inbox.Items); // the Desktop's order
     }
 
     [Fact]
@@ -124,14 +107,15 @@ public class DataSafetyTests : IDisposable
     {
         var store = new SnapshotStore(_directory.Path);
         var path = Path.Combine(_directory.Path, "nulls.json");
-        File.WriteAllText(path, """{ "schemaVersion": 1, "name": null, "takenAt": "2026-10-04T12:00:00+05:30", "fences": [ null, { "id": "g", "title": null, "items": null, "tabs": null } ], "layouts": null }""");
+        File.WriteAllText(path, """{ "schemaVersion": 5, "name": null, "takenAt": "2026-10-04T12:00:00+05:30", "fences": [ null, { "id": "g", "title": null, "tabs": null } ], "layouts": null, "items": { "g": [ null, { "id": "x", "target": "" } ] } }""");
 
         var snapshot = store.Load(path)!;
-        var restored = Snapshots.Restore(Sample(out _, out _), snapshot, [Desktop + "a.txt"]);
+        var (config, items) = Sample();
+        var (restored, restoredItems) = Snapshots.Restore(config, snapshot);
 
-        Assert.Single(restored.Fences, fence => fence.IsInbox);
-        Assert.Contains(restored.Fences, fence => fence.Id == "g");
-        Assert.Equal([Desktop + "a.txt"], restored.Fences.SelectMany(fence => fence.Items));
+        Assert.Equal("g", Assert.Single(restored.Fences).Id);
+        Assert.Empty(restoredItems.Of("g"));
+        Assert.Single(items.Fences); // the current document is untouched
     }
 
     // ---------- the Game Library index after failed writes (M12 carry-over) ----------

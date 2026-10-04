@@ -1,6 +1,5 @@
 using NeoFences.Core.Config;
 using NeoFences.Core.Layouts;
-using NeoFences.Core.Membership;
 using NeoFences.Core.Model;
 
 namespace NeoFences.Core.Tests.Model;
@@ -13,8 +12,8 @@ public class FenceTabsTests
 
     private static (NeoFencesConfig Config, Fence Inbox, Fence Games, Fence Tools, Fence Docs) Sample()
     {
-        var inbox = Fence.Create("Inbox") with { IsInbox = true };
-        var games = Fence.Create("Games") with { Items = [@"C:\Desktop\a.lnk"] };
+        var inbox = Fence.Create("Inbox");
+        var games = Fence.Create("Games");
         var tools = Fence.Create("Tools");
         var docs = Fence.Create("Docs");
         var layout = new Layout
@@ -51,7 +50,6 @@ public class FenceTabsTests
         Assert.True(Rects(merged).ContainsKey(games.Id));
         Assert.Equal(games.Id, FenceTabs.HostOf(merged, tools.Id).Id);
         Assert.True(FenceTabs.IsMember(merged, tools.Id));
-        Assert.Equal(Get(config, tools).Items, Get(merged, tools).Items); // items never move
     }
 
     [Fact]
@@ -208,13 +206,12 @@ public class FenceTabsTests
         config = FenceTabs.Merge(config, movingFenceId: tools.Id, targetFenceId: games.Id);
         config = FenceTabs.Merge(config, movingFenceId: docs.Id, targetFenceId: games.Id);
 
-        var memberGone = FenceMembership.DeleteFence(config, tools.Id);
+        var memberGone = FenceEdits.DeleteFence(config, tools.Id);
         Assert.Equal([games.Id, docs.Id], Get(memberGone, games).Tabs);
 
-        var hostGone = FenceMembership.DeleteFence(config, games.Id);
+        var hostGone = FenceEdits.DeleteFence(config, games.Id);
         Assert.Equal([tools.Id, docs.Id], Get(hostGone, tools).Tabs);
         Assert.Equal(Box, Rects(hostGone)[tools.Id]);
-        Assert.Contains(@"C:\Desktop\a.lnk", Get(hostGone, inbox).Items); // items go to the Inbox, as always
     }
 
     [Fact]

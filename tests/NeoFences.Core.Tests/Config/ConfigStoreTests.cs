@@ -13,8 +13,8 @@ public class ConfigStoreTests : IDisposable
 
     private ConfigStore NewStore() => new(_directory.Path, _clock);
 
-    private static NeoFencesConfig ConfigTitled(string inboxTitle) =>
-        NeoFencesConfig.CreateDefault() is var config ? config.WithFence(config.Inbox with { Title = inboxTitle }) : throw new InvalidOperationException();
+    private static NeoFencesConfig ConfigTitled(string title) =>
+        NeoFencesConfig.CreateDefault() is var config ? config.WithFence(config.Fences[0] with { Title = title }) : throw new InvalidOperationException();
 
     private string[] DailyBackupNames(ConfigStore store) =>
         Directory.GetFiles(store.BackupsDirectory).Select(Path.GetFileName).Order(StringComparer.Ordinal).ToArray()!;
@@ -28,7 +28,7 @@ public class ConfigStoreTests : IDisposable
 
         Assert.True(store.Save(ConfigTitled("First")));
 
-        Assert.Equal("First", ConfigJson.Deserialize(File.ReadAllText(store.ConfigPath)).Inbox.Title);
+        Assert.Equal("First", ConfigJson.Deserialize(File.ReadAllText(store.ConfigPath)).Fences[0].Title);
         Assert.Equal(["config-20261002.json"], DailyBackupNames(store));
         Assert.False(File.Exists(store.ConfigPath + ".tmp"));
         Assert.False(File.Exists(store.BackupPath));
@@ -42,8 +42,8 @@ public class ConfigStoreTests : IDisposable
 
         store.Save(ConfigTitled("Second"));
 
-        Assert.Equal("Second", ConfigJson.Deserialize(File.ReadAllText(store.ConfigPath)).Inbox.Title);
-        Assert.Equal("First", ConfigJson.Deserialize(File.ReadAllText(store.BackupPath)).Inbox.Title);
+        Assert.Equal("Second", ConfigJson.Deserialize(File.ReadAllText(store.ConfigPath)).Fences[0].Title);
+        Assert.Equal("First", ConfigJson.Deserialize(File.ReadAllText(store.BackupPath)).Fences[0].Title);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class ConfigStoreTests : IDisposable
         store.Save(ConfigTitled("Evening"));
 
         var daily = Path.Combine(store.BackupsDirectory, "config-20261002.json");
-        Assert.Equal("Morning", ConfigJson.Deserialize(File.ReadAllText(daily)).Inbox.Title);
+        Assert.Equal("Morning", ConfigJson.Deserialize(File.ReadAllText(daily)).Fences[0].Title);
     }
 
     [Fact]
@@ -112,19 +112,37 @@ public class ConfigStoreTests : IDisposable
         var result = NewStore().Load();
 
         Assert.Equal(ConfigLoadSource.Primary, result.Source);
-        Assert.Equal("Saved", result.Config.Inbox.Title);
+        Assert.Equal("Saved", result.Config.Fences[0].Title);
     }
 
     [Fact]
     public void Load_IsNormalized()
     {
         var store = NewStore();
-        File.WriteAllText(store.ConfigPath, """{ "schemaVersion": 1, "fences": [] }""");
+        File.WriteAllText(store.ConfigPath, """{ "schemaVersion": 5, "fences": [ { "id": "a", "title": "A", "iconSize": 7 } ] }""");
 
         var result = store.Load();
 
         Assert.Equal(ConfigLoadSource.Primary, result.Source);
-        Assert.True(Assert.Single(result.Config.Fences).IsInbox);
+        Assert.Equal(48, Assert.Single(result.Config.Fences).IconSize);
+    }
+
+    [Fact]
+    public void Load_ConfigFromBeforeTheVirtualItems_StartsFresh_AndTheFirstSaveKeepsTheOldFile()
+    {
+        // M18 spec §1: a schema-4 config (Inbox, Desktop membership, Portals) is not migrated.
+        var store = NewStore();
+        const string oldJson = """{ "schemaVersion": 4, "fences": [ { "id": "inbox", "title": "Inbox", "isInbox": true, "items": [ "a.txt" ] } ] }""";
+        File.WriteAllText(store.ConfigPath, oldJson);
+
+        var result = store.Load();
+        Assert.True(store.Save(result.Config));
+
+        Assert.Equal(ConfigLoadSource.Fresh, result.Source);
+        Assert.False(result.IsReadOnly);
+        Assert.Equal("Fence", Assert.Single(result.Config.Fences).Title);
+        Assert.Equal(oldJson, File.ReadAllText(Path.Combine(store.BackupsDirectory, "pre-schema-5-config.json")));
+        Assert.Equal(5, ConfigJson.Deserialize(File.ReadAllText(store.ConfigPath)).SchemaVersion);
     }
 
     [Fact]
@@ -138,7 +156,7 @@ public class ConfigStoreTests : IDisposable
         var result = NewStore().Load();
 
         Assert.Equal(ConfigLoadSource.Backup, result.Source);
-        Assert.Equal("Older", result.Config.Inbox.Title);
+        Assert.Equal("Older", result.Config.Fences[0].Title);
         Assert.Equal(_directory.File("config.corrupt-20261002-093000.json"), result.CorruptCopyPath);
         Assert.Equal("{ broken", File.ReadAllText(result.CorruptCopyPath!));
     }
@@ -157,7 +175,7 @@ public class ConfigStoreTests : IDisposable
         var result = NewStore().Load();
 
         Assert.Equal(ConfigLoadSource.DailyBackup, result.Source);
-        Assert.Equal("Day 1", result.Config.Inbox.Title);
+        Assert.Equal("Day 1", result.Config.Fences[0].Title);
     }
 
     [Fact]
@@ -205,7 +223,7 @@ public class ConfigStoreTests : IDisposable
         var saved = lockedStore.Save(result.Config);
 
         Assert.True(result.IsReadOnly);
-        Assert.Equal("Precious", result.Config.Inbox.Title); // from the daily backup
+        Assert.Equal("Precious", result.Config.Fences[0].Title); // from the daily backup
         Assert.False(saved);
         Assert.Equal(before, File.ReadAllText(store.ConfigPath));
     }
@@ -230,7 +248,7 @@ public class ConfigStoreTests : IDisposable
 
         Assert.True(store.Save(ConfigTitled("Saved")));
 
-        Assert.Equal("Saved", ConfigJson.Deserialize(File.ReadAllText(store.ConfigPath)).Inbox.Title);
+        Assert.Equal("Saved", ConfigJson.Deserialize(File.ReadAllText(store.ConfigPath)).Fences[0].Title);
         Assert.NotNull(store.LastBackupFailure);
     }
 

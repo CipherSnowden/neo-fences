@@ -8,14 +8,9 @@ public class ConfigJsonTests
 {
     private static NeoFencesConfig SampleConfig()
     {
-        var inbox = Fence.Create("Inbox") with { IsInbox = true, Items = [@"C:\Users\cipher\Desktop\notes.txt"] };
-        var games = Fence.Create("Games") with
-        {
-            Items = [@"C:\Users\cipher\Desktop\Crysis 2.lnk", "::{645FF040-5081-101B-9F08-00AA002F954E}"],
-            IconSize = 64,
-            RolledUp = true,
-        };
-        var screenshots = Fence.Create("Screenshots", FenceSource.Portal(@"D:\Pictures\Screenshots")) with { Sort = FenceSort.Date };
+        var tools = Fence.Create("Tools");
+        var games = Fence.Create("Games") with { IconSize = 64, RolledUp = true };
+        var library = Fence.Create("Library", isLibrary: true);
         var layout = new Layout
         {
             Monitors = new Dictionary<string, MonitorArea> { ["DELL"] = new(2560, 1392) },
@@ -23,7 +18,7 @@ public class ConfigJsonTests
         };
         return new NeoFencesConfig
         {
-            Fences = [inbox, games, screenshots],
+            Fences = [tools, games, library],
             Layouts = new Dictionary<string, Layout> { ["1mon:DELL-3840x2160@150%"] = layout },
             LastLayoutFingerprint = "1mon:DELL-3840x2160@150%",
         };
@@ -42,10 +37,7 @@ public class ConfigJsonTests
         Assert.Equal(original.Fences.Count, restored.Fences.Count);
         for (var fenceIdx = 0; fenceIdx < original.Fences.Count; fenceIdx++)
         {
-            var expected = original.Fences[fenceIdx];
-            var actual = restored.Fences[fenceIdx];
-            Assert.Equal(expected with { Items = [], Tabs = [] }, actual with { Items = [], Tabs = [] }); // lists compare by reference
-            Assert.Equal(expected.Items, actual.Items);
+            Assert.Equal(original.Fences[fenceIdx] with { Tabs = [] }, restored.Fences[fenceIdx] with { Tabs = [] }); // lists compare by reference
         }
         var restoredLayout = restored.Layouts["1mon:DELL-3840x2160@150%"];
         Assert.Equal(new MonitorArea(2560, 1392), restoredLayout.Monitors["DELL"]);
@@ -53,19 +45,16 @@ public class ConfigJsonTests
     }
 
     [Fact]
-    public void Json_UsesCamelCaseNamesAndEnumValues_AndOmitsComputedInbox()
+    public void Json_UsesCamelCaseNames_AndHoldsNoItems()
     {
         var json = ConfigJson.Serialize(SampleConfig());
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
 
         Assert.Equal(NeoFencesConfig.CurrentSchemaVersion, root.GetProperty("schemaVersion").GetInt32());
-        Assert.False(root.GetProperty("settings").GetProperty("takeover").GetBoolean());
-        Assert.False(root.TryGetProperty("inbox", out _));
-        var screenshots = root.GetProperty("fences")[2];
-        Assert.Equal("portal", screenshots.GetProperty("source").GetProperty("kind").GetString());
-        Assert.Equal(@"D:\Pictures\Screenshots", screenshots.GetProperty("source").GetProperty("path").GetString());
-        Assert.Equal("date", screenshots.GetProperty("sort").GetString());
+        Assert.False(root.GetProperty("settings").GetProperty("hideDesktopIcons").GetBoolean());
+        Assert.True(root.GetProperty("fences")[2].GetProperty("isLibrary").GetBoolean());
+        Assert.False(root.GetProperty("fences")[0].TryGetProperty("items", out _)); // items are items.json's (ADR-041)
         var rect = root.GetProperty("layouts").GetProperty("1mon:DELL-3840x2160@150%").GetProperty("fences").EnumerateObject().Single().Value;
         Assert.Equal("DELL", rect.GetProperty("monitor").GetString());
         Assert.Equal(420, rect.GetProperty("w").GetDouble());
@@ -74,7 +63,7 @@ public class ConfigJsonTests
     [Fact]
     public void Deserialize_AcceptsMinimalDocument()
     {
-        var config = ConfigJson.Deserialize("""{ "schemaVersion": 1 }""");
+        var config = ConfigJson.Deserialize("""{ "schemaVersion": 5 }""");
 
         Assert.Empty(config.Fences);
         Assert.Equal(new Settings(), config.Settings);
@@ -84,16 +73,30 @@ public class ConfigJsonTests
     public void Deserialize_MissingPropertiesKeepTheirDefaults()
     {
         var config = ConfigJson.Deserialize("""
-            { "schemaVersion": 1, "settings": { "takeover": true },
+            { "schemaVersion": 5, "settings": { "hideDesktopIcons": true },
               "fences": [ { "id": "f1", "title": "Games" } ] }
             """);
 
-        Assert.True(config.Settings.Takeover);
+        Assert.True(config.Settings.HideDesktopIcons);
         Assert.Equal("Ctrl+Alt+Space", config.Settings.PeekHotkey);
         var fence = Assert.Single(config.Fences);
         Assert.Equal(48, fence.IconSize);
-        Assert.Equal(FenceSource.Desktop, fence.Source);
-        Assert.Empty(fence.Items);
+        Assert.False(fence.IsLibrary);
+    }
+
+    [Fact]
+    public void Deserialize_IgnoresWhatOlderVersionsWrote()
+    {
+        // A pre-pivot file (schema 4): Inbox, Portal sources, rules, Takeover. Read without failing; ConfigStore then starts fresh.
+        var config = ConfigJson.Deserialize("""
+            { "schemaVersion": 4, "settings": { "takeover": true, "takeoverPromptAnswered": true },
+              "fences": [ { "id": "f1", "title": "Inbox", "isInbox": true, "items": [ "C:\\Users\\x\\Desktop\\a.txt" ] },
+                          { "id": "f2", "title": "Shots", "source": { "kind": "portal", "path": "D:\\Shots" }, "sort": "date" } ],
+              "rules": [ { "id": "r1", "fenceId": "f1", "condition": { "kind": "type" } } ] }
+            """);
+
+        Assert.Equal(["Inbox", "Shots"], config.Fences.Select(fence => fence.Title));
+        Assert.False(config.Settings.HideDesktopIcons);
     }
 
     [Theory]

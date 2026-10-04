@@ -7,32 +7,32 @@ public class WatchdogPlanTests
     [Fact]
     public void CleanExit_IconsShown_NothingToDo() =>
         Assert.Equal(new WatchdogPlan(RestoreIcons: false, Restart: WatchdogRestart.Never),
-            WatchdogPlan.For(cleanShutdown: true, sessionEnding: false, takeoverActive: false));
+            WatchdogPlan.For(cleanShutdown: true, sessionEnding: false, iconsHidden: false));
 
     [Fact]
     public void CleanExit_ButIconsStillMarkedHidden_RestoresAnyway()
     {
         // M2a review I1: a clean exit whose own restore failed (Explorer restarting) must not leave icons hidden.
         Assert.Equal(new WatchdogPlan(RestoreIcons: true, Restart: WatchdogRestart.Never),
-            WatchdogPlan.For(cleanShutdown: true, sessionEnding: false, takeoverActive: true));
+            WatchdogPlan.For(cleanShutdown: true, sessionEnding: false, iconsHidden: true));
     }
 
     [Fact]
     public void Crash_WithIconsHidden_RestoresAndRestarts() =>
         Assert.Equal(new WatchdogPlan(RestoreIcons: true, Restart: WatchdogRestart.Throttled),
-            WatchdogPlan.For(cleanShutdown: false, sessionEnding: false, takeoverActive: true));
+            WatchdogPlan.For(cleanShutdown: false, sessionEnding: false, iconsHidden: true));
 
     [Fact]
     public void Crash_WithoutTakeover_RestartsWithoutTouchingIcons() =>
         Assert.Equal(new WatchdogPlan(RestoreIcons: false, Restart: WatchdogRestart.Throttled),
-            WatchdogPlan.For(cleanShutdown: false, sessionEnding: false, takeoverActive: false));
+            WatchdogPlan.For(cleanShutdown: false, sessionEnding: false, iconsHidden: false));
 
     [Fact]
     public void SessionEnding_RestartsOnlyIfTheSessionContinues()
     {
         // ADR-013: WPF exits NeoFences on WM_QUERYENDSESSION; if the user then cancels the shutdown the watchdog brings it back.
         Assert.Equal(new WatchdogPlan(RestoreIcons: true, Restart: WatchdogRestart.IfSessionContinues),
-            WatchdogPlan.For(cleanShutdown: false, sessionEnding: true, takeoverActive: true));
+            WatchdogPlan.For(cleanShutdown: false, sessionEnding: true, iconsHidden: true));
     }
 }
 

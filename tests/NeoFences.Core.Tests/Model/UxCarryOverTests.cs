@@ -35,7 +35,7 @@ public class UxCarryOverTests
     {
         var first = Fence.Create("A");
         var second = Fence.Create("B");
-        var merged = FenceTabs.Merge(new NeoFencesConfig { Fences = [Fence.Create("Inbox") with { IsInbox = true }, first, second] }, second.Id, first.Id, wholeBox: false);
+        var merged = FenceTabs.Merge(new NeoFencesConfig { Fences = [Fence.Create("Inbox"), first, second] }, second.Id, first.Id, wholeBox: false);
 
         Assert.Same(merged, FenceTabs.Reorder(merged, second.Id, 1));
         var coloured = FenceTabs.SetColor(merged, second.Id, TabColor.Blue);

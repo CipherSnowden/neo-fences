@@ -13,7 +13,7 @@ public sealed record SnapshotEntry(string Path, string Name, DateTimeOffset Take
 /// <summary>
 /// Snapshot files (M10): one per snapshot in <c>%LOCALAPPDATA%\NeoFences\snapshots\</c>, written to a temp file and then
 /// swapped in, so a power cut never leaves half a snapshot. A damaged file is skipped and reported, never thrown.
-/// Deleting is the App's job (the Recycle Bin, hard rule 1).
+/// Deleting is the App's job (to the Recycle Bin).
 /// </summary>
 public sealed class SnapshotStore(string directory)
 {
@@ -69,7 +69,7 @@ public sealed class SnapshotStore(string directory)
         {
             System.IO.Directory.CreateDirectory(directory);
             var path = System.IO.Path.Combine(directory, fileName ?? NewFileName(snapshot.TakenAt));
-            WriteSafely(path, ConfigJson.SerializeSnapshot(snapshot));
+            SafeFile.Write(path, ConfigJson.SerializeSnapshot(snapshot), backupPath: null);
             LastFailure = null;
             return path;
         }
@@ -94,14 +94,16 @@ public sealed class SnapshotStore(string directory)
         }
     }
 
-    /// <exception cref="InvalidDataException">Too big, or written by a newer NeoFences (M13a): restoring or renaming it
-    /// here would drop what this version does not know.</exception>
+    /// <exception cref="InvalidDataException">Too big; written by a newer NeoFences (M13a: restoring or renaming it here would
+    /// drop what this version does not know); or from before the virtual items (M18: its fences held Desktop files).</exception>
     private static Snapshot Read(string path)
     {
         if (new FileInfo(path).Length > MaxFileBytes) throw new InvalidDataException($"{path} is too big for a snapshot");
         var snapshot = ConfigJson.DeserializeSnapshot(File.ReadAllText(path));
         if (snapshot.SchemaVersion > NeoFencesConfig.CurrentSchemaVersion)
             throw new InvalidDataException($"{path} comes from a newer NeoFences (schema {snapshot.SchemaVersion})");
+        if (snapshot.SchemaVersion < ConfigStore.FirstVirtualItemsSchema)
+            throw new InvalidDataException($"{path} comes from before the virtual items (schema {snapshot.SchemaVersion})");
         return snapshot;
     }
 
@@ -135,27 +137,5 @@ public sealed class SnapshotStore(string directory)
         var name = stem + ".json";
         for (var counter = 2; File.Exists(System.IO.Path.Combine(directory, name)); counter++) name = $"{stem}-{counter}.json";
         return name;
-    }
-
-    private static void WriteSafely(string path, string json)
-    {
-        var temp = path + ".tmp";
-        try
-        {
-            using (var stream = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
-            using (var writer = new StreamWriter(stream))
-            {
-                writer.Write(json);
-                writer.Flush();
-                stream.Flush(flushToDisk: true);
-            }
-            if (File.Exists(path)) File.Replace(temp, path, destinationBackupFileName: null, ignoreMetadataErrors: true);
-            else File.Move(temp, path);
-        }
-        catch
-        {
-            if (File.Exists(temp)) File.Delete(temp); // no *.json.tmp left behind, also after a full disk (M13a, M13b); the caller reports the failure
-            throw;
-        }
     }
 }

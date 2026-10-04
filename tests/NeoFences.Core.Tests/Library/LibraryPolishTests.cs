@@ -56,7 +56,7 @@ public class LibraryPolishTests : IDisposable
     [InlineData(@"C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe com.epicgames.launcher://apps/fn?action=launch", GameLauncher.Epic)]
     [InlineData(@"C:\Tools\steam-helper.exe --profile steam", null)]
     public void LauncherOf_FindsALaunchersLinkInTheArguments(string target, GameLauncher? expected) =>
-        Assert.Equal(expected, Rules.LauncherOf(target));
+        Assert.Equal(expected, GameLaunchers.LauncherOf(target));
 
     // ---------- the status line names sources the way people do ----------
 

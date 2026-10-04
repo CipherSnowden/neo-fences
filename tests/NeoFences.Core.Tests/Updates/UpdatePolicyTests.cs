@@ -44,13 +44,13 @@ public class UpdatePolicyTests
     }
 
     [Fact]
-    public void Config_AutoUpdateIsOnByDefault_SchemaFour_AndSurvivesARoundTrip()
+    public void Config_AutoUpdateIsOnByDefault_AndSurvivesARoundTrip()
     {
-        Assert.Equal(4, NeoFencesConfig.CurrentSchemaVersion);
+        Assert.Equal(5, NeoFencesConfig.CurrentSchemaVersion); // 4 brought the switch (M17); 5 the virtual items (M18)
         Assert.True(new Settings().AutoUpdate);
         var old = ConfigNormalizer.Normalize(ConfigJson.Deserialize("""{ "schemaVersion": 3, "fences": [] }"""));
         Assert.True(old.Settings.AutoUpdate);
-        Assert.Equal(4, old.SchemaVersion);
+        Assert.Equal(5, old.SchemaVersion);
         var off = old with { Settings = old.Settings with { AutoUpdate = false } };
         Assert.False(ConfigNormalizer.Normalize(ConfigJson.Deserialize(ConfigJson.Serialize(off))).Settings.AutoUpdate);
     }

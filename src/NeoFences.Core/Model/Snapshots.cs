@@ -1,10 +1,11 @@
 using NeoFences.Core.Config;
+using NeoFences.Core.Items;
 
 namespace NeoFences.Core.Model;
 
 /// <summary>
-/// A saved arrangement (M10, spec 2026-10-03-snapshots-design): every fence with every field (items, tabs, colours,
-/// roll-up, lock) and every monitor setup's places. No Settings, no files. Stored as a file of its own.
+/// A saved arrangement (M10, spec 2026-10-03-snapshots-design): every fence with every field (tabs, colours, roll-up,
+/// lock), every fence's virtual items (M18) and every monitor setup's places. No Settings, no files. Stored as a file of its own.
 /// </summary>
 public sealed record Snapshot
 {
@@ -14,9 +15,12 @@ public sealed record Snapshot
     public IReadOnlyList<Fence> Fences { get; init; } = [];
     public IReadOnlyDictionary<string, Layout> Layouts { get; init; } = new Dictionary<string, Layout>();
     public string? LastLayoutFingerprint { get; init; }
+
+    /// <summary>Every fence's items (M18), as in items.json.</summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<VirtualItem>> Items { get; init; } = new Dictionary<string, IReadOnlyList<VirtualItem>>();
 }
 
-/// <summary>Taking and restoring snapshots (M10). Pure: the App supplies the desktop listing and saves the result.</summary>
+/// <summary>Taking and restoring snapshots (M10). Pure: the App saves the result.</summary>
 public static class Snapshots
 {
     private const int MenuLabelLength = 60;
@@ -37,52 +41,29 @@ public static class Snapshots
         return clean.Replace("&", "&&");
     }
 
-    public static Snapshot Take(NeoFencesConfig config, string name, DateTimeOffset now) => new()
+    public static Snapshot Take(NeoFencesConfig config, ItemsDocument items, string name, DateTimeOffset now) => new()
     {
         Name = name,
         TakenAt = now,
         Fences = config.Fences,
         Layouts = config.Layouts,
         LastLayoutFingerprint = config.LastLayoutFingerprint,
+        Items = items.Fences,
     };
 
     /// <summary>
-    /// The arrangement of <paramref name="snapshot"/> applied to <paramref name="current"/> (spec §3): the snapshot's fences
-    /// and places; its icons back where they were if still on the desktop (<paramref name="desktopNow"/>); icons it does
-    /// not know stay in their current fence when that fence survives, else go to the Inbox; Settings and setups the
-    /// snapshot never saw stay as they are.
+    /// The arrangement of <paramref name="snapshot"/> applied to <paramref name="current"/> (spec §3; M18: items as saved):
+    /// the snapshot's fences, places and items; Settings and setups the snapshot never saw stay as they are. Items of
+    /// fences the snapshot does not have are dropped (a damaged or hand-edited file).
     /// </summary>
-    public static NeoFencesConfig Restore(NeoFencesConfig current, Snapshot snapshot, IEnumerable<string> desktopNow)
+    public static (NeoFencesConfig Config, ItemsDocument Items) Restore(NeoFencesConfig current, Snapshot snapshot)
     {
-        var desktop = desktopNow.ToList(); // the Desktop's own order for newcomers (M13a: not a HashSet's order)
-        var present = desktop.ToHashSet(ItemRef.Comparer);
-        // The snapshot file may be damaged or hand-edited: the normalizer gives it one Inbox, no duplicates, sane tabs.
+        // The snapshot file may be damaged or hand-edited: the normalizer gives it unique ids and sane tabs.
         var saved = ConfigNormalizer.Normalize(new NeoFencesConfig { Fences = snapshot.Fences, Layouts = snapshot.Layouts });
-        var fences = saved.Fences
-            .Select(fence => fence.Source.Kind == FenceSourceKind.Desktop ? fence with { Items = fence.Items.Where(present.Contains).ToList() } : fence)
-            .ToList();
-        var placed = fences.SelectMany(fence => fence.Items).ToHashSet(ItemRef.Comparer);
-        var desktopFenceIds = fences.Where(fence => fence.Source.Kind == FenceSourceKind.Desktop).Select(fence => fence.Id).ToHashSet(StringComparer.Ordinal);
-        var inboxId = fences.First(fence => fence.IsInbox).Id;
-
-        // Newer icons, in their current order: their fence if it survives, else the Inbox; unfenced ones to the Inbox too.
-        var arrivals = new List<(string FenceId, string ItemRef)>();
-        foreach (var fence in current.Fences.Where(fence => fence.Source.Kind == FenceSourceKind.Desktop))
-        {
-            foreach (var itemRef in fence.Items.Where(itemRef => present.Contains(itemRef) && placed.Add(itemRef)))
-            {
-                arrivals.Add((desktopFenceIds.Contains(fence.Id) ? fence.Id : inboxId, itemRef));
-            }
-        }
-        arrivals.AddRange(desktop.Where(placed.Add).Select(itemRef => (inboxId, itemRef)));
-        fences = fences.Select(fence =>
-        {
-            var joining = arrivals.Where(arrival => arrival.FenceId == fence.Id).Select(arrival => arrival.ItemRef).ToList();
-            return joining.Count == 0 ? fence : fence with { Items = [.. fence.Items, .. joining] };
-        }).ToList();
-
         var layouts = new Dictionary<string, Layout>(current.Layouts);
         foreach (var (fingerprint, layout) in saved.Layouts) layouts[fingerprint] = layout;
-        return ConfigNormalizer.Normalize(current with { Fences = fences, Layouts = layouts });
+        var config = ConfigNormalizer.Normalize(current with { Fences = saved.Fences, Layouts = layouts });
+        var items = ItemEdits.Repair(new ItemsDocument { Fences = snapshot.Items ?? new Dictionary<string, IReadOnlyList<VirtualItem>>() });
+        return (config, ItemEdits.Prune(items, config.Fences.Select(fence => fence.Id).ToHashSet(StringComparer.Ordinal)));
     }
 }
