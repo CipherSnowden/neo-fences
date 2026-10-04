@@ -14,7 +14,9 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 |---|---|---|---|---|---|
 | Fences holding desktop icons (Takeover) | 1+ | — | M2 | parked | ADR-040: fences hold virtual items instead; the desktop stays as Windows shows it |
 | Virtual items: own name, icon, path, arguments, run as admin, note | — | 0.9 | M18 | done | ADR-040/041; Properties dialog; the same target in several fences |
-| Add item… (file, folder, app, website) | — | 0.9 | M18 | done | fence menu; Browse or a typed path / web address |
+| Add item… (file, folder, app, website) | — | 0.9 | M18 | done | fence menu; Browse or a typed path / web address; "An app…" lists Start's apps (0.10) |
+| Store / Start apps as items | — | 0.10 | M19 | done | `shell:AppsFolder\<id>`: from the app list or dragged from Start; Missing when uninstalled (ADR-042) |
+| Add from desktop… | — | 0.10 | M19 | done | fence menu or tray: desktop entries grouped (Games / Apps / Folders and files / Web links), each group into a fence; items point at the desktop entries (ADR-042) |
 | Inbox / default fence for new items | — | — | M2 | parked | no auto-fill (ADR-040) |
 | Move / resize fences | 1+ | v1 | M2 | done | snap 8 px gap / edge alignment (M2c) |
 | Scrolling inside fences | 2+ | v1 | M2 | done | thin scrollbar (M2c) |
@@ -26,7 +28,8 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Item menu | 1+ | 0.9 | M18 | done | NeoFences' own safe menu; Windows' full menu on Shift+right-click, labelled "acts on the real file" |
 | Rename / delete items | 1+ | 0.9 | M18 | done | rename = the item's own name; Del = remove the item (no file operation, ADR-040) |
 | Drag-drop in/out/between fences | 1+ | 0.9 | M18 | done | drops create items (link, never move); Ctrl+drag duplicates; dragging out copies |
-| Missing / unavailable targets | — | 0.9 | M18 | done | watched (≤ 64 folders), renames followed, Locate… / Remove, per-fence Refresh |
+| Missing / unavailable targets | — | 0.9 | M18 | done | watched (≤ 64 folders), renames followed, Locate… / Remove, per-fence Refresh; a generic icon for their type (0.10) |
+| Bulk fix of missing items | — | 0.10 | M19 | done | after one Locate…, "Fix N more items?" for the others from the same old place; undo from the tray (ADR-042) |
 | Rubber-band selection | 1+ | v1 | M3 | done | M3b; Ctrl adds |
 | Folder Portals | 3+ | — | M4 | parked | ADR-040: later as dynamic collections (M20) |
 | Sort (name/type/date) | 2+ | v1 | M4 | done | one time; by the names shown (0.9) |
@@ -62,7 +65,6 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Blur tint preference (lighter/darker) | v1.7 (M14) | done | background strength slider, one value per Windows tone (ADR-036) |
 | Search palette across all fences | — | parked | built on branch `m15-search-palette` (local history bundle only), not merged |
 | Game Library fence (Steam/Epic/GOG/Ubisoft Connect/EA, cover art) | v1.5 | done | launchers, Xbox, game folders, Desktop game shortcuts; a game dragged into a fence becomes an item (0.9) (ADR-032) |
-| Store/UWP apps as items | M19+ | — | not files: need shell item lists and AppsFolder launch |
 | Dynamic collections (read-only folder views, auto-collect rules) | M20 | — | replaces Portals and Rules (ADR-040) |
 | Theme packs: "Nanosuit" (Crysis HUD), "Animus" (Assassin's Creed) | v2 | — | |
 | Custom Win11-style compact context menu | v2 | — | |

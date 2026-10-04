@@ -496,3 +496,33 @@ Added after the M18 final review:
 | AD30 | Sort by → Name on a fence holding the `\neofences-nohost\share\x.txt` item | the fences stay responsive; the sort finishes a few seconds later |
 | AD31 | Drag a fence item onto the desktop's Recycle Bin | nothing is deleted (drag-out offers copy or link only; the Recycle Bin takes moves) |
 | AD32 | Give an item a picture icon, take a snapshot, Remove the item, restart NeoFences, restore the snapshot | the item comes back with its picture |
+
+## AE — Store apps, bulk fix, Add from desktop, reliability (M19, ADR-042)
+
+Run with the test build and NeoFences' own data backed up (the installed copy stopped; its data restored afterwards).
+Test files only in `%USERPROFILE%\NeoFences-m19-test\` and the pendrive's `G:\NeoFences-test\`.
+
+| ID | Steps | Expected |
+|---|---|---|
+| AE1 | Add item… → Browse ▾ → An app… | the list opens at once ("Loading apps…"), then every Start app A–Z with icons (~0.3 s); typing filters it |
+| AE2 | Pick Sticky Notes (OK or double-click) | target `shell:AppsFolder\Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe!App`, the empty name box takes "Sticky Notes"; Arguments and Run as administrator greyed; status "● Found (an app)." |
+| AE3 | Add it; double-click the item | Sticky Notes opens; the item shows the app's icon and name |
+| AE4 | Drag an app from Start → All onto a fence (by hand) | a `shell:AppsFolder\…` item at the drop point; no "drop failed" warning in the log |
+| AE5 | Add the typed target `shell:AppsFolder\NotAnApp.Bogus_123!App` | status "● Not installed: …"; the item is Missing (dimmed, badge, a generic icon, the label "NotAnApp.Bogus") |
+| AE6 | Open that item → Locate… | the app list opens (not a file dialog); picking an app re-points the item |
+| AE7 | Items for `…\NeoFences-m19-test\old\a.txt`, `b.txt`, `c.txt`; exit NeoFences; rename `old` to `new`; start; open a → Locate… → `new\a.txt` | "Fix 2 more items? They were in …\old and are now in …\new." (b, c); Fix: b and c point into `new`, a log line "2 item(s) fixed", `snapshots\before-restore.json` written |
+| AE8 | Tray → Restore snapshot → "Undo the last restore or fix" | b and c point into `old` again (a stays: the undo reverts the fix, not the Locate) |
+| AE9 | AE7 with `d.txt` deleted from `new` before the Locate | d is not offered; only the items whose files are in `new` |
+| AE10 | Locate… a missing item to a file with another name | no "Fix N more" question |
+| AE11 | Tray → Add from desktop… | the dialog opens at once ("Reading your desktop…"), then groups Games / Apps / Folders and files / Web links with counts, every row ticked, "Put in: New fence: …" (or a fence of that title) |
+| AE12 | Add | new fences in free space, every ticked entry an item pointing at the desktop entry itself; nothing on the desktop changed; one log line with the counts |
+| AE13 | Open Add from desktop… again | every row unticked with "already in <fence>"; Add greyed |
+| AE14 | Settings → Game Library → add `D:\GameLibrary`; Add from desktop… | shortcuts into `D:\GameLibrary` are listed under Games |
+| AE15 | Tick "Hide desktop icons while NeoFences runs" and Add | the icons hide (HideIcons 1, marker); the Settings switch shows on |
+| AE16 | Shift+right-click the `\\neofences-nohost\share\x.txt` item | after ≤ 2 s a one-line menu "Network location not reachable"; the fence never freezes |
+| AE17 | Properties of that item → Browse ▾ → A file or program…; → Change icon → From a file… | each dialog opens within ~2 s at Windows' default place; log "did not answer" |
+| AE18 | Drag that item (with a reachable file item) out to Explorer | only the reachable file is copied; log "left out of the drag" |
+| AE19 | Properties: type a new path and press Enter at once | OK stays greyed until the check finishes ("Checking…"), then the saved Arguments state matches the new target |
+| AE20 | Restart NeoFences with the share item in a fence | the share item shows a generic icon within ~2 s; the other items' icons load normally (no stuck loader) |
+| AE21 | Pendrive: add an item on G:, then pull the stick right after NeoFences starts (watchers still arming) | no veto, no error; re-plug: the rename of `g.txt` is followed |
+| AE22 | Remove many items and a fence, then keep using NeoFences for a while | no growth of per-target records (log has no errors; behaviour unchanged) — covered by Core tests for the clean-up |
