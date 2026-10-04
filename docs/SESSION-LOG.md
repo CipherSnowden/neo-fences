@@ -486,6 +486,11 @@ pushed (release workflow built, tested, packed, uploaded a draft; a plain first 
 draft's Setup installed here with --silent (started itself in 6 s, version 0.9.0, schema 5, one empty fence, Start with
 Windows → the installed copy, icons visible, no warnings), published. CI notes Node 20 actions (checkout/setup-dotnet v4)
 are deprecated: bump to v5 some time.
-**Next:** M19 (customization polish + the deferred M18 minors in `research/m18-virtual-items.md`).
+**After the release:** the hub's fixed sections rewritten for virtual items (flows, drag matrix, UI mock, data model,
+features with a Parked status, risks) and two stale ARCHITECTURE lines fixed; CI actions bumped to checkout/setup-dotnet
+v5 (Node 24, CI green); the M18 test files and the older ones on the stick deleted at the user's request
+(`G:\NeoFences-test` kept, empty).
+**Next:** use 0.9.0 for a few days; decide the name (ADR-009 trademark) and code signing before 1.0.0; then plan M19
+(customization polish + the deferred M18 minors in `research/m18-virtual-items.md`).
 **Open:** an unreachable share item shows no icon; one unreproduced blank website icon after many restarts (both in
 `research/m18-virtual-items.md`).
