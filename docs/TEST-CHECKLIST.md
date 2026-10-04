@@ -485,3 +485,14 @@ Test data only in `%USERPROFILE%\Desktop\NeoFences-test\` (created and recycled 
 
 Sections C (Takeover parts), H, J, K, L, U and X describe the pre-pivot model (Takeover, membership, item file
 actions, Portals, Rules): parked with ADR-040, not run for 0.9.
+
+Added after the M18 final review:
+
+| ID | Steps | Expected |
+|---|---|---|
+| AD27 | An item for a .docx (or any file an editor saves by renaming): open it, change it, save | the item stays OK and keeps pointing at the .docx (not at a temp file) |
+| AD28 | Pull the pendrive without Safely remove; plug it back; rename `G:\NeoFences-test\g.txt` | Unavailable, then OK; the rename is followed (the watcher was re-armed) |
+| AD29 | Exit NeoFences, unplug the pendrive, start NeoFences, plug the pendrive in | the G: item shows Unavailable, then OK with its real icon and name (not the placeholder) |
+| AD30 | Sort by → Name on a fence holding the `\neofences-nohost\share\x.txt` item | the fences stay responsive; the sort finishes a few seconds later |
+| AD31 | Drag a fence item onto the desktop's Recycle Bin | nothing is deleted (drag-out offers copy or link only; the Recycle Bin takes moves) |
+| AD32 | Give an item a picture icon, take a snapshot, Remove the item, restart NeoFences, restore the snapshot | the item comes back with its picture |
