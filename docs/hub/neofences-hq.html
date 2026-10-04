@@ -736,17 +736,23 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-04",
-  commit: "736065b",
-  phase: "0.8.0 — pivot",
-  current: "PIVOT (ADR-040): fences hold virtual items, never file operations · repo reset to 0.8.0 · nothing installed · next: M18 virtual items spec (see docs/PIVOT-2026-10-04.md)",
+  commit: "3600535",
+  phase: "0.9.0 — virtual items",
+  current: "0.9.0 RELEASED and installed: fences hold virtual items (links to files, folders, apps, websites — own name and icon, never a file operation) · next: M19 customization polish",
   waiting: [
-    "NEW in v1.5.0 — Game Library: tray → New Game Library fence. Every installed game (Steam, Epic, GOG, Xbox, D:\\GameLibrary, game shortcuts on the Desktop) in one A–Z fence, Steam games with their covers. Right-click a game → Hide from library (e.g. Wallpaper Engine); Settings → Game Library for folders, sources and hidden games.",
-    "v1.4.0 Rules: Settings → Rules, e.g. Images → a fence, or Game shortcut / In a folder of mine → D:\\GameLibrary. New Desktop items are filed by themselves; \"Apply rules now\" tidies existing ones and can be undone (tray → Restore snapshot → Undo the last restore).",
-    "v1.3.0 Snapshots: tray → Take snapshot before you rearrange; tray → Restore snapshot puts it back. v1.2.0 Tabs: drag a fence by its title onto another fence's title to combine them; right-click a tab for Colour / Detach.",
-    "Hand checks still open, whenever convenient: real sign-out with icons hidden (C8); next upgrade by double-clicking Setup.exe (Q11); restore with a OneDrive Desktop offline (W9); the M2 checks listed under \"Open\" below."
+    "NEW in 0.9.0 — virtual items: drop files, folders, apps or browser links onto a fence (right-click → Add item… works too). Each item has its own name and icon (Properties); removing an item or a fence never touches the file. Renamed targets are followed; missing ones dim with a ⚠ and offer Locate…; a pulled USB stick dims its items until it is back.",
+    "Your desktop icons stay visible. Settings → \"Hide desktop icons while NeoFences runs\" hides them; they always come back (exit, crash, kill).",
+    "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
-    { group: "Open: your hand checks and things to try", items: [
+    { group: "M18 · Virtual items (0.9.0)", items: [
+      { t: "You chose: item records (approach A), with config.json and items.json as separate files (ADR-041)", s: "done" },
+      { t: "Spec, plan (compile-verified patches), native inline build: Core items + watching, schema 5, Shell drops/drag-out/pickers, App items + Properties + Locate…", s: "done" },
+      { t: "Final Opus review: C1 (editor saves) and I1–I7 fixed test-first; minors deferred to M19", s: "done" },
+      { t: "Live check with you: TEST-CHECKLIST AD 32/32; five bugs found and fixed (desktop-icon double-click quick-hide, drag-out, drops as shell items, rename flash, stick pulled without Safely remove)", s: "done" },
+      { t: "Merged, 0.9.0 released (CI green → tag → draft → install check → published) and installed", s: "done" }
+    ]},
+    { group: "Pre-pivot open items (superseded unless M19 revives them)", items: [
       { t: "You (optional): tray → New Game Library fence; right-click Wallpaper Engine → Hide from library", s: "todo" },
       { t: "You (optional): add your rules in Settings → Rules — e.g. Game shortcut / In a folder of mine → D:\\GameLibrary", s: "todo" },
       { t: "You (optional): try tabs — drag a title onto another fence, click tabs, right-click a tab → Colour / Detach, drag a tab out (V-checks)", s: "todo" },
@@ -994,19 +1000,23 @@ const HUB = {
     { id: "M11", name: "Rules (v1.4)", goal: "New desktop items go to a fence by type, game launcher or folder, name, date or size; Apply rules now (undoable) — released as v1.4.0", s: "done" },
     { id: "M12", name: "Game Library (v1.5)", goal: "One fence with every installed game (Steam, Epic, GOG, Ubisoft, EA, Battle.net, Xbox, game folders), Steam posters, hide, live rescans — released as v1.5.0", s: "done" },
     { id: "M13", name: "v1.6 carry-overs", goal: "Review carry-overs in 3 batches: data safety (v1.6.0), Game Library + rules polish (v1.6.1), fence + Settings UX (v1.6.2)", s: "wip" },
-    { id: "v2", name: "Next version", goal: "Theme packs (Nanosuit, Animus), desktop pages, icon tint, per-fence colours and fonts, search palette — pick the next one", s: "todo" }
+    { id: "M18", name: "Virtual items (0.9.0)", goal: "Fences hold links with their own name and icon; no file operations; target watching; native icons visible — released as 0.9.0", s: "done" },
+    { id: "M19", name: "Customization polish", goal: "Bulk re-locate of missing items, Store/UWP apps as items, the deferred M18 minors", s: "todo" },
+    { id: "M20", name: "Dynamic collections", goal: "Read-only folder views, auto-collect rules — later", s: "todo" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
     { v: "v1.1 – v1.6", s: "done", scope: "v1.1 reliability + icon-only labels; v1.2 fence tabs; v1.3 snapshots; v1.4 rules auto-sort; v1.5 Game Library fence; v1.6.0 data safety; v1.6.1 Game Library + rules polish; v1.6.2 fence + Settings UX (2026-10-03/04)." },
     { v: "v1.7", s: "done", scope: "Appearance (M14): background strength per tone, colour styles (accent edge / tinted glass / title strip), per-fence colours + custom, title fonts with per-fence override, wallpaper accent (Wallpaper Engine preview → Windows wallpaper → accent)." },
     { v: "v1.8", s: "todo", scope: "Parked (branch m15-search-palette). Search palette (M15): Ctrl+Alt+F, items in every fence (hidden tabs, rolled-up, Portals, Game Library) and NeoFences actions; Enter opens, Shift+Enter shows in the fence." },
+    { v: "0.9.0", s: "done", scope: "After the pivot (versions restart at 0.x; v1.x were dev builds): virtual items, separate items.json, target watching (renames followed, missing, unavailable), native icons visible with optional hide. Released and installed 2026-10-04." },
+    { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
   ],
   hardRules: [
-    "<b>Never lose or hide user files.</b> Delete only via the Recycle Bin flow; removing a fence never touches files.",
-    "<b>Native desktop icons always come back</b>: clean exit, crash, Task Manager kill, Explorer restart.",
+    "<b>NeoFences never modifies, moves, renames or deletes any user file</b> (ADR-040). Removing an item or a fence never touches files.",
+    "<b>Native desktop icons always come back</b> when the user chose to hide them: clean exit, crash, Task Manager kill, Explorer restart.",
     "<b>No DLL injection, no in-process global hooks.</b> Only out-of-context WinEvent hooks and the low-level mouse hook, removed in game mode.",
     "<b>All Win32/COM goes through NeoFences.Shell.</b> Core stays pure; App is UI only.",
     "<b>Bindings via CsWin32</b>, not hand-written DllImport.",
@@ -1154,9 +1164,12 @@ const HUB = {
     { id: "ADR-035", t: "Fence and Settings UX carry-overs; what stays as it is", s: "Accepted", d: "Title right-click opens the fence menu; header click opens a rolled-up box; snapshot results in Settings and warning notices; one-line tray labels; Settings keeps focus; layout key caps; Desktop shortcut changes rescan the library. Rules on the declined drag-drop, mixed-DPI and tab-strip items. Amends ADR-026." },
     { id: "ADR-036", t: "Appearance: colour styles, per-tone strength, title fonts, wallpaper accent", s: "Accepted", d: "Pure look resolver (v1.6 defaults); three colour styles as one preference; background strength per Windows tone; one global title font (per-fence override removed in v1.7.1, ADR-038); accent from Wallpaper Engine's preview, then Windows' wallpaper, then Windows' accent — no screen capture; schema 3; Windows' colour picker for custom colours." },
     { id: "ADR-038", t: "One title font for all fences; v1.7.1 polish", s: "Accepted", d: "The fence menu's Title font is gone (too deep; per-fence fonts too much): one font in Settings, old per-fence fonts dropped on save. Accent-edge titles pushed until readable; the M13c/M14 review carry-overs closed. Amends ADR-036." },
-    { id: "ADR-039", t: "Public repository, CI draft releases, Velopack auto-update; signing deferred", s: "Accepted", d: "One public repo (not open source), history scrubbed of the personal address and the hub link; CI builds every push and turns tags into draft releases; Velopack checks at start and daily (never in games, never when off), downloads quietly, applies after the clean exit; signing deferred." }
+    { id: "ADR-039", t: "Public repository, CI draft releases, Velopack auto-update; signing deferred", s: "Accepted", d: "One public repo (not open source), history scrubbed of the personal address and the hub link; CI builds every push and turns tags into draft releases; Velopack checks at start and daily (never in games, never when off), downloads quietly, applies after the clean exit; signing deferred." },
+    { id: "ADR-040", t: "The pivot: fences hold virtual items; no file operations", s: "Accepted", d: "Fences hold links (files, folders, apps, websites) with their own name and icon; NeoFences never modifies, moves, renames or deletes user files; native icons visible, optional hide; Takeover, Portals, Rules and item file actions parked; versions restart at 0.x; GitHub repo reset.", c: "Organizing no longer tidies the real desktop; parked features return later as dynamic fences." },
+    { id: "ADR-041", t: "Items in their own items.json; saves never prune item lists", s: "Accepted, amended in M18", d: "Config (schema 5) and virtual items live in separate files with the same safe store (atomic write, .bak, daily backups, corrupt recovery, read-only for newer schemas). Amended after review: saves never drop item lists, so a fallback config never costs items.", c: "Two files can disagree after a crash in between: the config is written first, an unused list stays harmless." }
   ],
   research: [
+    { t: "M18 live check: virtual items on the real desktop", b: "32/32 checklist rows pass. Five real bugs: UI Automation sees the live web wallpaper at every desktop point, so a desktop-icon double-click quick-hid everything (now Explorer's folder view answers); drag-out needs a shell-item-array data object; drops read best as shell items; renames flashed Missing; a stick pulled without Safely remove only sends DBT_DEVICEREMOVECOMPLETE, which left a deaf watcher. A power cut mid-check: NeoFences came back at sign-in with every item.", impact: "All fixed before 0.9.0; deferred minors listed in docs/research/m18-virtual-items.md for M19.", src: [] },
     { t: "Windows 11 24H2 changed the desktop window tree", b: "SHELLDLL_DefView stays a child of Progman, and Explorer's wallpaper layer is a WorkerW child of Progman below the icons. That WorkerW can appear late and is missed by plain enumeration. Wallpaper tools that parented into WorkerW broke.", impact: "Supports ADR-003: top-level fences don't depend on that tree.", src: [["kirie PR #11", "https://github.com/UnhingedSoftware/kirie/pull/11"], ["AutoHotkey forum: overlay broke after 24H2", "https://www.autohotkey.com/boards/viewtopic.php?style=7&t=135199"]] },
     { t: "What Fences 6 added", b: "Tabs (multiple fence groups in one), icon colour tint, dropping files onto a tab header, tab colour when unfocused. 6.20 added click-to-open for rolled-up fences, hover-pause before expanding, and smart placement spacing.", impact: "Roll-up modes and smart spacing joined v1; tabs and tint are v2.", src: [["Now Announcing: Fences 6", "https://www.stardock.com/news/535050/now-announcing-fences-6-beta-available-now"], ["Fences 6 Beta 2", "https://www.stardock.com/news/535722/fences-6-beta-2-arrives-with-new-features"], ["Fences 6.20", "https://www.stardock.com/news/539869/releasing-fences-620-with-new-features-and-enhancements"]] },
     { t: "Why not inject like Stardock does", b: "Fences hooks explorer.exe to control the real desktop list view. That breaks with Explorer updates and can be flagged by antivirus.", impact: "ADR-002: NeoFences draws items itself and hides native icons through the documented folder-view flag.", src: [] },
@@ -1193,7 +1206,7 @@ const HUB = {
   docs: [
     ["CLAUDE.md", "Auto-loaded each session: hard rules, repo map, sync protocol, commit style"],
     ["docs/ARCHITECTURE.md", "Living technical design: layers, z-order, threads, data locations, one line per milestone"],
-    ["docs/DECISIONS.md", "ADR log (ADR-001 to ADR-032) with reasons; superseded, never rewritten"],
+    ["docs/DECISIONS.md", "ADR log (ADR-001 to ADR-041) with reasons; superseded, never rewritten"],
     ["docs/FEATURES.md", "Fences parity matrix + extras with status (source of the Features table)"],
     ["docs/ROADMAP.md", "Milestones, checkboxes, claims, carry-overs from every review"],
     ["docs/SESSION-LOG.md", "Append-only log of every session"],
@@ -1224,7 +1237,10 @@ const HUB = {
     { date: "2026-10-03", topic: "M9 fence tabs (v1.2)", done: "Combine fences by dragging a title onto another, drag a tab out, tab colours. Review fixes and smoke passed; v1.2.0 installed.", next: "Snapshots" },
     { date: "2026-10-03", topic: "M10 snapshots (v1.3)", done: "Take and restore arrangements from the tray and Settings; every restore can be undone. Review fixed stale windows and a rename that could be lost; v1.3.0 installed.", next: "Rules auto-sort" },
     { date: "2026-10-03", topic: "M11 rules auto-sort (v1.4)", done: "New Desktop items filed by type, game, name, date or size; Apply rules now (undoable); you added a game folder of your own. Smoke caught half-written shortcuts; v1.4.0 installed.", next: "Game Library" },
-    { date: "2026-10-04", topic: "M12 Game Library (v1.5)", done: "One fence with every installed game (Steam, Epic, GOG, Xbox, D:\\GameLibrary, Desktop game shortcuts), Steam covers, hide, live rescans. Review fixed lost Steam games on a failed scan, ghost games and drive removal; v1.5.0 installed.", next: "Your pick: themes, desktop pages, icon tint or search" }
+    { date: "2026-10-04", topic: "M12 Game Library (v1.5)", done: "One fence with every installed game (Steam, Epic, GOG, Xbox, D:\\GameLibrary, Desktop game shortcuts), Steam covers, hide, live rescans. Review fixed lost Steam games on a failed scan, ghost games and drive removal; v1.5.0 installed.", next: "Your pick: themes, desktop pages, icon tint or search" },
+    { date: "2026-10-04", topic: "M13–M17: polish, appearance, search (parked), public releases", done: "v1.6.x carry-overs, appearance styles (v1.7), the search palette built then parked, v1.7.1 polish, public repo with CI draft releases and auto-update (v1.8.0).", next: "Hand checks" },
+    { date: "2026-10-04", topic: "The pivot (ADR-040) and the reset", done: "You rethought the product: fences hold virtual items, never file operations; native icons visible; versions restart at 0.x; GitHub reset to one commit (0.8.0); the installed build removed (data backed up).", next: "M18 virtual items" },
+    { date: "2026-10-04", topic: "M18 virtual items → 0.9.0", done: "Spec (items in their own items.json), plan, inline build, Opus review fixes, live check with you (32/32, five bugs fixed incl. a stick pulled without Safely remove), merged, released and installed 0.9.0.", next: "M19 customization polish" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1607,7 +1623,33 @@ const HUB = {
     ["91ffb6c", "docs: added ADR-039, update checks and results, and recorded M17"],
     ["634ecd2", "fix: fixed downloaded updates being applied by force at startup, updates ending the icon restore, and updates continuing after being switched off or during games"],
     ["240eb03", "docs: recorded M17 review fixes, the second rehearsal and deferred items"],
-    ["074e629", "chore: bumped the version to 1.8.0"]
+    ["074e629", "chore: bumped the version to 1.8.0"],
+    ["736065b", "chore: started NeoFences 0.8.0 from the pre-reset codebase (full history in a local bundle)"],
+    ["a634b5b", "docs: refreshed the hub after the pivot and the reset"],
+    ["4124175", "docs: added the M18 code map for the virtual-items pivot"],
+    ["62f4222", "docs: added the M18 virtual-items spec and ADR-041"],
+    ["e430c01", "docs: added the M18 virtual-items implementation plan"],
+    ["e3dbabe", "docs: claimed M18 virtual items"],
+    ["710ed1d", "feat: added virtual items and their edits to Core"],
+    ["ecaa40c", "feat: added target states, the watch plan and the refresh throttle to Core"],
+    ["278b716", "refactor: moved Core to config schema 5 with items.json and removed the desktop-membership model"],
+    ["abf7d4c", "feat: made fence drops create items and drags copy only in the Shell"],
+    ["6ee6857", "feat: showed virtual items in fences with their menu, Properties, Add item and target watching"],
+    ["43f0610", "docs: described the virtual items in architecture, features, checklist and roadmap"],
+    ["b66846a", "fix: read drops from Explorer and the desktop as shell items, so special items drop too and zip contents are never extracted"],
+    ["30520b9", "fix: made items follow only settled renames, re-armed stopped watchers and watched target folders for names only"],
+    ["c6d2e52", "fix: stopped dropping item lists at save, so a fallback config never costs the user their items"],
+    ["250be72", "fix: sorted off the UI thread, probed each drive once with a timeout, reloaded icons of returning targets and kept pictures snapshots use"],
+    ["17e7a1d", "docs: added the final-review checks to the M18 checklist"],
+    ["49bc962", "fix: told desktop icons from empty desktop by Explorer's icon positions, so double-clicking an icon no longer quick-hides"],
+    ["5880aba", "fix: built drag-out data from a shell item array, so Explorer copies items dragged out of a fence"],
+    ["b66ea45", "fix: held folder-change checks while a rename settles, so a renamed target no longer flashes Missing"],
+    ["8d06251", "fix: held folder-change checks until settling renames are followed"],
+    ["7b74a22", "docs: recorded the M18 progress, live check so far and the handoff"],
+    ["cf2775e", "fix: fixed item watchers going deaf after a drive was pulled without Safely remove"],
+    ["ba0c8c6", "docs: added the M18 live check results"],
+    ["7870a80", "chore: bumped the version to 0.9.0"],
+    ["3600535", "docs: recorded M18 done and merged, release 0.9.0 next"]
   ]
 };
 /* ===== END HUB DATA ===== */

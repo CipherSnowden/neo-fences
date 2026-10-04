@@ -481,6 +481,11 @@ sign-in with every item intact. Merged to main (fast-forward), worktree removed,
 the verified scratch files (byte-identical); Task 0 baseline was 438 tests, not 329; final review ran before the remaining
 live checks so they covered the final build; the reviewer's "declined to judge" items stand as the spec decides
 (drag-out "x - Copy", Run as administrator offered for any file, 7-Zip temp paths go Missing).
-**Next:** release 0.9.0 (push main → CI → tag → draft → install check → publish, each step asked); hub refresh; then M19.
+**Release:** v0.9.0, each step with the user's go: main pushed (CI green, 404 tests on GitHub's runner), tag v0.9.0
+pushed (release workflow built, tested, packed, uploaded a draft; a plain first line added to the generated notes), the
+draft's Setup installed here with --silent (started itself in 6 s, version 0.9.0, schema 5, one empty fence, Start with
+Windows → the installed copy, icons visible, no warnings), published. CI notes Node 20 actions (checkout/setup-dotnet v4)
+are deprecated: bump to v5 some time.
+**Next:** M19 (customization polish + the deferred M18 minors in `research/m18-virtual-items.md`).
 **Open:** an unreachable share item shows no icon; one unreproduced blank website icon after many restarts (both in
 `research/m18-virtual-items.md`).
