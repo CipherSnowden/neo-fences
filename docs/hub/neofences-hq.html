@@ -786,10 +786,11 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "615824b",
-  phase: "0.18.0 — first-run welcome",
-  current: "0.18.0 RELEASED and installed (your 0.17.0 updated itself): new installs get a welcome in the first fence (Sort my desktop…, Add item…, Guide) · next: pre-1.0 work or new ideas",
+  commit: "a53e8a7",
+  phase: "0.19.0 — modern widgets and sensors",
+  current: "M31 merged: modern widgets (tiles, accent bars), CPU / GPU temperatures from Afterburner or HWiNFO, RAM in GB, M30 leftovers · next: release 0.19.0, then your desktop with every feature",
   waiting: [
+    "NEW in 0.19.0 (when released) — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
     "NEW in 0.17.0 — Help: tray → Help (or Settings → About and logs → Help (online guide)) opens the guide on GitHub: every feature with pictures, a cheat-sheet of gestures and keys, install and troubleshooting. Worth checking: the README and guide links and images on GitHub (AO3), and the quick start on a fresh user (AO5).",
     "In 0.16.0 — auto-collect: fence menu → Auto-collect… → New rule. Watch your Desktop or any folder; pick kinds (apps and shortcuts, installers, documents, pictures, archives, anything) or patterns. New matching files show up as items within ~2 s; nothing is moved; removed stays removed; files from while NeoFences was closed are caught up at start.",
@@ -806,6 +807,15 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M31 · Modern widgets and sensors (0.19.0)", items: [
+      { t: "You chose style B with A's bars in the visual companion; stats CPU, CPU TEMP, GPU, GPU TEMP, RAM in GB; °F option", s: "done" },
+      { t: "Temperatures from MSI Afterburner or HWiNFO (read-only shared memory), value by value, then Windows (ADR-052)", s: "done" },
+      { t: "Prototype + probe, replay-verified plan, native build; Opus review fixes — 682 tests", s: "done" },
+      { t: "Live check: stats equal Afterburner's own values; new guide shots; merged locally", s: "done" },
+      { t: "Release 0.19.0", s: "todo" },
+      { t: "Your desktop with every feature: Desk widgets, Downloads panel, auto-collect, 2×2 games (asked first)", s: "todo" },
+      { t: "By hand: light mode (AQ2), Afterburner closed (AQ5), welcome at minimum size (AQ6)", s: "todo" }
+    ]},
     { group: "M30 · First-run welcome (0.18.0)", items: [
       { t: "You chose a welcome inside the first fence; the sort removes the empty welcome fence; hide icons via the dialog's checkbox", s: "done" },
       { t: "Spec, replay-verified plan, native build; Opus review fixes (read-only start, a set-up welcome fence kept) — 658 tests", s: "done" },
@@ -1152,6 +1162,7 @@ const HUB = {
     { id: "M28", name: "Polish (0.16.1)", goal: "The 20 deferred minors of M24–M27 — released as 0.16.1", s: "done" },
     { id: "M29", name: "A guide for friends (0.17.0)", goal: "README, docs/GUIDE.md with screenshots, Help in the tray and Settings (ADR-050) — released as 0.17.0", s: "done" },
     { id: "M30", name: "First-run welcome (0.18.0)", goal: "The first fence welcomes a fresh install; tray notice (ADR-051) — released as 0.18.0", s: "done" },
+    { id: "M31", name: "Modern widgets and sensors (0.19.0)", goal: "Restyled widgets; CPU / GPU temperatures via Afterburner or HWiNFO; RAM in GB (ADR-052) — merged, release pending", s: "wip" },
     { id: "Next", name: "Next", goal: "Pre-1.0 work (code signing) or new ideas", s: "todo" }
   ],
   versions: [
@@ -1172,6 +1183,7 @@ const HUB = {
     { v: "0.16.1", s: "done", scope: "Polish (M28): 20 deferred minors — panels, auto-collect, widgets, grid and sizes. Released 2026-10-05; the installed 0.16.0 updated itself." },
     { v: "0.17.0", s: "done", scope: "A guide for friends (M29): rewritten README, docs/GUIDE.md with screenshots, Help in the tray and Settings. Released 2026-10-06; the installed 0.16.1 updated itself." },
     { v: "0.18.0", s: "done", scope: "First-run welcome (M30): the first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is. Released 2026-10-06; the installed 0.17.0 updated itself." },
+    { v: "0.19.0", s: "todo", scope: "Modern widgets and sensors (M31): tiles with accent bars; CPU, CPU TEMP, GPU, GPU TEMP, RAM in GB; Afterburner / HWiNFO. Merged 2026-10-06; release pending." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1289,6 +1301,7 @@ const HUB = {
     ["Auto-collect rules: desktop or a folder, by kind or pattern", "Fences rules (v1-era: moved files)", "0.16", "M27", "done", "Never moves files; items only (ADR-049)", "extra"],
     ["Help: online guide with screenshots", "Help / knowledge base", "0.17", "M29", "done", "docs/GUIDE.md on GitHub; tray Help and Settings Help open it (ADR-050)", "extra"],
     ["First-run welcome", "First-run setup", "0.18", "M30", "done", "The first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is (ADR-051)", "extra"],
+    ["Modern widgets; CPU / GPU temperatures; RAM in GB", "Widgets", "0.19", "M31", "done", "Afterburner or HWiNFO read-only, value by value; Windows for the GPU (ADR-052)", "extra"],
     ["Store / Start apps as items", "—", "0.10", "M19", "done", "App list (Add item… → An app…) or a drag from Start; Missing when uninstalled (ADR-042)", "extra"],
     ["Add from desktop…", "—", "0.10", "M19", "done", "Desktop grouped into Games / Apps / Folders and files / Web links, each into a fence (ADR-042)", "extra"],
     ["Bulk fix of missing items", "—", "0.10", "M19", "done", "After one Locate…, the others from the same old place; undo from the tray (ADR-042)", "extra"],
@@ -1356,7 +1369,8 @@ const HUB = {
     { id: "ADR-048", t: "The folder panel element", s: "Accepted", d: "A panel is a folder item with panel settings (look, filters, sort): missing state, Locate…, rename-follow, copies and snapshots for free. Details / List / Icons; browsing in memory; 1–4 × 1–4 cells or Fill fence while alone. Folder views migrate once (a snapshot first; items saved before config).", c: "Supersedes ADR-044's view fence; read-only rules stand. An older version shows a panel as a folder icon." },
     { id: "ADR-049", t: "Auto-collect rules", s: "Accepted", d: "A fence's rules watch the desktop (both folders) or any folder; new matching files (kinds by name, or patterns) become items in the first matching fence; never a file operation; removed stays removed; catch-up at start by watermark; a 2 s settle per burst.", c: "Files moved in while NeoFences was closed are not caught up; collect is written only for fences with rules." },
     { id: "ADR-050", t: "Help lives on GitHub, linked from the app", s: "Accepted", d: "The guide is docs/GUIDE.md in the repo; tray Help and Settings Help (online guide) open its GitHub page; menu, setting or gesture changes update the guide in the same commit.", c: "Always the current guide; needs a network; Help 404s until the guide is on GitHub main." },
-    { id: "ADR-051", t: "The welcome lives in the first fence", s: "Accepted", d: "A fresh, writable start's first fence carries welcome: true and shows Sort my desktop…, Add item…, Guide while empty; its first item ends it; an Add from desktop that fills new fences removes it while still an untouched empty Fence; one tray notice on a fresh start.", c: "Updating copies never see it; no way to show it again; a fallback fresh start shows it, a read-only one never." }
+    { id: "ADR-051", t: "The welcome lives in the first fence", s: "Accepted", d: "A fresh, writable start's first fence carries welcome: true and shows Sort my desktop…, Add item…, Guide while empty; its first item ends it; an Add from desktop that fills new fences removes it while still an untouched empty Fence; one tray notice on a fresh start.", c: "Updating copies never see it; no way to show it again; a fallback fresh start shows it, a read-only one never." },
+    { id: "ADR-052", t: "Temperatures from MSI Afterburner or HWiNFO, read-only", s: "Accepted", d: "Their shared memory read-only (MemoryMappedFile; Core parses a copy), value by value; the main GPU by video memory; otherwise PDH and D3DKMT for the GPU; CPU TEMP shows a dash with a hint.", c: "CPU temperature needs one of the two running; NeoFences never starts or configures them; a later sensor picker can use the same readings." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1446,7 +1460,8 @@ const HUB = {
     { date: "2026-10-05", topic: "M27 auto-collect (merged)", done: "You chose auto-collect; prototype probed with a test folder; verified plan; native build; Opus review fixes (633 tests); live check AM; merged locally.", next: "Pre-1.0 work or polish" },
     { date: "2026-10-05", topic: "M28 polish (merged)", done: "All four groups; prototype + visual probe; verified plan; native build; Opus review fixes (643 tests); live check AN; merged locally.", next: "Pre-1.0 work or new ideas" },
     { date: "2026-10-05", topic: "M29 guide for friends (merged)", done: "Spec + plan; native build; 8 demo screenshots (3 as JPEG); Opus review fixes (tray overflow, download warning, wording); guide rule in CLAUDE.md; live check AO1/AO2/AO4; merged locally.", next: "Released 0.17.0; next: pre-1.0 work or new ideas" },
-    { date: "2026-10-06", topic: "M30 first-run welcome (merged)", done: "Welcome in the first fence; spec + replay-verified plan; native build; Opus review fixes (read-only start, set-up welcome fence kept; 658 tests); live check AP; merged locally.", next: "Released 0.18.0; next: pre-1.0 work or new ideas" }
+    { date: "2026-10-06", topic: "M30 first-run welcome (merged)", done: "Welcome in the first fence; spec + replay-verified plan; native build; Opus review fixes (read-only start, set-up welcome fence kept; 658 tests); live check AP; merged locally.", next: "Released 0.18.0; next: pre-1.0 work or new ideas" },
+    { date: "2026-10-06", topic: "M31 modern widgets and sensors (merged)", done: "Visual companion mockups; spec; prototype checked against Afterburner; replay-verified plan; native build; Opus review fixes (682 tests); live check AQ; new guide shots; merged locally.", next: "Release 0.19.0, then your desktop with every feature" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1999,7 +2014,20 @@ const HUB = {
     ["2d16bda", "docs: added the welcome screenshot and the M30 live check results"],
     ["cb0af77", "docs: recorded M30 merged and refreshed the hub"],
     ["d717eca", "chore: bumped the version to 0.18.0"],
-    ["caf6716", "docs: marked the 0.18.0 release as approved"]
+    ["caf6716", "docs: marked the 0.18.0 release as approved"],
+    ["615824b", "docs: recorded the 0.18.0 release and refreshed the hub"],
+    ["8340726", "docs: pointed the hub at the 0.18.0 release commit"],
+    ["a17fc4a", "docs: claimed M31 modern widgets and polish"],
+    ["a72026f", "docs: added the M31 modern widgets design spec"],
+    ["66beedf", "docs: added the M31 modern widgets plan"],
+    ["4eea754", "feat: added the sensor formats, the stats tiles and the modern date texts in Core"],
+    ["298f663", "feat: restyled the widgets and read temperatures from Afterburner, HWiNFO or Windows"],
+    ["6842d29", "fix: fixed the M30 leftovers: welcome ink and wrapping, settings refresh, the waiting notice, one window refresh, tray ids in order"],
+    ["8cd48b6", "docs: described the modern widgets and sensors in the guide, ADR-052, architecture, features, checklist AQ and the M31 note"],
+    ["2149ec5", "fix: fixed the M31 review findings: odd sensor names, values from either monitor, the graphics card by video memory, installed RAM, readable stats at 2x2"],
+    ["1b30e7b", "docs: described the per-value sources and the Afterburner monitoring tip"],
+    ["dbbabb9", "docs: added the M31 live check results and the new widget screenshots"],
+    ["a53e8a7", "docs: recorded M31 merged"]
   ]
 };
 /* ===== END HUB DATA ===== */
