@@ -52,4 +52,16 @@ scaled by the shell; the picker's system highlight colour.
 
 ## Live check
 
-(TEST-CHECKLIST AJ — filled in after the run.)
+2026-10-05, branch build on a copy of the user's data (restored afterwards), scripted while the PC was unattended;
+screenshots sent to the user.
+
+- **Pass:** AJ1 (Steam 2 × 2, gaps filled), AJ2 (Discord and GCC 2 × 1, then Default size), AJ3 + AJ14 (Forza at 2 × 4:
+  a big, sharp tile), AJ4 (Apps → Free: 19/19 cells stored, nothing moved), AJ5 (onto a taken cell → the nearest free
+  spot; three at once all landed on free spots), AJ7 (Sort by Name in Free packed from the top-left), AJ8 (narrowed to
+  one column the elements stack; widened, every stored cell unchanged), AJ9 (arrow keys move the selection spatially),
+  AJ10 (labels on hover and icon sizes re-lay the grid), AJ11 (a 500-entry view; every fence answered within 6 ms while
+  a file churned), AJ12 (a snapshot restore brought back Steam's 2 × 2 and Apps' Free layout), AJ13 (a Ctrl+drag in
+  place: the original kept its cell, the copy went to a free spot), AJ15 (cells right in the first frame after start).
+- **Not run:** AJ6 (a drop from Explorer onto an empty cell in a Free fence) — by hand later.
+- Script notes: AJ2's third element (Vortex) was scrolled out of view on the first pass (its menu has Size, rechecked);
+  AJ13 duplicated four elements because an earlier multi-selection was still active (no copy overlapped an original).
