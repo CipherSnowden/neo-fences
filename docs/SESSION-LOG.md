@@ -549,3 +549,17 @@ and Refresh cover it. The user asked for screenshots during tests (saved as feed
 0.11.0 in 2 s, config and items unchanged, plain restart back on GitHub updates), published with a plain first line; hub
 refreshed. **Next candidate (user idea):** one kind of fence — items, games and folder views as per-fence settings; keep
 Fence.Kind in code for later.
+
+## 2026-10-05 — M22 one kind of fence: games become items (0.12.0), built and merged
+
+**Done:** the user's direction: no fence types to pick — a fence holds elements whose kind and settings decide the look;
+later a folder panel, widgets (clock, calendar) and element sizes. First step: games as items (spec, ADR-045). Prototype
+probed on a copy of the user's data, plan with replay-verified patches, native execution; Opus final review "with
+fixes" (dimmed not-installed covers, read-only game targets, no new-game flood on a first scan, safe migration saves,
+returning games not copied; re-graded: Enter in the not-installed question, Windows' Delete on a game) — fixed, 515
+tests. Live check AH 18/18 scripted while the PC was unattended (data restored). Merged to main.
+Also this session: the desktop populated for a showcase (Games library fence, Apps from Add from desktop, a Downloads
+folder view), desktop icons hidden at the user's request.
+**Decisions:** ADR-045. The user: merge finished milestones into main locally until 1.0 (saved as feedback); item sizes
+1×1/1×2/2×1/2×2 later.
+**Next:** release 0.12.0 when the user says so; then the folder panel element, widgets or element sizes.
