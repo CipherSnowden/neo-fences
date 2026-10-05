@@ -3,11 +3,9 @@ using System.Windows.Data;
 
 namespace NeoFences.App;
 
-/// <summary>A stats bar's fill (M25): a percent 0–100 as a width on an 80-DIP track.</summary>
+/// <summary>A stats bar's fill (M25): a percent 0–100 scaled to its track (M31: as a 0–1 fraction).</summary>
 public sealed class PercentWidth(double track) : IValueConverter
 {
-    public static PercentWidth Of80 { get; } = new(80);
-
     /// <summary>0–1 for a ScaleTransform (M31: a bar as wide as its tile, whatever the tile's width).</summary>
     public static PercentWidth Fraction { get; } = new(1);
 

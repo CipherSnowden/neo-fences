@@ -124,6 +124,10 @@
                                         <Setter TargetName="Track" Property="Visibility" Value="Collapsed" />
                                         <Setter TargetName="Hint" Property="Visibility" Value="Visible" />
                                     </DataTrigger>
+                                    <!-- M32: no empty line under a dash without a hint (GPU TEMP, RAM). -->
+                                    <DataTrigger Binding="{Binding Hint}" Value="">
+                                        <Setter TargetName="Hint" Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
                                 </DataTemplate.Triggers>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

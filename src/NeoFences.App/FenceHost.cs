@@ -247,6 +247,7 @@ public sealed partial class FenceHost
             AnimationsAllowed = () => !_gameMode && SystemParameters.ClientAreaAnimation,
             BoxId = box.Id,
         };
+        window.Loaded += (_, _) => window.Dispatcher.BeginInvoke(PinAfterLayout, DispatcherPriority.Loaded); // M32
         window.TabSelected += fenceId => SwitchTab(window, fenceId);
         window.TabDropped += (fenceId, screenX, screenY) => OnTabDropped(window, fenceId, screenX, screenY);
         window.TabDragMoved += (screenX, screenY) =>
@@ -535,6 +536,13 @@ public sealed partial class FenceHost
     private void OnThemeChanged()
     {
         var light = SystemTheme.AppsUseLightTheme();
+        // M32: the accent may have changed without a light/dark flip: the widgets' bars follow it now, and once more at the
+        // next pass in case WPF had not caught the new accent yet.
+        foreach (var window in _windows.Values) window.ApplyWidgetBar(light);
+        Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+        {
+            foreach (var window in _windows.Values) window.ApplyWidgetBar(_lightTheme);
+        });
         if (light == _lightTheme) return;
         _lightTheme = light;
         Log.Information("Windows app mode changed; light: {Light}", light);
@@ -1152,6 +1160,7 @@ public sealed partial class FenceHost
         {
             ApplyDeferredShellWork();
             OnWidgetTick(); // M28: widgets right at once
+            ShowFirstStartNotice(); // M32: a notice held back by a game
         }
         UpdatePeekHotkey();
         _trayIcon?.SetTooltip(TrayTooltip());
@@ -1444,7 +1453,7 @@ public sealed partial class FenceHost
     /// </summary>
     private void ShowFirstStartNotice()
     {
-        if (!_firstStartNotice || !_trayShown) return;
+        if (!_firstStartNotice || !_trayShown || _gameMode) return; // M32: never over a game; shown when it ends
         _firstStartNotice = false;
         _trayIcon?.ShowBalloon("NeoFences is running", "Its icon is in the notification area — on Windows 11 maybe behind the ^ arrow. Click it for the menu and Help.");
     }

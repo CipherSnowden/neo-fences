@@ -1192,6 +1192,12 @@ public partial class FenceWindow : Window
         var widgetShadow = new DropShadowEffect { Color = light ? Colors.White : Colors.Black, ShadowDepth = light ? 0 : 1, BlurRadius = 8, Opacity = 0.45 };
         widgetShadow.Freeze();
         Resources["WidgetShadow"] = widgetShadow;
+        ApplyWidgetBar(light);
+    }
+
+    /// <summary>The widgets' bars in the Windows accent (M31); again on every accent change (M32), not only a light/dark flip.</summary>
+    public void ApplyWidgetBar(bool light)
+    {
         var bar = light ? new LinearGradientBrush(SystemColors.AccentColorDark1, SystemColors.AccentColor, 0) : new LinearGradientBrush(SystemColors.AccentColorLight2, SystemColors.AccentColorLight1, 0);
         bar.Freeze();
         Resources["WidgetBar"] = bar;

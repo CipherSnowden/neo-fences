@@ -61,25 +61,42 @@ public sealed class SystemStats : IDisposable
 
     private delegate SensorReading? SensorParser(ReadOnlySpan<byte> memory);
 
+    // M32: each source's last main GPU, so the choice is sticky (Widgets.StickyGpu).
+    private string? _afterburnerGpu, _hwinfoGpu, _windowsAdapter;
+
     /// <summary>Afterburner, completed value by value from HWiNFO when it lacks one (final review I2).</summary>
     private SensorReading? Outside()
     {
-        var afterburner = Shared(SensorFormats.AfterburnerMapping, SensorFormats.Afterburner);
-        return afterburner is { CpuTemp: not null, Gpu: not null, GpuTemp: not null }
-            ? afterburner
-            : SensorFormats.Merge(afterburner, Shared(SensorFormats.HwinfoMapping, SensorFormats.Hwinfo));
+        var afterburner = Shared(SensorFormats.AfterburnerMapping, memory => SensorFormats.Afterburner(memory, _afterburnerGpu), mutex: null);
+        if (afterburner?.GpuKey is { } afterburnerGpu) _afterburnerGpu = afterburnerGpu;
+        if (afterburner is { CpuTemp: not null, Gpu: not null, GpuTemp: not null }) return afterburner;
+        var hwinfo = Shared(SensorFormats.HwinfoMapping, memory => SensorFormats.Hwinfo(memory, _hwinfoGpu), mutex: SensorFormats.HwinfoMutex);
+        if (hwinfo?.GpuKey is { } hwinfoGpu) _hwinfoGpu = hwinfoGpu;
+        return SensorFormats.Merge(afterburner, hwinfo);
     }
 
-    /// <summary>A copy of a monitor's shared memory, parsed; null when it is not running (the usual case) or unreadable.</summary>
-    private SensorReading? Shared(string mapping, SensorParser parse)
+    /// <summary>
+    /// A copy of a monitor's shared memory, parsed; null when it is not running (the usual case) or unreadable. The copy is a
+    /// rented buffer (M32: no ~90 KB array per reading), taken under the monitor's mutex when it has one (M32: HWiNFO's,
+    /// waited for at most 20 ms; without it the copy is taken as before).
+    /// </summary>
+    private SensorReading? Shared(string mapping, SensorParser parse, string? mutex)
     {
         try
         {
             using var map = MemoryMappedFile.OpenExisting(mapping, MemoryMappedFileRights.Read);
             using var view = map.CreateViewStream(0, 0, MemoryMappedFileAccess.Read);
-            var bytes = new byte[Math.Min(view.Length, MaxSensorBytes)];
-            view.ReadExactly(bytes);
-            return parse(bytes);
+            var length = (int)Math.Min(view.Length, MaxSensorBytes);
+            var bytes = System.Buffers.ArrayPool<byte>.Shared.Rent(length);
+            try
+            {
+                using (Held(mutex)) view.ReadExactly(bytes, 0, length);
+                return parse(bytes.AsSpan(0, length));
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<byte>.Shared.Return(bytes);
+            }
         }
         catch (FileNotFoundException)
         {
@@ -89,6 +106,39 @@ public sealed class SystemStats : IDisposable
         {
             _logOnce(mapping, failure);
             return null;
+        }
+    }
+
+    /// <summary>The monitor's mutex held while copying (released on dispose), or nothing when there is none or it is busy.</summary>
+    private static IDisposable? Held(string? name)
+    {
+        if (name is null) return null;
+        try
+        {
+            if (!Mutex.TryOpenExisting(name, out var mutex)) return null;
+            try
+            {
+                if (mutex.WaitOne(20)) return new Release(mutex);
+            }
+            catch (AbandonedMutexException)
+            {
+                return new Release(mutex); // its owner ended while holding it: ours now
+            }
+            mutex.Dispose();
+            return null; // busy: copy without it, as before
+        }
+        catch (Exception failure) when (failure is UnauthorizedAccessException or IOException or WaitHandleCannotBeOpenedException)
+        {
+            return null; // no access to it: copy without it
+        }
+    }
+
+    private sealed class Release(Mutex mutex) : IDisposable
+    {
+        public void Dispose()
+        {
+            mutex.ReleaseMutex();
+            mutex.Dispose();
         }
     }
 
@@ -209,7 +259,8 @@ public sealed class SystemStats : IDisposable
             if (PInvoke.PdhCollectQueryData(new PDH_HQUERY(_query.DangerousGetHandle())) != 0) return Reopen(); // a GPU driver update: try again from scratch
             if (Values(_gpu) is not { } engines) return Reopen();
             var dedicated = _gpuMemory == default ? [] : Values(_gpuMemory) ?? [];
-            var (adapter, percent) = Widgets.MainGpu(engines, dedicated);
+            var (adapter, percent) = Widgets.MainGpu(engines, dedicated, _windowsAdapter); // M32: sticky
+            if (adapter.Length > 0) _windowsAdapter = adapter;
             return (percent, adapter);
         }
         catch (Exception failure) when (failure is InvalidOperationException or ExternalException)

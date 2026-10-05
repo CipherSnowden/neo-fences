@@ -16,6 +16,7 @@ public static partial class SensorFormats
 {
     public const string AfterburnerMapping = "MAHMSharedMemory";
     public const string HwinfoMapping = @"Global\HWiNFO_SENS_SM2";
+    public const string HwinfoMutex = @"Global\HWiNFO_SM2_MUTEX"; // M32: held while copying
     private const int MaxEntries = 4096;
 
     // ---------- MSI Afterburner: MAHM_SHARED_MEMORY_HEADER / _ENTRY (v2) ----------
