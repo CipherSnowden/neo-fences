@@ -221,3 +221,4 @@ PdhGetFormattedCounterArray
 PdhCloseQuery
 PDH_FMT
 PDH_MORE_DATA
+GetPhysicallyInstalledSystemMemory

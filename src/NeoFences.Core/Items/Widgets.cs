@@ -114,6 +114,20 @@ public static class Widgets
     /// </summary>
     public static double GpuPercent(IReadOnlyList<(string Instance, double Value)> engines) => BusiestGpu(engines).Percent;
 
+    /// <summary>
+    /// The main graphics card when no monitor names it (M31 final review I3): the adapter with the most dedicated video
+    /// memory in use (an integrated GPU has little), with its use; without memory readings, the busiest one as before.
+    /// </summary>
+    public static (string Adapter, double Percent) MainGpu(IReadOnlyList<(string Instance, double Value)> engines,
+        IReadOnlyList<(string Instance, double Bytes)> dedicated)
+    {
+        if (dedicated.Count == 0) return BusiestGpu(engines);
+        var main = dedicated.GroupBy(memory => AdapterOf(memory.Instance), StringComparer.OrdinalIgnoreCase)
+            .MaxBy(adapter => adapter.Sum(memory => memory.Bytes))!.Key;
+        var percent = engines.Where(engine => string.Equals(AdapterOf(engine.Instance), main, StringComparison.OrdinalIgnoreCase)).Sum(engine => engine.Value);
+        return (main, Math.Min(100, percent));
+    }
+
     /// <summary>The busiest adapter (its "luid_…" key) and its use (M31: its temperature is read from the same adapter).</summary>
     public static (string Adapter, double Percent) BusiestGpu(IReadOnlyList<(string Instance, double Value)> engines)
     {

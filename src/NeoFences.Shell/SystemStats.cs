@@ -25,6 +25,8 @@ public sealed class SystemStats : IDisposable
     private (ulong Idle, ulong Busy)? _lastCpu;
     private PdhCloseQuerySafeHandle? _query;
     private PDH_HCOUNTER _gpu;
+    private PDH_HCOUNTER _gpuMemory; // M31 final review I3: dedicated video memory per adapter (optional)
+    private const string GpuMemoryCounter = @"\GPU Adapter Memory(*)\Dedicated Usage";
     private bool _gpuFailed;
     private readonly object _gate = new(); // a reading and Dispose never overlap (exit while a reading runs; final review M1)
     private bool _disposed;
@@ -59,8 +61,14 @@ public sealed class SystemStats : IDisposable
 
     private delegate SensorReading? SensorParser(ReadOnlySpan<byte> memory);
 
-    private SensorReading? Outside() =>
-        Shared(SensorFormats.AfterburnerMapping, SensorFormats.Afterburner) ?? Shared(SensorFormats.HwinfoMapping, SensorFormats.Hwinfo);
+    /// <summary>Afterburner, completed value by value from HWiNFO when it lacks one (final review I2).</summary>
+    private SensorReading? Outside()
+    {
+        var afterburner = Shared(SensorFormats.AfterburnerMapping, SensorFormats.Afterburner);
+        return afterburner is { CpuTemp: not null, Gpu: not null, GpuTemp: not null }
+            ? afterburner
+            : SensorFormats.Merge(afterburner, Shared(SensorFormats.HwinfoMapping, SensorFormats.Hwinfo));
+    }
 
     /// <summary>A copy of a monitor's shared memory, parsed; null when it is not running (the usual case) or unreadable.</summary>
     private SensorReading? Shared(string mapping, SensorParser parse)
@@ -77,7 +85,7 @@ public sealed class SystemStats : IDisposable
         {
             return null; // not running
         }
-        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
+        catch (Exception failure) when (failure is not OutOfMemoryException) // unreadable, or anything odd: nothing (final review I1)
         {
             _logOnce(mapping, failure);
             return null;
@@ -163,17 +171,27 @@ public sealed class SystemStats : IDisposable
 
     private static ulong Ticks(FILETIME time) => ((ulong)(uint)time.dwHighDateTime << 32) | (uint)time.dwLowDateTime;
 
-    /// <summary>RAM in use and installed, in GB (M31: absolute, not a percent).</summary>
+    /// <summary>
+    /// RAM in use and installed, in GB (M31: absolute, not a percent). The total is the installed memory (final review M1:
+    /// "/ 32 GB", not the 31.1 GB Windows can use); in use is what Windows reports as used.
+    /// </summary>
     private (double? Used, double? Total) Ram()
     {
         const double Gb = 1024.0 * 1024 * 1024;
         var status = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>() };
-        if (PInvoke.GlobalMemoryStatusEx(ref status)) return ((status.ullTotalPhys - status.ullAvailPhys) / Gb, status.ullTotalPhys / Gb);
-        _logOnce("RAM", new System.ComponentModel.Win32Exception());
-        return (null, null);
+        if (!PInvoke.GlobalMemoryStatusEx(ref status))
+        {
+            _logOnce("RAM", new System.ComponentModel.Win32Exception());
+            return (null, null);
+        }
+        var installed = PInvoke.GetPhysicallyInstalledSystemMemory(out var kilobytes) && kilobytes * 1024 >= status.ullTotalPhys ? kilobytes * 1024.0 : status.ullTotalPhys;
+        return ((status.ullTotalPhys - status.ullAvailPhys) / Gb, installed / Gb);
     }
 
-    /// <summary>GPU use (the busiest adapter, like Task Manager) and that adapter's key, whose temperature is read too (M31).</summary>
+    /// <summary>
+    /// GPU use and the adapter it belongs to, whose temperature is read too (M31): the main graphics card — the adapter with
+    /// the most dedicated video memory in use (final review I3) — or, without that counter, the busiest one (M28).
+    /// </summary>
     private unsafe (double? Percent, string Adapter) Gpu()
     {
         if (_gpuFailed) return (null, "");
@@ -184,32 +202,41 @@ public sealed class SystemStats : IDisposable
                 Check(PInvoke.PdhOpenQuery(null, 0, out var query), "open");
                 _query = query;
                 Check(PInvoke.PdhAddEnglishCounter(_query, GpuCounter, 0, out _gpu), "add");
+                _gpuMemory = PInvoke.PdhAddEnglishCounter(_query, GpuMemoryCounter, 0, out var memory) == 0 ? memory : default; // optional
                 Check(PInvoke.PdhCollectQueryData(new PDH_HQUERY(_query.DangerousGetHandle())), "first collect");
                 return (null, ""); // a rate needs two collections
             }
             if (PInvoke.PdhCollectQueryData(new PDH_HQUERY(_query.DangerousGetHandle())) != 0) return Reopen(); // a GPU driver update: try again from scratch
-            uint size = 0, count = 0;
-            var status = PInvoke.PdhGetFormattedCounterArray(_gpu, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, null);
-            if (status != (uint)PInvoke.PDH_MORE_DATA || size == 0) return status == 0 ? (0, "") : Reopen(); // no 3D engines: 0 %
-            var buffer = new byte[size];
-            fixed (byte* bytes = buffer)
-            {
-                if (PInvoke.PdhGetFormattedCounterArray(_gpu, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes) != 0) return Reopen();
-                var items = (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes;
-                var engines = new List<(string Instance, double Value)>((int)count);
-                for (var index = 0; index < count; index++)
-                {
-                    if (items[index].FmtValue.CStatus is 0 or 1) engines.Add((items[index].szName.ToString(), items[index].FmtValue.Anonymous.doubleValue)); // valid data, or new data (review M2)
-                }
-                var (adapter, percent) = Widgets.BusiestGpu(engines); // M28: the busiest adapter, like Task Manager
-                return (percent, adapter);
-            }
+            if (Values(_gpu) is not { } engines) return Reopen();
+            var dedicated = _gpuMemory == default ? [] : Values(_gpuMemory) ?? [];
+            var (adapter, percent) = Widgets.MainGpu(engines, dedicated);
+            return (percent, adapter);
         }
         catch (Exception failure) when (failure is InvalidOperationException or ExternalException)
         {
             _gpuFailed = true; // the counter cannot be opened or added: no GPU counters on this PC, "—" from now on
             _logOnce("GPU", failure);
             return (null, "");
+        }
+    }
+
+    /// <summary>A counter's instances and values (valid or new data); empty when it has none; null when the read failed.</summary>
+    private static unsafe List<(string Instance, double Value)>? Values(PDH_HCOUNTER counter)
+    {
+        uint size = 0, count = 0;
+        var status = PInvoke.PdhGetFormattedCounterArray(counter, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, null);
+        if (status != (uint)PInvoke.PDH_MORE_DATA || size == 0) return status == 0 ? [] : null; // no instances (no 3D engines: 0 %)
+        var buffer = new byte[size];
+        fixed (byte* bytes = buffer)
+        {
+            if (PInvoke.PdhGetFormattedCounterArray(counter, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes) != 0) return null;
+            var items = (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes;
+            var values = new List<(string Instance, double Value)>((int)count);
+            for (var index = 0; index < count; index++)
+            {
+                if (items[index].FmtValue.CStatus is 0 or 1) values.Add((items[index].szName.ToString(), items[index].FmtValue.Anonymous.doubleValue)); // valid data, or new data (review M2)
+            }
+            return values;
         }
     }
 

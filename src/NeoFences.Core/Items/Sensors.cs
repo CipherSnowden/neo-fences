@@ -41,7 +41,8 @@ public static partial class SensorFormats
             var name = Text(entry[..NameLength]);
             if (name == "CPU temperature") { cpuTemp = value; continue; }
             if (AfterburnerGpu().Match(name) is not { Success: true } gpu) continue;
-            var number = gpu.Groups[1].Value.Length == 0 ? 1 : int.Parse(gpu.Groups[1].Value);
+            var number = 1;
+            if (gpu.Groups[1].Value.Length > 0 && !int.TryParse(gpu.Groups[1].Value, out number)) continue; // final review I1: odd names are nothing
             var known = gpus.GetValueOrDefault(number);
             gpus[number] = gpu.Groups[2].Value switch
             {
@@ -100,12 +101,26 @@ public static partial class SensorFormats
         return new SensorReading("HWiNFO", cpuTemp, chosen.Usage, chosen.Temp);
     }
 
-    /// <summary>The GPU using the most video memory; without memory readings, the first one.</summary>
+    /// <summary>
+    /// Each value from the first source that has it (final review I2): Afterburner without its CPU temperature graph still
+    /// lets HWiNFO's CPU temperature through. The source names both when the second one gave something.
+    /// </summary>
+    public static SensorReading? Merge(SensorReading? first, SensorReading? second)
+    {
+        if (first is null || second is null) return first ?? second;
+        var merged = new SensorReading(first.Source, first.CpuTemp ?? second.CpuTemp, first.Gpu ?? second.Gpu, first.GpuTemp ?? second.GpuTemp);
+        return merged == first ? first : merged with { Source = $"{first.Source} + {second.Source}" };
+    }
+
+    /// <summary>
+    /// The GPU using the most video memory. A lone GPU is it; several without memory readings are left to Windows (final
+    /// review I3: the first one is often the built-in GPU).
+    /// </summary>
     private static int? MainGpu(IEnumerable<(int Key, double? Memory)> gpus)
     {
         var list = gpus.OrderBy(gpu => gpu.Key).ToList();
-        if (list.Count == 0) return null;
-        return list.MaxBy(gpu => gpu.Memory ?? -1).Key;
+        if (list.Count == 1) return list[0].Key;
+        return list.Any(gpu => gpu.Memory is not null) ? list.MaxBy(gpu => gpu.Memory ?? -1).Key : null;
     }
 
     private static uint U32(ReadOnlySpan<byte> memory, int at) => BinaryPrimitives.ReadUInt32LittleEndian(memory[at..]);

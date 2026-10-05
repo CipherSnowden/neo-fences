@@ -149,3 +149,67 @@ public class SensorsTests
         Assert.Null(SensorFormats.Hwinfo(memory.AsSpan(0, memory.Length - 1)));
     }
 }
+
+/// <summary>M31 final review: odd names, per-value sources, two GPUs without memory readings, the Windows main adapter.</summary>
+public class SensorsReviewTests
+{
+    private static byte[] Afterburner(params (string Name, float Value)[] entries)
+    {
+        const int Header = 32, Entry = 1324;
+        var memory = new byte[Header + entries.Length * Entry];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(memory, 0x4D41484D);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(memory.AsSpan(8), Header);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(memory.AsSpan(12), (uint)entries.Length);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(memory.AsSpan(16), Entry);
+        for (var index = 0; index < entries.Length; index++)
+        {
+            System.Text.Encoding.Latin1.GetBytes(entries[index].Name).CopyTo(memory, Header + index * Entry);
+            System.Buffers.Binary.BinaryPrimitives.WriteSingleLittleEndian(memory.AsSpan(Header + index * Entry + 1300), entries[index].Value);
+        }
+        return memory;
+    }
+
+    [Fact]
+    public void Afterburner_WithAHugeGpuNumber_IsNoException()
+    {
+        // Final review I1: any process can create the mapping; a name like this must not throw (the stats would freeze).
+        var reading = SensorFormats.Afterburner(Afterburner(("GPU99999999999 usage", 5f), ("CPU temperature", 50f)));
+        Assert.NotNull(reading);
+        Assert.Equal(50, reading.CpuTemp);
+    }
+
+    [Fact]
+    public void Afterburner_TwoGpusWithoutMemoryReadings_LeavesTheGpuToWindows()
+    {
+        // Final review I3c: without video-memory readings the graphics card cannot be told from the built-in GPU.
+        var reading = SensorFormats.Afterburner(Afterburner(("GPU1 temperature", 44f), ("GPU2 temperature", 50f), ("GPU1 usage", 0f), ("GPU2 usage", 8f)));
+        Assert.Null(reading!.Gpu);
+        Assert.Null(reading.GpuTemp);
+    }
+
+    [Fact]
+    public void Merge_TakesEachValueFromTheFirstSourceThatHasIt()
+    {
+        // Final review I2: Afterburner without its CPU temperature graph, HWiNFO running too.
+        var afterburner = new SensorReading("MSI Afterburner", CpuTemp: null, Gpu: 8, GpuTemp: 50);
+        var hwinfo = new SensorReading("HWiNFO", CpuTemp: 52.5, Gpu: 41, GpuTemp: 58);
+
+        var merged = SensorFormats.Merge(afterburner, hwinfo);
+
+        Assert.Equal(new SensorReading("MSI Afterburner + HWiNFO", 52.5, 8, 50), merged);
+        Assert.Same(hwinfo, SensorFormats.Merge(null, hwinfo));
+        Assert.Equal(afterburner, SensorFormats.Merge(afterburner, null));
+        Assert.Equal("MSI Afterburner", SensorFormats.Merge(new SensorReading("MSI Afterburner", 50, 8, 50), hwinfo)!.Source); // nothing taken from HWiNFO
+    }
+
+    [Fact]
+    public void MainGpu_IsTheAdapterWithTheMostDedicatedMemory_NotTheBusiest()
+    {
+        // Final review I3a: at an idle desktop the built-in GPU can be the busier one; the tiles stay on the graphics card.
+        var engines = new List<(string, double)> { ("luid_0x0_0xA_phys_0_eng_0", 30), ("luid_0x0_0xB_phys_0_eng_0", 3), ("luid_0x0_0xB_phys_0_eng_1", 2) };
+        var dedicated = new List<(string, double)> { ("luid_0x0_0xA_phys_0", 300e6), ("luid_0x0_0xB_phys_0", 3.9e9) };
+
+        Assert.Equal(("luid_0x0_0xB", 5), Widgets.MainGpu(engines, dedicated));
+        Assert.Equal(("luid_0x0_0xA", 30), Widgets.MainGpu(engines, [])); // no memory counter: the busiest, as before
+    }
+}
