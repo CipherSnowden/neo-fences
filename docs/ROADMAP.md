@@ -67,6 +67,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check TEST-CHECKLIST AN by script (the rest by hand later); merged to main
   - [x] Released 0.16.1 on 2026-10-05 (the installed 0.16.0 updated itself in 3 s; data unchanged)
   - Deferred minors: in `research/m28-polish.md`
+- [~] **M29 — 0.17.0: a guide for friends** (README rewrite, docs/GUIDE.md with screenshots, Help in the tray and Settings) — claimed by session 2026-10-05 guide
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot
