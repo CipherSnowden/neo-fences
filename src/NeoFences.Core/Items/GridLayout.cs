@@ -103,11 +103,13 @@ public static class FenceGrid
     /// drag keeping their offsets from the first one's <c>From</c> cell (unknown: the drop cell); a taken spot → the nearest
     /// free one. Returns a cell per dropped element, in order.
     /// </summary>
+    /// <param name="anchorIndex">The dropped element that was under the pointer (M28): it lands on the drop cell, the others
+    /// keep their offsets from it.</param>
     public static IReadOnlyList<GridCell> PlaceDropped(IReadOnlyList<(GridCell Cell, GridSpan Span)> others,
-        IReadOnlyList<(GridSpan Span, GridCell? From)> dropped, GridCell dropCell, int columns)
+        IReadOnlyList<(GridSpan Span, GridCell? From)> dropped, GridCell dropCell, int columns, int anchorIndex = 0)
     {
         var placed = others.ToList();
-        var anchor = dropped.FirstOrDefault().From;
+        var anchor = dropped.ElementAtOrDefault(Math.Clamp(anchorIndex, 0, Math.Max(0, dropped.Count - 1))).From;
         var cells = new List<GridCell>();
         foreach (var (span, from) in dropped)
         {
@@ -120,6 +122,14 @@ public static class FenceGrid
         }
         return cells;
     }
+
+    /// <summary>A fence's columns for its width and cell width (M28: a hidden tab's own, not another window's); at least one.</summary>
+    public static int ColumnsFor(double width, double cellWidth) =>
+        double.IsFinite(width) && cellWidth > 0 ? Math.Max(1, (int)Math.Floor(width / cellWidth)) : 1;
+
+    /// <summary>The size several elements share (Size ▸ shows it checked), or AllSame false when they differ (M28).</summary>
+    public static (bool AllSame, GridSpan? Size) CommonSize(IReadOnlyList<GridSpan?> sizes) =>
+        sizes.Count > 0 && sizes.All(size => size == sizes[0]) ? (true, sizes[0]) : (false, null);
 
     /// <summary>Which cells are taken: a row of flags per grid row, grown as elements are placed.</summary>
     private sealed class Occupancy(int columns)

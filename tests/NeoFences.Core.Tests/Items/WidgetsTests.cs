@@ -22,11 +22,22 @@ public class WidgetsTests
     [Theory]
     [InlineData("neofences:widget/weather")]
     [InlineData("neofences:widget/")]
-    [InlineData(@"C:\neofences\widget\clock")]
-    public void UnknownWidgets_AreNotWidgets(string target)
+    public void UnknownWidgetKinds_AreUnknownWidgets_NeverOpenedThroughWindows(string target)
     {
+        // A widget kind of a newer NeoFences (M28, M25 review minor): still a widget (no shell open, no target check), shown Missing.
         Assert.Null(Widgets.Of(target));
-        Assert.NotEqual(ItemKind.Widget, ItemKinds.Of(target)); // a plain item: it shows Missing and can be removed
+        Assert.Equal(ItemKind.Widget, ItemKinds.Of(target));
+        Assert.True(Widgets.IsUnknown(target));
+        Assert.Equal("Unknown widget", Widgets.NameOfTarget(target));
+    }
+
+    [Fact]
+    public void KnownWidgets_AndPaths_AreNotUnknownWidgets()
+    {
+        Assert.False(Widgets.IsUnknown(Widgets.Target(WidgetKind.Clock)));
+        Assert.Equal("Clock", Widgets.NameOfTarget(Widgets.Target(WidgetKind.Clock)));
+        Assert.False(Widgets.IsUnknown(@"C:\neofences\widget\clock"));
+        Assert.NotEqual(ItemKind.Widget, ItemKinds.Of(@"C:\neofences\widget\clock"));
     }
 
     [Fact]

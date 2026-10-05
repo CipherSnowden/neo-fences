@@ -97,11 +97,11 @@ public class FolderPanelsTests
     }
 
     [Theory]
-    [InlineData(1, 2)]
-    [InlineData(2, 2)]
-    [InlineData(3, 4)]
-    [InlineData(4, 4)]
-    public void Columns_NarrowPanelsShowNameAndDate(int spanColumns, int expected) => Assert.Equal(expected, FolderPanels.Columns(spanColumns));
+    [InlineData(120.0, 2)]
+    [InlineData(299.0, 2)]
+    [InlineData(300.0, 4)]
+    [InlineData(1200.0, 4)]
+    public void Columns_NarrowPanelsShowNameAndDate_ByTheirRealWidth(double widthDips, int expected) => Assert.Equal(expected, FolderPanels.Columns(widthDips));
 
     [Fact]
     public void Normalize_RepairsHandEdits()

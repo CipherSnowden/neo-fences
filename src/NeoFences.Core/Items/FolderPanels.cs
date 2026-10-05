@@ -172,8 +172,8 @@ public static class FolderPanels
     public static string SizeText(long? bytes, System.Globalization.CultureInfo culture) =>
         bytes is { } size ? $"{Math.Ceiling(size / 1024.0).ToString("N0", culture)} KB" : "";
 
-    /// <summary>Details columns for a panel this many cells wide: Name and Date up to 2, all four from 3.</summary>
-    public static int Columns(int spanColumns) => spanColumns <= 2 ? 2 : 4;
+    /// <summary>Details columns for a panel this wide (DIPs): Name and Date below 300, all four from there (M28: its real width).</summary>
+    public static int Columns(double widthDips) => widthDips < 300 ? 2 : 4;
 
     /// <summary>
     /// "Fill fence": the panel takes the whole fence while it is the fence's only element; beside anything else it sits on

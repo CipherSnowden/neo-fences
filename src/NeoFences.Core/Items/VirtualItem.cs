@@ -87,7 +87,7 @@ public static class ItemKinds
     public static StringComparer Comparer { get; } = StringComparer.OrdinalIgnoreCase;
 
     public static ItemKind Of(string target) =>
-        Widgets.Of(target) is not null ? ItemKind.Widget // M25: nothing on disk behind it
+        target.StartsWith(Widgets.TargetPrefix, StringComparison.OrdinalIgnoreCase) ? ItemKind.Widget // M25: nothing on disk behind it (M28: unknown kinds too)
         : target.StartsWith("::", StringComparison.Ordinal) || target.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) ? ItemKind.Special
         : IsWebsite(target) ? ItemKind.Website
         : ItemKind.Path;

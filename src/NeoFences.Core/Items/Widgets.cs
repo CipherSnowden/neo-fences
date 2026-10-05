@@ -28,11 +28,20 @@ public static class Widgets
 
     public static string Target(WidgetKind kind) => TargetPrefix + kind.ToString().ToLowerInvariant();
 
-    /// <summary>The widget a target names, or null (an unknown one is a plain item: it shows Missing).</summary>
+    /// <summary>The widget a target names, or null (an unknown kind — from a newer NeoFences — is <see cref="IsUnknown"/>).</summary>
     public static WidgetKind? Of(string target) =>
         target.StartsWith(TargetPrefix, StringComparison.OrdinalIgnoreCase)
         && Enum.TryParse<WidgetKind>(target[TargetPrefix.Length..], ignoreCase: true, out var kind) && Enum.IsDefined(kind)
         && !int.TryParse(target[TargetPrefix.Length..], out _) ? kind : null;
+
+    /// <summary>
+    /// A widget target of a kind this NeoFences does not know (M28, M25 review minor): still a widget — never checked or
+    /// opened through Windows — shown Missing so it can be removed.
+    /// </summary>
+    public static bool IsUnknown(string target) => target.StartsWith(TargetPrefix, StringComparison.OrdinalIgnoreCase) && Of(target) is null;
+
+    /// <summary>A widget target's name: its kind's, or "Unknown widget".</summary>
+    public static string NameOfTarget(string target) => Of(target) is { } kind ? NameOf(kind) : "Unknown widget";
 
     public static string NameOf(WidgetKind kind) => kind switch
     {
@@ -53,7 +62,23 @@ public static class Widgets
     }
 
     public static DatePage Page(DateTime date, CultureInfo culture) =>
-        new(culture.DateTimeFormat.GetDayName(date.DayOfWeek).ToUpper(culture), date.Day.ToString(culture), date.ToString("MMMM yyyy", culture));
+        new(culture.DateTimeFormat.GetDayName(date.DayOfWeek).ToUpper(culture), date.Day.ToString(culture), date.ToString(culture.DateTimeFormat.YearMonthPattern, culture)); // M28: the culture's own order (ja, zh, ko, hu)
+
+    /// <summary>
+    /// GPU use like Task Manager's (M28, M25 review minor): the 3D engines' readings summed per adapter (the instance's
+    /// "luid_…" part), the busiest adapter, capped at 100. An instance without a luid counts as one adapter.
+    /// </summary>
+    public static double GpuPercent(IReadOnlyList<(string Instance, double Value)> engines) =>
+        engines.Count == 0 ? 0
+            : Math.Min(100, engines.GroupBy(engine => AdapterOf(engine.Instance), StringComparer.OrdinalIgnoreCase).Max(adapter => adapter.Sum(engine => engine.Value)));
+
+    private static string AdapterOf(string instance)
+    {
+        var start = instance.IndexOf("luid_", StringComparison.OrdinalIgnoreCase);
+        if (start < 0) return "";
+        var end = instance.IndexOf("_phys", start, StringComparison.OrdinalIgnoreCase);
+        return end < 0 ? instance[start..] : instance[start..end];
+    }
 
     /// <summary>The time in the culture's short time format, or its long one with seconds (12/24-hour follows Windows).</summary>
     public static string ClockText(DateTime now, bool seconds, CultureInfo culture) =>
