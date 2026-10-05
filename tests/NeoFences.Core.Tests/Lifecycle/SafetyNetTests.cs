@@ -182,6 +182,24 @@ public class SafetyNetTests
         Assert.False(result.IsReadOnly);
     }
 
+    [Fact]
+    public void Save_ProbesTheFileOnce_WithoutTheLockedFileWait_OrTheRepair() // M33 review I6: a save never freezes the UI
+    {
+        using var directory = new TempDirectory();
+        var repairs = 0;
+        var store = new JsonStore<NeoFencesConfig>(directory.Path, "config.json", NeoFencesConfig.CurrentSchemaVersion, ConfigJson.Deserialize,
+            config => config.SchemaVersion, ConfigJson.Serialize, TimeProvider.System,
+            repair: config => { repairs++; return config; }, readRetryDelay: TimeSpan.FromSeconds(2));
+        store.Save(NeoFencesConfig.CreateDefault());
+        store.Save(NeoFencesConfig.CreateDefault());
+        Assert.Equal(0, repairs);
+
+        using var locked = new FileStream(store.FilePath, FileMode.Open, FileAccess.Read, FileShare.None);
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        Assert.ThrowsAny<IOException>(() => store.Save(NeoFencesConfig.CreateDefault()));
+        Assert.True(timer.Elapsed < TimeSpan.FromSeconds(1), $"save waited {timer.Elapsed}");
+    }
+
     // ---------- log privacy ----------
 
     [Fact]

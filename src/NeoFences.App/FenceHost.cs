@@ -96,6 +96,7 @@ public sealed partial class FenceHost
     private string? _saveProblem; // M33: the save problem last shown (once per cause)
     private readonly List<(string Title, string Text)> _pendingNotices = []; // M33: notices waiting for the tray icon or a game's end
     private volatile bool _stopping; // M33: ends the watchdog keeper
+    private readonly object _keeperGate = new(); // M33 review I4: a relaunch never runs after the exit began
     private SettingsWindow? _settingsWindow; // M6b: one at a time
 
     public event Action? ExitRequested;
@@ -133,6 +134,10 @@ public sealed partial class FenceHost
 
     public void Start()
     {
+        // M33 review I8: the watchdog first, so a crash while loading or migrating the data is caught too.
+        _watchdog.LaunchDetached(Environment.ProcessId);
+        if (SafeMode) TryMarker(() => _watchdog.MarkSafeMode(Environment.ProcessId), what: "safe-mode marker"); // M33: a crash now stops and asks
+        KeepWatchdogAlive(); // M33
         var loaded = _store.Load();
         Log.Information("config loaded from {Source} (read-only: {IsReadOnly}, corrupt copy: {CorruptCopyPath})",
             loaded.Source, loaded.IsReadOnly, loaded.CorruptCopyPath);
@@ -147,9 +152,6 @@ public sealed partial class FenceHost
         MigrateGames(LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: an old Game Library fence becomes game items (a snapshot first)
         MigrateFolderViews(); // M26: an old folder view becomes a fence holding one panel (a snapshot first)
         if (loadedItems.Source == ConfigLoadSource.Primary && !loadedItems.IsReadOnly) CleanUnusedPictures(ItemEdits.ImagesInUse(_items), _snapshots.Directory);
-        _watchdog.LaunchDetached(Environment.ProcessId);
-        if (SafeMode) TryMarker(() => _watchdog.MarkSafeMode(Environment.ProcessId), what: "safe-mode marker"); // M33: a crash now stops and asks
-        KeepWatchdogAlive(); // M33
         ApplyStartup(); // after a power loss NeoFences must come back by itself (ADR-019)
 
         RefreshMonitors();
@@ -158,7 +160,7 @@ public sealed partial class FenceHost
         RefreshWindows(); // M26: panels list their folders from here
         StartSpecialIconNotifications();
         ApplyLayout();
-        if (_config.Settings.HideDesktopIcons) SetIconsHidden(true);
+        if (Current.IconsHidden) SetIconsHidden(true); // not in safe mode (M33 review I1)
         else if (_watchdog.IsIconsHiddenMarked)
         {
             // Icons may still be hidden from a run whose "show" never happened (both processes killed): show them.
@@ -213,17 +215,18 @@ public sealed partial class FenceHost
     public void OnSessionEnding()
     {
         _sessionEnding = true;
-        _stopping = true; // M33
+        lock (_keeperGate) _stopping = true; // M33
+        // M33 review I6: the icons first; a save on a slow disk must not leave them hidden when Windows ends us.
+        if (Current.IconsHidden || _watchdog.IsIconsHiddenMarked) SetIconsHidden(false);
         ApplyDeferredShellWork(); // renames seen during a game must be saved too (M6a review M2)
         SaveNow();
-        if (Current.IconsHidden || _watchdog.IsIconsHiddenMarked) SetIconsHidden(false);
         TryMarker(() => _watchdog.MarkSessionEnding(Environment.ProcessId), what: "session-ending marker");
     }
 
     /// <summary>Orderly exit: save, bring icons back, tell the watchdog all is well.</summary>
     public void Shutdown()
     {
-        _stopping = true; // M33: the watchdog keeper stops first
+        lock (_keeperGate) _stopping = true; // M33: the watchdog keeper stops first (never relaunching after this)
         WatchWallpaperEngine(watch: false); // M14
         _libraryStopped = true; // also on session end: a library scan finishing now writes and re-arms nothing (M13a review)
         ApplyDeferredShellWork(); // renames seen during a game must be saved too (M6a review M2)
@@ -1148,7 +1151,7 @@ public sealed partial class FenceHost
         _mouseHook = new DesktopMouseHook(
             onGesture: (gesture, screenX, screenY) => dispatcher.BeginInvoke(() => OnDesktopGesture(gesture, screenX, screenY)),
             onPeekClickOutside: () => dispatcher.BeginInvoke(() => SetPeek(false)),
-            log: message => Log.Information("{Message}", message));
+            log: message => Log.Information("{Message}", message)) { HandleRightButton = _config.Settings.DrawGesture }; // M33 review I3
     }
 
     /// <summary>Windows drops a low-level hook silently (LowLevelHooksTimeout): a fresh one after Explorer restarts and on unlock.</summary>
@@ -1217,6 +1220,7 @@ public sealed partial class FenceHost
             ApplyDeferredShellWork();
             OnWidgetTick(); // M28: widgets right at once
             ShowFirstStartNotice(); // M32: a notice held back by a game
+            FlushNotices(); // M33 review I7: safe mode or save notices held back by a game
         }
         UpdatePeekHotkey();
         _trayIcon?.SetTooltip(TrayTooltip());
@@ -1560,38 +1564,40 @@ public sealed partial class FenceHost
         var mainId = Environment.ProcessId;
         Task.Run(async () =>
         {
+            int? ended = null; // the watchdog last seen ending: its PID file may linger until the new one writes its own
             while (!_stopping)
             {
-                int? watchdogId = null;
-                for (var attempt = 0; watchdogId is null && attempt < 40 && !_stopping; attempt++)
+                // M33 review I4: only a watchdog seen running and then ended is replaced. One that never shows (slow start, PID
+                // file not writable) is waited for, never doubled: two watchdogs would turn a clean exit into a restart.
+                if (_watchdog.WatchdogProcessOf(mainId) is not { } id || id == ended)
                 {
-                    watchdogId = _watchdog.WatchdogProcessOf(mainId);
-                    if (watchdogId is null) await Task.Delay(500);
+                    await Task.Delay(1000);
+                    continue;
                 }
-                if (watchdogId is { } id)
-                {
-                    try
-                    {
-                        using var process = Process.GetProcessById(id);
-                        await process.WaitForExitAsync();
-                    }
-                    catch (ArgumentException)
-                    {
-                        // already gone
-                    }
-                }
-                if (_stopping) return;
-                Log.Warning("the watchdog is not running; starting another");
                 try
                 {
-                    _watchdog.LaunchDetached(mainId);
-                    if (SafeMode) _watchdog.MarkSafeMode(mainId);
+                    using var process = Process.GetProcessById(id);
+                    await process.WaitForExitAsync();
                 }
-                catch (Exception failure) when (failure is not OutOfMemoryException)
+                catch (Exception failure) when (failure is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
                 {
-                    Log.Error(failure, "could not start the watchdog");
+                    // already gone
                 }
-                await Task.Delay(TimeSpan.FromSeconds(10));
+                ended = id;
+                lock (_keeperGate)
+                {
+                    if (_stopping) return;
+                    Log.Warning("the watchdog is not running; starting another");
+                    try
+                    {
+                        _watchdog.LaunchDetached(mainId);
+                        if (SafeMode) _watchdog.MarkSafeMode(mainId);
+                    }
+                    catch (Exception failure) when (failure is not OutOfMemoryException)
+                    {
+                        Log.Error(failure, "could not start the watchdog");
+                    }
+                }
             }
         });
     }
@@ -1628,18 +1634,21 @@ public sealed partial class FenceHost
             Log.Warning("config not saved: the items were not saved first");
             return;
         }
+        var configSaved = false;
         try
         {
-            if (!_store.Save(_config)) Log.Warning("config not saved: config.json is read-only this session");
+            configSaved = _store.Save(_config);
+            if (!configSaved) Log.Warning("config not saved: config.json is read-only this session");
             else if (_store.LastBackupFailure is { } backupFailure) Log.Warning(backupFailure, "config saved, but the daily backups could not be written or pruned");
         }
         catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
         {
             Log.Error(failure, "config save failed");
             SaveProblem("NeoFences could not write config.json (see the log)."); // M33
-            return;
         }
-        if (!itemsFirst && SaveItems()) SaveProblem(null);
+        // M33 review I5: the items are saved even when config.json could not be (item edits are not lost with it).
+        var itemsSaved = itemsFirst || SaveItems();
+        if (configSaved && itemsSaved) SaveProblem(null);
     }
 
     /// <returns>True when items.json was written.</returns>
@@ -1721,6 +1730,7 @@ public sealed partial class FenceHost
     {
         _config = _config with { Settings = _config.Settings with { QuickHideGesture = quickHide, DrawGesture = draw } };
         Log.Information("desktop gestures: quick-hide {QuickHide}, draw {Draw}", quickHide, draw);
+        if (_mouseHook is not null) _mouseHook.HandleRightButton = draw; // M33 review I3: right-press back to Windows
         UpdateMouseHook();
         ScheduleSave();
         RefreshSettings();

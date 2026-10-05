@@ -39,6 +39,9 @@ public sealed class DesktopMouseHook : IDisposable
     /// <summary>Set by the UI while fences are shown over windows (Peek).</summary>
     public volatile bool PeekActive;
 
+    /// <summary>False when the draw gesture is off (M33): right-presses go to Windows untouched, no right-drag is tracked.</summary>
+    public volatile bool HandleRightButton = true;
+
     public bool IsInstalled { get; private set; }
 
     /// <summary>The pointer during a right-drag (screen pixels), for the draw-a-fence overlay.</summary>
@@ -110,6 +113,7 @@ public sealed class DesktopMouseHook : IDisposable
             var overDesktop = action != MouseAction.Move && DesktopWindows.IsOverDesktop(point);
             if (PeekActive && action is MouseAction.LeftDown or MouseAction.RightDown && !DesktopWindows.IsOverNeoFences(point))
                 _onPeekClickOutside();
+            if (!HandleRightButton && action is MouseAction.RightDown or MouseAction.RightUp) return PInvoke.CallNextHookEx(HHOOK.Null, code, wParam, lParam);
 
             var gesture = _tracker.OnMouse(action.Value, point.X, point.Y, hookData->time, overDesktop);
             // RightDragStarted reports where the drag began (the press), every other gesture the pointer now.

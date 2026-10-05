@@ -74,7 +74,7 @@ internal sealed class JsonStore<T>(string directory, string fileName, int curren
     /// </returns>
     public bool Save(T value)
     {
-        if (_saveBlocked || TryRead(FilePath, out _) == ReadOutcome.NewerSchema) return false;
+        if (_saveBlocked || TryRead(FilePath, out _, probe: true) == ReadOutcome.NewerSchema) return false; // one quick look (M33 review I6)
         Directory.CreateDirectory(directory);
         var json = serialize(value);
         SafeFile.Write(FilePath, json, BackupPath);
@@ -107,7 +107,8 @@ internal sealed class JsonStore<T>(string directory, string fileName, int curren
 
     public enum ReadOutcome { Missing, Ok, Corrupt, NewerSchema, Unreadable }
 
-    public ReadOutcome TryRead(string path, out T? value)
+    /// <param name="probe">Save's schema check: one attempt and no repair, so a save never waits on a locked file.</param>
+    public ReadOutcome TryRead(string path, out T? value, bool probe = false)
     {
         value = null;
         if (!File.Exists(path)) return ReadOutcome.Missing;
@@ -123,7 +124,7 @@ internal sealed class JsonStore<T>(string directory, string fileName, int curren
             {
                 // ponytail: blocking retry (~5 s worst case, M33: antivirus or OneDrive holding the file at sign-in), fine for
                 // startup; make async if Load moves off-thread.
-                if (attempt == ReadAttempts) return ReadOutcome.Unreadable;
+                if (probe || attempt == ReadAttempts) return ReadOutcome.Unreadable;
                 Thread.Sleep(_readRetryDelay);
             }
         }
@@ -134,7 +135,7 @@ internal sealed class JsonStore<T>(string directory, string fileName, int curren
             var schema = schemaOf(value);
             if (schema > currentSchema) return ReadOutcome.NewerSchema;
             if (schema < 1) return ReadOutcome.Corrupt;
-            if (repair is not null) value = repair(value);
+            if (repair is not null && !probe) value = repair(value);
             return ReadOutcome.Ok;
         }
         catch (Exception failure) when (failure is not OutOfMemoryException) // M33: anything odd in parse or repair is damage

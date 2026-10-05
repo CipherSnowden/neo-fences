@@ -50,7 +50,7 @@ public sealed partial class FenceHost
 
     /// <summary>Windows a widget can be seen in now; none while paused, quick-hidden or in game mode.</summary>
     private IReadOnlyList<FenceWindow> WidgetWindows() =>
-        !Current.FencesVisible || _gameMode ? []
+        !Current.FencesVisible || _gameMode || !Current.ExtrasWanted ? [] // M33 review I2: no sensor reads in safe mode
         : [.. _windows.Values.Where(window => window.IsVisible && window.HasWidgets && window.ItemsShown)]; // a hovered-open roll-up counts (final review I3)
 
     private void OnWidgetTick()
