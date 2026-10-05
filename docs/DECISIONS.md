@@ -1335,3 +1335,20 @@ usual open path.
 
 **Consequences.** Help is always the current guide and needs no in-app copy kept in sync; reading it needs a network.
 Every change to a menu, a setting or a gesture also updates the guide (same commit).
+
+## ADR-051 — The welcome lives in the first fence
+**Date:** 2026-10-06 · **Status:** Accepted
+
+**Context.** A friend who installs NeoFences saw one empty fence and nothing else: Windows 11 may hide the new tray icon
+behind the ^ arrow, and nothing said what NeoFences is or how to sort the desktop. The user chose a welcome inside the
+first fence over a welcome window or a tray notice alone.
+
+**Decision.** A fresh start's first fence carries `welcome: true` (written only when set). While it is empty it shows a
+welcome: **Sort my desktop…** (the existing Add from desktop dialog), **Add item…**, **Guide**. Its first item ends the
+welcome (an ordinary fence from then on); an Add from desktop that puts items into new fences removes the still-empty
+welcome fence (an empty fence only; no file is involved). A fresh start shows one tray notice saying where the icon is
+(not in game mode). Hiding Windows' own icons stays the dialog's existing checkbox: no second question.
+
+**Consequences.** Updating copies and every config after the welcome ended never show it; there is no way to show it
+again (out of scope). A config that falls back to a fresh start (missing, unreadable with no backup, pre-pivot) shows the
+welcome too.

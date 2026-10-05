@@ -724,3 +724,17 @@ Added after the M19 final review:
 | AO3 | On GitHub: the README's links and images, the guide's contents links and images | every link and anchor works; every image shows |
 | AO4 | Open every screenshot in docs/guide | nothing personal (names, private files, email, private links) |
 | AO5 | Follow the README's quick start on a fresh user | a sorted desktop in about five minutes, every named entry found |
+
+## AP — 0.18.0 first-run welcome (M30)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AP1 | Start with an empty data folder | one fence "Fence" showing Welcome to NeoFences, Sort my desktop…, Add item…, Guide; the notice "NeoFences is running" |
+| AP2 | Welcome → Guide | the guide opens on GitHub in the default browser |
+| AP3 | Resize the welcome fence to its minimum; Windows in light mode | the welcome scrolls; text and buttons stay legible |
+| AP4 | Drop a file on the welcome's text or buttons | the item is added; the welcome is gone; after a restart the fence is ordinary |
+| AP5 | Welcome → Sort my desktop… → Cancel | the welcome stays |
+| AP6 | Welcome → Sort my desktop… with groups ticked → Add | the new fences hold links; the welcome fence is removed; the dialog offered "Hide desktop icons while NeoFences runs" |
+| AP7 | Drag the welcome fence onto another fence's title (a tab), then Sort my desktop… | the welcome tab goes; the other fence and its box stay |
+| AP8 | Restart NeoFences before acting on the welcome | the welcome is still there; no second notice |
+| AP9 | Start with an existing config | no welcome, no notice |

@@ -171,6 +171,12 @@ games… is open; after each scan game items follow their game's shortcut and ne
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
+**0.18.0 (M30, first-run welcome)**: a fresh start's first fence carries `welcome: true` (`Fence.Welcome`, written only when
+set) and shows a welcome panel while empty: **Sort my desktop…** (Add from desktop), **Add item…**, **Guide**. Its first
+item clears the flag (`WelcomeEdits.ClearIfFilled` in `ItemsChanged`, every add path); an Add from desktop that fills new
+fences removes it while empty (`WelcomeEdits.AfterDesktopFill`). A `Fresh` config load shows one tray notice (not in
+game mode). ADR-051, `research/m30-welcome.md`.
+
 **0.17.0 (M29, a guide for friends)**: the README rewritten for the current NeoFences and `docs/GUIDE.md` (every
 feature, screenshots from a demo setup); tray → **Help** and Settings → **Help (online guide)** open the guide on GitHub
 (ADR-050, `research/m29-guide.md`).

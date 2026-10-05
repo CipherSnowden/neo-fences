@@ -11,6 +11,8 @@ Almost everything starts from two places:
 
 ![A desktop with NeoFences: Games, Apps, Downloads and a Desk fence with widgets](guide/desktop.jpg)
 
+New here? Start with [First start](#first-start).
+
 ## Contents
 
 1. [Fences](#1-fences)
@@ -28,6 +30,21 @@ Almost everything starts from two places:
 13. [Your files are safe](#13-your-files-are-safe)
 14. [Troubleshooting](#14-troubleshooting)
 15. [Cheat-sheet](#15-cheat-sheet)
+
+## First start
+
+After installing, NeoFences starts with one fence: the **welcome**. It says what NeoFences is and offers three buttons:
+
+- **Sort my desktop…** opens **Add from desktop…**: pick the groups you want (Games, Apps, Folders and files, Web links);
+  each becomes a fence of links to what is on your desktop. Tick **Hide desktop icons while NeoFences runs** there if you
+  want only the fences on your desktop (the icons come back whenever NeoFences exits). Once the new fences are made, the
+  empty welcome fence goes away by itself.
+- **Add item…** adds one file, folder, app or website to this fence.
+- **Guide** opens this guide.
+
+You can also drop files, folders or links onto the welcome fence: it then becomes an ordinary fence named "Fence"
+(rename it from its menu). A Windows notice says where NeoFences' icon is: in the notification area next to the clock,
+maybe behind the **^** arrow on Windows 11.
 
 ## 1. Fences
 

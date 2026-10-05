@@ -72,6 +72,7 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Folder panel element: Details / List / Icons, header sort, browse in (Back / Up / Home), Fill fence | 0.15 (M26) | done | ADR-048; folder views migrate to panels |
 | Auto-collect rules: new files of the desktop or a folder become items, by kind or pattern | 0.16 (M27) | done | ADR-049; never moves files; removed stays removed; catch-up at start |
 | A guide for friends: README, docs/GUIDE.md with screenshots, Help in the tray and Settings | 0.17 (M29) | done | ADR-050 |
+| First-run welcome: the first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is | 0.18 (M30) | done | ADR-051 |
 | Auto-collect rules (the other half of dynamic collections) | later | — | replaces Rules (ADR-040) |
 | Theme packs: "Nanosuit" (Crysis HUD), "Animus" (Assassin's Creed) | v2 | — | |
 | Custom Win11-style compact context menu | v2 | — | |
