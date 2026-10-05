@@ -60,7 +60,7 @@ Milestone details and exit criteria: spec §9.
 - [ ] **M27 — 0.16.0: auto-collect rules** (new files of the desktop or a folder become items in a fence; spec 2026-10-05-auto-collect-design, ADR-049)
   - [x] Prototype probed on a copy of the user's data, plan with replay-verified patches, native build; Opus review: 1 critical + 3 important + 2 re-graded fixed (633 tests)
   - [x] Live check TEST-CHECKLIST AM by script on a test folder (the real desktop, pendrive, AM12, AM14 by hand later); merged to main
-  - [ ] Release 0.16.0 (asked first)
+  - [ ] Release 0.16.0 (the user approved the sequence 2026-10-05)
   - Deferred minors: in `research/m27-auto-collect.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
