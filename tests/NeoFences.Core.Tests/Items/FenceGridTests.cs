@@ -113,6 +113,27 @@ public class FenceGridTests
     }
 
     [Fact]
+    public void Repair_DropsCellsBeyondAThousandRowsOrColumns()
+    {
+        // A hand-edited row of 10,000,000 would grow the grid's map row by row on every layout (final review I4).
+        var fenceId = Fence.NewId();
+        var far = VirtualItem.Create(@"C:\a") with { Cell = new GridCell(3, 10_000_000) };
+        var wide = VirtualItem.Create(@"C:\b") with { Cell = new GridCell(int.MaxValue - 1, 0) };
+        var near = VirtualItem.Create(@"C:\c") with { Cell = new GridCell(7, FenceGrid.MaxCell) };
+        var repaired = ItemEdits.Repair(new ItemsDocument().With(fenceId, [far, wide, near])).Of(fenceId);
+        Assert.Equal([null, null, new GridCell(7, FenceGrid.MaxCell)], repaired.Select(item => item.Cell));
+    }
+
+    [Fact]
+    public void PlaceDropped_ACopyOnItsOriginalsCell_GoesToTheNearestFreeSpot()
+    {
+        // Ctrl+drag in place in a Free fence: the original stays where it is, the copy never overlaps it (final review I1).
+        IReadOnlyList<(GridCell, GridSpan)> others = [(new GridCell(1, 0), new GridSpan(1, 1))];
+        var cells = FenceGrid.PlaceDropped(others, [(new GridSpan(1, 1), new GridCell(1, 0))], dropCell: new GridCell(1, 0), columns: 4);
+        Assert.Equal([new GridCell(0, 0)], cells);
+    }
+
+    [Fact]
     public void ItemsJson_RoundTripsSizesAndCells_WritingThemOnlyWhenSet()
     {
         var fenceId = Fence.NewId();

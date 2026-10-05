@@ -33,6 +33,9 @@ public sealed record GridArrangement(IReadOnlyList<GridCell> Cells, IReadOnlyLis
 /// </summary>
 public static class FenceGrid
 {
+    /// <summary>The farthest row or column a stored cell may name (a hand-edited 10,000,000 would grow the map every layout).</summary>
+    public const int MaxCell = 1000;
+
     /// <summary>An item's span: its own size, else 1×2 for a game shown as a cover (a 2:3 poster fits), else 1×1.</summary>
     public static GridSpan SpanOf(VirtualItem item) => item.Size ?? (GameItems.ShowsCover(item) ? new GridSpan(1, 2) : GridSpan.One);
 

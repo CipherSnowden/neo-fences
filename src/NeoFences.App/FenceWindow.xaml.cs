@@ -300,7 +300,7 @@ public partial class FenceWindow : Window
         TitleText.Text = fence.Title;
         _kind = fence.Kind;
         _layout = fence.Layout; // M24
-        if (_gridPanel is { } panel) panel.Layout = _layout;
+        Resources["GridLayout"] = _layout; // the panel takes it through a resource (final review I3)
         LayoutItem.Visibility = fence.Kind == FenceKind.Items ? Visibility.Visible : Visibility.Collapsed;
         LayoutFlowItem.IsChecked = _layout == FenceLayout.Flow;
         LayoutFreeItem.IsChecked = _layout == FenceLayout.Free;
@@ -665,14 +665,18 @@ public partial class FenceWindow : Window
                 if (found != index) _items.Move(found, index);
                 var resized = _items[index].Span != (shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One));
                 var reload = _items[index].Update(shown);
-                if (resized) SizeView(_items[index]); // M24
+                if (resized)
+                {
+                    SizeView(_items[index]); // M24
+                    _items[index].ArtPath = null; // its cover decoded again at the new tile width (final review I2)
+                }
                 if ((reload || resized) && IsLoaded) _iconLoader.Request(_items[index], PxOf(_items[index]));
                 ApplyArt(_items[index]); // shown as a cover now, or an icon again (M22); the same art is not loaded twice
                 continue;
             }
             var view = new FenceItemView(shown);
+            SizeView(view); // M24: its content for its span — before its cover is decoded at the tile's width (final review I2)
             ApplyArt(view);
-            SizeView(view); // M24: its content for its span
             if (IsLoaded) _iconLoader.Request(view, PxOf(view)); // before that, Loaded requests them at the right DPI (M2b review)
             _items.Insert(index, view);
         }
@@ -726,12 +730,7 @@ public partial class FenceWindow : Window
     {
         get
         {
-            if (_gridPanel is null && FindDescendant<FenceGridPanel>(ItemList) is { } found)
-            {
-                _gridPanel = found;
-                ApplyCellSizes();
-                found.Layout = _layout;
-            }
+            if (_gridPanel is null && FindDescendant<FenceGridPanel>(ItemList) is { } found) _gridPanel = found;
             return _gridPanel;
         }
     }
@@ -780,10 +779,17 @@ public partial class FenceWindow : Window
         var labelHeight = IsLibrary || _labelMode == LabelMode.Always ? 36.0 : 0.0;
         var cellWidth = (double)Resources["ItemWidth"] + 8;
         var cellHeight = _iconSizeDips + 12 + labelHeight;
-        if (_gridPanel is { } panel) (panel.CellWidth, panel.CellHeight) = (cellWidth, cellHeight);
+        // The panel takes them through resources, so it has them from its first layout pass (final review I3).
+        (Resources["GridCellWidth"], Resources["GridCellHeight"]) = (cellWidth, cellHeight);
         foreach (var view in _items)
         {
+            var tileWidth = view.TileWidth;
             if (view.ApplySize(cellWidth, cellHeight, _iconSizeDips, labelHeight) && IsLoaded) _iconLoader.Request(view, PxOf(view));
+            if (view.IsTile && Math.Abs(view.TileWidth - tileWidth) > 0.5)
+            {
+                view.ArtPath = null; // a cover decoded again at the new tile width (final review I2)
+                ApplyArt(view);
+            }
         }
     }
 

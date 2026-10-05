@@ -217,7 +217,7 @@ public static class ItemEdits
                     Target = item.Target.Trim(),
                     Icon = item.Icon is { File: null or "", Image: null or "" } ? null : item.Icon,
                     Size = item.Size?.Clamp(GridSpan.Max), // M24: a hand-edited size within 1–4 each way
-                    Cell = item.Cell is { Column: >= 0, Row: >= 0 } ? item.Cell : null,
+                    Cell = item.Cell is { Column: >= 0 and <= FenceGrid.MaxCell, Row: >= 0 and <= FenceGrid.MaxCell } ? item.Cell : null, // M24 final review I4
                 })
                 .ToList();
         }

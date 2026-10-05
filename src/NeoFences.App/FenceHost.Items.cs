@@ -428,9 +428,12 @@ public sealed partial class FenceHost
         {
             if (duplicate)
             {
+                // The copies come in document order: their sources in the same order, so each copy gets its own offset (final review I1).
+                var copying = known.ToHashSet(StringComparer.Ordinal);
+                var sources = _items.Fences.Values.SelectMany(items => items).Where(item => copying.Contains(item.Id)).Select(item => item.Id).ToList();
                 var copies = ItemEdits.Duplicate(_items, known, window.FenceId, insertAt);
                 _items = copies.Document;
-                PlaceDropped(window, copies.NewIds, known); // M24: a Free fence puts them on the drop cell
+                PlaceDropped(window, copies.NewIds, sources); // M24: a Free fence puts them on the drop cell
             }
             else
             {
@@ -514,7 +517,7 @@ public sealed partial class FenceHost
             try
             {
                 _items = ItemEdits.Reorder(_items, fenceId, sorted.Result); // the fence changed meanwhile: ArgumentException, its order stays
-                PackFreeFence(window); // M24: a Free fence is laid out packed in the new order
+                PackFreeFence(window, fenceId); // M24: a Free fence is laid out packed in the new order
             }
             catch (Exception failure) when (failure is ArgumentException or AggregateException)
             {

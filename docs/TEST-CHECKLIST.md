@@ -623,3 +623,6 @@ Added after the M19 final review:
 | AJ10 | Labels on hover; icon size 32 and 96 | cells shrink and grow; big icons reload sharp |
 | AJ11 | A 500-entry folder view | lays out without a visible pause |
 | AJ12 | Take snapshot; change sizes and layout; restore | sizes, layout and cells come back |
+| AJ13 | Free: Ctrl+drag an icon a little (onto its own cell) | the original stays; the copy lands on the nearest free spot, not on top of it |
+| AJ14 | A game cover set to 2 × 4 | the poster is sharp (decoded at the tile's width), not an upscaled thumbnail |
+| AJ15 | Restart NeoFences with a 64-px fence | cells are right from the first frame (no clipped labels or overlapping icons) |

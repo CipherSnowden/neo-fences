@@ -46,7 +46,8 @@ public sealed partial class FenceHost
     {
         if (!IsFree(window.FenceId) || window.LastDropCell is not { } dropCell || itemIds.Count == 0) return;
         var arriving = itemIds.ToHashSet(StringComparer.Ordinal);
-        var others = window.CurrentLayout().Where(entry => !arriving.Contains(entry.Key) && !sourceKeys.Contains(entry.Key))
+        // Only the arriving items are taken out: a Ctrl+drag's originals stay where they are (final review I1).
+        var others = window.CurrentLayout().Where(entry => !arriving.Contains(entry.Key))
             .Select(entry => (entry.Cell, entry.Span)).ToList();
         var shownCells = _windows.Values.SelectMany(shown => shown.CurrentCells()).GroupBy(entry => entry.Key).ToDictionary(group => group.Key, group => group.First().Value);
         var dropped = itemIds.Select((id, index) => (Span: _items.Find(id) is { } item ? FenceGrid.SpanOf(item) : GridSpan.One,
@@ -76,11 +77,14 @@ public sealed partial class FenceHost
         if (cells.Count > 0) _items = ItemEdits.Place(_items, cells);
     }
 
-    /// <summary>Sort by in a Free fence: packed from the top-left in the new order, and those cells stored (spec §2).</summary>
-    private void PackFreeFence(FenceWindow window)
+    /// <summary>
+    /// Sort by in a Free fence: packed from the top-left in the new order, and those cells stored (spec §2) — the fence the
+    /// sort was for, while the window still shows it (a tab switch during the sort leaves the new tab alone; final review I5).
+    /// </summary>
+    private void PackFreeFence(FenceWindow window, string fenceId)
     {
-        if (!IsFree(window.FenceId)) return;
-        var items = _items.Of(window.FenceId);
+        if (!IsFree(fenceId) || window.FenceId != fenceId) return;
+        var items = _items.Of(fenceId);
         var arrangement = FenceGrid.Arrange([.. items.Select(item => new GridElement(FenceGrid.SpanOf(item), null))], window.Columns, FenceLayout.Flow);
         _items = ItemEdits.Place(_items, items.Select((item, index) => (item.Id, arrangement.Cells[index])).ToDictionary(pair => pair.Id, pair => pair.Item2, StringComparer.Ordinal));
     }

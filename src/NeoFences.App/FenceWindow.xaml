@@ -22,6 +22,9 @@
         <sys:Double x:Key="TileWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">72</sys:Double>
         <sys:Double x:Key="TileHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">108</sys:Double>
         <sys:Double x:Key="TileCellWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">84</sys:Double>
+        <!-- M24: the grid's cells and layout, set by ApplyCellSizes / ApplyFence before the panel's first pass. -->
+        <sys:Double x:Key="GridCellWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">84</sys:Double>
+        <sys:Double x:Key="GridCellHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">96</sys:Double>
         <!-- Thin scrollbar (spec §6): no arrows, a rounded thumb that brightens under the mouse. -->
         <Style TargetType="ScrollBar">
             <Setter Property="Width" Value="6" />
@@ -123,7 +126,8 @@
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <!-- M24: whole cells, elements spanning 1–4 × 1–4, packed (Flow) or at stored cells (Free). -->
-                                <local:FenceGridPanel />
+                                <local:FenceGridPanel CellWidth="{DynamicResource GridCellWidth}" CellHeight="{DynamicResource GridCellHeight}"
+                                                      Layout="{DynamicResource GridLayout}" />
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                         <ListBox.ItemContainerStyle>
