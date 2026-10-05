@@ -50,7 +50,7 @@ Milestone details and exit criteria: spec §9.
 - [ ] **M25 — 0.14.0: widgets (clock, date, system stats)** (spec 2026-10-05-widgets-design, ADR-047)
   - [x] Prototype probed on a copy of the user's data (0.003 % CPU), plan with replay-verified patches, native build; Opus review: 5 important + 2 re-graded fixed (559 tests)
   - [x] Live check TEST-CHECKLIST AK 11/13 (AK4 12/24-hour and AK13 time zone by hand later); merged to main
-  - [ ] Release 0.14.0 (ask first)
+  - [ ] Release 0.14.0 (the user approved the sequence 2026-10-05)
   - Deferred minors: in `research/m25-widgets.md`
 - [ ] Later (the user's vision 2026-10-05: a fence holds *elements*; kinds stay in code): a folder panel element (a folder in a list / detailed view inside a fence), widgets (clock, calendar), element sizes
 - [ ] Later (user idea 2026-10-05): **item sizes** — one virtual item can take 1×1, 1×2, 2×1, 2×2 … cells in its fence (a grid layout instead of the wrap panel).
