@@ -46,6 +46,7 @@ public partial class FenceWindow : Window
     private string _title = "";
     private FenceKind _kind; // the shown tab: items, the Game Library (M12: tiles, its own menu) or a folder view (M21: read-only)
     private const string ItemsHint = "Drop files, folders or links here — or right-click → Add item…";
+    private bool _welcome; // M30: the first fence of a fresh start (ADR-051)
     private IReadOnlyDictionary<string, (string Path, bool IsPoster)> _libraryArt = new Dictionary<string, (string, bool)>();
     private DragTracker? _drag;
     private bool _locked;
@@ -144,6 +145,8 @@ public partial class FenceWindow : Window
     public event Action? AddItemRequested;
     /// <summary>Fence menu → "Add from desktop…" (M19).</summary>
     public event Action? AddFromDesktopRequested;
+    /// <summary>The welcome's Guide button (M30): the online guide, as tray → Help.</summary>
+    public event Action? GuideRequested;
     /// <summary>Fence menu → "Refresh": the items' targets are checked again and their icons reloaded (the library rescans).</summary>
     public event Action? RefreshRequested;
     /// <summary>Fence menu → "New Game Library fence" (M12).</summary>
@@ -225,6 +228,9 @@ public partial class FenceWindow : Window
         LayoutFreeItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Free);
         ItemList.SizeChanged += (_, _) => ApplyFill(); // M26: a filling panel follows the fence's size
         AddItemItem.Click += (_, _) => AddItemRequested?.Invoke();
+        WelcomeSortButton.Click += (_, _) => AddFromDesktopRequested?.Invoke(); // M30: the welcome's buttons
+        WelcomeAddButton.Click += (_, _) => AddItemRequested?.Invoke();
+        WelcomeGuideButton.Click += (_, _) => GuideRequested?.Invoke();
         AddFromDesktopItem.Click += (_, _) => AddFromDesktopRequested?.Invoke();
         RefreshItem.Click += (_, _) => RefreshRequested?.Invoke();
         foreach (var size in ConfigNormalizer.IconSizes)
@@ -306,6 +312,7 @@ public partial class FenceWindow : Window
         _title = fence.Title;
         TitleText.Text = fence.Title;
         _kind = fence.Kind;
+        _welcome = fence.Welcome; // M30
         _layout = fence.Layout; // M24
         Resources["GridLayout"] = _layout; // the panel takes it through a resource (final review I3)
         LayoutItem.Visibility = fence.Kind == FenceKind.Items ? Visibility.Visible : Visibility.Collapsed;
@@ -334,6 +341,7 @@ public partial class FenceWindow : Window
         _labelMode = fence.Labels;
         SetIconSize(fence.IconSize);
         SetLabelMode(fence.Labels);
+        UpdateEmptyHint(); // M30: the welcome shows, or ends when its flag is cleared
     }
 
     /// <summary>The shown tab is the Game Library (M12).</summary>
@@ -692,10 +700,12 @@ public partial class FenceWindow : Window
         Dispatcher.BeginInvoke(UpdateHoverLabel, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
-    /// <summary>An empty fence (not the library) says how to fill it (spec §5).</summary>
+    /// <summary>An empty fence (not the library) says how to fill it (spec §5); the welcome fence shows the welcome (M30).</summary>
     private void UpdateEmptyHint()
     {
-        var text = _kind == FenceKind.Items && _items.Count == 0 ? ItemsHint : null;
+        var empty = _kind == FenceKind.Items && _items.Count == 0;
+        WelcomePanel.Visibility = empty && _welcome ? Visibility.Visible : Visibility.Collapsed;
+        var text = empty && !_welcome ? ItemsHint : null;
         EmptyHint.Text = text ?? "";
         EmptyHint.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
     }

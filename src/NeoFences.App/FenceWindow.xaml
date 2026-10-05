@@ -119,6 +119,28 @@
                 <local:FolderPanelView DataContext="{Binding PanelModel}" />
             </Grid>
         </DataTemplate>
+        <!-- The welcome's buttons (M30): quiet on the glass, like the panel's browse buttons. -->
+        <Style x:Key="WelcomeButton" TargetType="Button">
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource FenceText}" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="{DynamicResource FenceHover}" BorderBrush="{DynamicResource FenceSubtleText}" BorderThickness="1" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource FenceText}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <!-- FenceOutline / FenceVeil / FenceTitleText come from the fence's look (M14, ApplyStyle); FenceBorder stays the tone's. -->
     <Border CornerRadius="8" BorderBrush="{DynamicResource FenceOutline}" BorderThickness="1" Background="{DynamicResource FenceVeil}">
@@ -344,6 +366,22 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+                    <!-- The first-run welcome (M30, ADR-051): the first fence of a fresh start, while it is empty. -->
+                    <ScrollViewer x:Name="WelcomePanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="12,6,12,8" VerticalAlignment="Center">
+                            <TextBlock Text="Welcome to NeoFences" Foreground="{DynamicResource FenceTitleText}" FontSize="16" FontWeight="SemiBold"
+                                       TextWrapping="Wrap" TextAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                            <TextBlock Margin="0,4,0,8" Text="Fences hold links to your apps, games, files and websites — your files never move."
+                                       Foreground="{DynamicResource FenceText}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                            <WrapPanel HorizontalAlignment="Center">
+                                <Button x:Name="WelcomeSortButton" Style="{StaticResource WelcomeButton}" Content="Sort my desktop…" FontWeight="SemiBold" />
+                                <Button x:Name="WelcomeAddButton" Style="{StaticResource WelcomeButton}" Content="Add item…" />
+                                <Button x:Name="WelcomeGuideButton" Style="{StaticResource WelcomeButton}" Content="Guide" ToolTip="Opens the online guide" />
+                            </WrapPanel>
+                            <TextBlock Margin="0,8,0,0" Text="or drop files, folders or links here" Foreground="{DynamicResource FenceSubtleText}" FontSize="11"
+                                       TextWrapping="Wrap" TextAlignment="Center" />
+                        </StackPanel>
+                    </ScrollViewer>
                     <!-- An empty fence says how to fill it (M18 spec §5). -->
                     <TextBlock x:Name="EmptyHint" Visibility="Collapsed" Margin="12" TextWrapping="Wrap" TextAlignment="Center"
                                VerticalAlignment="Center" Foreground="{DynamicResource FenceSubtleText}" IsHitTestVisible="False" />

@@ -55,9 +55,23 @@ public sealed partial class FenceHost
             added += result.AddedIds.Count;
         }
         Log.Information("Add from desktop: {Added} item(s) added, {NewFences} new fence(s)", added, newFences);
+        var beforeWelcome = _config;
+        _config = WelcomeEdits.AfterDesktopFill(_config, _items, added, newFences); // M30: the empty welcome fence was only the welcome
+        if (!ReferenceEquals(beforeWelcome, _config)) Log.Information("welcome fence removed: Add from desktop made its fences");
         SyncBoxes();
         ItemsChanged(checkTargets: [.. plan.Groups.SelectMany(group => group.ItemRefs)]);
         SaveNow();
         if (plan.HideIcons) SetHideDesktopIcons(true);
+    }
+
+    /// <summary>The welcome fence got its first item (M30): from now on an ordinary fence; its window drops the welcome.</summary>
+    private void EndWelcomeIfFilled()
+    {
+        var before = _config;
+        _config = WelcomeEdits.ClearIfFilled(_config, _items);
+        if (ReferenceEquals(before, _config)) return;
+        Log.Information("welcome ended: the welcome fence got its first item");
+        foreach (var window in _windows.Values)
+            if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is { } shown) window.Refresh(shown);
     }
 }

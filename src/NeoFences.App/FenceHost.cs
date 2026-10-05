@@ -161,6 +161,9 @@ public sealed partial class FenceHost
             Log.Error(failure, "tray icon unavailable; fences and gestures keep working"); // hard rule 7: only the tray is lost
         }
         StartGameMode();
+        // M30: a fresh start says where NeoFences lives; Windows 11 may tuck a new tray icon behind the ^ arrow.
+        if (loaded.Source == ConfigLoadSource.Fresh && !_gameMode)
+            _trayIcon?.ShowBalloon("NeoFences is running", "Its icon is in the notification area — on Windows 11 maybe behind the ^ arrow. Click it for the menu and Help.");
         StartWatching(); // M18: states fill in as the checks finish (spec §4)
         StartUpdates(); // M17: the first check a minute after start
         if (Appearance.WallpaperAccent) UpdateAccents(); // M14: the accent is read once at start, then on wallpaper changes
@@ -278,6 +281,7 @@ public sealed partial class FenceHost
         window.PropertiesRequested += (key, focusName) => ShowProperties(window, key, focusName);
         window.AddItemRequested += () => AddItem(window);
         window.AddFromDesktopRequested += ShowDesktopFill;
+        window.GuideRequested += () => OpenItem(GuideUrl, ownerHandle: 0); // M30: the welcome's Guide
         window.RefreshRequested += () => RefreshFence(window);
         window.DrivesChanged += OnDrivesChanged;
         window.NewLibraryRequested += CreateLibraryFence;

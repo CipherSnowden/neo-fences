@@ -414,6 +414,7 @@ public sealed partial class FenceHost
     /// <summary>After any item change: windows, save, watching, and a check of the targets that are new.</summary>
     private void ItemsChanged(IReadOnlyList<string> checkTargets)
     {
+        EndWelcomeIfFilled(); // M30
         PinFreeCells(); // M24: new elements of Free fences keep the spot they show at
         RefreshWindows();
         ScheduleSave();
