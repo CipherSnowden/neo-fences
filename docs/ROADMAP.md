@@ -19,7 +19,23 @@ Milestone details and exit criteria: spec §9.
   - [x] Final review (Opus) and its fix pass; live check: TEST-CHECKLIST AD 32/32 pass, five bugs fixed on the way (`research/m18-virtual-items.md`)
   - [x] Merged to main (fast-forward), version 0.9.0
   - [x] Release 0.9.0: main pushed (CI green) → tag v0.9.0 → draft → install check on this PC → published 2026-10-04
-- [ ] Before 1.0.0 (first version for friends): code signing (ADR-039; not needed for 0.10.0). Name decided: stays NeoFences (ADR-043)
+- [ ] Before 1.0.0 (first version for friends): code signing deferred — unsigned is accepted for 1.0 (user, 2026-10-06: no paid signing yet; see the 1.0 plan below). Name decided: stays NeoFences (ADR-043)
+
+### Path to 1.0.0 (review 2026-10-06, `docs/research/v1-readiness.md`)
+
+User decisions 2026-10-06: safety net first; online game covers in 1.0 as an opt-in (off by default, ADR at M34);
+a short freeware licence drafted in M39 for the user's approval; Hyper-V test machines on this PC for M38 (ask again
+before setting them up); a release candidate for friends before 1.0.0. Unsigned and not open source for 1.0.
+
+- [ ] **M33 — Safety net**: crash-loop message and safe mode, save-failure notices, undo for remove item / delete fence, gesture switches (quick-hide, right-drag; off = no mouse hook), marker-before-hide, watchdog kept alive, damaged-file fallback, log size and privacy, update after a crash
+- [ ] **M34 — Icons and game tiles**: crisp icons at any scaling, rounded and theme-aware cover tiles, the no-art tile, Set cover…, opt-in online covers, 2:3 cover sizes, row spacing, accent selection, Steam art from disk, website and Xbox tiles
+- [ ] **M35 — Modern menus and dialogs**: Fluent fence/item menus, dark tray menu, the fence menu regrouped (~10 entries), one Fluent confirm dialog, a modern colour picker
+- [ ] **M36 — Fence settings and presets**: per-fence settings window (transparency, title alignment/font, hide title bar, labels, spacing), look presets, export/import, Settings navigation + switches + reset
+- [ ] **M37 — Performance at scale**: icon cache, virtualized fences, cheaper label shadows, idle timers that stop, ready-to-run publish; 500 items / 50 fences test
+- [ ] **M38 — Compatibility and accessibility**: Windows 10 and Windows 11 22H2/23H2/24H2 test pass (Hyper-V), two monitors with mixed scaling; High Contrast, focus visuals, named fences, a keyboard way in
+- [ ] **M39 — Release readiness**: licence, PRIVACY, SECURITY, third-party notices, issue templates, checksums and attestations in CI, README/guide refresh, landing page (GitHub Pages), Core tests on Linux in CI
+- [ ] **1.0.0-rc** to friends (beta channel, 1–2 weeks), then **1.0.0**
+- After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
   - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches
   - [x] Core (apps, Relocation, DesktopSorting, StaleEntries), Shell (AppList, generic icons, COM releases), App (app list, bulk fix + undo, Add from desktop, R1–R8)
