@@ -1298,3 +1298,24 @@ and Icons; double-clicking a subfolder browses inside the panel; sizes 1–4 × 
 
 **Consequences.** One lister per panel (hidden tabs keep listing, game mode pauses them); rows are virtualized and icons
 load as rows come into view; at most 500 entries, then "+ N more". An older NeoFences shows a panel as a plain folder icon.
+
+## ADR-049 — Auto-collect rules
+**Date:** 2026-10-05 · **Status:** Accepted · **Continues:** ADR-040 (dynamic collections parked for later), ADR-048
+
+**Context.** The user hides the native desktop icons, so a shortcut an installer drops on the desktop is invisible. The
+other half of the "dynamic collections" parked in ADR-040: fences that gather matching items by themselves. The user chose
+this milestone and approved the proposed defaults.
+
+**Decision.**
+- A fence holds rules (`Fence.Collect`): a source (a folder, or the desktop = the user's and the Public Desktop), kinds by
+  file name (Apps and shortcuts, Installers, Documents, Pictures, Archives, Anything) and optional patterns.
+- One `FolderLister` per watched folder; each listing is compared with the last one, and what arrived (created, renamed
+  or moved in) goes to the first matching rule in fence order, as an item. Nothing any fence already holds; at most 200
+  per rule per burst. Never a file operation.
+- Removed stays removed: only arrivals count. At start (or a drive back) what was created after the rules last looked
+  (`Watermark`, updated when something arrived) is caught up.
+- A new rule offers what matches already once ("Add these N too?", default No). Game mode and Pause hold arrivals until
+  they end.
+
+**Consequences.** A file moved into a watched folder while NeoFences was closed keeps its old creation time and is not
+caught up. config.json writes `collect` only for fences with rules (schema stays 5); an older NeoFences ignores it.

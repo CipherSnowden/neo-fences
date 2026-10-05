@@ -669,3 +669,19 @@ Added after the M19 final review:
 | AL18 | Click empty space inside a panel → Delete; select the panel by its name row | nothing removed; the panel shows a thin outline when selected (M12) |
 | AL19 | Fence menu → Sort by on a fence its panel fills (a migrated view) | the panel sorts (Date newest first) (M11) |
 | AL20 | A panel taller than its fence: wheel over its rows to their top, then on | the fence scrolls up to the panel's name row |
+
+## AM — 0.16.0 auto-collect rules (M27)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AM1 | Apps → Auto-collect… → New rule (Desktop, Apps and shortcuts + Installers) → OK | "Add these N too?" when desktop entries match that no fence holds; the menu says "(1 rule)" |
+| AM2 | A new shortcut appears on the desktop (install something, or copy a .lnk there) | an item in Apps within a second; the file stays on the desktop |
+| AM3 | Remove that item from Apps; change something on the desktop; restart NeoFences | it does not come back |
+| AM4 | A rule on Downloads → Installers on another fence; download an installer (a .crdownload first) | one item with the final name |
+| AM5 | Two fences' rules on the same folder and kind | the fence higher in the list gets it |
+| AM6 | Exit NeoFences; create a matching file in a watched folder; start NeoFences | the file is collected (catch-up) |
+| AM7 | A game in front (game mode) or Pause; files arrive; leave the game / resume | collected then, not during |
+| AM8 | A rule on the pendrive's `NeoFences-test` folder: Safely Remove; plug back in with a new file | ejects; the new file is collected |
+| AM9 | Copy 300 matching files into a watched folder at once | 200 items; the rest logged |
+| AM10 | Edit a rule's kinds; remove a rule; Cancel the dialog | saved / gone / nothing changed |
+| AM11 | NeoFences' CPU with two rules, idle 30 s | well under 0.1 % |
