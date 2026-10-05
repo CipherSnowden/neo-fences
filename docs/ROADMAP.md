@@ -81,7 +81,14 @@ Milestone details and exit criteria: spec §9.
   - [ ] AP3, AP4, AP7 and the tray notice by hand
   - [x] Released 0.18.0 on 2026-10-06 (the installed 0.17.0 updated itself in 2 s; data unchanged; no welcome on the existing setup)
   - Deferred minors: in `research/m30-welcome.md`
-- [~] **M31 — 0.19.0: modern widgets and sensors, polish** (widget restyle; CPU/GPU temperatures via Afterburner or HWiNFO; RAM in GB; M29–M30 minors; the user's desktop set up with every feature) — claimed by session 2026-10-06 widgets
+- [x] **M31 — 0.19.0: modern widgets and sensors, polish** (widget restyle; CPU/GPU temperatures via Afterburner or HWiNFO; RAM in GB; M29–M30 minors)
+  - [x] Mockups in the visual companion (style B with A's bars), spec, prototype + probe, replay-verified plan, native build
+  - [x] Opus review: 0 critical / 5 important (odd names, per-value sources, the graphics card by video memory, 2×2 legibility) + RAM installed, fixed (682 tests)
+  - [x] Live check AQ1, AQ3, AQ4 by script (stats equal Afterburner); new guide shots; merged to main
+  - [ ] AQ2 (light mode), AQ5 (Afterburner closed), AQ6 by hand
+  - [ ] Release 0.19.0 (asked first)
+  - [ ] Then the user's desktop with every feature (Task 7 of the plan, asked first)
+  - Deferred minors: in `research/m31-widgets.md` and the session log
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot

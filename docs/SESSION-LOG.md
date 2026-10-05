@@ -674,3 +674,20 @@ AP by script (the notice not caught on screen). Merged locally.
 degraded) and passed on a re-run; draft with the delta package (297 KB), install check (the installed 0.17.0 updated
 itself in 2 s through the tray's Restart to update; data unchanged; no welcome on the existing setup; plain restart back
 on GitHub updates), published; hub refreshed.
+
+## 2026-10-06 — M31 modern widgets and sensors (0.19.0), built and merged
+
+**Done:** the user found the widgets' text outdated and chose, in the visual companion, style B (dashboard tiles) with
+style A's thin accent bars; the stats became CPU %, CPU TEMP, GPU %, GPU TEMP and RAM in GB (no disk), °F as a widget
+option. Temperatures come from MSI Afterburner or HWiNFO64 shared memory, read-only (verified on the user's PC with
+Afterburner running elevated), value by value, then Windows (PDH, D3DKMT for the GPU temperature). The M29–M30 leftovers
+fixed. Prototype + probe, replay-verified plan, native execution; Opus final review fixes (odd names, per-value sources,
+the graphics card by dedicated video memory, legibility at 2×2, installed RAM). 682 tests. Live check AQ by script; new
+guide screenshots. Merged locally.
+**Decisions:** ADR-052.
+**Deferred minors:** the accent bars follow an accent change only after a restart; a 90 KB buffer per reading while a
+monitor runs; hybrid laptops may flip by memory in use; an empty hint line on "—" tiles; the first-start notice can show
+in a game after tray retries; CJK clock date line; a missing space in `Widgets.Page`; "fahrenheit": false on clocks;
+HWiNFO read without its mutex; checklist steps for the two-GPU fallback, accent change, Afterburner without CPU
+temperature, HWiNFO DEAD; `PercentWidth.Of80` unused.
+**Next:** release 0.19.0 when the user says so; then set up the user's desktop with every feature (asked first).
