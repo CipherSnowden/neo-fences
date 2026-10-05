@@ -34,7 +34,8 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check TEST-CHECKLIST AG: 19 pass; AG8/AG9 (stick pull, Safely Remove) skipped by the user's choice; AG10 not run; found and fixed: views from one fence stacked on one spot; merged to main
   - [x] Released 0.11.0 on 2026-10-05: CI green, draft with delta, install check (the installed 0.10.1 updated itself to 0.11.0, data unchanged), published, hub refreshed
   - Deferred minors: selection on the UI thread per re-list; a hidden tab's title after a rename-follow; relative paths and the newest-N box in the settings
-- [ ] **Next candidate (user idea 2026-10-05): one kind of fence.** Instead of separate normal / Game Library / folder-view fences, every fence can serve each use through per-fence settings (personalization). Keep `Fence.Kind` and the kinds in code — they may be needed later; do not remove them outright. Needs brainstorming + spec.
+- [~] **M22 — 0.12.0: one kind of fence — games become items** (spec 2026-10-05-games-as-items-design) — claimed by session 2026-10-05 m22-games-as-items
+- [ ] Later (the user's vision 2026-10-05: a fence holds *elements*; kinds stay in code): a folder panel element (a folder in a list / detailed view inside a fence), widgets (clock, calendar), element sizes
 - [ ] Later (user idea 2026-10-05): **item sizes** — one virtual item can take 1×1, 1×2, 2×1, 2×2 … cells in its fence (a grid layout instead of the wrap panel).
 - [ ] Later — auto-collect rules (the other half of dynamic collections)
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
