@@ -208,3 +208,6 @@ KNOWN_FOLDER_FLAG
 BHID_EnumItems
 IEnumShellItems
 SHCreateItemFromIDList
+SHGetKnownFolderPath
+FOLDERID_Downloads
+FOLDERID_Screenshots
