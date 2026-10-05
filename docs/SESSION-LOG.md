@@ -642,3 +642,15 @@ offer over a game) — 643 tests. Live check AN by script. Merged locally.
 **Next:** release 0.16.1 when the user says so; the user to confirm cover-wide cells in mixed icon-only fences (AN20).
 **Released:** 0.16.1 on 2026-10-05 — CI green, draft with the delta package (317 KB), install check (the installed 0.16.0
 updated itself in 3 s through the tray's Restart to update; data unchanged; plain restart back on GitHub updates), published; hub refreshed.
+
+## 2026-10-05 — M29 a guide for friends (0.17.0), built and merged
+
+**Done:** the user chose a guide for friends: help lives on GitHub and the app links to it (ADR-050). Tray **Help** and
+Settings **Help (online guide)** open `docs/GUIDE.md` on GitHub; the README is rewritten (install with SmartScreen and
+Smart App Control, quick start, what it does, your files are safe); `docs/GUIDE.md` has 15 sections, a cheat-sheet and
+eight screenshots from a demo setup (three as JPEG for size). Opus final review "ready with fixes": the tray overflow,
+the browser download warning and six wording fixes; the guide rule went into CLAUDE.md with the user's OK. 643 tests.
+Live check AO1/AO2/AO4 by script. Merged locally.
+**Decisions:** ADR-050.
+**Next:** push main (the guide must be on GitHub before Help is released), then release 0.17.0 when the user says so;
+AO3/AO5 by hand.

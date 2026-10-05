@@ -67,7 +67,13 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check TEST-CHECKLIST AN by script (the rest by hand later); merged to main
   - [x] Released 0.16.1 on 2026-10-05 (the installed 0.16.0 updated itself in 3 s; data unchanged)
   - Deferred minors: in `research/m28-polish.md`
-- [~] **M29 — 0.17.0: a guide for friends** (README rewrite, docs/GUIDE.md with screenshots, Help in the tray and Settings) — claimed by session 2026-10-05 guide
+- [x] **M29 — 0.17.0: a guide for friends** (README rewrite, docs/GUIDE.md with screenshots, Help in the tray and Settings)
+  - [x] Spec, plan (app change as a replay-verified patch), native build; screenshots from a demo setup (Release build)
+  - [x] Opus review: 0 critical / 3 important (tray overflow, browser download warning, guide rule into CLAUDE.md), 6 wording minors fixed (643 tests)
+  - [x] Live check AO1, AO2, AO4 by script; merged to main
+  - [ ] AO3 (links on GitHub) after the push; AO5 (quick start on a fresh user) by hand
+  - [ ] Release 0.17.0 — push main first (the in-app Help opens the guide on GitHub)
+  - Deferred minors: in `research/m29-guide.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot

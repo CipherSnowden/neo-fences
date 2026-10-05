@@ -33,3 +33,17 @@ Spec: `docs/superpowers/specs/2026-10-05-guide-design.md` · Decision: ADR-050 �
 | AO3 | [after the push] the guide's GitHub page shows 404 until `docs/GUIDE.md` is on `main` on GitHub. |
 | AO4 | **Pass** (above). |
 | AO5 | [USER] |
+
+## Review (Opus, whole branch)
+
+0 critical, 3 important (fixed: the tray icon may sit behind the ^ arrow on Windows 11; the browser's download warning
+before SmartScreen; the keep-the-guide-current rule copied into CLAUDE.md), six wording minors fixed (Date (newest
+first), Rename tab, the panel's back-to-folder button, Hidden games, which fence wins two rules, Smart App Control).
+The user approved the real Start apps visible in the desktop and item-menu shots.
+
+Deferred minors:
+- GUIDE §3 lists the game menu in a different order than the app and leaves out Size.
+- The auto-collect source "Downloads (<path>)" shows the profile path — a future shot must avoid it.
+- Bottom-row labels are clipped in the games, desktop and panel shots.
+- `TrayHelp` / `GuideUrl` sit between tray ids 14 and 15 in FenceHost.cs.
+- Troubleshooting names GitHub Issues without a link.
