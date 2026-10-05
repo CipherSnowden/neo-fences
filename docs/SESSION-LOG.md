@@ -691,3 +691,7 @@ in a game after tray retries; CJK clock date line; a missing space in `Widgets.P
 HWiNFO read without its mutex; checklist steps for the two-GPU fallback, accent change, Afterburner without CPU
 temperature, HWiNFO DEAD; `PercentWidth.Of80` unused.
 **Next:** release 0.19.0 when the user says so; then set up the user's desktop with every feature (asked first).
+**Released:** 0.19.0 on 2026-10-06 — CI cancelled once by GitHub (no runner, Actions degraded) and passed on a re-run;
+release build in 7 min; draft with the delta package (424 KB); install check while the user was away (the installed
+0.18.0 updated itself in 2 s through the tray's Restart to update; data unchanged; plain restart back on GitHub
+updates); published; hub refreshed. The desktop setup with every feature waits for the user's picks.
