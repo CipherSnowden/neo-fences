@@ -17,6 +17,12 @@ public sealed record Settings
     public LabelMode DefaultLabels { get; init; } = LabelMode.Always;
     /// <summary>The small arrow Windows draws on shortcut icons (M8b, user choice: a setting, off by default).</summary>
     public bool ShowShortcutArrows { get; init; }
+
+    /// <summary>Settings → General: "Double-click the desktop to quick-hide" (M33, on by default).</summary>
+    public bool QuickHideGesture { get; init; } = true;
+
+    /// <summary>Settings → General: "Right-drag on the desktop to draw a fence" (M33, on by default).</summary>
+    public bool DrawGesture { get; init; } = true;
     /// <summary>Settings → Appearance (M14): background strength, colour style, wallpaper accent, title font.</summary>
     public AppearanceSettings Appearance { get; init; } = new();
     /// <summary>Download updates from GitHub by themselves (M17); off: NeoFences makes no network calls at all.</summary>

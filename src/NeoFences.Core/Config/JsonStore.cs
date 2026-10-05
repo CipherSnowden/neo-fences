@@ -9,12 +9,14 @@ public enum ConfigLoadSource { Primary, Backup, DailyBackup, Fresh }
 /// 10 kept), a recovery chain for damaged files, and never a save over a file from a newer NeoFences. <c>config.json</c>
 /// and <c>items.json</c> are each one of these.
 /// </summary>
+/// <param name="repair">Run on every read (M33): an exception here counts as a damaged file, so the backups are tried.</param>
+/// <param name="readRetryDelay">Between read attempts of a locked file (M33: 4 attempts, about 5 s in all by default).</param>
 internal sealed class JsonStore<T>(string directory, string fileName, int currentSchema, Func<string, T> deserialize, Func<T, int> schemaOf,
-    Func<T, string> serialize, TimeProvider time) where T : class
+    Func<T, string> serialize, TimeProvider time, Func<T, T>? repair = null, TimeSpan? readRetryDelay = null) where T : class
 {
     public const int DailyBackupsKept = 10;
-    private const int ReadAttempts = 3;
-    private static readonly TimeSpan ReadRetryDelay = TimeSpan.FromMilliseconds(100);
+    private const int ReadAttempts = 4;
+    private readonly TimeSpan _readRetryDelay = readRetryDelay ?? TimeSpan.FromMilliseconds(1600);
 
     private bool _saveBlocked;
 
@@ -119,23 +121,27 @@ internal sealed class JsonStore<T>(string directory, string fileName, int curren
             }
             catch (Exception readFailure) when (readFailure is IOException or UnauthorizedAccessException)
             {
-                // ponytail: blocking retry (~200 ms worst case), fine for startup; make async if Load moves off-thread.
+                // ponytail: blocking retry (~5 s worst case, M33: antivirus or OneDrive holding the file at sign-in), fine for
+                // startup; make async if Load moves off-thread.
                 if (attempt == ReadAttempts) return ReadOutcome.Unreadable;
-                Thread.Sleep(ReadRetryDelay);
+                Thread.Sleep(_readRetryDelay);
             }
         }
 
         try
         {
             value = deserialize(json);
+            var schema = schemaOf(value);
+            if (schema > currentSchema) return ReadOutcome.NewerSchema;
+            if (schema < 1) return ReadOutcome.Corrupt;
+            if (repair is not null) value = repair(value);
+            return ReadOutcome.Ok;
         }
-        catch (JsonException)
+        catch (Exception failure) when (failure is not OutOfMemoryException) // M33: anything odd in parse or repair is damage
         {
+            value = null;
             return ReadOutcome.Corrupt;
         }
-        var schema = schemaOf(value);
-        if (schema > currentSchema) return ReadOutcome.NewerSchema;
-        return schema < 1 ? ReadOutcome.Corrupt : ReadOutcome.Ok;
     }
 }
 

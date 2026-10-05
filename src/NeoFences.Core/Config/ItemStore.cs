@@ -15,7 +15,7 @@ public sealed class ItemStore(string directory, TimeProvider? timeProvider = nul
     public const string FileName = "items.json";
 
     private readonly JsonStore<ItemsDocument> _store = new(directory, FileName, ItemsDocument.CurrentSchemaVersion, ConfigJson.DeserializeItems,
-        document => document.Schema, ConfigJson.SerializeItems, timeProvider ?? TimeProvider.System);
+        document => document.Schema, ConfigJson.SerializeItems, timeProvider ?? TimeProvider.System, repair: ItemEdits.Repair); // M33: repaired inside the read
 
     public string ItemsPath => _store.FilePath;
     public string BackupPath => _store.BackupPath;
@@ -27,7 +27,7 @@ public sealed class ItemStore(string directory, TimeProvider? timeProvider = nul
     public ItemsLoadResult Load()
     {
         var (document, source, corruptCopyPath, isReadOnly) = _store.Load();
-        return new(document is null ? new ItemsDocument() : ItemEdits.Repair(document), source, corruptCopyPath, isReadOnly);
+        return new(document ?? new ItemsDocument(), source, corruptCopyPath, isReadOnly); // repaired in the read (M33)
     }
 
     /// <returns>False when saving is blocked (see <see cref="ItemsLoadResult.IsReadOnly"/>).</returns>

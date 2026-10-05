@@ -32,10 +32,13 @@ public sealed class ConfigStore
     private readonly JsonStore<NeoFencesConfig> _store;
     private bool _previousSchemaChecked; // once per run: with no older file to find, every save would re-read up to 11 files (M13c)
 
-    public ConfigStore(string directory, TimeProvider? timeProvider = null)
+    /// <param name="readRetryDelay">Between attempts to read a locked file (tests shorten it).</param>
+    public ConfigStore(string directory, TimeProvider? timeProvider = null, TimeSpan? readRetryDelay = null)
     {
+        // M33: the normalizer runs inside the read, so a file it cannot repair falls back to the backups instead of failing the start.
         _store = new JsonStore<NeoFencesConfig>(directory, FileName, NeoFencesConfig.CurrentSchemaVersion, ConfigJson.Deserialize,
-            config => config.SchemaVersion, ConfigJson.Serialize, timeProvider ?? TimeProvider.System);
+            config => config.SchemaVersion, ConfigJson.Serialize, timeProvider ?? TimeProvider.System,
+            repair: config => config.SchemaVersion < FirstVirtualItemsSchema ? config : ConfigNormalizer.Normalize(config), readRetryDelay: readRetryDelay);
     }
 
     public string ConfigPath => _store.FilePath;
@@ -51,7 +54,7 @@ public sealed class ConfigStore
         if (config is null) return new(FreshConfig(isReadOnly), ConfigLoadSource.Fresh, corruptCopyPath, isReadOnly);
         // From before the virtual items: a fresh start (spec §1); the first save keeps the old file as PreviousSchemaCopyName.
         if (config.SchemaVersion < FirstVirtualItemsSchema) return new(FreshConfig(isReadOnly), ConfigLoadSource.Fresh, corruptCopyPath, isReadOnly);
-        return new(ConfigNormalizer.Normalize(config), source, corruptCopyPath, isReadOnly);
+        return new(config, source, corruptCopyPath, isReadOnly); // normalized in the read (M33)
     }
 
     /// <summary>

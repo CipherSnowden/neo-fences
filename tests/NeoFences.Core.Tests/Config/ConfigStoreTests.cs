@@ -11,7 +11,7 @@ public class ConfigStoreTests : IDisposable
 
     public void Dispose() => _directory.Dispose();
 
-    private ConfigStore NewStore() => new(_directory.Path, _clock);
+    private ConfigStore NewStore() => new(_directory.Path, _clock, readRetryDelay: TimeSpan.FromMilliseconds(20)); // M33: locked-file retries kept short in tests
 
     private static NeoFencesConfig ConfigTitled(string title) =>
         NeoFencesConfig.CreateDefault() is var config ? config.WithFence(config.Fences[0] with { Title = title }) : throw new InvalidOperationException();
