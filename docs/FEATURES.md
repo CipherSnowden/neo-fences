@@ -67,6 +67,7 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Game Library (Steam/Epic/GOG/Ubisoft Connect/EA, cover art) | v1.5 | done | launchers, Xbox, game folders, Desktop game shortcuts (ADR-032); since 0.12 games are items in any fence (cover tile or icon, Add games…, new games go to a chosen fence; ADR-045) |
 | One kind of fence: any item in any fence, its look from its kind and settings | 0.12 (M22) | done (games, sizes) | ADR-045, ADR-046; next: a folder panel element, widgets (clock, calendar) |
 | Element sizes 1–4 × 1–4 and a fence grid (Flow packed / Free fixed positions) | 0.13 (M24) | done | ADR-046; Size ▸ picker, Layout ▸ per fence |
+| Widgets: clock, date, system stats (CPU, RAM, GPU, C:) | 0.14 (M25) | done | ADR-047; any size; idle while unseen |
 | Folder views: types, files/folders only, newest N, live sort, "+ N more" | 0.11 (M21) | done | ADR-044; Downloads/Screenshots start newest first |
 | Auto-collect rules (the other half of dynamic collections) | later | — | replaces Rules (ADR-040) |
 | Theme packs: "Nanosuit" (Crysis HUD), "Animus" (Assassin's Creed) | v2 | — | |

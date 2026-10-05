@@ -626,3 +626,18 @@ Added after the M19 final review:
 | AJ13 | Free: Ctrl+drag an icon a little (onto its own cell) | the original stays; the copy lands on the nearest free spot, not on top of it |
 | AJ14 | A game cover set to 2 × 4 | the poster is sharp (decoded at the tile's width), not an upscaled thumbnail |
 | AJ15 | Restart NeoFences with a 64-px fence | cells are right from the first frame (no clipped labels or overlapping icons) |
+
+## AK — 0.14.0 widgets (M25)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AK1 | Apps → Add widget ▸ Clock, Date, System stats (Flow); again in a Free fence | each added (end / first free spot); Clock 2 × 1, Date and Stats 2 × 2 |
+| AK2 | Size ▸ 1 × 1 and 4 × 4 on each | content scales; nothing clipped |
+| AK3 | Clock → Show seconds, Show date | seconds tick on whole seconds; a date line appears |
+| AK4 | Windows settings → time format 12/24-hour | the clock follows (after the next tick) |
+| AK5 | System stats while a CPU-heavy task runs; then idle | CPU bar rises and falls; GPU and C: shown (or "—") |
+| AK6 | Pause NeoFences / quick-hide / a game in front / roll the fence up | no updates meanwhile; the time is right again at once afterwards |
+| AK7 | Drag a widget to another fence; Ctrl+drag a copy; Remove from fence | moves; a second clock; removed |
+| AK8 | Double-click the clock; the stats | Windows' Clock app; Task Manager |
+| AK9 | Snapshot, remove the widgets, restore | widgets back with their sizes and options |
+| AK10 | NeoFences' CPU with three widgets shown (Task Manager or a 30 s measurement) | well under 0.1 % |

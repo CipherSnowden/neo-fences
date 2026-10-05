@@ -1254,3 +1254,22 @@ any element and a choice of how elements sit, per fence.
 
 **Consequences.** Folder-view entries and the old library fence stay 1×1; no resize handles (menu picker only); spans
 above 4 later if wanted. config.json writes each fence's `layout`; items.json writes `size` / `cell` only when set.
+
+## ADR-047 — Widgets: clock, date, system stats
+**Date:** 2026-10-05 · **Status:** Accepted · **Continues:** ADR-045 (one kind of fence), ADR-046 (element sizes)
+
+**Context.** The user's vision: a fence holds elements; widgets are one kind. The user chose a clock, a date page and
+system stats (CPU, RAM, GPU, disk) as bars.
+
+**Decision.**
+- A widget is stored like an item with a `neofences:widget/<clock|date|stats>` target (`ItemKind.Widget`): sizes,
+  layouts, drags, copies, Remove and snapshots are the items'. Never checked, watched, relocated or dragged out to apps.
+- Defaults: Clock 2×1 (Windows' short time format; options: seconds, date line), Date 2×2 (weekday, day, month year),
+  Stats 2×2 (CPU, RAM, GPU, C: used; "—" when Windows gives no value). Double-click: Clock app / Task Manager.
+- Readings from Windows' own counters through CsWin32 (`GetSystemTimes`, `GlobalMemoryStatusEx`, `GetDiskFreeSpaceEx`,
+  PDH GPU engines); no new dependency.
+- One timer on whole seconds while any widget exists; no work while no widget can be seen (paused, quick-hide, game
+  mode, rolled up, hidden tab); stats read every 2 s on a worker, one reading at a time.
+
+**Consequences.** Measured 0.003 % of the user's CPU with three widgets shown. A widget kind a newer NeoFences adds reads
+as a plain "missing" item in an older one.

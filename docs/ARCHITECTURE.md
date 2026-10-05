@@ -50,7 +50,7 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 ```
 ┌─────────────────────────── NeoFences.App (WPF) ───────────────────────────┐
 │ FenceHost (+ .Items .Watching .Library .Appearance .Updates .DesktopFill  │
-│            .FolderViews .GameItems .Grid)                                 │
+│            .FolderViews .GameItems .Grid .Widgets)                        │
 │ FenceWindow · FenceItemView · IconLoader · ItemPropertiesWindow           │
 │ AppPickerWindow · RelocateWindow · DesktopFillWindow · MissingItemWindow  │
 │ FolderViewWindow · AddGamesWindow · SettingsWindow · FolderLister         │
@@ -60,7 +60,7 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 ┌──────────────▼─────────── NeoFences.Shell (Win32/COM, CsWin32) ───────────┐
 │ DesktopHost · DesktopIcons · ShellItems · ShellItemMenu · ShellDragDrop   │
 │ TargetProbe · PathPicker · IconPicker · FolderWatcher · DesktopMouseHook  │
-│ AppList · KnownFolders                                                    │
+│ AppList · KnownFolders · SystemStats                                      │
 │ GameDetection · GameScanners · Monitors · TrayIcon · Watchdog             │
 └──────────────┬────────────────────────────────────────────────────────────┘
 ┌──────────────▼─────────── NeoFences.Core (pure C#) ───────────────────────┐
@@ -82,6 +82,9 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 | Core/FencePlacement, Core/Lifecycle | px↔DIP placement, containing monitor; `RunState` (hide icons, quick-hide, Pause, game mode), session-end policy, restart throttle, watcher backoff | — |
 | Core/Library | Valve/Epic parsing, `GameCatalog` merge, `LibraryFiles` plan, `GameLaunchers.LauncherOf` (ADR-032); `GameItems` (M22): `Migrate` (a library fence → game items), `NewGames`, `AddNew`, `Retarget` (by game id), `ShowsCover` | — |
 | Core/Items (M24) | `GridSpan` (1–4 × 1–4), `GridCell`, `FenceLayout` (Flow / Free), `FenceGrid.Arrange` (dense packing; Free: stored cells, collisions and out-of-width elements to free spots), `CellAt`, `NearestFree`, `PlaceDropped`, `SpanOf` (covers 1×2); `ItemEdits.SetSize`, `Place`; repairs | — |
+| Core/Items (M25) | `Widgets`: `WidgetKind` (Clock / Date / Stats), `neofences:widget/<kind>` targets (`ItemKind.Widget`, never checked or watched), default spans, `WidgetOptions`, clock text, date page, stat rows, `NextTick` | System.Globalization |
+| Shell/SystemStats (M25) | CPU (`GetSystemTimes` deltas), RAM (`GlobalMemoryStatusEx`), C: used (`GetDiskFreeSpaceEx`), GPU (PDH `\GPU Engine(*engtype_3D)\Utilization Percentage`, summed); null per value on failure | PDH, kernel32 |
+| App/FenceHost.Widgets (M25) | Add widget ▸, the widget menu (clock options), double-clicks (Clock app, Task Manager); one timer on whole seconds while any widget exists, idle while none can be seen; stats every 2 s on a worker | DispatcherTimer |
 | App/FenceGridPanel, SizePicker, FenceHost.Grid (M24) | the fence list's items panel: whole cells from the icon size and label mode, columns from the width, elements placed where `FenceGrid` says (a failed pass falls back to 1×1 in order); Size ▸ 4×4 picker; Layout ▸ (Flow → Free stores the shown cells); Free drops on the cell under the pointer (offsets kept, taken → nearest free); Sort in Free packs and stores; new elements of Free fences store their spot | WPF Panel |
 | App/FenceHost.GameItems, AddGamesWindow (M22) | games as items (ADR-045): migration at start / after a restore / after a scan (a snapshot first), new games into `Library.NewGamesFence`, Add games…, the game item menu (Show as cover / icon, Open install folder), "not installed" | WPF (Fluent) |
 | App/FenceHost | orchestrates config + items, monitors, windows, debounced saves (both files, config first), display changes, Explorer restarts, session end, snapshots, tray | — |
@@ -127,7 +130,7 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 - `config.json` (+ `.bak`, `.tmp` transient) — schema 5
   - shape: `{ schemaVersion, settings: { hideDesktopIcons, peekHotkey, … }, fences: [ { id, title, isLibrary, view: { path, show, sort, newest, patterns } (M21), layout (M24), iconSize, rolledUp, locked, labels, tabs, activeTab, tabColor, customColor } ], layouts: { <fingerprint>: { monitors, fences: { <fenceId>: { monitor, x, y, w, h } } } }, library, lastLayoutFingerprint }`
 - `items.json` (+ `.bak`) — schema 1 (ADR-041)
-  - shape: `{ schema, fences: { <fenceId>: [ { id, target, name, icon: { file, index } | { image }, arguments, runAsAdmin, note, gameId, showAs (M22), size: { columns, rows }, cell: { column, row } (M24) } ] } }`
+  - shape: `{ schema, fences: { <fenceId>: [ { id, target, name, icon: { file, index } | { image }, arguments, runAsAdmin, note, gameId, showAs (M22), size: { columns, rows }, cell: { column, row } (M24), widget: { seconds, date } (M25) } ] } }`
   - a list is removed only with its fence (Delete fence); lists of fences the config does not have stay (a fallback config never costs items; ADR-041 amended)
 - `icons\<itemId>-<guid>.png` — pictures chosen as item icons (≤ 256 px); unused ones deleted at start
 - `backups\config-<yyyyMMdd>.json`, `backups\items-<yyyyMMdd>.json` (keep 10 each), `backups\pre-schema-5-config.json`
@@ -164,6 +167,10 @@ NeoFences' own shortcut for it in `library\`; any fence can hold games next to o
 games… is open; after each scan game items follow their game's shortcut and new games go to the chosen fence. An old
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
+
+**0.14.0 (M25, widgets)**: Clock, Date and System stats elements in any fence (fence menu → Add widget ▸), any size;
+the clock follows Windows' time format, with optional seconds and date line; stats show CPU, RAM, GPU and C: as bars every
+2 s; nothing updates while no widget can be seen (ADR-047, `research/m25-widgets.md`).
 
 **0.13.0 (M24, element sizes and the fence grid)**: every element spans 1–4 columns × 1–4 rows of its fence's cells
 (Size ▸, a 4×4 picker); a bigger element shows a bigger icon (≤ 256 px) or cover; game covers default to 1×2. Each fence is
