@@ -1,7 +1,8 @@
 namespace NeoFences.Core.Model;
 
 /// <summary>What sorting needs to know about one item (filled in by NeoFences.Shell).</summary>
-public sealed record ItemInfo(string ItemRef, string Name, bool IsFolder, string TypeName, DateTimeOffset Modified);
+/// <param name="Size">A file's size in bytes (M26: a folder panel's Size column); null for folders and when unknown.</param>
+public sealed record ItemInfo(string ItemRef, string Name, bool IsFolder, string TypeName, DateTimeOffset Modified, long? Size = null);
 
 /// <summary>
 /// Item order for "Sort by" (one time) and the library's listing. Name and Type put folders first, like
@@ -19,7 +20,7 @@ public static class ItemSorting
     }).Select(item => item.ItemRef).ToList();
 
     /// <summary>"setup2" before "setup10": runs of digits compare by value, the rest ignoring case (like Explorer).</summary>
-    private sealed class NaturalComparer : IComparer<string>
+    internal sealed class NaturalComparer : IComparer<string>
     {
         public static NaturalComparer Instance { get; } = new();
 

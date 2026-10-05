@@ -178,9 +178,12 @@ public static class ItemEdits
         };
     }
 
-    /// <summary>Size ▸ (M24): these items take this size (null: the default). The same document when none of them is known.</summary>
+    /// <summary>
+    /// Size ▸ (M24): these items take this size (null: the default); a panel filling its fence goes back on cells (M26).
+    /// The same document when none of them is known.
+    /// </summary>
     public static ItemsDocument SetSize(ItemsDocument document, IReadOnlyCollection<string> itemIds, GridSpan? size) =>
-        Change(document, item => itemIds.Contains(item.Id) ? item with { Size = size?.Clamp(GridSpan.Max) } : null);
+        Change(document, item => itemIds.Contains(item.Id) ? item with { Size = size?.Clamp(GridSpan.Max), Fill = false } : null);
 
     /// <summary>Free fences (M24): these items (by id) store these cells.</summary>
     public static ItemsDocument Place(ItemsDocument document, IReadOnlyDictionary<string, GridCell> cells) =>
@@ -218,6 +221,7 @@ public static class ItemEdits
                     Icon = item.Icon is { File: null or "", Image: null or "" } ? null : item.Icon,
                     Size = item.Size?.Clamp(GridSpan.Max), // M24: a hand-edited size within 1–4 each way
                     Cell = item.Cell is { Column: >= 0 and <= FenceGrid.MaxCell, Row: >= 0 and <= FenceGrid.MaxCell } ? item.Cell : null, // M24 final review I4
+                    Panel = FolderPanels.Normalize(item.Panel), // M26: a hand-edited look, sort or count
                 })
                 .ToList();
         }

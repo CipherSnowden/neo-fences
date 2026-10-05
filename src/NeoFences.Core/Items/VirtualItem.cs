@@ -61,6 +61,13 @@ public sealed record VirtualItem
     /// <summary>A clock widget's options (M25); null: the defaults.</summary>
     public WidgetOptions? Widget { get; init; }
 
+    /// <summary>A folder shown as a panel (M26); null: a plain folder icon.</summary>
+    public FolderPanel? Panel { get; init; }
+
+    /// <summary>A panel takes the whole fence while it is the fence's only element (M26, <see cref="FolderPanels.Fills"/>).</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Fill { get; init; }
+
     [JsonIgnore]
     public ItemKind Kind => ItemKinds.Of(Target);
 

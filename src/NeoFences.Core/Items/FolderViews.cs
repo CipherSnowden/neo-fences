@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.IO.Enumeration;
 using NeoFences.Core.Model;
 
 namespace NeoFences.Core.Items;
@@ -16,27 +15,17 @@ public static class FolderViews
     /// <summary>Downloads and Screenshots start newest first with this many entries.</summary>
     public const int BusyFolderNewest = 30;
 
-    /// <param name="Shown">Entry paths in the order shown.</param>
+    /// <param name="Entries">The entries shown, in order (M26: with their facts, for a panel's columns).</param>
     /// <param name="Hidden">Entries the view would show but the cap leaves out ("+ N more").</param>
     /// <param name="Listed">Entries in the folder before any filter ("This folder is empty").</param>
-    public sealed record Selection(IReadOnlyList<string> Shown, int Hidden, int Listed);
-
-    public static Selection Select(IReadOnlyList<ItemInfo> entries, FolderView view)
+    public sealed record Selection(IReadOnlyList<ItemInfo> Entries, int Hidden, int Listed)
     {
-        var patterns = ParsePatterns(view.Patterns) ?? [];
-        IEnumerable<ItemInfo> matching = entries.Where(entry => view.Show switch
-        {
-            ViewShow.Files => !entry.IsFolder,
-            ViewShow.Folders => entry.IsFolder,
-            _ => true,
-        });
-        // Subfolders pass the patterns: a "*.png" view of Screenshots still shows its game folders.
-        if (patterns.Count > 0)
-            matching = matching.Where(entry => entry.IsFolder || patterns.Any(pattern => FileSystemName.MatchesSimpleExpression(pattern, entry.Name, ignoreCase: true)));
-        if (view.Newest is { } newest) matching = matching.OrderByDescending(entry => entry.Modified).Take(newest);
-        var ordered = ItemSorting.Order(matching, view.Sort == FenceSort.Manual ? FenceSort.Name : view.Sort);
-        return new Selection([.. ordered.Take(MaxShown)], Math.Max(0, ordered.Count - MaxShown), entries.Count);
+        /// <summary>Entry paths in the order shown.</summary>
+        public IReadOnlyList<string> Shown => [.. Entries.Select(entry => entry.ItemRef)];
     }
+
+    /// <summary>A view's listing as its panel shows it (M26: views became panels; the same rules).</summary>
+    public static Selection Select(IReadOnlyList<ItemInfo> entries, FolderView view) => FolderPanels.Select(entries, FolderPanels.FromView(view));
 
     /// <summary>
     /// "*.png; .jpg, txt" → ["*.png", "*.jpg", "*.txt"]: split on ; and ,; a bare extension becomes "*.ext". Null when a

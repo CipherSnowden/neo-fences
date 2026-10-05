@@ -26,6 +26,7 @@ public static class ConfigJson
             // Folder views (M21): a typo in a view's show or sort is repaired too, not the whole file lost (final review).
             new LenientEnumConverter<ViewShow>(), new LenientEnumConverter<FenceSort>(),
             new LenientEnumConverter<Items.ItemShow>(), new LenientEnumConverter<Items.FenceLayout>(), // M24 // M22: a typo in items.json shows the usual look, never fails the file
+            new LenientEnumConverter<Items.PanelLook>(), new LenientEnumConverter<Items.PanelSort>(), // M26
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
         },
     };
