@@ -258,7 +258,7 @@ Tray or fence menu → **Settings…**:
 - **Something went wrong:** **Settings → About and logs → Open logs folder** and look at the newest file; report problems
   on the project's [GitHub Issues page](https://github.com/CipherSnowden/neo-fences/issues) with what you did and that
   log.
-- **CPU TEMP shows "—"**: start MSI Afterburner or HWiNFO64 (in HWiNFO, turn on "Shared Memory Support" in its
+- **CPU TEMP shows "—"**: start MSI Afterburner (with "CPU temperature" ticked in its Settings → Monitoring) or HWiNFO64 (in HWiNFO, turn on "Shared Memory Support" in its
   settings; the free version turns it off again after 12 hours).
 
 ## 15. Cheat-sheet

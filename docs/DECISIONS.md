@@ -1361,10 +1361,10 @@ the GPU temperature (as Task Manager shows it) but no reliable CPU temperature: 
 admin rights, which NeoFences never uses. The user runs MSI Afterburner; friends may run HWiNFO64. Both publish their
 sensors in shared memory that any process may read.
 
-**Decision.** The stats read MSI Afterburner's `MAHMSharedMemory`, then HWiNFO's `Global\HWiNFO_SENS_SM2`, read-only
-through `MemoryMappedFile` (no Win32 binding, no dependency); Core parses a copy of the bytes (signature and size checks;
-anything odd is nothing). The main graphics card is the one using the most video memory. Without either, GPU use comes
-from PDH as before and its temperature from D3DKMT adapter perf data (a commented DllImport: CsWin32 has these WDK
+**Decision.** The stats read MSI Afterburner's `MAHMSharedMemory`, then HWiNFO's `Global\HWiNFO_SENS_SM2` for any value
+Afterburner lacks, read-only through `MemoryMappedFile` (no Win32 binding, no dependency); Core parses a copy of the bytes
+(signature and size checks; anything odd is nothing). The main graphics card is the one using the most video memory — in
+the Windows fallback too, by each adapter's dedicated-memory counter. Without either monitor, GPU use comes from PDH and its temperature from D3DKMT adapter perf data (a commented DllImport: CsWin32 has these WDK
 functions only through the WDK metadata package, a new dependency). CPU TEMP then shows "—" with "needs Afterburner or
 HWiNFO". RAM shows GB used of installed; the disk tile is gone.
 
