@@ -616,3 +616,15 @@ taller than its fence hid its header (the wheel now scrolls the fence at the pan
 **Next:** release 0.15.0 when the user says so; then auto-collect rules or pre-1.0 work.**Released:** 0.15.0 on 2026-10-05 — CI green, draft with the delta package (360 KB), install check (the installed 0.14.0
 updated itself in 3 s through the tray's Restart to update; the Downloads folder view became a filling panel after a
 "Before folder views became panels" snapshot; plain restart back on GitHub updates), published; hub refreshed.
+
+## 2026-10-05 — M27 auto-collect rules (0.16.0), built and merged
+
+**Done:** the user chose auto-collect rules and approved the proposed defaults: a fence's rules watch the desktop or any
+folder; new matching files (apps and shortcuts, installers, documents, pictures, archives, anything, or patterns) become
+items in the first matching fence; nothing is moved; removed stays removed; files created while NeoFences was closed are
+caught up at start (ADR-049). Prototype probed on a copy of the user's data with a test folder, plan with replay-verified
+patches, native execution; Opus final review "with fixes" (the desktop's two folders lost one catch-up, renames made
+duplicates, the burst cap counted per listing, a restore brought old files back; re-graded: names-only watching, the
+desktop chosen as a folder) — fixed, 633 tests. Live check AM by script. Merged locally.
+**Decisions:** ADR-049.
+**Next:** release 0.16.0 when the user says so.
