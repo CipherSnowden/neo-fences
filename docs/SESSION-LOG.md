@@ -700,3 +700,18 @@ Clair Obscur and Detroit at 2×2 first in a Free Games fence (taller; Downloads 
 switched to Details, newest first; the existing auto-collect rules kept. Snapshot `snapshot-2026-10-06_02-45-50` taken first
 (tray → Restore snapshot undoes it). Seen: a Free fence written without cells shows them arranged but pins them only
 at the next item change (noted for later).
+
+## 2026-10-06 — M32 polish (0.19.1), built and merged
+
+**Done:** the user chose a polish release with every M31 deferred minor and the Free-layout bug found while setting up
+their desktop: accent bars follow an accent change at once, a rented sensor buffer, HWiNFO read under its mutex, a sticky
+main GPU per source (2× and 1 GB more — ruling: the spec's 256 MB would still flip on its own example), no empty hint
+line, the first-start notice held during a game, the clock's date line in the culture's order (Windows' own ja/zh
+formats too), `fahrenheit` written only when set, a Free fence's cells stored at first layout. Prototype + replay-verified
+plan, native execution; Opus final review fixes (700 tests). Live check AR1 (accent switched to Blue and back with the
+user's OK — restoring needed the grid's Red swatch; verified red in WPF and DWM; installed copy restarted) and AR2.
+Merged locally.
+**Decisions:** ADR-052 amended (sticky GPU, HWiNFO mutex).
+**Deferred minors:** a hybrid laptop's first choice at an idle start can be the built-in GPU; a Free fence loading rolled
+up may be pinned one column narrower; the fence look's Windows accent not refreshed on an accent change.
+**Next:** release 0.19.1 when the user says so.
