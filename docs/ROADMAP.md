@@ -72,7 +72,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Opus review: 0 critical / 3 important (tray overflow, browser download warning, guide rule into CLAUDE.md), 6 wording minors fixed (643 tests)
   - [x] Live check AO1, AO2, AO4 by script; merged to main
   - [ ] AO3 (links on GitHub) after the push; AO5 (quick start on a fresh user) by hand
-  - [ ] Release 0.17.0 (main pushed with the guide first; the user approved the release 2026-10-05)
+  - [x] Released 0.17.0 on 2026-10-06 (the installed 0.16.1 updated itself in 3 s; data unchanged; tray shows Help)
   - Deferred minors: in `research/m29-guide.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 

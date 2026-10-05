@@ -654,3 +654,7 @@ Live check AO1/AO2/AO4 by script. Merged locally.
 **Decisions:** ADR-050.
 **Next:** push main (the guide must be on GitHub before Help is released), then release 0.17.0 when the user says so;
 AO3/AO5 by hand.
+**Released:** 0.17.0 on 2026-10-06 — CI green, draft with the delta package (223 KB), install check (the first try found game
+mode on — a fullscreen video — so no update check ran, as designed; rerun when the screen was free: the installed 0.16.1
+updated itself in 3 s through the tray's Restart to update; data unchanged; the tray shows Help; plain restart back on
+GitHub updates), published; hub refreshed.

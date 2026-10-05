@@ -788,9 +788,10 @@ const HUB = {
   updated: "2026-10-05",
   commit: "0c316d9",
   phase: "0.17.0 — a guide for friends",
-  current: "M29 merged: README rewrite, docs/GUIDE.md with 8 screenshots, Help in the tray and Settings · next: push main, then release 0.17.0 when you say so",
+  current: "0.17.0 RELEASED and installed (your 0.16.1 updated itself): README, docs/GUIDE.md with screenshots, Help in the tray and Settings · next: pre-1.0 work or new ideas",
   waiting: [
-    "NEW in 0.16.0 — auto-collect: fence menu → Auto-collect… → New rule. Watch your Desktop or any folder; pick kinds (apps and shortcuts, installers, documents, pictures, archives, anything) or patterns. New matching files show up as items within ~2 s; nothing is moved; removed stays removed; files from while NeoFences was closed are caught up at start.",
+    "NEW in 0.17.0 — Help: tray → Help (or Settings → About and logs → Help (online guide)) opens the guide on GitHub: every feature with pictures, a cheat-sheet of gestures and keys, install and troubleshooting. Worth checking: the README and guide links and images on GitHub (AO3), and the quick start on a fresh user (AO5).",
+    "In 0.16.0 — auto-collect: fence menu → Auto-collect… → New rule. Watch your Desktop or any folder; pick kinds (apps and shortcuts, installers, documents, pictures, archives, anything) or patterns. New matching files show up as items within ~2 s; nothing is moved; removed stays removed; files from while NeoFences was closed are caught up at start.",
     "In 0.15.0 — folder panels: fence menu → Add folder panel… (or a folder item → Show as folder panel). Details / List / Icons, click a column header to sort, double-click a subfolder to browse in (Back / Up / Home), Size ▸ or Fill fence. Your Downloads view is now a panel that fills its fence.",
     "In 0.14.0 — widgets: fence menu → Add widget → Clock, Date or System stats (CPU, RAM, GPU, C:). Any size via Size ▸; right-click the clock for seconds and a date line; double-click the clock for Windows' Clock app, the stats for Task Manager. Widgets do nothing while you game or the fences are hidden.",
     "In 0.13.0 — element sizes: right-click any item → Size → pick columns × rows (up to 4 × 4); a bigger app is a bigger icon, a bigger game a bigger cover; smaller items fill the gaps. Fence menu → Layout → Free (fixed positions) keeps items exactly where you drop them; Flow (packed) is the default.",
@@ -809,7 +810,7 @@ const HUB = {
       { t: "README rewrite, docs/GUIDE.md (15 sections, cheat-sheet), 8 screenshots from a demo setup", s: "done" },
       { t: "Opus review: 0 critical / 3 important (tray overflow, download warning, guide rule in CLAUDE.md) + 6 wording fixes (643 tests)", s: "done" },
       { t: "Live check AO1/AO2/AO4 by script; merged locally", s: "done" },
-      { t: "Push main (Help opens the guide on GitHub), then release 0.17.0", s: "todo" },
+      { t: "Released 0.17.0 — your 0.16.1 updated itself in 3 s; data unchanged; the tray shows Help", s: "done" },
       { t: "AO3 links on GitHub, AO5 quick start on a fresh user — by hand", s: "todo" }
     ]},
     { group: "M28 · Polish (0.16.1)", items: [
@@ -1141,7 +1142,7 @@ const HUB = {
     { id: "M26", name: "Folder panels (0.15.0)", goal: "A folder as Details / List / Icons inside any fence; folder views become panels (ADR-048) — released as 0.15.0", s: "done" },
     { id: "M27", name: "Auto-collect (0.16.0)", goal: "New files of the desktop or a folder become items in a fence (ADR-049) — released as 0.16.0", s: "done" },
     { id: "M28", name: "Polish (0.16.1)", goal: "The 20 deferred minors of M24–M27 — released as 0.16.1", s: "done" },
-    { id: "M29", name: "A guide for friends (0.17.0)", goal: "README, docs/GUIDE.md with screenshots, Help in the tray and Settings (ADR-050) — merged, release pending", s: "wip" },
+    { id: "M29", name: "A guide for friends (0.17.0)", goal: "README, docs/GUIDE.md with screenshots, Help in the tray and Settings (ADR-050) — released as 0.17.0", s: "done" },
     { id: "Next", name: "Next", goal: "Pre-1.0 work (first run, code signing) or new ideas", s: "todo" }
   ],
   versions: [
@@ -1160,7 +1161,7 @@ const HUB = {
     { v: "0.15.0", s: "done", scope: "Folder panels (M26): a folder as Details / List / Icons inside any fence, browsing in, header sort, Fill fence; folder views became panels (snapshot first). Released 2026-10-05; the installed 0.14.0 updated itself." },
     { v: "0.16.0", s: "done", scope: "Auto-collect rules (M27): new files of the desktop or a folder become items in a fence, by kind or pattern; removed stays removed; catch-up at start. Released 2026-10-05; the installed 0.15.0 updated itself." },
     { v: "0.16.1", s: "done", scope: "Polish (M28): 20 deferred minors — panels, auto-collect, widgets, grid and sizes. Released 2026-10-05; the installed 0.16.0 updated itself." },
-    { v: "0.17.0", s: "todo", scope: "A guide for friends (M29): rewritten README, docs/GUIDE.md with screenshots, Help in the tray and Settings. Merged 2026-10-05; release pending." },
+    { v: "0.17.0", s: "done", scope: "A guide for friends (M29): rewritten README, docs/GUIDE.md with screenshots, Help in the tray and Settings. Released 2026-10-06; the installed 0.16.1 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1432,7 +1433,7 @@ const HUB = {
     { date: "2026-10-05", topic: "M26 folder panels (merged)", done: "Panels replace folder views. Prototype probed on a copy of your data (you paused the first run), verified plan, native build, Opus review fixes (606 tests), live check AL (a tall panel's wheel fixed), merged locally.", next: "Auto-collect rules or pre-1.0 work" },
     { date: "2026-10-05", topic: "M27 auto-collect (merged)", done: "You chose auto-collect; prototype probed with a test folder; verified plan; native build; Opus review fixes (633 tests); live check AM; merged locally.", next: "Pre-1.0 work or polish" },
     { date: "2026-10-05", topic: "M28 polish (merged)", done: "All four groups; prototype + visual probe; verified plan; native build; Opus review fixes (643 tests); live check AN; merged locally.", next: "Pre-1.0 work or new ideas" },
-    { date: "2026-10-05", topic: "M29 guide for friends (merged)", done: "Spec + plan; native build; 8 demo screenshots (3 as JPEG); Opus review fixes (tray overflow, download warning, wording); guide rule in CLAUDE.md; live check AO1/AO2/AO4; merged locally.", next: "Push main, release 0.17.0" }
+    { date: "2026-10-05", topic: "M29 guide for friends (merged)", done: "Spec + plan; native build; 8 demo screenshots (3 as JPEG); Opus review fixes (tray overflow, download warning, wording); guide rule in CLAUDE.md; live check AO1/AO2/AO4; merged locally.", next: "Released 0.17.0; next: pre-1.0 work or new ideas" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1970,7 +1971,9 @@ const HUB = {
     ["5604aaf", "docs: recorded the guide's screenshots and the Help live check"],
     ["9d9d2e2", "docs: fixed the guide's tray, download warning and menu wording after review"],
     ["09752a5", "docs: added the keep-the-guide-current rule to CLAUDE.md"],
-    ["0c316d9", "docs: recorded the M29 guide as built and merged"]
+    ["0c316d9", "docs: recorded the M29 guide as built and merged"],
+    ["d38d789", "chore: bumped the version to 0.17.0"],
+    ["998134f", "docs: marked the 0.17.0 release as approved"]
   ]
 };
 /* ===== END HUB DATA ===== */
