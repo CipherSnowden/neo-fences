@@ -158,6 +158,8 @@ public partial class FenceWindow : Window
     public event Action? NewFolderPanelRequested;
     /// <summary>Fence menu → "Add folder panel…" (M26).</summary>
     public event Action? AddFolderPanelRequested;
+    /// <summary>Fence menu → "Auto-collect…" (M27).</summary>
+    public event Action? AutoCollectRequested;
     /// <summary>A folder panel asks for something (M26): the panel item's key and what.</summary>
     public event Action<string, PanelCommand>? PanelCommandRequested;
     /// <summary>A drive arrived or was removed (Windows tells top-level windows): missing and unavailable items are checked again.</summary>
@@ -213,6 +215,7 @@ public partial class FenceWindow : Window
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
         NewFolderPanelItem.Click += (_, _) => NewFolderPanelRequested?.Invoke(); // M26
         AddFolderPanelItem.Click += (_, _) => AddFolderPanelRequested?.Invoke();
+        AutoCollectItem.Click += (_, _) => AutoCollectRequested?.Invoke(); // M27
         AddGamesItem.Click += (_, _) => AddGamesRequested?.Invoke();
         AddClockItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Clock); // M25
         AddDateItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Date);
@@ -316,6 +319,8 @@ public partial class FenceWindow : Window
         AddGamesItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddWidgetItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddFolderPanelItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        AutoCollectItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        AutoCollectItem.Header = fence.Collect.Count switch { 0 => "Auto-collect…", 1 => "Auto-collect… (1 rule)", var count => $"Auto-collect… ({count} rules)" }; // M27
         SortItem.Visibility = _kind == FenceKind.Library ? Visibility.Collapsed : Visibility.Visible;
         foreach (var sortItem in SortItem.Items.OfType<MenuItem>()) sortItem.IsChecked = view && Equals(sortItem.Tag, fence.View!.Sort);
         DeleteItem.Header = _kind switch

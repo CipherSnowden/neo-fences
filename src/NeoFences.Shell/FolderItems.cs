@@ -38,7 +38,8 @@ public static class FolderItems
         var isFolder = entry is DirectoryInfo;
         return new ItemInfo(entry.FullName, entry.Name, isFolder, isFolder ? "" : entry.Extension.ToUpperInvariant(),
             entry.Exists ? entry.LastWriteTime : DateTimeOffset.MinValue,
-            Size: entry is FileInfo { Exists: true } file ? file.Length : null); // M26: a panel's Size column (read with the listing)
+            Size: entry is FileInfo { Exists: true } file ? file.Length : null, // M26: a panel's Size column (read with the listing)
+            Created: entry.Exists ? entry.CreationTime : DateTimeOffset.MinValue); // M27: an auto-collect rule's catch-up
     }
 }
 

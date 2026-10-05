@@ -109,6 +109,7 @@ public sealed partial class FenceHost
             if (_libraryLister?.ReleaseForRemoval(handle) == true) Log.Information("the library folder's drive is being removed: released it");
             if (ReleaseLibraryForRemoval(handle)) Log.Information("a drive the game library watches is being removed: released it");
             if (ReleasePanelsForRemoval(handle)) Log.Information("a drive a folder panel shows is being removed: released it");
+            if (ReleaseCollectForRemoval(handle)) Log.Information("a drive an auto-collect rule watches is being removed: released it");
             if (ReleaseTargetWatcherForRemoval(handle)) Log.Information("a drive holding item targets is being removed: released it");
         };
         _specialIconsTimer.Tick += (_, _) => RefreshSpecialIcons();
@@ -210,6 +211,7 @@ public sealed partial class FenceHost
         _specialIcons?.Dispose();
         _libraryLister?.Dispose();
         StopPanelListers(); // M26
+        StopCollectListers(); // M27
         _widgetTimer?.Stop(); // M25
         _systemStats?.Dispose();
         StopLibraryWatchers();
@@ -278,6 +280,7 @@ public sealed partial class FenceHost
         window.NewLibraryRequested += CreateLibraryFence;
         window.NewFolderPanelRequested += () => NewFolderPanel(window.Handle); // M26
         window.AddFolderPanelRequested += () => AddFolderPanel(window);
+        window.AutoCollectRequested += () => EditCollectRules(window); // M27
         window.PanelCommandRequested += (itemId, command) => OnPanelCommand(window, itemId, command);
         window.AddGamesRequested += () => AddGames(window); // M22
         window.LayoutRequested += layout => SetFenceLayout(window, layout); // M24
@@ -337,6 +340,7 @@ public sealed partial class FenceHost
     private void RefreshWindows()
     {
         EnsurePanelListers(); // M26: a lister per panel, on the folder it shows
+        EnsureCollectListers(); // M27: a lister per folder a rule watches
         foreach (var window in _windows.Values) RefreshWindow(window);
         UpdateWidgetTimer(); // M25: a timer only while some fence holds a widget
     }
@@ -1133,6 +1137,7 @@ public sealed partial class FenceHost
         UpdateMouseHook();
         _libraryLister?.SetPaused(gameMode);
         SetPanelsPaused(gameMode); // M21, M26
+        SetCollectPaused(); // M27
         if (!gameMode) ApplyDeferredShellWork();
         UpdatePeekHotkey();
         _trayIcon?.SetTooltip(TrayTooltip());
@@ -1165,6 +1170,7 @@ public sealed partial class FenceHost
             EndDrawOverlay();
         }
         _paused = paused;
+        SetCollectPaused(); // M27: new files wait while paused
         if (paused)
         {
             _quickHidden = false; // resuming shows everything

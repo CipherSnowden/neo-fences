@@ -11,6 +11,9 @@ public static class KnownFolders
     public static IReadOnlyList<string> BusyFolders(Action<Exception> logFailure) =>
         [.. new[] { PInvoke.FOLDERID_Downloads, PInvoke.FOLDERID_Screenshots }.Select(folderId => TryGetPath(folderId, logFailure)).OfType<string>()];
 
+    /// <summary>Downloads, where Windows has it (M27: a rule's source); null when it cannot be told (logged).</summary>
+    public static string? Downloads(Action<Exception> logFailure) => TryGetPath(PInvoke.FOLDERID_Downloads, logFailure);
+
     private static unsafe string? TryGetPath(Guid folderId, Action<Exception> logFailure)
     {
         PWSTR path = default;

@@ -91,6 +91,8 @@
                         </MenuItem>
                         <!-- M26: a folder inside the fence, beside its other elements. -->
                         <MenuItem x:Name="AddFolderPanelItem" Header="Add folder panel…" />
+                        <!-- M27: new matching files of a folder become items here. -->
+                        <MenuItem x:Name="AutoCollectItem" Header="Auto-collect…" />
                         <MenuItem x:Name="RefreshItem" Header="Refresh" />
                         <Separator />
                         <MenuItem x:Name="NewFenceItem" Header="New fence" />
