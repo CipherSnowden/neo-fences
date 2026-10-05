@@ -613,4 +613,6 @@ the fence, rows blinked during downloads; re-graded: safe migration saves, no sn
 Sort by on a filled fence, invisible panel selection) — fixed, 606 tests. Live check AL by script; found and fixed: a panel
 taller than its fence hid its header (the wheel now scrolls the fence at the panel's ends). Merged locally.
 **Decisions:** ADR-048 (supersedes ADR-044's folder-view fence).
-**Next:** release 0.15.0 when the user says so; then auto-collect rules or pre-1.0 work.
+**Next:** release 0.15.0 when the user says so; then auto-collect rules or pre-1.0 work.**Released:** 0.15.0 on 2026-10-05 — CI green, draft with the delta package (360 KB), install check (the installed 0.14.0
+updated itself in 3 s through the tray's Restart to update; the Downloads folder view became a filling panel after a
+"Before folder views became panels" snapshot; plain restart back on GitHub updates), published; hub refreshed.

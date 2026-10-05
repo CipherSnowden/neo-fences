@@ -786,11 +786,12 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "5207201",
-  phase: "0.15.0 — folder panels (merged)",
-  current: "M26 folder panels MERGED locally (0.14.0 still installed): a folder as Details / List / Icons inside any fence, browsing in, Fill fence; folder views become panels · next: release 0.15.0 (asked first)",
+  commit: "f352d65",
+  phase: "0.15.0 — folder panels",
+  current: "0.15.0 RELEASED and installed (your 0.14.0 updated itself): folder panels — a folder as Details / List / Icons inside any fence; your Downloads view is now a filling panel · next: auto-collect rules or pre-1.0 work",
   waiting: [
-    "NEW in 0.14.0 — widgets: fence menu → Add widget → Clock, Date or System stats (CPU, RAM, GPU, C:). Any size via Size ▸; right-click the clock for seconds and a date line; double-click the clock for Windows' Clock app, the stats for Task Manager. Widgets do nothing while you game or the fences are hidden.",
+    "NEW in 0.15.0 — folder panels: fence menu → Add folder panel… (or a folder item → Show as folder panel). Details / List / Icons, click a column header to sort, double-click a subfolder to browse in (Back / Up / Home), Size ▸ or Fill fence. Your Downloads view is now a panel that fills its fence.",
+    "In 0.14.0 — widgets: fence menu → Add widget → Clock, Date or System stats (CPU, RAM, GPU, C:). Any size via Size ▸; right-click the clock for seconds and a date line; double-click the clock for Windows' Clock app, the stats for Task Manager. Widgets do nothing while you game or the fences are hidden.",
     "In 0.13.0 — element sizes: right-click any item → Size → pick columns × rows (up to 4 × 4); a bigger app is a bigger icon, a bigger game a bigger cover; smaller items fill the gaps. Fence menu → Layout → Free (fixed positions) keeps items exactly where you drop them; Flow (packed) is the default.",
     "In 0.12.1 — small fixes: big folder views stay smooth, Folder view settings says why OK is greyed out, hidden view tabs follow folder renames, Game Library settings and game menus behave better.",
     "In 0.12.0 — games are items: put any game in any fence next to your apps (Ctrl+drag a cover into Apps); right-click → Show as → Cover tile / Icon. Fence menu → Add games… lists every game found. Settings → Game Library → New games go to picks the fence that gets newly installed games. An uninstalled game dims with ⚠ and comes back when reinstalled. Your Games fence is now a normal fence (tray → Restore snapshot has \"Before games became items\").",
@@ -806,7 +807,7 @@ const HUB = {
       { t: "You picked: panels replace folder views; Details / List / Icons; browse into subfolders; cells or Fill fence", s: "done" },
       { t: "Prototype probed on a copy of your data (0 % CPU idle), verified plan, native build; Opus review: 4 important + 4 re-graded fixed (606 tests)", s: "done" },
       { t: "Live check AL by script (a tall panel's wheel fixed); merged locally", s: "done" },
-      { t: "Release 0.15.0 (asked first)", s: "todo" }
+      { t: "Released 0.15.0 — your 0.14.0 updated itself in 3 s; Downloads became a filling panel (snapshot first)", s: "done" }
     ]},
     { group: "M25 · Widgets (0.14.0)", items: [
       { t: "You picked Clock, Date and System stats (bars), stored as elements beside items", s: "done" },
@@ -1116,7 +1117,7 @@ const HUB = {
     { id: "M23", name: "Small fixes (0.12.1)", goal: "The M21/M22 review minors — released as 0.12.1", s: "done" },
     { id: "M24", name: "Element sizes (0.13.0)", goal: "Elements 1–4 × 1–4 cells, Flow / Free grid per fence (ADR-046) — released as 0.13.0", s: "done" },
     { id: "M25", name: "Widgets (0.14.0)", goal: "Clock, Date, System stats elements in any fence (ADR-047) — released as 0.14.0", s: "done" },
-    { id: "M26", name: "Folder panels (0.15.0)", goal: "A folder as Details / List / Icons inside any fence; folder views become panels (ADR-048) — merged, release next", s: "doing" },
+    { id: "M26", name: "Folder panels (0.15.0)", goal: "A folder as Details / List / Icons inside any fence; folder views become panels (ADR-048) — released as 0.15.0", s: "done" },
     { id: "Next", name: "Next", goal: "Auto-collect rules, or pre-1.0 work (code signing etc.)", s: "todo" }
   ],
   versions: [
@@ -1132,6 +1133,7 @@ const HUB = {
     { v: "0.12.1", s: "done", scope: "Small fixes (M23): view sorting off the UI thread, hidden tab titles follow renames, full folder paths with reasons, Settings after Delete fence, no shortcut flash during scans, a steady New games list, Open install folder only for installed games. Released 2026-10-05; the installed 0.12.0 updated itself." },
     { v: "0.13.0", s: "done", scope: "Element sizes (M24): any element 1–4 × 1–4 cells via Size ▸, bigger icons and covers, gaps filled; per fence Flow (packed) or Free (fixed positions, drops on the cell under the pointer). Released 2026-10-05; the installed 0.12.1 updated itself." },
     { v: "0.14.0", s: "done", scope: "Widgets (M25): Clock (seconds, date line; follows Windows' time format), Date page, System stats (CPU, RAM, GPU, C: as bars) in any fence at any size; idle while unseen (0.016 % CPU measured). Released 2026-10-05; the installed 0.13.0 updated itself." },
+    { v: "0.15.0", s: "done", scope: "Folder panels (M26): a folder as Details / List / Icons inside any fence, browsing in, header sort, Fill fence; folder views became panels (snapshot first). Released 2026-10-05; the installed 0.14.0 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1245,6 +1247,7 @@ const HUB = {
     ["One kind of fence (elements decide their look)", "—", "0.12", "M22", "wip", "Games and sizes done; next: folder panel, widgets (ADR-045, ADR-046)", "extra"],
     ["Element sizes and a Flow / Free grid", "—", "0.13", "M24", "done", "1–4 × 1–4 cells, Size ▸ picker, Layout ▸ per fence (ADR-046)", "extra"],
     ["Widgets: clock, date, system stats", "—", "0.14", "M25", "done", "Any size; idle while unseen (ADR-047)", "extra"],
+    ["Folder panels: Details / List / Icons, browse in, Fill fence", "3+ (Portals)", "0.15", "M26", "done", "Replaces folder views (ADR-048)", "extra"],
     ["Store / Start apps as items", "—", "0.10", "M19", "done", "App list (Add item… → An app…) or a drag from Start; Missing when uninstalled (ADR-042)", "extra"],
     ["Add from desktop…", "—", "0.10", "M19", "done", "Desktop grouped into Games / Apps / Folders and files / Web links, each into a fence (ADR-042)", "extra"],
     ["Bulk fix of missing items", "—", "0.10", "M19", "done", "After one Locate…, the others from the same old place; undo from the tray (ADR-042)", "extra"],
@@ -1395,7 +1398,7 @@ const HUB = {
     { date: "2026-10-05", topic: "M23 small fixes → 0.12.1", done: "You picked the leftovers, then the vision. 8 review minors fixed, live check AI 6/6 (screenshots sent), merged locally, released — your 0.12.0 updated itself.", next: "Design the next vision piece" },
     { date: "2026-10-05", topic: "M24 element sizes → 0.13.0", done: "You chose sizes first. Pure Core grid + WPF panel, prototype probed on a copy of your data, verified plan, native build, Opus review fixes, live check 14/15 (screenshots sent), merged locally, released — your 0.12.1 updated itself.", next: "Widgets or the folder panel" },
     { date: "2026-10-05", topic: "M25 widgets → 0.14.0", done: "You picked Clock, Date and System stats. Prototype probed on a copy of your data, verified plan, native build, Opus review fixes, live check 11/13 (screenshots sent), merged locally, released — your 0.13.0 updated itself (on exit; the scripted Restart click was blocked by an elevated Task Manager).", next: "The folder panel element" },
-    { date: "2026-10-05", topic: "M26 folder panels (merged)", done: "Panels replace folder views. Prototype probed on a copy of your data (you paused the first run), verified plan, native build, Opus review fixes (606 tests), live check AL (a tall panel's wheel fixed), merged locally.", next: "Release 0.15.0" }
+    { date: "2026-10-05", topic: "M26 folder panels (merged)", done: "Panels replace folder views. Prototype probed on a copy of your data (you paused the first run), verified plan, native build, Opus review fixes (606 tests), live check AL (a tall panel's wheel fixed), merged locally.", next: "Auto-collect rules or pre-1.0 work" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1893,7 +1896,10 @@ const HUB = {
     ["c3610d0", "feat: added folder panels to fences and made folder views into panels"],
     ["131b0b7", "docs: described folder panels in ADR-048, architecture, features, checklist AL and the M26 research note"],
     ["30e6181", "fix: fixed the M26 review findings: panels leaving fill, moves in Free fences, arrow keys, rows during downloads, safe migration saves, Sort by on a filled fence, panel selection"],
-    ["5207201", "fix: fixed a tall folder panel hiding its header: the wheel scrolls the fence at the panel's ends"]
+    ["5207201", "fix: fixed a tall folder panel hiding its header: the wheel scrolls the fence at the panel's ends"],
+    ["52acd53", "docs: recorded M26 merged and refreshed the hub"],
+    ["aade7c8", "chore: bumped the version to 0.15.0"],
+    ["f352d65", "docs: marked the 0.15.0 release as approved"]
   ]
 };
 /* ===== END HUB DATA ===== */
