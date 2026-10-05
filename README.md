@@ -9,21 +9,24 @@ play, and it never moves, renames or deletes anything of yours.
 
 ## Install
 
-1. Open the [Releases](../../releases) page and download `NeoFences.App-win-Setup.exe` from the newest release.
+1. Open the [Releases](../../releases) page and download `NeoFences.App-win-Setup.exe` from the newest release. If
+   your browser warns that the file "isn't commonly downloaded", keep it (Edge: **…** → **Keep** → **Show more** →
+   **Keep anyway**).
 2. Run it. NeoFences installs for your user only (no administrator rights needed) and starts. Its icon sits in the
-   notification area (the tray), next to the clock.
+   notification area (the tray), next to the clock. On Windows 11 it may be behind the **^** arrow there; drag it
+   onto the taskbar to keep it in view.
 3. **The first time only**, Windows may show *"Windows protected your PC"*: click **More info → Run anyway**. NeoFences
    is not code-signed yet, so Windows does not know the publisher.
 
 > **Smart App Control:** on PCs where Windows' Smart App Control is on (some fresh Windows 11 installs), unsigned apps are
-> blocked without a "Run anyway" button. NeoFences cannot run there until it is signed.
+> blocked without a "Run anyway" button. NeoFences cannot run while Smart App Control is on.
 
 NeoFences **updates itself**: when a new version is ready the tray menu shows *"Restart to update"*; if you ignore it,
 the update installs the next time NeoFences exits. You can turn this off in **Settings → Updates**.
 
 ## Quick start
 
-1. **Sort your desktop into fences:** click the tray icon → **Add from desktop…** and pick the groups you want (Games,
+1. **Sort your desktop into fences:** click the tray icon (or right-click a fence) → **Add from desktop…** and pick the groups you want (Games,
    Apps, Folders and files, Web links). Each becomes a fence of links to what is on your desktop.
 2. **Add more:** drag files, folders, apps from Start, or a web address onto a fence — or right-click a fence →
    **Add item…**.

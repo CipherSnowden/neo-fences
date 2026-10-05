@@ -7,7 +7,7 @@ something from a fence only removes the link.
 Almost everything starts from two places:
 
 - **The fence menu** — right-click a fence's title or its empty space.
-- **The tray menu** — click NeoFences' icon in the notification area (left or right click).
+- **The tray menu** — click NeoFences' icon in the notification area (left or right click). Windows 11 may tuck a new app's icon behind the **^** arrow next to the clock; drag it onto the taskbar to keep it in view.
 
 ![A desktop with NeoFences: Games, Apps, Downloads and a Desk fence with widgets](guide/desktop.jpg)
 
@@ -37,7 +37,7 @@ Almost everything starts from two places:
 - **Right-drag on empty desktop**: hold the right mouse button and draw a rectangle; let go and type the fence's name.
 - Tray → **Add from desktop…** makes one fence per group of things on your desktop (see [Items](#2-items)).
 
-**Name it:** fence menu → **Rename fence** (or double-click a tab's name).
+**Name it:** fence menu → **Rename fence** (**Rename tab** in a fence with tabs; or double-click a tab's name).
 
 **Move and resize:** drag the title to move; drag an edge or corner to resize. Fences snap to each other and to the
 screen edges with a small gap.
@@ -90,7 +90,7 @@ first so it can be undone.
 
 **Remove:** **Del** or **Remove from fence**. The file is never touched.
 
-**Order:** drag to rearrange, or fence menu → **Sort by** (Name, Type, Date) to sort once. **Refresh** checks the links
+**Order:** drag to rearrange, or fence menu → **Sort by** (**Name**, **Type**, **Date (newest first)**) to sort once. **Refresh** checks the links
 again and reloads their icons.
 
 ![An item's menu](guide/item-menu.jpg)
@@ -102,7 +102,7 @@ Store**, the **game folders** you add, and game shortcuts on your desktop — an
 
 - Fence menu → **Add games…** lists every game NeoFences found; tick the ones you want in that fence.
 - **Settings → Game Library**: **New games go to** (the fence where newly installed games appear), **Game folders (each
-  sub-folder is a game)**, **Look for games in** (which launchers to read), **Hidden games** (**Show again**), and
+  sub-folder is a game)**, **Look for games in** (which launchers to read), **Hidden games** (games hidden in older versions; **Show again**), and
   **Refresh library now**.
 - A game's menu: **Open**, **Open install folder**, **Show as ▸ Cover tile / Icon**, **Copy path**, **Properties…**,
   **Remove from fence**. A game that is no longer installed says "Not installed".
@@ -140,7 +140,7 @@ A folder panel shows a folder inside a fence, live and read-only.
   **Panel settings…** (the folder, what it shows, file types, only the newest N), **Open folder**, **Size**, **Fill
   fence** (when it is the fence's only element), **Show as icon**, **Remove from fence**.
 - In Details, click a column header (**Name**, **Date modified**, **Type**, **Size**) to sort; click again to reverse.
-- Double-click a subfolder to look inside; **Back**, **Up** and **Home** buttons (or **Backspace** and **Alt+Up**) bring
+- Double-click a subfolder to look inside; the **Back**, **Up** and **Back to the panel's folder** buttons (or **Backspace** and **Alt+Up**) bring
   you back. Next time the panel starts at its own folder again.
 - Right-click an entry: **Open**, **Open file location**, **Copy path**, **Add to fence**. Drag entries out to copy them,
   or onto a fence to add links.
@@ -159,7 +159,7 @@ A fence can collect new files by itself. Fence menu → **Auto-collect…** → 
   that, only new files are collected.
 
 What happens next: a new matching file shows up in the fence within a couple of seconds, as a link — the file stays where
-it is. If two fences' rules match, the fence higher in the list gets it. Remove a collected item and it stays removed.
+it is. If two fences' rules match, only one of them gets it (the fence made first). Remove a collected item and it stays removed.
 Files that appear while NeoFences is closed are picked up at its next start. Nothing is collected during a game; it
 catches up afterwards.
 
@@ -224,9 +224,10 @@ Tray or fence menu → **Settings…**:
 ## 14. Troubleshooting
 
 - **Desktop icons stay hidden** (very unlikely): right-click the desktop → **View** → **Show desktop icons**.
+- **The browser warns about the download** ("isn't commonly downloaded"): in Edge, **…** → **Keep** → **Show more** → **Keep anyway**; in Chrome, **Keep**. NeoFences is new and unsigned, so few people have downloaded it yet.
 - **"Windows protected your PC"** when installing: **More info → Run anyway** (NeoFences is not code-signed yet). With
-  **Smart App Control** on, Windows blocks unsigned apps without that button; NeoFences cannot run there until it is
-  signed.
+  **Smart App Control** on, Windows blocks unsigned apps without that button; NeoFences cannot run while Smart
+  App Control is on.
 - **A fence is off-screen** after changing monitors: NeoFences moves fences back onto a screen by itself when the displays
   change; if one still hides, **Settings → Snapshots → Restore** an earlier layout.
 - **Something went wrong:** **Settings → About and logs → Open logs folder** and look at the newest file; report problems
