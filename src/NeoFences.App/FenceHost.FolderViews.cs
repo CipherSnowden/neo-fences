@@ -1,6 +1,5 @@
 using System.Windows.Controls;
 using NeoFences.Core.Items;
-using NeoFences.Core.Layouts;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
 using Serilog;
@@ -97,20 +96,14 @@ public sealed partial class FenceHost
         SaveNow();
     }
 
-    /// <summary>Folder item menu → "Show as folder view": a view of that folder beside the fence, with the defaults.</summary>
-    private void ShowAsFolderView(FenceWindow window, string folder)
+    /// <summary>
+    /// Folder item menu → "Show as folder view": a view of that folder with the defaults, placed in free space like a new
+    /// fence (live check: a fixed offset from the fence stacked every view made from it on the same spot).
+    /// </summary>
+    private void ShowAsFolderView(string folder)
     {
+        SetQuickHidden(false); // a new fence must show
         (_config, var fence) = FenceEdits.CreateView(_config, FolderViews.DefaultsFor(folder, BusyFolders));
-        if (_monitors.Count > 0 && _config.LastLayoutFingerprint is { } fingerprint && _config.Layouts.TryGetValue(fingerprint, out var layout)
-            && layout.Fences.TryGetValue(window.BoxId, out var besideRect))
-        {
-            var monitor = _monitors.FirstOrDefault(candidate => candidate.DeviceId == besideRect.Monitor) ?? _monitors[0];
-            var box = FencePlacement.ToPixels(besideRect, monitor);
-            var offset = (int)Math.Round(40 * monitor.Scale);
-            var placed = box with { X = box.X + offset, Y = box.Y + offset }; // like a detached tab (M9); the layout keeps it on screen
-            _config = LayoutEngine.WithFenceRect(_config, fingerprint: fingerprint, fenceId: fence.Id,
-                rect: FencePlacement.FromPixels(placed, FencePlacement.ContainingMonitor(placed, _monitors)));
-        }
         Log.Information("folder view {FenceId} created for {Folder} from an item", fence.Id, folder);
         SyncBoxes();
         SaveNow();

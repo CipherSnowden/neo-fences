@@ -127,7 +127,7 @@ public sealed partial class FenceHost
             Command("Open", () => OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin));
             if (onDisk && !check.IsFolder) Command("Run as administrator", () => OpenVirtualItem(window, item, runAsAdmin: true));
             if (onDisk) Command("Open file location", () => ShowInFolder(item.Target));
-            if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder view", () => ShowAsFolderView(window, item.Target)); // M21
+            if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder view", () => ShowAsFolderView(item.Target)); // M21
             Command("Copy path", () => CopyText(item.Target));
             menu.Items.Add(new Separator());
             Command("Properties…", () => ShowProperties(window, item.Id, focusName: false));
