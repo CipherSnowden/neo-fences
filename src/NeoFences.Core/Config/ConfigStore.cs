@@ -48,10 +48,20 @@ public sealed class ConfigStore
     public ConfigLoadResult Load()
     {
         var (config, source, corruptCopyPath, isReadOnly) = _store.Load();
-        if (config is null) return new(NeoFencesConfig.CreateDefault(), ConfigLoadSource.Fresh, corruptCopyPath, isReadOnly);
+        if (config is null) return new(FreshConfig(isReadOnly), ConfigLoadSource.Fresh, corruptCopyPath, isReadOnly);
         // From before the virtual items: a fresh start (spec §1); the first save keeps the old file as PreviousSchemaCopyName.
-        if (config.SchemaVersion < FirstVirtualItemsSchema) return new(NeoFencesConfig.CreateDefault(), ConfigLoadSource.Fresh, corruptCopyPath, isReadOnly);
+        if (config.SchemaVersion < FirstVirtualItemsSchema) return new(FreshConfig(isReadOnly), ConfigLoadSource.Fresh, corruptCopyPath, isReadOnly);
         return new(ConfigNormalizer.Normalize(config), source, corruptCopyPath, isReadOnly);
+    }
+
+    /// <summary>
+    /// The default config; the welcome (M30) only on a writable start: a read-only one is an existing user on an older build
+    /// (a newer config, final review I1), whose welcome could never be saved away.
+    /// </summary>
+    private static NeoFencesConfig FreshConfig(bool isReadOnly)
+    {
+        var fresh = NeoFencesConfig.CreateDefault();
+        return isReadOnly ? fresh with { Fences = [.. fresh.Fences.Select(fence => fence with { Welcome = false })] } : fresh;
     }
 
     /// <returns>

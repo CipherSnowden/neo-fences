@@ -162,7 +162,7 @@ public sealed partial class FenceHost
         }
         StartGameMode();
         // M30: a fresh start says where NeoFences lives; Windows 11 may tuck a new tray icon behind the ^ arrow.
-        if (loaded.Source == ConfigLoadSource.Fresh && !_gameMode)
+        if (loaded.Source == ConfigLoadSource.Fresh && !loaded.IsReadOnly && !_gameMode) // not for an older build on a newer config (final review I1)
             _trayIcon?.ShowBalloon("NeoFences is running", "Its icon is in the notification area — on Windows 11 maybe behind the ^ arrow. Click it for the menu and Help.");
         StartWatching(); // M18: states fill in as the checks finish (spec §4)
         StartUpdates(); // M17: the first check a minute after start

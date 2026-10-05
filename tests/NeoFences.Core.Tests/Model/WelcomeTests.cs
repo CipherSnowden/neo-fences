@@ -123,6 +123,24 @@ public class WelcomeTests
         Assert.Contains(result.Fences, fence => fence.Id == notes.Id);
     }
 
+    [Theory]
+    [InlineData(true, false)] // renamed
+    [InlineData(false, true)] // given auto-collect rules
+    public void AfterDesktopFill_KeepsAWelcomeFenceTheUserSetUp(bool renamed, bool rules)
+    {
+        // M30 final review M4: an empty welcome fence the user made their own is not "only the welcome".
+        var config = NeoFencesConfig.CreateDefault();
+        var welcomeId = config.Fences[0].Id;
+        if (renamed) config = FenceEdits.Rename(config, welcomeId, "Downloads");
+        if (rules) config = FenceEdits.SetCollect(config, welcomeId, [new CollectRule()]);
+        var (filled, games) = FenceEdits.CreateFence(config, "Games");
+        var items = WithItem(new ItemsDocument(), games.Id);
+
+        var result = WelcomeEdits.AfterDesktopFill(filled, items, added: 1, newFences: 1);
+
+        Assert.Contains(result.Fences, fence => fence.Id == welcomeId);
+    }
+
     [Fact]
     public void AfterDesktopFill_NeverRemovesAnOrdinaryEmptyFence()
     {

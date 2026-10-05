@@ -192,6 +192,19 @@ public class ConfigStoreTests : IDisposable
     }
 
     [Fact]
+    public void Load_ConfigFromNewerVersion_ShowsNoWelcome()
+    {
+        // M30 final review I1: a read-only fresh start is an existing user on an older build, not a first run.
+        var store = NewStore();
+        File.WriteAllText(store.ConfigPath, """{ "schemaVersion": 99 }""");
+
+        var result = store.Load();
+
+        Assert.True(result.IsReadOnly);
+        Assert.DoesNotContain(result.Config.Fences, fence => fence.Welcome);
+    }
+
+    [Fact]
     public void Load_ConfigFromNewerVersion_IsReadOnly_AndSaveNeverOverwritesIt()
     {
         var store = NewStore();
