@@ -29,7 +29,11 @@ Milestone details and exit criteria: spec §9.
 - [x] **M20 — 0.10.1: the deferred M19 review minors** (bounded; design agreed in chat 2026-10-05; the R1 microsecond race stays as is)
   - [x] Fixes test-first (468 tests); live check TEST-CHECKLIST AF 4/4 (+ AF5 by reading); merged to main, version 0.10.1
   - [x] Released 0.10.1 on 2026-10-05: CI green, draft with delta, install check (the installed 0.10.0 updated itself to 0.10.1, data unchanged), published, hub refreshed
-- [~] **M21 — 0.11.0: folder views** (read-only live folder fences; spec 2026-10-05-folder-views-design) — claimed by session 2026-10-05 m21-folder-views
+- [ ] **M21 — 0.11.0: folder views** (read-only live folder fences; spec 2026-10-05-folder-views-design, ADR-044)
+  - [x] Prototype (worktree), plan with replay-verified patches, native build (Core 29 new test cases), Opus final review: 3 important + 3 re-graded fixed (502 tests)
+  - [x] Live check TEST-CHECKLIST AG: 19 pass; AG8/AG9 (stick pull, Safely Remove) skipped by the user's choice; AG10 not run; found and fixed: views from one fence stacked on one spot; merged to main
+  - [ ] Release 0.11.0 (ask first: version bump, push, tag, install check as an update from 0.10.1, publish, hub)
+  - Deferred minors: selection on the UI thread per re-list; a hidden tab's title after a rename-follow; relative paths and the newest-N box in the settings
 - [ ] Later — auto-collect rules (the other half of dynamic collections)
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 

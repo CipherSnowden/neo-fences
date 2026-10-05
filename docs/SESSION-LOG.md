@@ -532,3 +532,16 @@ while the PC was unattended (installed data backed up and restored). Merged to m
 **Released:** 0.10.1 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.10.0 updated itself to
 0.10.1 from a local feed, config and items unchanged, plain restart back on GitHub updates), published with a plain first line;
 hub refreshed.
+
+## 2026-10-05 — M21 folder views (0.11.0), built and merged
+
+**Done:** the user picked dynamic collections, then folder views only (auto-collect rules later): a fence that shows one
+folder live and read-only (spec 2026-10-05-folder-views-design, ADR-044). Choices: subfolders open in Explorer; per view
+show kind, type patterns, newest N, kept sort; Downloads/Screenshots newest first with 30; 500 cap with "+ N more".
+Prototype in a worktree, plan with replay-verified patches, native execution; Opus final review "with fixes" (drive-root
+views, one log line per outage, Browse on a dead share; re-graded: a crash after a restore during settings, enum typos
+losing the config, known-folder failures) — fixed, 502 tests. Live check AG 19 pass; the stacking of views made from one
+fence found and fixed. Merged to main.
+**Decisions:** ADR-044. The user: no automatic recovery checks for a stick (AG8/AG9 skipped) — "Folder not available"
+and Refresh cover it. The user asked for screenshots during tests (saved as feedback).
+**Next:** release 0.11.0 when the user says so; deferred minors in `research/m21-folder-views.md`.
