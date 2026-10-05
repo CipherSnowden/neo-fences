@@ -29,7 +29,8 @@ Milestone details and exit criteria: spec §9.
 - [x] **M20 — 0.10.1: the deferred M19 review minors** (bounded; design agreed in chat 2026-10-05; the R1 microsecond race stays as is)
   - [x] Fixes test-first (468 tests); live check TEST-CHECKLIST AF 4/4 (+ AF5 by reading); merged to main, version 0.10.1
   - [x] Released 0.10.1 on 2026-10-05: CI green, draft with delta, install check (the installed 0.10.0 updated itself to 0.10.1, data unchanged), published, hub refreshed
-- [ ] Later — dynamic collections (read-only folder views, auto-collect rules)
+- [~] **M21 — 0.11.0: folder views** (read-only live folder fences; spec 2026-10-05-folder-views-design) — claimed by session 2026-10-05 m21-folder-views
+- [ ] Later — auto-collect rules (the other half of dynamic collections)
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot
