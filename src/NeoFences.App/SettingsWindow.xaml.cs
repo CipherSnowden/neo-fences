@@ -42,6 +42,8 @@ public partial class SettingsWindow : Window
     public event Action<bool>? GameModeChanged;
     public event Action? OpenLogsRequested;
     public event Action? OpenDataRequested;
+    /// <summary>"Help (online guide)" (M29): the guide on GitHub.</summary>
+    public event Action? HelpRequested;
     public event Action? TakeSnapshotRequested;
     public event Action<string>? RestoreSnapshotRequested;
     public event Action<string, string>? RenameSnapshotRequested;
@@ -87,6 +89,7 @@ public partial class SettingsWindow : Window
         }
         OpenLogsButton.Click += (_, _) => OpenLogsRequested?.Invoke();
         OpenDataButton.Click += (_, _) => OpenDataRequested?.Invoke();
+        HelpButton.Click += (_, _) => HelpRequested?.Invoke();
         TakeSnapshotButton.Click += (_, _) => TakeSnapshotRequested?.Invoke();
         OpenSnapshotsButton.Click += (_, _) => OpenSnapshotsRequested?.Invoke();
         RestoreSnapshotButton.Click += (_, _) => { if (SelectedSnapshot is { } row) RestoreSnapshotRequested?.Invoke(row.Path); };

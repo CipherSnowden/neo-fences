@@ -80,6 +80,9 @@ public sealed partial class FenceHost
     private const int TrayNewLibrary = 11; // M12
     private const int TraySnapshotsSettings = 12; // M13c: "More in Settings…" opens the Snapshots card
     private const int TrayAddFromDesktop = 14; // M19 §3 (13 is TrayRestartToUpdate)
+    private const int TrayHelp = 16; // M29
+    /// <summary>The guide for friends (M29, ADR-050): help lives on GitHub, linked from the tray and Settings.</summary>
+    private const string GuideUrl = "https://github.com/CipherSnowden/neo-fences/blob/main/docs/GUIDE.md";
     private const int TrayNewFolderPanel = 15; // M21 (folder views), M26 (folder panels)
     private SettingsWindow? _settingsWindow; // M6b: one at a time
 
@@ -898,6 +901,7 @@ public sealed partial class FenceHost
         window.RestartToUpdateRequested += RestartToUpdate;
         window.KeyboardLayoutChanged += RefreshSettings; // M16: key caps follow the new layout
         window.OpenLogsRequested += () => OpenItem(AppPaths.LogsDirectory, ownerHandle: 0);
+        window.HelpRequested += () => OpenItem(GuideUrl, ownerHandle: 0); // M29
         window.OpenDataRequested += () => OpenItem(AppPaths.DataDirectory, ownerHandle: 0);
         window.Closed += (_, _) =>
         {
@@ -1229,6 +1233,7 @@ public sealed partial class FenceHost
             new TrayMenuItem(TrayTakeSnapshot, "Take snapshot"),
             new TrayMenuItem(TrayRestoreMenu, "Restore snapshot", Enabled: snapshots.Count > 0) { Children = restoreItems },
             TrayMenuItem.Separator,
+            new TrayMenuItem(TrayHelp, "Help"), // M29: the guide on GitHub
             new TrayMenuItem(TraySettings, "Settings…"),
             new TrayMenuItem(TrayPause, "Pause NeoFences", Checked: _paused),
             TrayMenuItem.Separator,
@@ -1250,6 +1255,7 @@ public sealed partial class FenceHost
             case TrayPeek: SetPeek(!_peeking); break;
             case TrayPause: SetPaused(!_paused); break;
             case TraySettings: OpenSettings(); break;
+            case TrayHelp: OpenItem(GuideUrl, ownerHandle: 0); break;
             case TrayRestartToUpdate: RestartToUpdate(); break; // M17
             case TraySnapshotsSettings:
                 OpenSettings();
