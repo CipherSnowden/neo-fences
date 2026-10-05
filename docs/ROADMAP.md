@@ -57,7 +57,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check TEST-CHECKLIST AL by script (AL8, AL10, AL11, AL15, AL17, AL20 by hand later); a tall panel's wheel fix; merged to main
   - [x] Released 0.15.0 on 2026-10-05 (the installed 0.14.0 updated itself in 3 s; its Downloads view became a filling panel, a snapshot first)
   - Deferred minors: in `research/m26-folder-panel.md`
-- [ ] Later — auto-collect rules (the other half of dynamic collections)
+- [~] **M27 — 0.16.0: auto-collect rules** (the other half of dynamic collections: new files in a watched folder become items in a fence) — claimed by session 2026-10-05 auto-collect
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot
