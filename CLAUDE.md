@@ -66,6 +66,8 @@ Several Claude sessions work on this repo, possibly in parallel. Git is the sync
 - Deliberate shortcuts get a `// ponytail: <ceiling>, <upgrade path>` comment.
 - `Core` logic is test-first (xUnit). Shell/UI behaviour is verified with
   `docs/TEST-CHECKLIST.md`.
+- A change to a menu entry, setting, gesture or key updates `docs/GUIDE.md` (and the README quick start if it
+  names it) in the same commit (ADR-050) — the app's Help opens that guide.
 
 ## Repository map
 
