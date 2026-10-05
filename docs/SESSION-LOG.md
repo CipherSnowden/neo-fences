@@ -566,3 +566,11 @@ folder view), desktop icons hidden at the user's request.
 **Released:** 0.12.0 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.11.0 updated itself in
 2 s; the user's Games fence became 12 game items after the safety snapshot; plain restart back on GitHub updates),
 published with a plain first line; hub refreshed.
+
+## 2026-10-05 — M23 small fixes (0.12.1)
+
+**Done:** the user chose the review leftovers, then the vision. The 8 deferred M21/M22 minors fixed (bounded design agreed
+in chat; Core test-first: `FolderViews.FolderPath`, two library fences; 526 tests). Live check AI 6/6 on a copy of the
+user's data (a 20,000-file view: fences answered within 6 ms while a file churned). Merged locally; released 0.12.1 (the
+installed 0.12.0 updated itself, data unchanged); hub refreshed.
+**Next:** design the next piece of the one-kind-of-fence vision (folder panel element, widgets, element sizes).
