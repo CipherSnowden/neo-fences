@@ -588,3 +588,13 @@ tests. Live check AJ 14/15 scripted (AJ6 by hand later). Merged locally.
 **Released:** 0.13.0 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.12.1 updated itself in
 3 s; config.json gained each fence's `layout: flow`, items unchanged; plain restart back on GitHub updates), published; hub
 refreshed.
+
+## 2026-10-05 — M25 widgets (0.14.0), built and merged
+
+**Done:** the user picked widgets: Clock, Date page, System stats (CPU, RAM, GPU, C: as bars), stored as elements beside
+items (ADR-047). Prototype probed on a copy of the user's data, plan with replay-verified patches, native execution; Opus
+final review "with fixes" (stats failure logging, Open with widgets selected, hovered-open roll-ups, a monotonic stats
+clock, Windows format/time-zone changes; re-graded: safe exit, GPU recovery after driver updates) — fixed, 559 tests. Live
+check AK 11/13 scripted (CPU 0.016 % with four widgets). Merged locally.
+**Decisions:** ADR-047.
+**Next:** release 0.14.0 when the user says so; then the folder panel element.
