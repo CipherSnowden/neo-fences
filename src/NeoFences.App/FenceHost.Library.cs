@@ -10,7 +10,7 @@ namespace NeoFences.App;
 /// <summary>
 /// The Game Library fence (M12, spec 2026-10-03-game-library-design, ADR-032): scans the launchers, the Xbox app, the
 /// user's game folders and Desktop game shortcuts on its own STA thread, merges them (Core <see cref="GameCatalog"/>),
-/// keeps one shortcut per game in <see cref="AppPaths.LibraryDirectory"/> and shows that folder (LibraryLister) as tiles.
+/// keeps one shortcut per game in <see cref="AppPaths.LibraryDirectory"/> and shows that folder (FolderLister) as tiles.
 /// Nothing is started or changed outside NeoFences' own folder.
 /// </summary>
 public sealed partial class FenceHost
@@ -40,7 +40,7 @@ public sealed partial class FenceHost
         else if (hasFence && _libraryLister is null)
         {
             TryCreateFolder(AppPaths.LibraryDirectory);
-            _libraryLister = new LibraryLister(AppPaths.LibraryDirectory, noticeOwner: _messages.Handle, show: ShowLibrary,
+            _libraryLister = new FolderLister(AppPaths.LibraryDirectory, noticeOwner: _messages.Handle, label: "library folder", show: ShowLibrary,
                 logFailure: failure => Log.Warning(failure, "cannot watch the game library folder"));
             if (_gameMode) _libraryLister.SetPaused(true);
         }

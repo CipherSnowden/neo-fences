@@ -23,7 +23,7 @@ public sealed partial class FenceHost
     private readonly Dictionary<string, (FolderWatcher Watcher, DeviceRemovalNotice? Notice)> _targetWatchers = new(ItemKinds.Comparer);
     private HashSet<string> _wantedFolders = new(ItemKinds.Comparer);
     private readonly HashSet<string> _armingFolders = new(ItemKinds.Comparer); // watchers being opened off the UI thread
-    // Removal notices registered by a batch still arming, by handle (M19 R1, like LibraryLister._inFlight): a drive removed
+    // Removal notices registered by a batch still arming, by handle (M19 R1, like FolderLister._inFlight): a drive removed
     // meanwhile is let go of at once; the batch then drops that folder.
     private readonly System.Collections.Concurrent.ConcurrentDictionary<nint, (FolderWatcher Watcher, DeviceRemovalNotice Notice)> _armingNotices = new();
     private readonly RefreshThrottle _refreshThrottle = new();
@@ -255,6 +255,7 @@ public sealed partial class FenceHost
             ScanLibrary(full: true);
             return;
         }
+        if (_viewListers.TryGetValue(window.FenceId, out var viewLister)) viewLister.Refresh(); // a folder view lists again (M21)
         CheckFence(window.FenceId);
         window.ReloadIcons();
     }

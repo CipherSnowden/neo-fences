@@ -44,7 +44,9 @@ public partial class FenceWindow : Window
     private int _iconSizeDips;
     private bool _renaming;
     private string _title = "";
-    private bool _isLibrary; // the shown tab is the Game Library (M12): tiles, its own menu items
+    private FenceKind _kind; // the shown tab: items, the Game Library (M12: tiles, its own menu) or a folder view (M21: read-only)
+    private const string ItemsHint = "Drop files, folders or links here — or right-click → Add item…";
+    private string? _viewStatus; // a folder view's line instead of entries: not available, empty, nothing matching (M21)
     private IReadOnlyDictionary<string, (string Path, bool IsPoster)> _libraryArt = new Dictionary<string, (string, bool)>();
     private DragTracker? _drag;
     private bool _locked;
@@ -147,6 +149,12 @@ public partial class FenceWindow : Window
     public event Action? RefreshRequested;
     /// <summary>Fence menu → "New Game Library fence" (M12).</summary>
     public event Action? NewLibraryRequested;
+    /// <summary>Fence menu → "New folder view…" (M21).</summary>
+    public event Action? NewFolderViewRequested;
+    /// <summary>A folder view's "Open folder" (its menu, or the "+ N more" line).</summary>
+    public event Action? OpenFolderRequested;
+    /// <summary>A folder view's "Folder view settings…".</summary>
+    public event Action? ViewSettingsRequested;
     /// <summary>A drive arrived or was removed (Windows tells top-level windows): missing and unavailable items are checked again.</summary>
     public event Action? DrivesChanged;
     /// <summary>The "Start with Windows" toggle changed (ADR-019).</summary>
@@ -198,6 +206,10 @@ public partial class FenceWindow : Window
         TitleBar.SizeChanged += (_, _) => UpdateTabStripWidth();
         PreviewKeyDown += OnTabKeys;
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
+        NewFolderViewItem.Click += (_, _) => NewFolderViewRequested?.Invoke();
+        OpenFolderItem.Click += (_, _) => OpenFolderRequested?.Invoke();
+        ViewSettingsItem.Click += (_, _) => ViewSettingsRequested?.Invoke();
+        MoreLine.MouseLeftButtonUp += (_, click) => { click.Handled = true; OpenFolderRequested?.Invoke(); };
         AddItemItem.Click += (_, _) => AddItemRequested?.Invoke();
         AddFromDesktopItem.Click += (_, _) => AddFromDesktopRequested?.Invoke();
         RefreshItem.Click += (_, _) => RefreshRequested?.Invoke();
@@ -279,12 +291,24 @@ public partial class FenceWindow : Window
     {
         _title = fence.Title;
         TitleText.Text = fence.Title;
-        _isLibrary = fence.IsLibrary;
-        // The library is NeoFences' own A–Z list of games: no items to add or sort (M12).
-        AddItemItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible;
-        AddFromDesktopItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible;
-        SortItem.Visibility = _isLibrary ? Visibility.Collapsed : Visibility.Visible;
-        DeleteItem.Header = _isLibrary ? "Delete fence (your games are not touched)" : "Delete fence (your files are not touched)";
+        _kind = fence.Kind;
+        // The library is NeoFences' own A–Z list of games: no items to add or sort (M12). A folder view shows its folder
+        // read-only: nothing to add; "Sort by" is its own, kept (M21).
+        var items = _kind == FenceKind.Items;
+        var view = _kind == FenceKind.View;
+        AddItemItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        AddFromDesktopItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        SortItem.Visibility = _kind == FenceKind.Library ? Visibility.Collapsed : Visibility.Visible;
+        foreach (var sortItem in SortItem.Items.OfType<MenuItem>()) sortItem.IsChecked = view && Equals(sortItem.Tag, fence.View!.Sort);
+        OpenFolderItem.Visibility = view ? Visibility.Visible : Visibility.Collapsed;
+        ViewSettingsItem.Visibility = view ? Visibility.Visible : Visibility.Collapsed;
+        DeleteItem.Header = _kind switch
+        {
+            FenceKind.Library => "Delete fence (your games are not touched)",
+            FenceKind.View => "Delete fence (the folder is not touched)",
+            _ => "Delete fence (your files are not touched)",
+        };
+        if (!view) SetViewStatus(center: null, more: null);
         UpdateEmptyHint();
         _labelMode = fence.Labels;
         SetIconSize(fence.IconSize);
@@ -292,7 +316,22 @@ public partial class FenceWindow : Window
     }
 
     /// <summary>The shown tab is the Game Library (M12).</summary>
-    public bool IsLibrary => _isLibrary;
+    public bool IsLibrary => _kind == FenceKind.Library;
+
+    /// <summary>The shown tab's kind (M21): items, the Game Library, or a folder view.</summary>
+    public FenceKind Kind => _kind;
+
+    /// <summary>
+    /// A folder view's status (M21 spec §3): a line instead of entries (not available, empty, nothing matching), and a
+    /// clickable "+ N more — Open folder" under them.
+    /// </summary>
+    public void SetViewStatus(string? center, string? more)
+    {
+        _viewStatus = center;
+        MoreText.Text = more ?? "";
+        MoreLine.Visibility = more is null ? Visibility.Collapsed : Visibility.Visible;
+        UpdateEmptyHint();
+    }
 
     /// <summary>The library's tile art by item ref: a 2:3 poster, or a logo shown centred (M12).</summary>
     public void SetLibraryArt(IReadOnlyDictionary<string, (string Path, bool IsPoster)> art)
@@ -303,8 +342,8 @@ public partial class FenceWindow : Window
 
     private void ApplyArt(FenceItemView view)
     {
-        view.IsTile = _isLibrary;
-        if (!_isLibrary || !_libraryArt.TryGetValue(view.Key, out var art))
+        view.IsTile = IsLibrary;
+        if (!IsLibrary || !_libraryArt.TryGetValue(view.Key, out var art))
         {
             view.ArtPath = null;
             view.Art = null;
@@ -625,7 +664,13 @@ public partial class FenceWindow : Window
     }
 
     /// <summary>An empty fence (not the library) says how to fill it (spec §5).</summary>
-    private void UpdateEmptyHint() => EmptyHint.Visibility = !_isLibrary && _items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    private void UpdateEmptyHint()
+    {
+        // A folder view shows its status line in the same place (M21).
+        var text = _kind == FenceKind.View ? _viewStatus : _kind == FenceKind.Items && _items.Count == 0 ? ItemsHint : null;
+        EmptyHint.Text = text ?? "";
+        EmptyHint.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
+    }
 
     /// <summary>These items selected and scrolled into view: a drop of what the fence already holds shows where it is (spec §2).</summary>
     public void SelectItems(IReadOnlyCollection<string> keys)
@@ -667,7 +712,7 @@ public partial class FenceWindow : Window
     /// <summary>Covers are decoded at the tile's pixel width: a new icon size or monitor DPI decodes them again (final review I3).</summary>
     private void ReloadArt()
     {
-        if (!_isLibrary) return;
+        if (!IsLibrary) return;
         foreach (var view in _items)
         {
             view.ArtPath = null;
@@ -696,7 +741,7 @@ public partial class FenceWindow : Window
         Resources["TileWidth"] = Math.Round(_iconSizeDips * 1.5);
         Resources["TileHeight"] = Math.Round(_iconSizeDips * 2.25);
         // With labels: room for two short words under small icons. Icons only: a tight grid.
-        Resources["ItemWidth"] = _isLibrary ? Math.Round(_iconSizeDips * 1.5) + 12.0
+        Resources["ItemWidth"] = IsLibrary ? Math.Round(_iconSizeDips * 1.5) + 12.0
             : _labelMode == LabelMode.Always ? LabelledItemWidth : _iconSizeDips + 12.0;
     }
 
@@ -1065,7 +1110,7 @@ public partial class FenceWindow : Window
         var key = args.Key == Key.System ? args.SystemKey : args.Key; // Alt+Enter arrives as Key.System
         switch (key)
         {
-            case Key.Enter when Keyboard.Modifiers == ModifierKeys.Alt && selected.Count == 1 && !_isLibrary:
+            case Key.Enter when Keyboard.Modifiers == ModifierKeys.Alt && selected.Count == 1 && _kind == FenceKind.Items:
                 PropertiesRequested?.Invoke(selected[0].Key, false);
                 break;
             case Key.Enter when selected.Count == 1:
@@ -1077,7 +1122,7 @@ public partial class FenceWindow : Window
             case Key.Delete when selected.Count > 0:
                 RemoveRequested?.Invoke(selected.Select(view => view.Key).ToList()); // Shift+Del too: only the item goes
                 break;
-            case Key.F2 when selected.Count == 1 && !_isLibrary: // library shortcuts are named by their game (M12)
+            case Key.F2 when selected.Count == 1 && _kind == FenceKind.Items: // library shortcuts are named by their game (M12); views show real names (M21)
                 PropertiesRequested?.Invoke(selected[0].Key, true);
                 break;
             default:

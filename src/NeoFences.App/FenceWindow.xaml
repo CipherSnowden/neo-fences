@@ -79,9 +79,13 @@
                         <MenuItem x:Name="AddItemItem" Header="Add item…" />
                         <MenuItem x:Name="AddFromDesktopItem" Header="Add from desktop…" />
                         <MenuItem x:Name="RefreshItem" Header="Refresh" />
+                        <!-- Folder views (M21): shown only on a view. -->
+                        <MenuItem x:Name="OpenFolderItem" Header="Open folder" Visibility="Collapsed" />
+                        <MenuItem x:Name="ViewSettingsItem" Header="Folder view settings…" Visibility="Collapsed" />
                         <Separator />
                         <MenuItem x:Name="NewFenceItem" Header="New fence" />
                         <MenuItem x:Name="NewLibraryItem" Header="New Game Library fence" />
+                        <MenuItem x:Name="NewFolderViewItem" Header="New folder view…" />
                         <MenuItem x:Name="RenameItem" Header="Rename fence" />
                         <MenuItem x:Name="IconSizeItem" Header="Icon size" />
                         <MenuItem x:Name="LabelsItem" Header="Labels">
@@ -101,6 +105,10 @@
                     </ContextMenu>
                 </Border.ContextMenu>
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <ListBox x:Name="ItemList" Background="Transparent" BorderThickness="0" Padding="4"
                              SelectionMode="Extended" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              ScrollViewer.VerticalScrollBarVisibility="Auto">
@@ -204,10 +212,14 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <!-- An empty fence says how to fill it (M18 spec §5). -->
+                    <!-- An empty fence says how to fill it (M18 spec §5); a folder view says why it shows nothing (M21). -->
                     <TextBlock x:Name="EmptyHint" Visibility="Collapsed" Margin="12" TextWrapping="Wrap" TextAlignment="Center"
-                               VerticalAlignment="Center" Foreground="{DynamicResource FenceSubtleText}" IsHitTestVisible="False"
-                               Text="Drop files, folders or links here — or right-click → Add item…" />
+                               VerticalAlignment="Center" Foreground="{DynamicResource FenceSubtleText}" IsHitTestVisible="False" />
+                    <!-- A folder view past its cap (M21): "+ N more — Open folder", clickable. -->
+                    <Border x:Name="MoreLine" Grid.Row="1" Visibility="Collapsed" Padding="8,3,8,5" Cursor="Hand" Background="#01000000">
+                        <TextBlock x:Name="MoreText" Foreground="{DynamicResource FenceSubtleText}" FontSize="12" TextAlignment="Center"
+                                   TextDecorations="Underline" />
+                    </Border>
                     <!-- Rubber-band selection (M3b): drawn while dragging on empty space. -->
                     <Canvas IsHitTestVisible="False" ClipToBounds="True">
                         <Rectangle x:Name="SelectionBand" Visibility="Collapsed" Fill="{DynamicResource FenceHover}"

@@ -15,7 +15,7 @@ public sealed partial class FenceHost
     private void ShowDesktopFill()
     {
         if (_desktopFillOpen) return; // one window at a time
-        var fences = _config.Fences.Where(fence => !fence.IsLibrary).Select(fence => (fence.Id, fence.Title)).ToList();
+        var fences = _config.Fences.Where(fence => fence.Kind == FenceKind.Items).Select(fence => (fence.Id, fence.Title)).ToList(); // not the library or views (M21)
         var titles = fences.ToDictionary(fence => fence.Id, fence => fence.Title, StringComparer.Ordinal);
         // Each target already held by an item → a fence holding it (shown as "already in …", unticked).
         var alreadyIn = new Dictionary<string, string>(ItemKinds.Comparer);

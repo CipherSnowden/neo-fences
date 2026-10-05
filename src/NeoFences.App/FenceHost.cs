@@ -47,7 +47,7 @@ public sealed partial class FenceHost
     private readonly HashSet<string> _loggedSnapshotProblems = new(StringComparer.OrdinalIgnoreCase);
     private readonly DispatcherTimer _specialIconsTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
     private readonly Dictionary<string, IDisposable> _dropRegistrations = new(StringComparer.Ordinal);
-    private LibraryLister? _libraryLister; // the Game Library fence's folder (M12), while that fence exists
+    private FolderLister? _libraryLister; // the Game Library fence's folder (M12), while that fence exists
     private NeoFencesConfig _config = NeoFencesConfig.CreateDefault();
     private ItemsDocument _items = new();
     private IReadOnlyList<MonitorPlacement> _monitors = [];
@@ -78,6 +78,7 @@ public sealed partial class FenceHost
     private const int TrayNewLibrary = 11; // M12
     private const int TraySnapshotsSettings = 12; // M13c: "More in Settings…" opens the Snapshots card
     private const int TrayAddFromDesktop = 14; // M19 §3 (13 is TrayRestartToUpdate)
+    private const int TrayNewFolderView = 15; // M21
     private SettingsWindow? _settingsWindow; // M6b: one at a time
 
     public event Action? ExitRequested;
@@ -98,6 +99,7 @@ public sealed partial class FenceHost
         {
             if (_libraryLister?.ReleaseForRemoval(handle) == true) Log.Information("the library folder's drive is being removed: released it");
             if (ReleaseLibraryForRemoval(handle)) Log.Information("a drive the game library watches is being removed: released it");
+            if (ReleaseViewsForRemoval(handle)) Log.Information("a drive a folder view shows is being removed: released it");
             if (ReleaseTargetWatcherForRemoval(handle)) Log.Information("a drive holding item targets is being removed: released it");
         };
         _specialIconsTimer.Tick += (_, _) => RefreshSpecialIcons();
@@ -120,6 +122,7 @@ public sealed partial class FenceHost
         RefreshMonitors();
         foreach (var box in FenceTabs.Boxes(_config)) OpenWindow(box); // one window per box (M9)
         EnsureLibraryLister();
+        EnsureViewListers(); // M21
         RefreshWindows();
         StartSpecialIconNotifications();
         ApplyLayout();
@@ -194,6 +197,7 @@ public sealed partial class FenceHost
         StopWatching();
         _specialIcons?.Dispose();
         _libraryLister?.Dispose();
+        StopViewListers();
         StopLibraryWatchers();
         _libraryTimer?.Stop();
         _shellWorker.Dispose();
@@ -258,6 +262,9 @@ public sealed partial class FenceHost
         window.RefreshRequested += () => RefreshFence(window);
         window.DrivesChanged += OnDrivesChanged;
         window.NewLibraryRequested += CreateLibraryFence;
+        window.NewFolderViewRequested += () => NewFolderView(window.Handle); // M21
+        window.OpenFolderRequested += () => OpenViewFolder(window);
+        window.ViewSettingsRequested += () => EditFolderView(window);
         window.StartupToggled += SetStartWithWindows;
         window.SettingsRequested += OpenSettings;
         window.LabelModeRequested += labels => SetFenceLabels(window, labels);
@@ -308,7 +315,7 @@ public sealed partial class FenceHost
         Log.Information("special icons refreshed");
     }
 
-    /// <summary>Every window shows its fence's items as they are now (the library lists itself, LibraryLister).</summary>
+    /// <summary>Every window shows its fence's items as they are now (the library lists itself, FolderLister; views show their last listing).</summary>
     private void RefreshWindows()
     {
         foreach (var window in _windows.Values) RefreshWindow(window);
@@ -317,6 +324,11 @@ public sealed partial class FenceHost
     private void RefreshWindow(FenceWindow window)
     {
         if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { IsLibrary: false } shown) return;
+        if (shown.View is not null)
+        {
+            RenderView(window, shown); // M21
+            return;
+        }
         window.SetItems([.. _items.Of(shown.Id).Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note, StateOf(item.Target)))]);
     }
 
@@ -339,7 +351,7 @@ public sealed partial class FenceHost
         {
             _dropRegistrations[window.BoxId] = ShellDragDrop.RegisterFence(window.Handle, new FenceDropHandlers(
                 HitTest: window.HitTest,
-                AcceptsDrops: () => !window.IsLibrary, // the library shows NeoFences' own shortcuts only (M12)
+                AcceptsDrops: () => window.Kind == FenceKind.Items, // the library shows its own shortcuts (M12); a view never writes to its folder (M21)
                 ItemsDropped: (keys, insertAt, duplicate) => OnItemsDropped(window, keys, insertAt, duplicate),
                 TargetsDropped: (targets, insertAt) => OnTargetsDropped(window, targets, insertAt),
                 ShowFeedback: window.ShowDropFeedback,
@@ -524,6 +536,7 @@ public sealed partial class FenceHost
         }
         foreach (var box in boxes.Where(box => !_windows.ContainsKey(box.Id))) OpenWindow(box);
         EnsureLibraryLister();
+        EnsureViewListers(); // M21
         foreach (var box in boxes)
         {
             var window = _windows[box.Id];
@@ -943,6 +956,7 @@ public sealed partial class FenceHost
             window.Refresh(shown);
             window.SetTitle(shown.Title);
         }
+        RefreshWindows(); // a fence that became (or stopped being) a folder view shows its new kind (M21)
         ForgetGoneTargets(); // records of items the restore took away (M20)
         CheckAllTargets(); // the restored items' targets may have changed since
         _settingsWindow?.ShowSnapshotNotice($"Restored \"{snapshot.Name}\".", failed: false); // replaces an earlier failure line (final review M1)
@@ -1089,6 +1103,7 @@ public sealed partial class FenceHost
         }
         UpdateMouseHook();
         _libraryLister?.SetPaused(gameMode);
+        SetViewsPaused(gameMode); // M21
         if (!gameMode) ApplyDeferredShellWork();
         UpdatePeekHotkey();
         _trayIcon?.SetTooltip(TrayTooltip());
@@ -1166,6 +1181,7 @@ public sealed partial class FenceHost
             .. UpdateTrayItems(), // M17: "Restart to update to v…" first while an update waits
             new TrayMenuItem(TrayNewFence, "New fence", Enabled: !_paused),
             new TrayMenuItem(TrayNewLibrary, "New Game Library fence", Enabled: !_paused),
+            new TrayMenuItem(TrayNewFolderView, "New folder view…", Enabled: !_paused),
             new TrayMenuItem(TrayAddFromDesktop, "Add from desktop…", Enabled: !_paused),
             new TrayMenuItem(TrayQuickHide, "Quick-hide", Checked: _quickHidden, Enabled: !_paused),
             new TrayMenuItem(TrayPeek, $"Peek\t{PeekHotkeyDisplay}", Checked: _peeking, Enabled: !_paused),
@@ -1185,6 +1201,7 @@ public sealed partial class FenceHost
                 CreateFence();
                 break;
             case TrayNewLibrary: CreateLibraryFence(); break;
+            case TrayNewFolderView: NewFolderView(ownerHandle: 0); break;
             case TrayAddFromDesktop:
                 SetQuickHidden(false); // the new items must be seen landing
                 ShowDesktopFill();

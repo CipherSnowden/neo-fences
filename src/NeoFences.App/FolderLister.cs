@@ -6,11 +6,12 @@ using NeoFences.Shell;
 namespace NeoFences.App;
 
 /// <summary>
-/// The Game Library fence's folder listing (M12; Portals' code until M18): NeoFences' own library folder and its watcher.
+/// A folder's live listing and its watcher: the Game Library fence's own folder (M12; Portals' code until M18) and every
+/// folder view's folder (M21).
 /// Listing and watcher setup run off the UI thread (M4 review I1); bursts of changes become one re-list at most every
 /// 250 ms (I2); an unavailable or unwatched folder is retried every few seconds (I4).
 /// </summary>
-public sealed class LibraryLister : IDisposable
+public sealed class FolderLister : IDisposable
 {
     private static readonly TimeSpan RefreshDelay = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(7);
@@ -19,6 +20,8 @@ public sealed class LibraryLister : IDisposable
     private readonly DispatcherTimer _retryTimer;
     private readonly Action<IReadOnlyList<ItemInfo>?> _show;
     private readonly Action<Exception> _logFailure;
+    private readonly string _label; // "library folder" / "folder view": log lines say which
+    private readonly Action<string, string>? _renamed;
     private FolderWatcher? _watcher;
     private DeviceRemovalNotice? _removal;   // asks before the library drive is removed (USB stick, M8d)
     private readonly nint _noticeOwner;
@@ -40,8 +43,12 @@ public sealed class LibraryLister : IDisposable
 
     /// <param name="show">Called on the UI thread with the shown folder's items, or null when it cannot be read.</param>
     /// <param name="noticeOwner">The window that receives "may this drive be removed?" (the app's message window).</param>
-    public LibraryLister(string folder, nint noticeOwner, Action<IReadOnlyList<ItemInfo>?> show, Action<Exception> logFailure)
+    /// <param name="renamed">Called on the UI thread with the old and new path when the folder itself is renamed in place (M21).</param>
+    public FolderLister(string folder, nint noticeOwner, string label, Action<IReadOnlyList<ItemInfo>?> show, Action<Exception> logFailure,
+        Action<string, string>? renamed = null)
     {
+        _label = label;
+        _renamed = renamed;
         _noticeOwner = noticeOwner;
         _backoffTimer = new DispatcherTimer();
         _backoffTimer.Tick += (_, _) =>
@@ -104,6 +111,13 @@ public sealed class LibraryLister : IDisposable
                 _lastArm = DateTime.UtcNow;
                 watcher.Changed += () => dispatcher.BeginInvoke(ScheduleRefresh);
                 watcher.Failed += () => dispatcher.BeginInvoke(OnWatcherFailed);
+                if (_renamed is { } renamed)
+                {
+                    watcher.Renamed += (oldPath, newPath) =>
+                    {
+                        if (NeoFences.Core.Items.FolderViews.SameFolder(oldPath, folder)) dispatcher.BeginInvoke(() => { if (!_disposed) renamed(oldPath, newPath); });
+                    };
+                }
                 if (watcher.HasFailed) OnWatcherFailed(); // it failed while arming, before this subscription (M8d review I2)
                 // Unreadable or unwatched (drive not there yet): try again every few seconds until it is.
                 if (items is null || !watcher.IsWatching) _retryTimer.Start();
@@ -176,7 +190,7 @@ public sealed class LibraryLister : IDisposable
         _failureDelay = NeoFences.Core.Lifecycle.WatcherBackoff.Next(_failureDelay, lastRearm: _lastArm, failureAt: DateTime.UtcNow);
         _backoffTimer.Interval = _failureDelay;
         _backoffTimer.Start();
-        Serilog.Log.Information("library folder watcher stopped ({Folder}); re-listing after {Delay}", Folder, _failureDelay);
+        Serilog.Log.Information("{Label} watcher stopped ({Folder}); re-listing after {Delay}", _label, Folder, _failureDelay);
     }
 
     private void ScheduleRefresh()

@@ -26,7 +26,7 @@ public sealed partial class FenceHost
     /// <summary>Double-click / Enter. Peek ends once something is opened from it (like Fences).</summary>
     private void OpenKey(FenceWindow window, string key)
     {
-        if (window.IsLibrary) OpenItem(key, ownerHandle: window.Handle); // the library's key is its shortcut's path
+        if (window.Kind != FenceKind.Items) OpenItem(key, ownerHandle: window.Handle); // the library's and a view's key is a path (M12, M21)
         else if (_items.Find(key) is { } item) OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin);
         SetPeek(false);
     }
@@ -89,6 +89,11 @@ public sealed partial class FenceHost
             ShowLibraryItemMenu(window, keys, screenX, screenY, extended: shift);
             return;
         }
+        if (window.Kind == FenceKind.View)
+        {
+            ShowViewItemMenu(window, keys, extended: shift, screenX, screenY, fromKeyboard); // M21
+            return;
+        }
         var items = keys.Select(_items.Find).OfType<VirtualItem>().ToList();
         if (items.Count == 0) return;
         if (shift)
@@ -122,6 +127,7 @@ public sealed partial class FenceHost
             Command("Open", () => OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin));
             if (onDisk && !check.IsFolder) Command("Run as administrator", () => OpenVirtualItem(window, item, runAsAdmin: true));
             if (onDisk) Command("Open file location", () => ShowInFolder(item.Target));
+            if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder view", () => ShowAsFolderView(window, item.Target)); // M21
             Command("Copy path", () => CopyText(item.Target));
             menu.Items.Add(new Separator());
             Command("Properties…", () => ShowProperties(window, item.Id, focusName: false));
@@ -192,6 +198,7 @@ public sealed partial class FenceHost
             HideGames(keys); // Delete in the library hides the game; its shortcut is NeoFences' own (M12)
             return;
         }
+        if (window.Kind == FenceKind.View) return; // a view shows its folder as it is; nothing to remove (M21)
         if (keys.Count > 1 && MessageBox.Show(window, $"Remove {keys.Count} items from this fence?\n\nYour files, folders and apps are not touched.",
                 "NeoFences", MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel) != MessageBoxResult.OK) return;
         _items = ItemEdits.Remove(_items, keys.ToHashSet(StringComparer.Ordinal));
@@ -202,7 +209,7 @@ public sealed partial class FenceHost
     /// <summary>Properties (F2: the name selected; Alt+Enter; the menu): changes only the item (spec §3).</summary>
     private void ShowProperties(FenceWindow window, string key, bool focusName)
     {
-        if (window.IsLibrary || _items.Find(key) is not { } item) return;
+        if (window.Kind != FenceKind.Items || _items.Find(key) is not { } item) return;
         var dialog = new ItemPropertiesWindow(item, adding: false, iconLoader: _iconLoader, focusName: focusName) { Owner = window };
         if (dialog.ShowDialog() != true || dialog.Result is not { } changed) return;
         changed = WithCopiedPicture(window, changed, dialog.PictureToCopy);
@@ -214,7 +221,7 @@ public sealed partial class FenceHost
     /// <summary>Fence menu → "Add item…" (spec §2): a file, folder, app or website, with its own name if wanted.</summary>
     private void AddItem(FenceWindow window)
     {
-        if (window.IsLibrary) return;
+        if (window.Kind != FenceKind.Items) return;
         var dialog = new ItemPropertiesWindow(VirtualItem.Create(""), adding: true, iconLoader: _iconLoader, focusName: false) { Owner = window };
         if (dialog.ShowDialog() != true || dialog.Result is not { } created) return;
         var added = ItemEdits.Add(_items, window.FenceId, [WithCopiedPicture(window, created, dialog.PictureToCopy)]);
@@ -401,9 +408,9 @@ public sealed partial class FenceHost
     /// <summary>Items dragged from a fence: moved here (Ctrl: duplicated). Library games dragged in become items of their shortcut.</summary>
     private void OnItemsDropped(FenceWindow window, IReadOnlyList<string> keys, int insertAt, bool duplicate)
     {
-        if (window.IsLibrary) return;
+        if (window.Kind != FenceKind.Items) return;
         var known = keys.Where(key => _items.Find(key) is not null).ToList();
-        var fromLibrary = keys.Except(known).ToList(); // the library's key is its shortcut's path (M12)
+        var fromLibrary = keys.Except(known).ToList(); // the library's and a view's key is a path (M12, M21): they become items
         if (known.Count > 0)
         {
             _items = duplicate ? ItemEdits.Duplicate(_items, known, window.FenceId, insertAt).Document : ItemEdits.Move(_items, known, window.FenceId, insertAt);
@@ -416,7 +423,7 @@ public sealed partial class FenceHost
     /// <summary>Files, folders or a link from outside: new items at the drop point; the originals stay where they are.</summary>
     private void OnTargetsDropped(FenceWindow window, IReadOnlyList<string> targets, int insertAt)
     {
-        if (!window.IsLibrary && targets.Count > 0) AddTargets(window, targets, insertAt);
+        if (window.Kind == FenceKind.Items && targets.Count > 0) AddTargets(window, targets, insertAt);
     }
 
     private void AddTargets(FenceWindow window, IReadOnlyList<string> targets, int insertAt)
@@ -435,6 +442,17 @@ public sealed partial class FenceHost
         if (window.IsLibrary)
         {
             (files, urls) = (keys, []); // NeoFences' own shortcuts (M12)
+        }
+        else if (window.Kind == FenceKind.View)
+        {
+            // A view's entries are its folder's: asked once now, at most 2 s (M19 R2), so a share gone since the listing cannot freeze the drag.
+            var folder = Path.GetDirectoryName(keys[0]) ?? keys[0];
+            if (TargetProbe.Check(folder).State != TargetState.Ok)
+            {
+                Log.Information("drag from folder view: {Folder} is not reachable", folder);
+                return;
+            }
+            (files, urls) = (keys, []);
         }
         else
         {
@@ -457,6 +475,11 @@ public sealed partial class FenceHost
     private void SortFence(FenceWindow window, FenceSort sort)
     {
         if (window.IsLibrary) return;
+        if (window.Kind == FenceKind.View)
+        {
+            SortView(window, sort); // M21: the view's own sort, kept
+            return;
+        }
         var fenceId = window.FenceId;
         var items = _items.Of(fenceId);
         // Targets not seen OK are sorted without asking their disk (a dead share answers only after its timeout).
