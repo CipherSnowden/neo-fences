@@ -123,6 +123,27 @@ public class FolderPanelsTests
         Assert.False(FolderPanels.Fills([]));
     }
 
+    [Theory]
+    [InlineData(FenceSort.Name, PanelSort.Name, false)]
+    [InlineData(FenceSort.Manual, PanelSort.Name, false)]
+    [InlineData(FenceSort.Type, PanelSort.Type, false)]
+    [InlineData(FenceSort.Date, PanelSort.Date, true)]
+    public void SortedBy_TheFenceMenuSortsAFillingPanel_AsAViewDid(FenceSort sort, PanelSort expected, bool descending)
+    {
+        var sorted = FolderPanels.SortedBy(new FolderPanel { Look = PanelLook.Icons, Newest = 30, Sort = PanelSort.Size, Descending = !descending }, sort);
+        Assert.Equal(new FolderPanel { Look = PanelLook.Icons, Newest = 30, Sort = expected, Descending = descending }, sorted);
+    }
+
+    [Fact]
+    public void MigrateViews_SaysWhetherItAddedPanels_SoARepeatNeedsNoSecondSnapshot()
+    {
+        var view = Fence.Create("Downloads") with { View = new FolderView { Path = @"C:\Users\me\Downloads" } };
+        var config = NeoFencesConfig.CreateDefault() with { Fences = [view] };
+        var once = FolderPanels.MigrateViews(config, new ItemsDocument());
+        Assert.Equal(1, once.AddedPanels);
+        Assert.Equal(0, FolderPanels.MigrateViews(config, once.Items).AddedPanels); // a read-only config: the view again, its panel already there
+    }
+
     [Fact]
     public void SetSize_PutsAFillingPanelBackOnCells()
     {

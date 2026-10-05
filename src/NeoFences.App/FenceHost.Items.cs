@@ -500,6 +500,11 @@ public sealed partial class FenceHost
         if (window.Kind != FenceKind.Items) return;
         var fenceId = window.FenceId;
         var items = _items.Of(fenceId);
+        if (FolderPanels.Fills(items))
+        {
+            SetPanel(items[0].Id, FolderPanels.SortedBy(items[0].Panel!, sort)); // a filling panel sorts, as its folder view did (M26 final review M11)
+            return;
+        }
         // Targets not seen OK are sorted without asking their disk (a dead share answers only after its timeout).
         var reachable = items.Where(item => CheckOf(item.Target).State == TargetState.Ok).Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
         // Off the UI thread: the targets' facts come from their disks (final review I2).

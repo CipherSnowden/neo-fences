@@ -374,7 +374,9 @@ public sealed partial class FenceHost
         {
             _dropRegistrations[window.BoxId] = ShellDragDrop.RegisterFence(window.Handle, new FenceDropHandlers(
                 HitTest: window.HitTest,
-                AcceptsDrops: () => window.Kind == FenceKind.Items && !window.DropOverPanel, // the library shows its own shortcuts (M12); a panel never writes to its folder (M21, M26)
+                // The library shows its own shortcuts (M12); a panel never takes files from outside (M21, M26) — fence elements still
+                // move over it, so a panel moves a cell or two in a Free fence (final review I2).
+                AcceptsDrops: fromFence => window.Kind == FenceKind.Items && (fromFence || !window.DropOverPanel),
                 ItemsDropped: (keys, insertAt, duplicate) => OnItemsDropped(window, keys, insertAt, duplicate),
                 TargetsDropped: (targets, insertAt) => OnTargetsDropped(window, targets, insertAt),
                 ShowFeedback: window.ShowDropFeedback,
@@ -1416,7 +1418,12 @@ public sealed partial class FenceHost
     private void SaveNow(bool itemsFirst = false)
     {
         _saveTimer.Stop();
-        if (itemsFirst) SaveItems();
+        if (itemsFirst && !SaveItems())
+        {
+            // The config still names the old kinds then: the migration runs again next time (M26 final review M6).
+            Log.Warning("config not saved: the items were not saved first");
+            return;
+        }
         try
         {
             if (!_store.Save(_config)) Log.Warning("config not saved: config.json is read-only this session");
@@ -1429,16 +1436,23 @@ public sealed partial class FenceHost
         if (!itemsFirst) SaveItems();
     }
 
-    private void SaveItems()
+    /// <returns>True when items.json was written.</returns>
+    private bool SaveItems()
     {
         try
         {
-            if (!_itemStore.Save(_items)) Log.Warning("items not saved: items.json is read-only this session");
-            else if (_itemStore.LastBackupFailure is { } backupFailure) Log.Warning(backupFailure, "items saved, but the daily backups could not be written or pruned");
+            if (!_itemStore.Save(_items))
+            {
+                Log.Warning("items not saved: items.json is read-only this session");
+                return false;
+            }
+            if (_itemStore.LastBackupFailure is { } backupFailure) Log.Warning(backupFailure, "items saved, but the daily backups could not be written or pruned");
+            return true;
         }
         catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
         {
             Log.Error(failure, "items save failed");
+            return false;
         }
     }
 

@@ -35,3 +35,32 @@ the same name); the whole panel tinted with the fence's hover and selection (now
 - The Type column shows the extension (as Sort by does), not Windows' type names.
 - The panel's name area belongs to the fence (select, drag, right-click → panel menu); its rows, buttons and lines are the
   panel's own.
+
+## Final review (Opus, 2026-10-05): with fixes
+
+No critical findings. Fixed (Core test-first where Core shows it; App fixes have checklist rows AL14–AL19):
+- **I1** — a panel that stopped filling (an item added, Fill off, a 4 × 4 pick) kept the fence's size and was clipped in
+  its cells: a change of Fill now resizes it like a change of span (AL14).
+- **I2** — in a Free fence a panel could not be moved a short way by its name row (every drop over a panel was refused):
+  only drops from outside are refused over panels; fence elements move freely (AL15).
+- **I3** — an arrow at a panel's first or last row bubbled to the fence's list, moving the selection to a fence element
+  (where Delete would act): the panel keeps its arrows (AL16).
+- **I4** — a file that changed (a growing download) got a new row each re-list: its icon blinked and its selection went.
+  Rows are kept by path and only their facts update (AL17).
+- **M6 → fixed** (re-graded: a failed items save during the migration still saved the config without the view) — the
+  config is not saved when the items save first fails.
+- **M7 → fixed** (re-graded: a read-only config.json made a new snapshot at every start) — the migration reports the
+  panels it added (`AddedPanels`); a repeat that adds none takes no snapshot (test).
+- **M11 → fixed** (re-graded: the user's own Downloads fence lost its Sort by) — Sort by on a fence its panel fills sorts
+  the panel as the view did (`FolderPanels.SortedBy`, tests; AL19).
+- **M12 → fixed** (re-graded: an invisible selection Delete removed) — a press on a panel's own space never selects the
+  panel element; a selected panel shows a thin outline (AL18).
+
+Deferred minors:
+- Details columns follow the stored span, not the real width (a filling panel in a narrow fence squeezes Name; at 2 cells
+  Date can clip).
+- In icon-only fences the hover name pill can sit over a filling panel's top rows.
+- Every element's template builds a collapsed panel control (unmeasured cost; a ContentPresenter with a typed template
+  would build it only for panels).
+- The Menu key on a panel row places the entry menu at the fence's selected element, not the row.
+- DECISIONS.md: no blank line between ADR-047's last line and ADR-048's heading.

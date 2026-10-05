@@ -662,3 +662,9 @@ Added after the M19 final review:
 | AL11 | A game in front (game mode); change files in the folder; leave the game | no listing during the game; current after |
 | AL12 | NeoFences' CPU with two panels shown, idle 30 s | well under 0.1 % |
 | AL13 | Snapshot from before 0.15.0 (with a folder view) → restore | the view comes back as a filling panel |
+| AL14 | A lone filling panel → Add item… (or untick Fill fence) | the panel sits exactly on 4 × 4 cells; its scrollbar and last rows visible (final review I1) |
+| AL15 | Free fence: drag a panel by its name row one cell right | it moves (only drops from outside are refused over panels; I2) |
+| AL16 | Select a panel's last row → Down; Left in Details; then Delete | the selection stays in the panel; Delete removes nothing (I3) |
+| AL17 | A file growing in a Downloads panel (a download running) | its row keeps its icon and selection; size and date update (I4) |
+| AL18 | Click empty space inside a panel → Delete; select the panel by its name row | nothing removed; the panel shows a thin outline when selected (M12) |
+| AL19 | Fence menu → Sort by on a fence its panel fills (a migrated view) | the panel sorts (Date newest first) (M11) |

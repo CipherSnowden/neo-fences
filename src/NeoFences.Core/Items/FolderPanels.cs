@@ -141,6 +141,16 @@ public static class FolderPanels
         }).ToList();
     }
 
+    /// <summary>
+    /// The fence menu's Sort by on a fence that a panel fills (a migrated folder view; final review M11): the panel sorts as the
+    /// view did — Date newest first, Name and Type A→Z (Manual is Name).
+    /// </summary>
+    public static FolderPanel SortedBy(FolderPanel panel, FenceSort sort) => panel with
+    {
+        Sort = sort switch { FenceSort.Date => PanelSort.Date, FenceSort.Type => PanelSort.Type, _ => PanelSort.Name },
+        Descending = sort == FenceSort.Date,
+    };
+
     /// <summary>A column header clicked: the same column again reverses it; another starts in its natural direction.</summary>
     public static FolderPanel HeaderSort(FolderPanel panel, PanelSort clicked) =>
         clicked == panel.Sort ? panel with { Descending = !panel.Descending }
@@ -172,7 +182,8 @@ public static class FolderPanels
     public static bool Fills(IReadOnlyList<VirtualItem> fenceItems) => fenceItems is [{ Fill: true } only] && IsPanel(only);
 
     /// <param name="MigratedFenceIds">Fences that were folder views and now hold one panel.</param>
-    public sealed record Migration(NeoFencesConfig Config, ItemsDocument Items, IReadOnlyList<string> MigratedFenceIds);
+    /// <param name="AddedPanels">Panels this run added: 0 when a cut-short save (or a read-only config) repeats it.</param>
+    public sealed record Migration(NeoFencesConfig Config, ItemsDocument Items, IReadOnlyList<string> MigratedFenceIds, int AddedPanels);
 
     /// <summary>
     /// Every folder view becomes an items fence holding one filling panel of its folder (spec §1). Run again after a save
@@ -181,13 +192,17 @@ public static class FolderPanels
     public static Migration MigrateViews(NeoFencesConfig config, ItemsDocument items)
     {
         var views = config.Fences.Where(fence => fence.View is not null).ToList();
+        var added = 0;
         foreach (var fence in views)
         {
             var view = fence.View!;
             if (!items.Of(fence.Id).Any(item => IsPanel(item) && FolderViews.SameFolder(item.Target, view.Path)))
+            {
                 items = items.With(fence.Id, [.. items.Of(fence.Id), VirtualItem.Create(view.Path) with { Panel = FromView(view), Fill = true }]);
+                added++;
+            }
             config = config.WithFence(fence with { View = null });
         }
-        return new Migration(config, items, [.. views.Select(fence => fence.Id)]);
+        return new Migration(config, items, [.. views.Select(fence => fence.Id)], added);
     }
 }

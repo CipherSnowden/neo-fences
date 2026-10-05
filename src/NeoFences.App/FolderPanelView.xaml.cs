@@ -37,6 +37,8 @@ public partial class FolderPanelView : UserControl
         EntryList.PreviewMouseLeftButtonUp += OnRelease;
         EntryList.MouseDoubleClick += OnDoubleClick;
         EntryList.KeyDown += OnKeyDown;
+        // A press on the panel's own space never selects the panel element behind it (an invisible selection Delete would remove; final review M12).
+        EntryList.MouseLeftButtonDown += (_, press) => { press.Handled = true; EntryList.Focus(); };
         EntryList.ContextMenuOpening += OnEntryMenu;
         BackButton.Click += (_, _) => Send(new PanelNavigate(PanelMove.Back));
         UpButton.Click += (_, _) => Send(new PanelNavigate(PanelMove.Up));
@@ -195,7 +197,13 @@ public partial class FolderPanelView : UserControl
             Key.Up when Keyboard.Modifiers == ModifierKeys.Alt => new PanelNavigate(PanelMove.Up),
             _ => null,
         };
-        if (command is null) return;
+        if (command is null)
+        {
+            // An arrow at the first or last row (or sideways in rows) is left unhandled by the list: it must not move on to the
+            // fence's own elements, where Delete or F2 would then act (final review I3).
+            if (pressed is Key.Up or Key.Down or Key.Left or Key.Right or Key.Home or Key.End or Key.PageUp or Key.PageDown) key.Handled = true;
+            return;
+        }
         key.Handled = true;
         Send(command);
     }

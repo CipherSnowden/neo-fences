@@ -15,14 +15,15 @@ namespace NeoFences.Shell;
 
 /// <summary>What a fence does with drops; NeoFences.App supplies these (all called on the UI thread).</summary>
 /// <param name="HitTest">The insert position under a screen point (physical pixels); hovering a tab header shows that tab.</param>
-/// <param name="AcceptsDrops">False for the Game Library (it shows NeoFences' own shortcuts only).</param>
+/// <param name="AcceptsDrops">Given whether the drag comes from a fence (this process): false for the Game Library (it shows
+/// NeoFences' own shortcuts only); M26: false for outside drops over a folder panel.</param>
 /// <param name="ItemsDropped">Keys dragged out of a fence (this process), the insert position, and Ctrl held (duplicate).</param>
 /// <param name="TargetsDropped">Paths, or one website URL, dragged in from outside (Explorer, the desktop, a browser).</param>
 /// <param name="ShowFeedback">The insert caret's position, or null to hide it.</param>
 /// <param name="LogFailure">A drop that could not be read.</param>
 public sealed record FenceDropHandlers(
     Func<int, int, int> HitTest,
-    Func<bool> AcceptsDrops,
+    Func<bool, bool> AcceptsDrops,
     Action<IReadOnlyList<string>, int, bool> ItemsDropped,
     Action<IReadOnlyList<string>, int> TargetsDropped,
     Action<int?> ShowFeedback,
@@ -363,7 +364,7 @@ public static class ShellDragDrop
             try
             {
                 var insertAt = handlers.HitTest(pt.x, pt.y); // first: a hovered tab header switches the tab, which may refuse
-                if (!handlers.AcceptsDrops() || (_keys.Count == 0 && _targets.Count == 0))
+                if (!handlers.AcceptsDrops(_keys.Count > 0) || (_keys.Count == 0 && _targets.Count == 0))
                 {
                     handlers.ShowFeedback(null);
                     return null;

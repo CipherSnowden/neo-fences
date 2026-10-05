@@ -33,24 +33,39 @@ public sealed record PanelOpenFolder : PanelCommand;
 /// <param name="ShowHeader">False for a panel filling a fence titled like it, at its own folder: the title already says it.</param>
 public sealed record PanelContent(string Header, bool ShowHeader, bool CanGoBack, bool CanGoUp, bool CanGoHome, IReadOnlyList<ItemInfo> Entries, string? Status, string? More);
 
-/// <summary>One entry of a panel: its facts as text for the columns, and an item view for its icon and name.</summary>
-public sealed class PanelEntry
+/// <summary>
+/// One entry of a panel: its facts as text for the columns, and an item view for its icon and name. A file that changes
+/// (a download growing) keeps its entry: icon and selection stay, only the facts are updated (final review I4).
+/// </summary>
+public sealed class PanelEntry : INotifyPropertyChanged
 {
     public PanelEntry(ItemInfo info, CultureInfo culture)
     {
         Info = info;
         Item = new FenceItemView(new ShownItem(info.ItemRef, info.ItemRef, Name: info.Name));
+        Update(info, culture);
+    }
+
+    public ItemInfo Info { get; private set; }
+    public string Path => Info.ItemRef;
+    public FenceItemView Item { get; }
+    public string DateText { get; private set { field = value; Changed(); } } = "";
+    public string TypeText { get; private set { field = value; Changed(); } } = "";
+    public string SizeText { get; private set { field = value; Changed(); } } = "";
+
+    /// <summary>The same path's new facts (its size or date changed; the name too, when only its case changed).</summary>
+    public void Update(ItemInfo info, CultureInfo culture)
+    {
+        Info = info;
+        if (Item.OwnName != info.Name) Item.Update(new ShownItem(info.ItemRef, info.ItemRef, Name: info.Name));
         DateText = info.Modified == DateTimeOffset.MinValue ? "" : info.Modified.LocalDateTime.ToString("g", culture);
         TypeText = info.IsFolder ? "Folder" : info.TypeName.TrimStart('.');
         SizeText = info.IsFolder ? "" : FolderPanels.SizeText(info.Size, culture);
     }
 
-    public ItemInfo Info { get; }
-    public string Path => Info.ItemRef;
-    public FenceItemView Item { get; }
-    public string DateText { get; }
-    public string TypeText { get; }
-    public string SizeText { get; }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void Changed([CallerMemberName] string? property = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
 
     /// <summary>The icon size (physical pixels) last asked for: a new look or DPI asks again.</summary>
     public int RequestedPx { get; set; }
@@ -115,7 +130,12 @@ public sealed class FolderPanelModel : INotifyPropertyChanged
         (CanGoBack, CanGoUp, CanGoHome) = (content.CanGoBack, content.CanGoUp, content.CanGoHome);
         (Status, More) = (content.Status, content.More);
         var kept = Entries.GroupBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase).ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
-        var wanted = content.Entries.Select(info => kept.TryGetValue(info.ItemRef, out var entry) && entry.Info == info ? entry : new PanelEntry(info, culture)).ToList();
+        var wanted = content.Entries.Select(info =>
+        {
+            if (!kept.TryGetValue(info.ItemRef, out var entry)) return new PanelEntry(info, culture);
+            if (entry.Info != info) entry.Update(info, culture);
+            return entry;
+        }).ToList();
         var wantedSet = wanted.ToHashSet();
         for (var index = Entries.Count - 1; index >= 0; index--)
         {

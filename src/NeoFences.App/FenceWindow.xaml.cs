@@ -653,7 +653,8 @@ public partial class FenceWindow : Window
             if (found >= 0)
             {
                 if (found != index) _items.Move(found, index);
-                var resized = _items[index].Span != (shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One));
+                // A panel that stops filling goes back to its span's size, not the fence's (M26 final review I1).
+                var resized = _items[index].Span != (shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One)) || _items[index].Fills != shown.Fill;
                 var reload = _items[index].Update(shown);
                 if (resized)
                 {

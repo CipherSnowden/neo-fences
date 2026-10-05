@@ -304,13 +304,14 @@ public sealed partial class FenceHost
             Log.Information("folder views not made into panels: items.json is read-only this session"); // the config must not lose the view
             return false;
         }
+        var migration = FolderPanels.MigrateViews(_config, _items);
         var now = DateTimeOffset.Now;
-        if (_snapshots.Save(Snapshots.Take(_config, _items, name: $"Before folder views became panels ({now:d MMM HH:mm})", now: now)) is null)
+        // A repeat (a cut-short save, a read-only config) adds no panel and needs no second snapshot (final review M7).
+        if (migration.AddedPanels > 0 && _snapshots.Save(Snapshots.Take(_config, _items, name: $"Before folder views became panels ({now:d MMM HH:mm})", now: now)) is null)
         {
             Log.Warning(_snapshots.LastFailure, "folder views not made into panels: the snapshot before it could not be saved; tried again next time");
             return false;
         }
-        var migration = FolderPanels.MigrateViews(_config, _items);
         (_config, _items) = (migration.Config, migration.Items);
         Log.Information("folder view fence(s) {FenceIds} now hold a folder panel each", migration.MigratedFenceIds);
         SaveNow(itemsFirst: true);
