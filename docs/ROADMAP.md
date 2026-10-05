@@ -37,7 +37,7 @@ Milestone details and exit criteria: spec §9.
 - [ ] **M22 — 0.12.0: one kind of fence — games become items** (spec 2026-10-05-games-as-items-design, ADR-045)
   - [x] Prototype probed on a copy of the user's data, plan with replay-verified patches, native build; Opus review: 5 important + 2 re-graded fixed (515 tests)
   - [x] Live check TEST-CHECKLIST AH 18/18 (scripted, PC unattended); merged to main (user: merge locally until 1.0)
-  - [ ] Release 0.12.0 (ask first)
+  - [ ] Release 0.12.0 (the user approved the sequence 2026-10-05)
   - Deferred minors: Delete fence vs an open Settings / idle scan; a renamed game shortcut's brief "Not installed"; the New games list rebuilt on refresh; Open install folder on a not-installed game; a two-library-fences test
 - [ ] Later (the user's vision 2026-10-05: a fence holds *elements*; kinds stay in code): a folder panel element (a folder in a list / detailed view inside a fence), widgets (clock, calendar), element sizes
 - [ ] Later (user idea 2026-10-05): **item sizes** — one virtual item can take 1×1, 1×2, 2×1, 2×2 … cells in its fence (a grid layout instead of the wrap panel).
