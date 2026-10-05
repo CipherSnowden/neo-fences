@@ -162,6 +162,12 @@ games… is open; after each scan game items follow their game's shortcut and ne
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
+**0.12.1 (M23)**: the M21/M22 review minors — a folder view sorts its listing off the UI thread; a hidden view tab's title
+follows its folder's rename; Folder view settings takes full paths only (variables expanded) and says why OK is greyed
+out; deleting a fence refreshes Settings and stops an unneeded game scan, and new games never go to a gone fence; a game
+shortcut the scan rewrites is not shown "not installed" for a moment; the "New games go to" list is rebuilt only when the
+fences change; "Open install folder" is off for a game that is not installed.
+
 **0.11.0 (M21, folder views)**: a fence can show one folder live, read-only (ADR-044): "New folder view…" (tray, fence
 menu) or "Show as folder view" on a folder item; per view: files and folders / files only / folders only, type patterns,
 sort (kept, live), only the newest N; Downloads and Screenshots start newest first with 30; at most 500 entries, then

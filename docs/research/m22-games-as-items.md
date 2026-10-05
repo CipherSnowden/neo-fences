@@ -41,7 +41,7 @@ No critical findings. Fixed (Core test-first where Core can show it; App-only fi
   Delete there removes only the item (AH17).
 - Coverage added for focus 3: `Retarget_UpdatesEveryCopyOfAGame_InEveryFence`.
 
-Deferred minors:
+Deferred minors (fixed in 0.12.1, M23 — see ARCHITECTURE and checklist AI):
 - Deleting a fence does not refresh an open Settings window or stop an idle scan (a stale "New games go to" entry could
   be picked while Settings stays open).
 - A game whose shortcut is renamed may show "Not installed" for a moment until the scan finishes.

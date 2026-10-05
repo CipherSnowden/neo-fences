@@ -41,7 +41,7 @@ No critical findings. Fixed (Core test-first where Core can show it; App-only fi
   repaired (`LenientEnumConverter`; test `Config_RepairsATypoInAViewsShowOrSort_InsteadOfFailingTheFile`).
 - **M9 → fixed** (re-graded: an exception escaping to the UI thread) — `KnownFolders` catches every failure but out of memory.
 
-Deferred minors:
+Deferred minors (fixed in 0.12.1, M23 — see ARCHITECTURE and checklist AI):
 - Filtering and sorting run on the UI thread at every re-list (~140 ms for 20,000 entries sorted by name; ~3 ms by date
   or newest N, the Downloads default).
 - A hidden tab's header keeps its old title after its folder's rename until the box is redrawn.

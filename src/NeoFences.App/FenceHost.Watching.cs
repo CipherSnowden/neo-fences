@@ -309,6 +309,8 @@ public sealed partial class FenceHost
         foreach (var (target, check) in checks)
         {
             if (!live.Contains(target)) continue; // its item went while the check ran: no record left behind (M20)
+            // The scan rewrites NeoFences' own game shortcuts: one gone for a moment is checked again after the scan (M23).
+            if (_libraryScanning && check.State == TargetState.Missing && target.StartsWith(AppPaths.LibraryDirectory + "\\", StringComparison.OrdinalIgnoreCase)) continue;
             if (_checkBatchOf.TryGetValue(target, out var newest) && newest > batch) continue; // a newer answer is already there
             _checkBatchOf[target] = Math.Min(batch, _checkBatch);
             if (_targetChecks.TryGetValue(target, out var before) && before == check) continue;

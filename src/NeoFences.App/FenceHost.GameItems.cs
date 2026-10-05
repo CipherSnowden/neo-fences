@@ -67,7 +67,8 @@ public sealed partial class FenceHost
         _items = retargeted;
         IReadOnlyList<string> added = [];
         // A game some fence already holds is not copied in when it comes back (final review I5).
-        if (_config.Library.NewGamesFence is { } fenceId && GameItems.NotInAnyFence(_items, GameItems.NewGames(previous, current)) is { Count: > 0 } newGames)
+        if (_config.Library.NewGamesFence is { } fenceId && _config.Fences.Any(fence => fence.Id == fenceId && fence.Kind == FenceKind.Items) // M23: never a gone fence
+            && GameItems.NotInAnyFence(_items, GameItems.NewGames(previous, current)) is { Count: > 0 } newGames)
         {
             var result = GameItems.AddNew(_items, fenceId, newGames, AppPaths.LibraryDirectory);
             _items = result.Document;
@@ -76,6 +77,8 @@ public sealed partial class FenceHost
         }
         if (changed || added.Count > 0) ItemsChanged(checkTargets: added);
         else RefreshWindows(); // new covers
+        // Shortcuts the scan rewrote were not marked missing while it ran (M23): every game item is checked again now.
+        CheckTargets([.. _items.Fences.Values.SelectMany(items => items).Where(GameItems.IsGame).Select(item => item.Target).Distinct(ItemKinds.Comparer)]);
         _addGamesWindow?.ShowGames(GamesForAdding(_addGamesWindow.FenceId));
     }
 
@@ -129,7 +132,9 @@ public sealed partial class FenceHost
         Command(showAs, "Cover tile", () => SetShowAs(item.Id, ItemShow.Cover), isChecked: GameItems.ShowsCover(item));
         Command(showAs, "Icon", () => SetShowAs(item.Id, ItemShow.Icon), isChecked: !GameItems.ShowsCover(item));
         menu.Items.Add(showAs);
-        Command(menu, "Open install folder", () => OpenInstallFolder(window, item.Target));
+        var openFolder = new MenuItem { Header = "Open install folder", IsEnabled = installed && LibraryItemOf(item.Target)?.Game.InstallFolder is not null }; // M23
+        openFolder.Click += (_, _) => OpenInstallFolder(window, item.Target);
+        menu.Items.Add(openFolder);
         Command(menu, "Copy path", () => CopyText(item.Target));
         menu.Items.Add(new Separator());
         Command(menu, "Properties…", () => ShowProperties(window, item.Id, focusName: false));

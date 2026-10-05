@@ -595,3 +595,14 @@ Added after the M19 final review:
 | AH16 | Open a not-installed game; press Enter in the question | nothing happens (no default button); the item stays |
 | AH17 | Shift+right-click a game item → Delete | only the item leaves the fence; NeoFences' shortcut for the game stays |
 | AH18 | Move a game from Games to Apps; make it come back as new (remove its test folder, scan, put it back, scan) | it stays in Apps only; no copy appears in Games |
+
+## AI — 0.12.1 small fixes (M23)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AI1 | Folder view settings: Folder `Downloads`; then `%USERPROFILE%\Downloads`; Only the newest `0` | a red line "Type a full folder path…" and OK greyed; then OK on; then "…a number from 1 to 500" |
+| AI2 | A view of a folder with 20,000 files, sorted by name, while a file in it is rewritten every 100 ms | every fence keeps answering (no UI-thread stall over ~100 ms) |
+| AI3 | A view as a hidden tab of a box; rename its folder in Explorer | the tab header shows the new name without switching to it |
+| AI4 | Settings open; delete a fence | "New games go to" no longer lists it |
+| AI5 | Settings → "New games go to" dropdown open while a scan finishes | the dropdown stays open |
+| AI6 | Right-click a game that is not installed | "Open install folder" greyed out |

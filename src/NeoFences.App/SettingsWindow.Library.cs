@@ -33,6 +33,7 @@ public partial class SettingsWindow
     public event Action<string?>? NewGamesFenceChanged;
 
     private IReadOnlyList<string> _libraryFolders = [];
+    private IReadOnlyList<(string Id, string Title)> _newGamesChoices = [(Id: "", Title: "\u0000")]; // never equal to a real list: the first show builds it
 
     private (CheckBox Box, string Name)[] SourceBoxes =>
     [
@@ -94,9 +95,14 @@ public partial class SettingsWindow
         ShowGameAgainButton.IsEnabled = HiddenGameList.SelectedItem is not null;
         HiddenGamesEmpty.Visibility = view.Hidden.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         LibraryStatus.Text = view.Status;
-        NewGamesBox.Items.Clear();
-        NewGamesBox.Items.Add(new ComboBoxItem { Content = "Nowhere", Tag = null });
-        foreach (var (id, title) in view.Fences) NewGamesBox.Items.Add(new ComboBoxItem { Content = title.Length > 0 ? title : "(untitled fence)", Tag = id });
+        // Rebuilt only when the fences changed (M23): a rebuild closes an open dropdown, and scans refresh Settings often.
+        if (!view.Fences.SequenceEqual(_newGamesChoices))
+        {
+            _newGamesChoices = view.Fences;
+            NewGamesBox.Items.Clear();
+            NewGamesBox.Items.Add(new ComboBoxItem { Content = "Nowhere", Tag = null });
+            foreach (var (id, title) in view.Fences) NewGamesBox.Items.Add(new ComboBoxItem { Content = title.Length > 0 ? title : "(untitled fence)", Tag = id });
+        }
         NewGamesBox.SelectedItem = NewGamesBox.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag as string == view.NewGamesFence) ?? NewGamesBox.Items[0];
         RefreshLibraryButton.IsEnabled = view.HasFence;
     }

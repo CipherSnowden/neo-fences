@@ -16,6 +16,9 @@ public sealed partial class FenceHost
     private readonly Dictionary<string, FolderLister> _viewListers = new(StringComparer.Ordinal);
     // The last listing per view (null: not readable); missing while the first listing is on its way.
     private readonly Dictionary<string, IReadOnlyList<ItemInfo>?> _viewListings = new(StringComparer.Ordinal);
+    // The selection made off the UI thread for the view's settings at the time, and the newest request per view (M23).
+    private readonly Dictionary<string, (FolderView View, FolderViews.Selection? Selection)> _viewSelections = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _viewSelectionRequests = new(StringComparer.Ordinal);
     private IReadOnlyList<string>? _busyFolders;
 
     /// <summary>A lister for every view fence, on its current folder; listers of views that are gone (or changed folder) go.</summary>
@@ -28,6 +31,7 @@ public sealed partial class FenceHost
             lister.Dispose(); // the folder stays as it is
             _viewListers.Remove(fenceId);
             _viewListings.Remove(fenceId);
+            _viewSelections.Remove(fenceId);
         }
         foreach (var (fenceId, path) in views.Where(view => !_viewListers.ContainsKey(view.Key)))
         {
@@ -45,6 +49,7 @@ public sealed partial class FenceHost
         foreach (var lister in _viewListers.Values) lister.Dispose();
         _viewListers.Clear();
         _viewListings.Clear();
+        _viewSelections.Clear();
     }
 
     /// <summary>A listing arrived (on the UI thread): kept, and shown when the view is the shown tab of its box.</summary>
@@ -55,7 +60,20 @@ public sealed partial class FenceHost
         _viewListings[fenceId] = listed;
         if (listed is null && wasAvailable && _config.Fences.FirstOrDefault(fence => fence.Id == fenceId)?.View is { } view)
             Log.Information("folder view: {Folder} is not available", view.Path); // once per outage, not every 7 s retry
-        if (_windows.Values.FirstOrDefault(window => window.FenceId == fenceId) is { } shown) RefreshWindow(shown);
+        if (_config.Fences.FirstOrDefault(fence => fence.Id == fenceId)?.View is not { } settings) return;
+        // Filtered and sorted off the UI thread (M23): 20,000 entries sorted by name take ~140 ms, at every re-list.
+        var request = _viewSelectionRequests[fenceId] = _viewSelectionRequests.GetValueOrDefault(fenceId) + 1;
+        Task.Run(() => listed is null ? null : FolderViews.Select(listed, settings)).ContinueWith(selecting =>
+        {
+            if (selecting.IsFaulted)
+            {
+                Log.Warning(selecting.Exception, "folder view {FenceId}: the listing could not be sorted", fenceId);
+                return;
+            }
+            if (!_viewListers.ContainsKey(fenceId) || _viewSelectionRequests.GetValueOrDefault(fenceId) != request) return; // gone, or a newer listing
+            _viewSelections[fenceId] = (settings, selecting.Result);
+            if (_windows.Values.FirstOrDefault(window => window.FenceId == fenceId) is { } shown) RefreshWindow(shown);
+        }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     /// <summary>The view's entries as its settings select them, and its status line (RefreshWindow calls this for views).</summary>
@@ -67,7 +85,13 @@ public sealed partial class FenceHost
             window.SetViewStatus(center: null, more: null);
             return;
         }
-        var selection = listed is null ? null : FolderViews.Select(listed, fence.View!);
+        // The background selection when it matches the settings; after a settings change, once here (a user action).
+        if (!_viewSelections.TryGetValue(fence.Id, out var cached) || cached.View != fence.View)
+        {
+            cached = (fence.View!, listed is null ? null : FolderViews.Select(listed, fence.View!));
+            _viewSelections[fence.Id] = cached;
+        }
+        var selection = cached.Selection;
         window.SetItems(selection is null ? [] : [.. selection.Shown.Select(path => new ShownItem(path, path))]);
         var (center, more) = FolderViews.Status(selection, fence.View!);
         window.SetViewStatus(center, more);
@@ -130,6 +154,8 @@ public sealed partial class FenceHost
     {
         _config = FenceEdits.SetView(_config, fenceId, view);
         EnsureViewListers();
+        // Its tab header too when the view is a hidden tab of a box (M23).
+        if (FenceTabs.HostOf(_config, fenceId) is { } host && _windows.TryGetValue(host.Id, out var boxWindow) && boxWindow.FenceId != fenceId) RefreshTabs(boxWindow);
         if (_windows.Values.FirstOrDefault(window => window.FenceId == fenceId) is { } window && _config.Fences.First(fence => fence.Id == fenceId) is var fence)
         {
             window.Refresh(fence);

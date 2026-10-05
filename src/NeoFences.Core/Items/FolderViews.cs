@@ -85,6 +85,16 @@ public static class FolderViews
     /// </summary>
     public static string ListedFolder(string path) => Path.TrimEndingDirectorySeparator(path);
 
+    /// <summary>
+    /// The folder typed in Folder view settings (M23): variables expanded (%USERPROFILE%), and only a full path — a relative
+    /// one would be read against NeoFences' own current folder and show "not available" under a misleading title.
+    /// </summary>
+    public static string? FolderPath(string text)
+    {
+        var expanded = Environment.ExpandEnvironmentVariables(text.Trim());
+        return expanded.Length > 0 && !expanded.Contains('%') && Path.IsPathFullyQualified(expanded) ? expanded : null;
+    }
+
     public static bool SameFolder(string left, string right) =>
         string.Equals(left.TrimEnd('\\', '/'), right.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
 

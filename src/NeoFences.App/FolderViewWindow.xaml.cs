@@ -67,14 +67,22 @@ public partial class FolderViewWindow : Window
         PatternsHint.Text = patternsOk ? _patternsHint : "Use file name patterns like *.png;*.jpg — no paths, and none of \\ / : \" < > |";
         PatternsHint.Foreground = patternsOk ? (System.Windows.Media.Brush)FindResource("TextFillColorSecondaryBrush") : System.Windows.Media.Brushes.IndianRed;
         NewestBox.IsEnabled = NewestCheck.IsChecked == true;
+        // Say why OK is greyed out (M23); an empty folder box needs no words.
+        var problem = FolderBox.Text.Trim().Length > 0 && FolderViews.FolderPath(FolderBox.Text) is null
+            ? "Type a full folder path, like C:\\Users\\you\\Downloads (or use Browse…)."
+            : NewestCheck.IsChecked == true && !(int.TryParse(NewestBox.Text.Trim(), out var count) && count is >= 1 and <= FolderViews.MaxNewest)
+                ? $"\"Only the newest\" takes a number from 1 to {FolderViews.MaxNewest}."
+                : null;
+        ProblemText.Text = problem ?? "";
+        ProblemText.Visibility = problem is null ? Visibility.Collapsed : Visibility.Visible;
         OkButton.IsEnabled = Read() is not null;
     }
 
     /// <summary>The view as entered, or null while something is not valid.</summary>
     private FolderView? Read()
     {
-        var folder = FolderBox.Text.Trim();
-        if (folder.Length == 0 || FolderViews.ParsePatterns(PatternsBox.Text) is null) return null;
+        // A full path only, variables expanded (M23): a relative one would be read against NeoFences' own folder.
+        if (FolderViews.FolderPath(FolderBox.Text) is not { } folder || FolderViews.ParsePatterns(PatternsBox.Text) is null) return null;
         int? newest = null;
         if (NewestCheck.IsChecked == true)
         {

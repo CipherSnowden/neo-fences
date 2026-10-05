@@ -498,6 +498,8 @@ public sealed partial class FenceHost
         SyncBoxes(); // closes the window when its box is gone
         UpdateWatching();
         ForgetGoneTargets();
+        UpdateLibrary(); // M23: no game fence left, no scan
+        RefreshSettings(); // M23: "New games go to" no longer offers the deleted fence
     }
 
     private void OnThemeChanged()
