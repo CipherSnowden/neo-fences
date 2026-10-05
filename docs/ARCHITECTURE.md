@@ -171,6 +171,12 @@ games… is open; after each scan game items follow their game's shortcut and ne
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
+**0.19.0 (M31, modern widgets and sensors)**: the widgets in Windows 11's display font, the stats as tiles with thin
+accent bars: CPU %, CPU TEMP, GPU %, GPU TEMP and RAM in GB (`Widgets.Tiles`). `SystemStats` reads MSI Afterburner
+(`MAHMSharedMemory`), then HWiNFO (`Global\HWiNFO_SENS_SM2`), read-only through `MemoryMappedFile` (`SensorFormats`
+parses the bytes in Core; the main GPU is the one using the most video memory), otherwise PDH for GPU use and D3DKMT
+adapter perf data for its temperature (a commented DllImport). The M30 leftovers fixed. ADR-052, `research/m31-widgets.md`.
+
 **0.18.0 (M30, first-run welcome)**: a fresh start's first fence carries `welcome: true` (`Fence.Welcome`, written only when
 set) and shows a welcome panel while empty: **Sort my desktop…** (Add from desktop), **Add item…**, **Guide**. Its first
 item clears the flag (`WelcomeEdits.ClearIfFilled` in `ItemsChanged`, every add path); an Add from desktop that fills new

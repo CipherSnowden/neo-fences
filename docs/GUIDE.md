@@ -124,8 +124,8 @@ Store**, the **game folders** you add, and game shortcuts on your desktop — an
 - **Settings → Game Library**: **New games go to** (the fence where newly installed games appear), **Game folders (each
   sub-folder is a game)**, **Look for games in** (which launchers to read), **Hidden games** (games hidden in older versions; **Show again**), and
   **Refresh library now**.
-- A game's menu: **Open**, **Open install folder**, **Show as ▸ Cover tile / Icon**, **Copy path**, **Properties…**,
-  **Remove from fence**. A game that is no longer installed says "Not installed".
+- A game's menu: **Open**, **Show as ▸ Cover tile / Icon**, **Size ▸**, **Open install folder**, **Copy path**,
+  **Properties…**, **Remove from fence**. A game that is no longer installed says "Not installed".
 
 ![A Games fence with covers](guide/games.jpg)
 
@@ -141,10 +141,15 @@ Store**, the **game folders** you add, and game shortcuts on your desktop — an
 
 ## 5. Widgets
 
-Fence menu → **Add widget** → **Clock**, **Date** or **System stats** (CPU, RAM, GPU and drive C: as bars). Size them
-like anything else.
+Fence menu → **Add widget** → **Clock**, **Date** or **System stats**. Size them like anything else.
 
 - Right-click the clock for **Show seconds** and **Show date**. It follows Windows' time format (12- or 24-hour).
+- **System stats** shows five tiles: **CPU** and **GPU** use, **CPU TEMP** and **GPU TEMP**, and **RAM** in use (e.g.
+  "13.0 / 32 GB"). The bars take your Windows accent colour. Right-click it for **Temperature in °F**.
+- Temperatures: Windows lets apps read the CPU temperature only through a hardware monitor. If **MSI Afterburner** or
+  **HWiNFO64** (with its "Shared Memory Support" on) is running, NeoFences reads their values — read-only, nothing to
+  set up. Without one, CPU TEMP shows "—" and the GPU temperature comes from Windows. The graphics card shown is the one
+  using the most video memory (not a built-in one).
 - Double-click the clock to open Windows' Clock app, the stats to open Task Manager.
 - Widgets do no work while nobody can see them — in a game, while paused or quick-hidden, or rolled up.
 
@@ -251,7 +256,10 @@ Tray or fence menu → **Settings…**:
 - **A fence is off-screen** after changing monitors: NeoFences moves fences back onto a screen by itself when the displays
   change; if one still hides, **Settings → Snapshots → Restore** an earlier layout.
 - **Something went wrong:** **Settings → About and logs → Open logs folder** and look at the newest file; report problems
-  on the project's GitHub Issues page with what you did and that log.
+  on the project's [GitHub Issues page](https://github.com/CipherSnowden/neo-fences/issues) with what you did and that
+  log.
+- **CPU TEMP shows "—"**: start MSI Afterburner or HWiNFO64 (in HWiNFO, turn on "Shared Memory Support" in its
+  settings; the free version turns it off again after 12 hours).
 
 ## 15. Cheat-sheet
 

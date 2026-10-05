@@ -68,6 +68,7 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | One kind of fence: any item in any fence, its look from its kind and settings | 0.12 (M22) | done (games, sizes, widgets, folder panels) | ADR-045–ADR-048; later: auto-collect rules |
 | Element sizes 1–4 × 1–4 and a fence grid (Flow packed / Free fixed positions) | 0.13 (M24) | done | ADR-046; Size ▸ picker, Layout ▸ per fence |
 | Widgets: clock, date, system stats (CPU, RAM, GPU, C:) | 0.14 (M25) | done | ADR-047; any size; idle while unseen |
+| Modern widgets; stats with CPU / GPU temperatures (Afterburner or HWiNFO, read-only) and RAM in GB; °F option | 0.19 (M31) | done | ADR-052; disk tile dropped |
 | Folder views: types, files/folders only, newest N, live sort, "+ N more" | 0.11 (M21) | done | ADR-044; Downloads/Screenshots start newest first; panels since 0.15 |
 | Folder panel element: Details / List / Icons, header sort, browse in (Back / Up / Home), Fill fence | 0.15 (M26) | done | ADR-048; folder views migrate to panels |
 | Auto-collect rules: new files of the desktop or a folder become items, by kind or pattern | 0.16 (M27) | done | ADR-049; never moves files; removed stays removed; catch-up at start |

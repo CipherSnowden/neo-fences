@@ -1352,3 +1352,22 @@ welcome fence (an empty fence only, still titled "Fence" and without auto-collec
 **Consequences.** Updating copies and every config after the welcome ended never show it; there is no way to show it
 again (out of scope). A config that falls back to a fresh start (missing, unreadable with no backup, pre-pivot) shows the
 welcome too; a read-only start (an older build on a newer config) never does, nor its notice.
+
+## ADR-052 — Temperatures from MSI Afterburner or HWiNFO, read-only
+**Date:** 2026-10-06 · **Status:** Accepted
+
+**Context.** The user wanted CPU and GPU temperatures in the System stats widget. Windows gives a normal (non-admin) app
+the GPU temperature (as Task Manager shows it) but no reliable CPU temperature: that needs a kernel driver running with
+admin rights, which NeoFences never uses. The user runs MSI Afterburner; friends may run HWiNFO64. Both publish their
+sensors in shared memory that any process may read.
+
+**Decision.** The stats read MSI Afterburner's `MAHMSharedMemory`, then HWiNFO's `Global\HWiNFO_SENS_SM2`, read-only
+through `MemoryMappedFile` (no Win32 binding, no dependency); Core parses a copy of the bytes (signature and size checks;
+anything odd is nothing). The main graphics card is the one using the most video memory. Without either, GPU use comes
+from PDH as before and its temperature from D3DKMT adapter perf data (a commented DllImport: CsWin32 has these WDK
+functions only through the WDK metadata package, a new dependency). CPU TEMP then shows "—" with "needs Afterburner or
+HWiNFO". RAM shows GB used of installed; the disk tile is gone.
+
+**Consequences.** CPU temperature needs one of the two monitors running (HWiNFO free stops sharing after 12 hours until
+switched on again). NeoFences never starts, closes or configures them. A later sensor picker can use the same readings
+(clocks, power, fans, FPS are all there).

@@ -731,10 +731,22 @@ Added after the M19 final review:
 |---|---|---|
 | AP1 | Start with an empty data folder | one fence "Fence" showing Welcome to NeoFences, Sort my desktop…, Add item…, Guide; the notice "NeoFences is running" |
 | AP2 | Welcome → Guide | the guide opens on GitHub in the default browser |
-| AP3 | Resize the welcome fence to its minimum; Windows in light mode | the welcome scrolls; text and buttons stay legible |
+| AP3 | Resize the welcome fence to its minimum; Windows in light mode | the welcome scrolls; button labels wrap instead of being cut off; text stays legible |
 | AP4 | Drop a file on the welcome's text or buttons | the item is added; the welcome is gone; after a restart the fence is ordinary |
 | AP5 | Welcome → Sort my desktop… → Cancel | the welcome stays |
 | AP6 | Welcome → Sort my desktop… with groups ticked → Add | the new fences hold links; the welcome fence is removed; the dialog offered "Hide desktop icons while NeoFences runs" |
 | AP7 | Drag the welcome fence onto another fence's title (a tab), then Sort my desktop… | the welcome tab goes; the other fence and its box stay |
 | AP8 | Restart NeoFences before acting on the welcome | the welcome is still there; no second notice |
 | AP9 | Start with an existing config | no welcome, no notice |
+
+## AQ — 0.19.0 modern widgets and sensors (M31)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AQ1 | Clock (date on), Date and System stats at 3-wide and 2-wide spans | modern type; nothing clipped; tiles in two columns, RAM across |
+| AQ2 | The same in Windows light mode, over a bright wallpaper | text and accent bars legible |
+| AQ3 | System stats with MSI Afterburner running | CPU TEMP and GPU TEMP match Afterburner's own; the graphics card, not the built-in GPU; log "sensors from MSI Afterburner" |
+| AQ4 | Stats → Temperature in °F | both temperatures in °F; bars unchanged |
+| AQ5 | Close Afterburner (by the user) | CPU TEMP "—" with "needs Afterburner or HWiNFO"; GPU TEMP from Windows; back when Afterburner returns |
+| AQ6 | The welcome fence at its minimum size | button labels wrap, nothing cut off |
+| AQ7 | GUIDE §3, §5, §14 on GitHub | game menu order with Size; the widgets text; the Issues link works |
