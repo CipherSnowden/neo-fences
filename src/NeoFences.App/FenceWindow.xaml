@@ -20,6 +20,7 @@
         <Visibility x:Key="ShortcutArrowVisibility">Collapsed</Visibility>
         <sys:Double x:Key="TileWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">72</sys:Double>
         <sys:Double x:Key="TileHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">108</sys:Double>
+        <sys:Double x:Key="TileCellWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">84</sys:Double>
         <!-- Thin scrollbar (spec §6): no arrows, a rounded thumb that brightens under the mouse. -->
         <Style TargetType="ScrollBar">
             <Setter Property="Width" Value="6" />
@@ -78,13 +79,15 @@
                     <ContextMenu x:Name="BodyContextMenu">
                         <MenuItem x:Name="AddItemItem" Header="Add item…" />
                         <MenuItem x:Name="AddFromDesktopItem" Header="Add from desktop…" />
+                        <MenuItem x:Name="AddGamesItem" Header="Add games…" />
                         <MenuItem x:Name="RefreshItem" Header="Refresh" />
                         <!-- Folder views (M21): shown only on a view. -->
                         <MenuItem x:Name="OpenFolderItem" Header="Open folder" Visibility="Collapsed" />
                         <MenuItem x:Name="ViewSettingsItem" Header="Folder view settings…" Visibility="Collapsed" />
                         <Separator />
                         <MenuItem x:Name="NewFenceItem" Header="New fence" />
-                        <MenuItem x:Name="NewLibraryItem" Header="New Game Library fence" />
+                        <!-- M22: games are items in any fence; the library fence kind stays in the code, not in the menu. -->
+                        <MenuItem x:Name="NewLibraryItem" Header="New Game Library fence" Visibility="Collapsed" />
                         <MenuItem x:Name="NewFolderViewItem" Header="New folder view…" />
                         <MenuItem x:Name="RenameItem" Header="Rename fence" />
                         <MenuItem x:Name="IconSizeItem" Header="Icon size" />
@@ -185,6 +188,7 @@
                                 </StackPanel>
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding IsTile}" Value="True">
+                                        <Setter TargetName="Cell" Property="Width" Value="{DynamicResource TileCellWidth}" />
                                         <Setter TargetName="IconGrid" Property="Visibility" Value="Collapsed" />
                                         <Setter TargetName="Tile" Property="Visibility" Value="Visible" />
                                     </DataTrigger>

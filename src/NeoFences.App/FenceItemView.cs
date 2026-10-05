@@ -10,8 +10,10 @@ namespace NeoFences.App;
 /// What a fence shows of one item (M18): a virtual item (key = its id), or a Game Library shortcut (key = its path).
 /// The host builds these from its data; the window shows them in place (<see cref="FenceWindow.SetItems"/>).
 /// </summary>
+/// <param name="Tile">A 2:3 tile (M22: a game item shown as its cover); <paramref name="TileArt"/> is its poster or logo.</param>
+/// <param name="IsGame">A game item (M22): "Not installed" instead of "Missing".</param>
 public sealed record ShownItem(string Key, string Target, string? Name = null, ItemIcon? Icon = null, string? Note = null,
-    TargetState State = TargetState.Ok);
+    TargetState State = TargetState.Ok, bool Tile = false, (string Path, bool IsPoster)? TileArt = null, bool IsGame = false);
 
 /// <summary>One item as a fence shows it. Label and icon start as placeholders and fill in from <see cref="IconLoader"/>.</summary>
 public sealed class FenceItemView : INotifyPropertyChanged
@@ -57,7 +59,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
     /// <summary>The note, or what is wrong with the target (spec §4); the name otherwise.</summary>
     public string ToolTipText => State switch
     {
-        TargetState.Missing => $"Missing: {Target}",
+        TargetState.Missing => IsGame ? $"Not installed: {Label}" : $"Missing: {Target}",
         TargetState.Unavailable => TargetChecks.IsNetworkPath(Target) ? $"Network location not reachable: {Target}"
             : $"Drive {TargetChecks.RootOf(Target)?.TrimEnd('\\') ?? "?"} is not connected: {Target}",
         _ => Note is { Length: > 0 } note ? $"{Label}\n{note}" : Label,
@@ -76,6 +78,9 @@ public sealed class FenceItemView : INotifyPropertyChanged
         OwnIcon = shown.Icon;
         OwnName = string.IsNullOrWhiteSpace(shown.Name) ? null : shown.Name;
         Note = shown.Note;
+        Tile = shown.Tile;
+        TileArt = shown.TileArt;
+        IsGame = shown.IsGame;
         State = shown.State;
         if (OwnName is not null) Label = OwnName;
         else if (reload || Label.Length == 0) Label = PlaceholderName(Target);
@@ -103,6 +108,13 @@ public sealed class FenceItemView : INotifyPropertyChanged
         get;
         set { field = value; Changed(); }
     }
+
+    /// <summary>The host wants a tile for this item (M22: a game item's cover), and its art; the window decides <see cref="IsTile"/>.</summary>
+    public bool Tile { get; private set; }
+
+    public (string Path, bool IsPoster)? TileArt { get; private set; }
+
+    public bool IsGame { get; private set; }
 
     /// <summary>A Game Library tile (M12): a 2:3 tile with a poster, a logo or the icon centred.</summary>
     public bool IsTile

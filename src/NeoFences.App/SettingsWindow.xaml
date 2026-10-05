@@ -241,7 +241,11 @@
             <Border x:Name="LibraryCard" Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock x:Name="LibraryDescription" Style="{StaticResource Description}" Margin="0,0,0,8"
-                               Text="The Game Library fence lists every installed game it finds. Launcher games start through their launcher. Nothing is downloaded, and your games and files are never changed." />
+                               Text="Finds the games installed on this PC. Put them in any fence with fence menu → Add games…; newly installed games go to the fence chosen below. Launcher games start through their launcher. Nothing is downloaded, and your games and files are never changed." />
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                        <TextBlock Text="New games go to" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <ComboBox x:Name="NewGamesBox" MinWidth="200" AutomationProperties.Name="New games go to" />
+                    </StackPanel>
                     <TextBlock Text="Game folders (each sub-folder is a game)" Margin="0,4,0,4" />
                     <ListBox x:Name="GameFolderList" MaxHeight="120" AutomationProperties.Name="Game folders" />
                     <WrapPanel Margin="0,8,0,0">
@@ -261,7 +265,7 @@
                         <CheckBox x:Name="ShortcutsSourceBox" Margin="0,0,16,6" />
                     </WrapPanel>
                     <TextBlock Text="Hidden games" Margin="0,8,0,4" />
-                    <TextBlock x:Name="HiddenGamesEmpty" Style="{StaticResource Description}" Text="None. Right-click a game → Hide from library." />
+                    <TextBlock x:Name="HiddenGamesEmpty" Style="{StaticResource Description}" Text="None." />
                     <ListBox x:Name="HiddenGameList" MaxHeight="120" AutomationProperties.Name="Hidden games" />
                     <WrapPanel Margin="0,8,0,0">
                         <Button x:Name="ShowGameAgainButton" Content="Show again" Margin="0,0,8,6" IsEnabled="False" />

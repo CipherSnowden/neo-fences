@@ -7,6 +7,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using NeoFences.Core.Config;
 using NeoFences.Core.Items;
+using NeoFences.Core.Library;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
 using Serilog;
@@ -62,7 +63,7 @@ public sealed partial class FenceHost
     {
         if (_items.Find(itemId) is not { } item) return;
         // The fence's window may have closed meanwhile (its box merged into another): then the question stands alone (final review M1).
-        var question = new MissingItemWindow(DisplayName(item), item.Target, state) { Owner = _windows.ContainsValue(window) ? window : null };
+        var question = new MissingItemWindow(DisplayName(item), item.Target, state, game: GameItems.IsGame(item)) { Owner = _windows.ContainsValue(window) ? window : null };
         if (question.ShowDialog() != true) return;
         if (question.Choice == MissingItemChoice.Locate) Locate(window, itemId);
         else if (question.Choice == MissingItemChoice.Remove) RemoveItems(window, [itemId]);
@@ -112,6 +113,11 @@ public sealed partial class FenceHost
         {
             Command("Open", () => { foreach (var item in items) OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin); });
             Command($"Remove {items.Count} items from fence", () => RemoveItems(window, [.. items.Select(item => item.Id)]));
+        }
+        else if (GameItems.IsGame(items[0]))
+        {
+            ShowGameItemMenu(window, items[0], fromKeyboard); // M22
+            return;
         }
         else
         {
@@ -400,6 +406,7 @@ public sealed partial class FenceHost
         ScheduleSave();
         UpdateWatching();
         ForgetGoneTargets();
+        UpdateLibrary(); // M22: the scan runs while a fence holds a game item
         if (checkTargets.Count > 0) CheckTargets(checkTargets);
     }
 

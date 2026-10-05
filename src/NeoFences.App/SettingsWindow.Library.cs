@@ -14,8 +14,10 @@ public sealed record HiddenGame(string Id, string Name, IReadOnlyList<string> Al
     public override string ToString() => Name;
 }
 
-/// <summary>What Settings → Game Library shows (M12).</summary>
-public sealed record LibraryView(bool HasFence, IReadOnlyList<string> Folders, LibrarySources Sources, IReadOnlyList<HiddenGame> Hidden, string Status);
+/// <summary>What Settings → Game Library shows (M12; M22: the fences new games can go to, and the chosen one).</summary>
+/// <param name="HasFence">The scan runs (games are wanted somewhere).</param>
+public sealed record LibraryView(bool HasFence, IReadOnlyList<string> Folders, LibrarySources Sources, IReadOnlyList<HiddenGame> Hidden, string Status,
+    IReadOnlyList<(string Id, string Title)> Fences, string? NewGamesFence);
 
 /// <summary>
 /// Settings → Game Library (M12, spec §4): game folders, a checkbox per source, hidden games with "Show again", and
@@ -27,6 +29,8 @@ public partial class SettingsWindow
     public event Action<LibrarySources>? LibrarySourcesChanged;
     public event Action<string>? ShowGameAgainRequested;
     public event Action? RefreshLibraryRequested;
+    /// <summary>"New games go to" (M22): a fence id, or null for nowhere.</summary>
+    public event Action<string?>? NewGamesFenceChanged;
 
     private IReadOnlyList<string> _libraryFolders = [];
 
@@ -57,6 +61,11 @@ public partial class SettingsWindow
         HiddenGameList.SelectionChanged += (_, _) => ShowGameAgainButton.IsEnabled = HiddenGameList.SelectedItem is not null;
         ShowGameAgainButton.Click += (_, _) => { if (HiddenGameList.SelectedItem is HiddenGame game) ShowGameAgainRequested?.Invoke(game.Id); };
         RefreshLibraryButton.Click += (_, _) => RefreshLibraryRequested?.Invoke();
+        NewGamesBox.SelectionChanged += (_, _) =>
+        {
+            if (_updating || NewGamesBox.SelectedItem is not ComboBoxItem chosen) return;
+            NewGamesFenceChanged?.Invoke(chosen.Tag as string);
+        };
         AutomationProperties.SetHelpText(GameFolderList, LibraryDescription.Text);
     }
 
@@ -85,6 +94,10 @@ public partial class SettingsWindow
         ShowGameAgainButton.IsEnabled = HiddenGameList.SelectedItem is not null;
         HiddenGamesEmpty.Visibility = view.Hidden.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         LibraryStatus.Text = view.Status;
+        NewGamesBox.Items.Clear();
+        NewGamesBox.Items.Add(new ComboBoxItem { Content = "Nowhere", Tag = null });
+        foreach (var (id, title) in view.Fences) NewGamesBox.Items.Add(new ComboBoxItem { Content = title.Length > 0 ? title : "(untitled fence)", Tag = id });
+        NewGamesBox.SelectedItem = NewGamesBox.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag as string == view.NewGamesFence) ?? NewGamesBox.Items[0];
         RefreshLibraryButton.IsEnabled = view.HasFence;
     }
 }

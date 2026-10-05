@@ -10,9 +10,20 @@ public partial class MissingItemWindow : Window
 {
     public MissingItemChoice Choice { get; private set; }
 
-    public MissingItemWindow(string name, string target, TargetState state)
+    /// <param name="game">A game item (M22): "not installed", no Locate….</param>
+    public MissingItemWindow(string name, string target, TargetState state, bool game = false)
     {
         InitializeComponent();
+        if (game && state == TargetState.Missing)
+        {
+            Headline.Text = $"\"{name}\" is not installed";
+            Explanation.Text = "The game was uninstalled, or its launcher no longer lists it. Reinstall it and the item comes back by itself.";
+            TargetText.Text = "";
+            LocateButton.Visibility = Visibility.Collapsed;
+            RemoveButton.IsDefault = true;
+            RemoveButton.Click += (_, _) => Choose(MissingItemChoice.Remove);
+            return;
+        }
         Headline.Text = state == TargetState.Unavailable ? $"\"{name}\" is not available right now" : $"\"{name}\" is missing";
         Explanation.Text = state == TargetState.Unavailable
             ? TargetChecks.IsNetworkPath(target)

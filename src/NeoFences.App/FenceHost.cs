@@ -6,6 +6,7 @@ using NeoFences.Core.Config;
 using NeoFences.Core.Input;
 using NeoFences.Core.Items;
 using NeoFences.Core.Layouts;
+using NeoFences.Core.Library;
 using NeoFences.Core.Lifecycle;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
@@ -115,6 +116,7 @@ public sealed partial class FenceHost
         Log.Information("items loaded from {Source} (read-only: {IsReadOnly}, corrupt copy: {CorruptCopyPath}): {Count} item(s)",
             loadedItems.Source, loadedItems.IsReadOnly, loadedItems.CorruptCopyPath, loadedItems.Document.Fences.Values.Sum(items => items.Count));
         _items = loadedItems.Document;
+        MigrateGames(LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: an old Game Library fence becomes game items (a snapshot first)
         if (loadedItems.Source == ConfigLoadSource.Primary && !loadedItems.IsReadOnly) CleanUnusedPictures(ItemEdits.ImagesInUse(_items), _snapshots.Directory);
         _watchdog.LaunchDetached(Environment.ProcessId);
         ApplyStartup(); // after a power loss NeoFences must come back by itself (ADR-019)
@@ -263,6 +265,7 @@ public sealed partial class FenceHost
         window.DrivesChanged += OnDrivesChanged;
         window.NewLibraryRequested += CreateLibraryFence;
         window.NewFolderViewRequested += () => NewFolderView(window.Handle); // M21
+        window.AddGamesRequested += () => AddGames(window); // M22
         window.OpenFolderRequested += () => OpenViewFolder(window);
         window.ViewSettingsRequested += () => EditFolderView(window);
         window.StartupToggled += SetStartWithWindows;
@@ -329,7 +332,9 @@ public sealed partial class FenceHost
             RenderView(window, shown); // M21
             return;
         }
-        window.SetItems([.. _items.Of(shown.Id).Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note, StateOf(item.Target)))]);
+        var covers = _items.Of(shown.Id).Any(GameItems.ShowsCover) ? LibraryArt() : null; // M22: game items shown as covers
+        window.SetItems([.. _items.Of(shown.Id).Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note, StateOf(item.Target),
+            Tile: GameItems.ShowsCover(item), TileArt: covers is not null && covers.TryGetValue(item.Target, out var cover) ? cover : null, IsGame: GameItems.IsGame(item)))]);
     }
 
     /// <summary>Opens a path NeoFences knows (a library game, the logs or data folder).</summary>
@@ -947,6 +952,7 @@ public sealed partial class FenceHost
         }
         Log.Information("restoring snapshot {Name} from {Path}", snapshot.Name, path);
         (_config, _items) = Snapshots.Restore(_config, snapshot);
+        MigrateGames(_library.Items.Count > 0 ? _library : LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: a snapshot from before games became items
         SaveNow();
         SyncBoxes();
         // Windows that kept their fence still show its old title, icon size and labels (final review I1).
@@ -957,6 +963,7 @@ public sealed partial class FenceHost
             window.SetTitle(shown.Title);
         }
         RefreshWindows(); // a fence that became (or stopped being) a folder view shows its new kind (M21)
+        UpdateLibrary(); // M22: the restored fences may hold game items, or none
         ForgetGoneTargets(); // records of items the restore took away (M20)
         CheckAllTargets(); // the restored items' targets may have changed since
         _settingsWindow?.ShowSnapshotNotice($"Restored \"{snapshot.Name}\".", failed: false); // replaces an earlier failure line (final review M1)
@@ -1180,7 +1187,6 @@ public sealed partial class FenceHost
         [
             .. UpdateTrayItems(), // M17: "Restart to update to v…" first while an update waits
             new TrayMenuItem(TrayNewFence, "New fence", Enabled: !_paused),
-            new TrayMenuItem(TrayNewLibrary, "New Game Library fence", Enabled: !_paused),
             new TrayMenuItem(TrayNewFolderView, "New folder view…", Enabled: !_paused),
             new TrayMenuItem(TrayAddFromDesktop, "Add from desktop…", Enabled: !_paused),
             new TrayMenuItem(TrayQuickHide, "Quick-hide", Checked: _quickHidden, Enabled: !_paused),

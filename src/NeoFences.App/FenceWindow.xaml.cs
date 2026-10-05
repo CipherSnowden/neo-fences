@@ -149,6 +149,8 @@ public partial class FenceWindow : Window
     public event Action? RefreshRequested;
     /// <summary>Fence menu → "New Game Library fence" (M12).</summary>
     public event Action? NewLibraryRequested;
+    /// <summary>Fence menu → "Add games…" (M22).</summary>
+    public event Action? AddGamesRequested;
     /// <summary>Fence menu → "New folder view…" (M21).</summary>
     public event Action? NewFolderViewRequested;
     /// <summary>A folder view's "Open folder" (its menu, or the "+ N more" line).</summary>
@@ -207,6 +209,7 @@ public partial class FenceWindow : Window
         PreviewKeyDown += OnTabKeys;
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
         NewFolderViewItem.Click += (_, _) => NewFolderViewRequested?.Invoke();
+        AddGamesItem.Click += (_, _) => AddGamesRequested?.Invoke();
         OpenFolderItem.Click += (_, _) => OpenFolderRequested?.Invoke();
         ViewSettingsItem.Click += (_, _) => ViewSettingsRequested?.Invoke();
         MoreLine.MouseLeftButtonUp += (_, click) => { click.Handled = true; OpenFolderRequested?.Invoke(); };
@@ -298,6 +301,7 @@ public partial class FenceWindow : Window
         var view = _kind == FenceKind.View;
         AddItemItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddFromDesktopItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        AddGamesItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         SortItem.Visibility = _kind == FenceKind.Library ? Visibility.Collapsed : Visibility.Visible;
         foreach (var sortItem in SortItem.Items.OfType<MenuItem>()) sortItem.IsChecked = view && Equals(sortItem.Tag, fence.View!.Sort);
         OpenFolderItem.Visibility = view ? Visibility.Visible : Visibility.Collapsed;
@@ -342,8 +346,9 @@ public partial class FenceWindow : Window
 
     private void ApplyArt(FenceItemView view)
     {
-        view.IsTile = IsLibrary;
-        if (!IsLibrary || !_libraryArt.TryGetValue(view.Key, out var art))
+        view.IsTile = IsLibrary || view.Tile; // the library's tiles (M12), game items shown as covers (M22)
+        (string Path, bool IsPoster)? chosen = IsLibrary ? (_libraryArt.TryGetValue(view.Key, out var libraryArt) ? libraryArt : null) : view.TileArt;
+        if (!view.IsTile || chosen is not { } art)
         {
             view.ArtPath = null;
             view.Art = null;
@@ -651,6 +656,7 @@ public partial class FenceWindow : Window
             {
                 if (found != index) _items.Move(found, index);
                 if (_items[index].Update(shown) && IsLoaded) _iconLoader.Request(_items[index], iconSizePx);
+                ApplyArt(_items[index]); // shown as a cover now, or an icon again (M22); the same art is not loaded twice
                 continue;
             }
             var view = new FenceItemView(shown);
@@ -712,8 +718,7 @@ public partial class FenceWindow : Window
     /// <summary>Covers are decoded at the tile's pixel width: a new icon size or monitor DPI decodes them again (final review I3).</summary>
     private void ReloadArt()
     {
-        if (!IsLibrary) return;
-        foreach (var view in _items)
+        foreach (var view in _items.Where(view => view.IsTile))
         {
             view.ArtPath = null;
             ApplyArt(view);
@@ -740,6 +745,7 @@ public partial class FenceWindow : Window
         // Game Library tiles are 2:3, 1.5 × the icon size wide (M12).
         Resources["TileWidth"] = Math.Round(_iconSizeDips * 1.5);
         Resources["TileHeight"] = Math.Round(_iconSizeDips * 2.25);
+        Resources["TileCellWidth"] = Math.Round(_iconSizeDips * 1.5) + 12.0; // a cover tile among icons (M22)
         // With labels: room for two short words under small icons. Icons only: a tight grid.
         Resources["ItemWidth"] = IsLibrary ? Math.Round(_iconSizeDips * 1.5) + 12.0
             : _labelMode == LabelMode.Always ? LabelledItemWidth : _iconSizeDips + 12.0;

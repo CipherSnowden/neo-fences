@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows.Threading;
+using NeoFences.Core.Items;
 using NeoFences.Core.Library;
 using NeoFences.Core.Model;
 using NeoFences.Shell;
@@ -27,6 +28,13 @@ public sealed partial class FenceHost
     private string _libraryStatus = "Not scanned yet.";
 
     private bool HasLibraryFence => _config.Fences.Any(fence => fence.IsLibrary);
+
+    /// <summary>
+    /// The scan runs while games are wanted (M22): an old library fence, a game item in any fence, a fence new games go to,
+    /// or the Add games… list open. Otherwise it sleeps (no watchers).
+    /// </summary>
+    private bool LibraryWanted => HasLibraryFence || _config.Library.NewGamesFence is not null || _addGamesWindow is not null
+                                  || _items.Fences.Values.Any(items => items.Any(GameItems.IsGame));
 
     /// <summary>The library folder's lister while the Game Library fence exists (a hidden library tab keeps listing, M9).</summary>
     private void EnsureLibraryLister()
@@ -58,7 +66,7 @@ public sealed partial class FenceHost
     /// <summary>Starts the library when its fence appears, stops watching when it goes (EnsureLibraryLister calls this).</summary>
     private void UpdateLibrary()
     {
-        if (HasLibraryFence == _libraryActive) return;
+        if (LibraryWanted == _libraryActive) return;
         _libraryActive = !_libraryActive;
         if (_libraryActive)
         {
@@ -133,12 +141,14 @@ public sealed partial class FenceHost
             DisposeWatchers(watch);
             return;
         }
+        var previous = _library;
         if (state is not null) _library = state;
         _libraryStatus = $"Last scan {DateTime.Now:HH:mm}: {_library.Items.Count} games"
                          + (unreadable.Count > 0 ? $"; not readable right now: {string.Join(", ", unreadable.Select(GameCatalog.SourceName))}" : ".");
         if (state is null || !_libraryActive) DisposeWatchers(watch); // a failed scan keeps the watchers it had (final review I2)
         else ReplaceLibraryWatchers(watch);
         _libraryLister?.Refresh(); // new art, order
+        if (state is not null) ApplyGames(previous, state); // M22: game items follow the scan; new games go to their fence
         RefreshSettings();
         if (!_libraryScanAgain) return;
         _libraryScanAgain = false;
@@ -296,11 +306,13 @@ public sealed partial class FenceHost
     }
 
     private LibraryView LibrarySettingsView() => new(
-        HasFence: HasLibraryFence,
+        HasFence: LibraryWanted,
         Folders: _config.Library.Folders,
         Sources: _config.Library.Sources,
         Hidden: HiddenGamesForSettings(),
-        Status: HasLibraryFence ? _libraryStatus : "No Game Library fence yet: tray → New Game Library fence.");
+        Status: LibraryWanted ? _libraryStatus : "No games in any fence yet: fence menu → Add games…, or choose where new games go.",
+        Fences: [.. _config.Fences.Where(fence => fence.Kind == FenceKind.Items).Select(fence => (fence.Id, fence.Title))],
+        NewGamesFence: _config.Library.NewGamesFence);
 
     private void WireLibrarySettings(SettingsWindow window)
     {
@@ -320,6 +332,11 @@ public sealed partial class FenceHost
             Change(library => library with { Hidden = [.. library.Hidden.Where(hiddenId => !ids.Contains(hiddenId))] }, "show again");
         };
         window.RefreshLibraryRequested += () => ScanLibrary(full: true);
+        window.NewGamesFenceChanged += fenceId =>
+        {
+            Change(library => library with { NewGamesFence = fenceId }, "new games go to");
+            UpdateLibrary(); // a fence for new games: the scan runs
+        };
     }
 
     /// <summary>One row per hidden game (all its ids together); a hidden id no scan finds any more is listed by itself.</summary>
