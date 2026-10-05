@@ -628,3 +628,5 @@ duplicates, the burst cap counted per listing, a restore brought old files back;
 desktop chosen as a folder) — fixed, 633 tests. Live check AM by script. Merged locally.
 **Decisions:** ADR-049.
 **Next:** release 0.16.0 when the user says so.
+**Released:** 0.16.0 on 2026-10-05 — CI green, draft with the delta package (413 KB), install check (the installed 0.15.0
+updated itself in 3 s through the tray's Restart to update; data unchanged; plain restart back on GitHub updates), published; hub refreshed.

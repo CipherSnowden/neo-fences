@@ -786,11 +786,12 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "35bc8e6",
-  phase: "0.16.0 — auto-collect (merged)",
-  current: "M27 auto-collect rules MERGED locally (0.15.0 installed): a fence collects new files of the desktop or a folder as items, by kind or pattern · next: release 0.16.0 (asked first)",
+  commit: "2692f96",
+  phase: "0.16.0 — auto-collect",
+  current: "0.16.0 RELEASED and installed (your 0.15.0 updated itself): auto-collect rules — a fence collects new files of the desktop or a folder as items (fence menu → Auto-collect…) · next: pre-1.0 work or polish",
   waiting: [
-    "NEW in 0.15.0 — folder panels: fence menu → Add folder panel… (or a folder item → Show as folder panel). Details / List / Icons, click a column header to sort, double-click a subfolder to browse in (Back / Up / Home), Size ▸ or Fill fence. Your Downloads view is now a panel that fills its fence.",
+    "NEW in 0.16.0 — auto-collect: fence menu → Auto-collect… → New rule. Watch your Desktop or any folder; pick kinds (apps and shortcuts, installers, documents, pictures, archives, anything) or patterns. New matching files show up as items within ~2 s; nothing is moved; removed stays removed; files from while NeoFences was closed are caught up at start.",
+    "In 0.15.0 — folder panels: fence menu → Add folder panel… (or a folder item → Show as folder panel). Details / List / Icons, click a column header to sort, double-click a subfolder to browse in (Back / Up / Home), Size ▸ or Fill fence. Your Downloads view is now a panel that fills its fence.",
     "In 0.14.0 — widgets: fence menu → Add widget → Clock, Date or System stats (CPU, RAM, GPU, C:). Any size via Size ▸; right-click the clock for seconds and a date line; double-click the clock for Windows' Clock app, the stats for Task Manager. Widgets do nothing while you game or the fences are hidden.",
     "In 0.13.0 — element sizes: right-click any item → Size → pick columns × rows (up to 4 × 4); a bigger app is a bigger icon, a bigger game a bigger cover; smaller items fill the gaps. Fence menu → Layout → Free (fixed positions) keeps items exactly where you drop them; Flow (packed) is the default.",
     "In 0.12.1 — small fixes: big folder views stay smooth, Folder view settings says why OK is greyed out, hidden view tabs follow folder renames, Game Library settings and game menus behave better.",
@@ -807,7 +808,7 @@ const HUB = {
       { t: "You chose auto-collect and approved the defaults (desktop or any folder; kinds or patterns; removed stays removed; catch-up at start)", s: "done" },
       { t: "Prototype probed on a copy of your data (test folder), verified plan, native build; Opus review: 1 critical + 3 important + 2 re-graded fixed (633 tests)", s: "done" },
       { t: "Live check AM by script; merged locally", s: "done" },
-      { t: "Release 0.16.0 (asked first)", s: "todo" }
+      { t: "Released 0.16.0 — your 0.15.0 updated itself in 3 s; data unchanged", s: "done" }
     ]},
     { group: "M26 · Folder panels (0.15.0)", items: [
       { t: "You picked: panels replace folder views; Details / List / Icons; browse into subfolders; cells or Fill fence", s: "done" },
@@ -1124,7 +1125,7 @@ const HUB = {
     { id: "M24", name: "Element sizes (0.13.0)", goal: "Elements 1–4 × 1–4 cells, Flow / Free grid per fence (ADR-046) — released as 0.13.0", s: "done" },
     { id: "M25", name: "Widgets (0.14.0)", goal: "Clock, Date, System stats elements in any fence (ADR-047) — released as 0.14.0", s: "done" },
     { id: "M26", name: "Folder panels (0.15.0)", goal: "A folder as Details / List / Icons inside any fence; folder views become panels (ADR-048) — released as 0.15.0", s: "done" },
-    { id: "M27", name: "Auto-collect (0.16.0)", goal: "New files of the desktop or a folder become items in a fence (ADR-049) — merged, release next", s: "doing" },
+    { id: "M27", name: "Auto-collect (0.16.0)", goal: "New files of the desktop or a folder become items in a fence (ADR-049) — released as 0.16.0", s: "done" },
     { id: "Next", name: "Next", goal: "Pre-1.0 work (code signing, first run, docs for friends) or polish from deferred minors", s: "todo" }
   ],
   versions: [
@@ -1141,6 +1142,7 @@ const HUB = {
     { v: "0.13.0", s: "done", scope: "Element sizes (M24): any element 1–4 × 1–4 cells via Size ▸, bigger icons and covers, gaps filled; per fence Flow (packed) or Free (fixed positions, drops on the cell under the pointer). Released 2026-10-05; the installed 0.12.1 updated itself." },
     { v: "0.14.0", s: "done", scope: "Widgets (M25): Clock (seconds, date line; follows Windows' time format), Date page, System stats (CPU, RAM, GPU, C: as bars) in any fence at any size; idle while unseen (0.016 % CPU measured). Released 2026-10-05; the installed 0.13.0 updated itself." },
     { v: "0.15.0", s: "done", scope: "Folder panels (M26): a folder as Details / List / Icons inside any fence, browsing in, header sort, Fill fence; folder views became panels (snapshot first). Released 2026-10-05; the installed 0.14.0 updated itself." },
+    { v: "0.16.0", s: "done", scope: "Auto-collect rules (M27): new files of the desktop or a folder become items in a fence, by kind or pattern; removed stays removed; catch-up at start. Released 2026-10-05; the installed 0.15.0 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1255,6 +1257,7 @@ const HUB = {
     ["Element sizes and a Flow / Free grid", "—", "0.13", "M24", "done", "1–4 × 1–4 cells, Size ▸ picker, Layout ▸ per fence (ADR-046)", "extra"],
     ["Widgets: clock, date, system stats", "—", "0.14", "M25", "done", "Any size; idle while unseen (ADR-047)", "extra"],
     ["Folder panels: Details / List / Icons, browse in, Fill fence", "3+ (Portals)", "0.15", "M26", "done", "Replaces folder views (ADR-048)", "extra"],
+    ["Auto-collect rules: desktop or a folder, by kind or pattern", "Fences rules (v1-era: moved files)", "0.16", "M27", "done", "Never moves files; items only (ADR-049)", "extra"],
     ["Store / Start apps as items", "—", "0.10", "M19", "done", "App list (Add item… → An app…) or a drag from Start; Missing when uninstalled (ADR-042)", "extra"],
     ["Add from desktop…", "—", "0.10", "M19", "done", "Desktop grouped into Games / Apps / Folders and files / Web links, each into a fence (ADR-042)", "extra"],
     ["Bulk fix of missing items", "—", "0.10", "M19", "done", "After one Locate…, the others from the same old place; undo from the tray (ADR-042)", "extra"],
@@ -1407,7 +1410,7 @@ const HUB = {
     { date: "2026-10-05", topic: "M24 element sizes → 0.13.0", done: "You chose sizes first. Pure Core grid + WPF panel, prototype probed on a copy of your data, verified plan, native build, Opus review fixes, live check 14/15 (screenshots sent), merged locally, released — your 0.12.1 updated itself.", next: "Widgets or the folder panel" },
     { date: "2026-10-05", topic: "M25 widgets → 0.14.0", done: "You picked Clock, Date and System stats. Prototype probed on a copy of your data, verified plan, native build, Opus review fixes, live check 11/13 (screenshots sent), merged locally, released — your 0.13.0 updated itself (on exit; the scripted Restart click was blocked by an elevated Task Manager).", next: "The folder panel element" },
     { date: "2026-10-05", topic: "M26 folder panels (merged)", done: "Panels replace folder views. Prototype probed on a copy of your data (you paused the first run), verified plan, native build, Opus review fixes (606 tests), live check AL (a tall panel's wheel fixed), merged locally.", next: "Auto-collect rules or pre-1.0 work" },
-    { date: "2026-10-05", topic: "M27 auto-collect (merged)", done: "You chose auto-collect; prototype probed with a test folder; verified plan; native build; Opus review fixes (633 tests); live check AM; merged locally.", next: "Release 0.16.0" }
+    { date: "2026-10-05", topic: "M27 auto-collect (merged)", done: "You chose auto-collect; prototype probed with a test folder; verified plan; native build; Opus review fixes (633 tests); live check AM; merged locally.", next: "Pre-1.0 work or polish" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1917,7 +1920,10 @@ const HUB = {
     ["6d48b3d", "feat: added auto-collect rules to fences: watched folders, the rules dialog and catch-up"],
     ["7d5bd38", "docs: described auto-collect rules in ADR-049, architecture, features, checklist AM and the M27 research note"],
     ["5d46bdd", "fix: fixed the M27 review findings: catch-up per desktop folder, a 2 s settle against rename duplicates and bursts, restores start rules anew, names-only watching, the desktop chosen as a folder"],
-    ["35bc8e6", "docs: added the M27 live check results"]
+    ["35bc8e6", "docs: added the M27 live check results"],
+    ["d0e9293", "docs: recorded M27 merged and refreshed the hub"],
+    ["bbd8878", "chore: bumped the version to 0.16.0"],
+    ["2692f96", "docs: marked the 0.16.0 release as approved"]
   ]
 };
 /* ===== END HUB DATA ===== */
