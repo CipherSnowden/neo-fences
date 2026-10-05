@@ -52,8 +52,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check TEST-CHECKLIST AK 11/13 (AK4 12/24-hour and AK13 time zone by hand later); merged to main
   - [x] Released 0.14.0 on 2026-10-05 (the installed 0.13.0 updated itself)
   - Deferred minors: in `research/m25-widgets.md`
-- [ ] Later (the user's vision 2026-10-05: a fence holds *elements*; kinds stay in code): a folder panel element (a folder in a list / detailed view inside a fence), widgets (clock, calendar), element sizes
-- [ ] Later (user idea 2026-10-05): **item sizes** — one virtual item can take 1×1, 1×2, 2×1, 2×2 … cells in its fence (a grid layout instead of the wrap panel).
+- [~] **M26 — 0.15.0: the folder panel element** (a folder as Details / List / Icons inside any fence; replaces folder-view fences) — claimed by session 2026-10-05 folder-panel
 - [ ] Later — auto-collect rules (the other half of dynamic collections)
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
