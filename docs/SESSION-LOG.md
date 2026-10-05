@@ -545,3 +545,7 @@ fence found and fixed. Merged to main.
 **Decisions:** ADR-044. The user: no automatic recovery checks for a stick (AG8/AG9 skipped) — "Folder not available"
 and Refresh cover it. The user asked for screenshots during tests (saved as feedback).
 **Next:** release 0.11.0 when the user says so; deferred minors in `research/m21-folder-views.md`.
+**Released:** 0.11.0 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.10.1 updated itself to
+0.11.0 in 2 s, config and items unchanged, plain restart back on GitHub updates), published with a plain first line; hub
+refreshed. **Next candidate (user idea):** one kind of fence — items, games and folder views as per-fence settings; keep
+Fence.Kind in code for later.

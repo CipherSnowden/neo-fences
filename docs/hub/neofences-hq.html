@@ -786,17 +786,24 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "953846d",
-  phase: "0.10.1 — small fixes",
-  current: "0.10.1 RELEASED and installed (your 0.10.0 updated itself): the deferred M19 minors fixed · next: your pick (dynamic collections later)",
+  commit: "acc50b6",
+  phase: "0.11.0 — folder views",
+  current: "0.11.0 RELEASED and installed (your 0.10.1 updated itself): folder views — a fence shows one folder live, read-only · next candidate: one kind of fence with per-fence settings (your idea)",
   waiting: [
-    "NEW in 0.10.1 — programs added from the app list show readable names (\"7-Zip File Manager\", not a long ID) and Shift+right-click gives Windows' own menu for them. Add from desktop… is quick when you have a Game Library fence and puts This PC / Control Panel shortcuts under Folders and files. Fix all only leaves an undo snapshot when it fixed something.",
+    "NEW in 0.11.0 — folder views: tray or fence menu → New folder view…, or right-click a folder item → Show as folder view. The fence shows that folder live (Downloads, a games folder, a USB stick), read-only: open, copy path, Add to fence ▸, drag out as a copy. Fence menu → Folder view settings… for files/folders only, types like *.png;*.jpg, sort, only the newest N. Downloads and Screenshots start newest first; past 500 entries a \"+ N more — Open folder\" line. A missing folder says \"Folder not available\"; fence menu → Refresh lists again.",
+    "In 0.10.1 — programs added from the app list show readable names (\"7-Zip File Manager\", not a long ID) and Shift+right-click gives Windows' own menu for them. Add from desktop… is quick when you have a Game Library fence and puts This PC / Control Panel shortcuts under Folders and files. Fix all only leaves an undo snapshot when it fixed something.",
     "In 0.10.0 — Add item… → Browse ▾ → An app… lists every Start app (Store apps too), or drag an app from Start → All onto a fence. Tray or fence menu → Add from desktop… turns your desktop into fences in one dialog (add D:\\GameLibrary in Settings → Game Library so your games sort into Games). After a Locate…, NeoFences offers to fix the other missing items from the same old place; tray → Restore snapshot → Undo the last restore or fix puts them back.",
     "In 0.9.0 — virtual items: drop files, folders, apps or browser links onto a fence (right-click → Add item… works too). Each item has its own name and icon (Properties); removing an item or a fence never touches the file. Renamed targets are followed; missing ones dim with a ⚠ and offer Locate…; a pulled USB stick dims its items until it is back.",
     "Your desktop icons stay visible. Settings → \"Hide desktop icons while NeoFences runs\" hides them; they always come back (exit, crash, kill).",
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M21 · Folder views (0.11.0)", items: [
+      { t: "You chose: dynamic collections → folder views only; subfolders open in Explorer; types, files/folders only, newest N; all four uses (games, work, Downloads, USB)", s: "done" },
+      { t: "Prototype, plan with replay-verified patches, native build; Opus review: drive-root views, log once per outage, Browse on a dead share + 3 re-graded fixes (502 tests)", s: "done" },
+      { t: "Live check AG: 19 pass (stick pull / Safely Remove skipped by your choice); views from one fence stacking on one spot found and fixed; merged; released 0.11.0 — your 0.10.1 updated itself", s: "done" },
+      { t: "Next candidate (your idea): one kind of fence — items, games and folder views as per-fence settings; the kinds stay in code for later", s: "todo" }
+    ]},
     { group: "M20 · Small fixes (0.10.1)", items: [
       { t: "You chose: small fixes only — the deferred M19 review minors; the microsecond R1 race stays as is", s: "done" },
       { t: "Fixed test-first (468 tests): bulk-fix undo only when something is fixed, readable app names + Windows menu for apps, Add from desktop reuses the game scan and skips system folders, Windows-place shortcuts sorted as folders, stale records dropped, failed checks logged", s: "done" },
@@ -1074,7 +1081,8 @@ const HUB = {
     { id: "M18", name: "Virtual items (0.9.0)", goal: "Fences hold links with their own name and icon; no file operations; target watching; native icons visible — released as 0.9.0", s: "done" },
     { id: "M19", name: "Apps, bulk fix, Add from desktop (0.10.0)", goal: "Store/Start apps as items, bulk fix of missing items with undo, Add from desktop…, the M18 reliability leftovers — released as 0.10.0", s: "done" },
     { id: "M20", name: "Small fixes (0.10.1)", goal: "The deferred M19 review minors — released as 0.10.1", s: "done" },
-    { id: "Next", name: "Next", goal: "Your pick; dynamic collections (read-only folder views, auto-collect rules) later", s: "todo" }
+    { id: "M21", name: "Folder views (0.11.0)", goal: "A fence that shows one folder live, read-only (ADR-044) — released as 0.11.0", s: "done" },
+    { id: "Next", name: "Next", goal: "Candidate (your idea): one kind of fence with per-fence settings for items, games and folder views; auto-collect rules later", s: "todo" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
@@ -1084,6 +1092,7 @@ const HUB = {
     { v: "0.9.0", s: "done", scope: "After the pivot (versions restart at 0.x; v1.x were dev builds): virtual items, separate items.json, target watching (renames followed, missing, unavailable), native icons visible with optional hide. Released and installed 2026-10-04." },
     { v: "0.10.0", s: "done", scope: "Store and Start apps as items (app list, drag from Start), bulk fix of missing items after one Locate… (undo from the tray), Add from desktop… (grouped into fences), generic icons for unreachable targets, no stalls on dead shares. Released 2026-10-05; the installed 0.9.0 updated itself." },
     { v: "0.10.1", s: "done", scope: "Small fixes (M20): readable app names and Windows' menu for apps, faster Add from desktop with a Game Library, Windows-place shortcuts sorted as folders, bulk-fix undo only when something is fixed, stale records dropped. Released 2026-10-05; the installed 0.10.0 updated itself." },
+    { v: "0.11.0", s: "done", scope: "Folder views (M21): a fence shows one folder live, read-only — types, files/folders only, newest N, kept sort, 500 cap with + N more, not available / Refresh, follows the folder's rename; Show as folder view on folder items. Released 2026-10-05; the installed 0.10.1 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1197,11 +1206,12 @@ const HUB = {
     ["Store / Start apps as items", "—", "0.10", "M19", "done", "App list (Add item… → An app…) or a drag from Start; Missing when uninstalled (ADR-042)", "extra"],
     ["Add from desktop…", "—", "0.10", "M19", "done", "Desktop grouped into Games / Apps / Folders and files / Web links, each into a fence (ADR-042)", "extra"],
     ["Bulk fix of missing items", "—", "0.10", "M19", "done", "After one Locate…, the others from the same old place; undo from the tray (ADR-042)", "extra"],
-    ["Dynamic collections (folder views, auto-collect rules)", "3+", "M20", "—", "todo", "Replaces Portals and Rules (ADR-040)", "parity"],
+    ["Folder views (read-only live folder fences)", "3+", "M21", "0.11", "done", "ADR-044; replaces Portals", "parity"],
+    ["Auto-collect rules", "3+", "later", "—", "todo", "Replaces Rules (ADR-040)", "parity"],
     ["Fences holding the desktop's own icons (Takeover)", "1+", "—", "M2", "parked", "ADR-040: fences hold virtual items instead", "parity"],
     ["Inbox / default fence for new items", "—", "—", "M2", "parked", "No auto-fill (ADR-040)", "extra"],
-    ["Folder Portals", "3+", "—", "M4", "parked", "Later as dynamic collections (M20)", "parity"],
-    ["Rules auto-sort", "3+", "—", "M11", "parked", "Later as auto-collect rules (M20)", "parity"],
+    ["Folder Portals", "3+", "—", "M4", "parked", "Came back read-only as folder views (M21, ADR-044)", "parity"],
+    ["Rules auto-sort", "3+", "—", "M11", "parked", "Later as auto-collect rules", "parity"],
     ["Search palette across all fences", "—", "—", "M15", "parked", "Built, never merged; in the local history bundle", "extra"],
     ["Desktop pages", "3+", "v2", "—", "todo", "", "parity"],
     ["Desktop icon colour tint", "6", "v2", "—", "todo", "", "parity"],
@@ -1252,7 +1262,8 @@ const HUB = {
     { id: "ADR-040", t: "The pivot: fences hold virtual items; no file operations", s: "Accepted", d: "Fences hold links (files, folders, apps, websites) with their own name and icon; NeoFences never modifies, moves, renames or deletes user files; native icons visible, optional hide; Takeover, Portals, Rules and item file actions parked; versions restart at 0.x; GitHub repo reset.", c: "Organizing no longer tidies the real desktop; parked features return later as dynamic fences." },
     { id: "ADR-041", t: "Items in their own items.json; saves never prune item lists", s: "Accepted, amended in M18", d: "Config (schema 5) and virtual items live in separate files with the same safe store (atomic write, .bak, daily backups, corrupt recovery, read-only for newer schemas). Amended after review: saves never drop item lists, so a fallback config never costs items.", c: "Two files can disagree after a crash in between: the config is written first, an unused list stays harmless." },
     { id: "ADR-042", t: "0.10.0: Store apps as items, bulk fix with an undo snapshot, Add from desktop", s: "Accepted", d: "App items are shell:AppsFolder\\<AppUserModelID> (opened through Explorer, Missing when uninstalled; from an app list or dragged from Start). After a Locate…, the other missing or unavailable items under the same old folder are offered when their files exist at the new place; Fix saves a snapshot in the restore slot first. Add from desktop groups the desktop (Games / Apps / Folders and files / Web links) into fences; items point at the desktop entries.", c: "App items take no arguments or run as admin; one undo slot for restores and fixes; deleting a desktop shortcut later makes its item Missing." },
-    { id: "ADR-043", t: "The name stays NeoFences", s: "Accepted", d: "The product, executable, folders and code keep the name NeoFences; a personal project for now; revisited only if it is ever distributed more widely. Supersedes ADR-009.", c: "No rename work; the trademark question stays a listed risk." }
+    { id: "ADR-043", t: "The name stays NeoFences", s: "Accepted", d: "The product, executable, folders and code keep the name NeoFences; a personal project for now; revisited only if it is ever distributed more widely. Supersedes ADR-009.", c: "No rename work; the trademark question stays a listed risk." },
+    { id: "ADR-044", t: "Folder views: fences that show one folder live, read-only", s: "Accepted", d: "A fence is items, the Game Library, or a folder view (Fence.View: path, show, sort, newest, patterns; schema stays 5). NeoFences never writes to the folder: drops refused, no rename/delete in its menu (Windows' Shift+right-click menu stays). Subfolders open in Explorer; 500 cap; listing reuses the Library's FolderLister.", c: "Two watchers per view, no limit on views; auto-collect rules later." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1332,7 +1343,8 @@ const HUB = {
     { date: "2026-10-04", topic: "The pivot (ADR-040) and the reset", done: "You rethought the product: fences hold virtual items, never file operations; native icons visible; versions restart at 0.x; GitHub reset to one commit (0.8.0); the installed build removed (data backed up).", next: "M18 virtual items" },
     { date: "2026-10-04", topic: "M18 virtual items → 0.9.0", done: "Spec (items in their own items.json), plan, inline build, Opus review fixes, live check with you (32/32, five bugs fixed incl. a stick pulled without Safely remove), merged, released and installed 0.9.0. Then: this hub rewritten for virtual items, CI actions on v5, test files deleted.", next: "Use 0.9.0; name + signing before 1.0.0; then M19" },
     { date: "2026-10-05", topic: "M19 apps, bulk fix, Add from desktop → 0.10.0", done: "You went straight to 0.10.0 (name stays NeoFences). Prototype with live probes, a plan of replay-verified patches, native build, Opus review fixes, live check with you (29/30), merged, released — your installed 0.9.0 updated itself to 0.10.0.", next: "M20: deferred minors, dynamic collections" },
-    { date: "2026-10-05", topic: "M20 small fixes → 0.10.1", done: "You picked small fixes only. The 8 deferred M19 minors fixed test-first (one left as is by your choice), live check AF 4/4 while the PC was in my care, merged, released — your installed 0.10.0 updated itself to 0.10.1.", next: "Your pick; dynamic collections later" }
+    { date: "2026-10-05", topic: "M20 small fixes → 0.10.1", done: "You picked small fixes only. The 8 deferred M19 minors fixed test-first (one left as is by your choice), live check AF 4/4 while the PC was in my care, merged, released — your installed 0.10.0 updated itself to 0.10.1.", next: "Your pick; dynamic collections later" },
+    { date: "2026-10-05", topic: "M21 folder views → 0.11.0", done: "You picked folder views. Prototype, verified plan, native build, Opus review fixes, live check (19 pass, screenshots sent), stacking bug found and fixed, merged, released — your installed 0.10.1 updated itself to 0.11.0.", next: "Candidate: one kind of fence with per-fence settings (your idea)" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1764,7 +1776,20 @@ const HUB = {
     ["cbdb7dc", "docs: described 0.10.1 and added checklist section AF"],
     ["27705d7", "docs: added the 0.10.1 live check results"],
     ["667cad4", "chore: bumped the version to 0.10.1"],
-    ["953846d", "docs: recorded M20 done and merged, release 0.10.1 next"]
+    ["953846d", "docs: recorded M20 done and merged, release 0.10.1 next"],
+    ["101521b", "docs: claimed M21 (0.11.0 folder views)"],
+    ["d7ecf90", "docs: added the M21 folder views design spec"],
+    ["2631f26", "docs: added the M21 folder views implementation plan"],
+    ["2d50d01", "feat: added folder views to the core: the view model, selection, patterns, defaults and status"],
+    ["b3a6d6c", "feat: added the Downloads and Screenshots known folders to the shell layer"],
+    ["93601dc", "feat: added folder view fences that show one folder live and read-only"],
+    ["3d3cbe2", "docs: described folder views in ADR-044, architecture, features, checklist AG and the M21 research note"],
+    ["cc384bd", "fix: fixed the M21 review findings: drive-root views, one log line per outage, Browse on a dead share, settings after a restore, view enum typos, known-folder failures"],
+    ["bd45f40", "fix: fixed folder views made from one fence stacking on the same spot"],
+    ["45cad72", "docs: added the M21 live check results"],
+    ["14d135b", "docs: recorded M21 done and merged, release 0.11.0 next"],
+    ["7645ef0", "chore: bumped the version to 0.11.0"],
+    ["acc50b6", "docs: marked the 0.11.0 release as approved"]
   ]
 };
 /* ===== END HUB DATA ===== */
