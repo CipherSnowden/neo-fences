@@ -26,8 +26,10 @@ Milestone details and exit criteria: spec §9.
   - [x] Final Opus review "with fixes": dead-share probes, mapped drives, app answers, quoted app launch, Locate owner guard fixed (460 tests); minors deferred (`research/m19-apps-relocate-desktop-fill.md`)
   - [x] Live check TEST-CHECKLIST AE (29/30; AE25 needs a mapped drive) + AD2/AD8/AD14/AD18; merged to main, version 0.10.0
   - [x] Release 0.10.0: main pushed (CI green) → tag v0.10.0 → draft → install check (the installed 0.9.0 updated itself) → published 2026-10-05
-- [~] **M20 — 0.10.1: the deferred M19 review minors** (bounded; design agreed in chat 2026-10-05; the R1 microsecond race stays as is) — claimed by session 2026-10-05 m20-small-fixes
-- [ ] M20 — dynamic collections (read-only folder views, auto-collect rules) — later
+- [ ] **M20 — 0.10.1: the deferred M19 review minors** (bounded; design agreed in chat 2026-10-05; the R1 microsecond race stays as is)
+  - [x] Fixes test-first (468 tests); live check TEST-CHECKLIST AF 4/4 (+ AF5 by reading); merged to main, version 0.10.1
+  - [ ] Release 0.10.1 (the user approved the whole sequence: push → CI → tag → draft → install check as an update from 0.10.0 → publish → hub)
+- [ ] Later — dynamic collections (read-only folder views, auto-collect rules)
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot

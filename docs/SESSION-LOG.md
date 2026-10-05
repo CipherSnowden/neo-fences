@@ -516,3 +516,16 @@ back as 0.10.0 in 2 s with its data, schema 5 and startup entry unchanged (the r
 switch: restarted plainly so it checks GitHub again); a plain first line added to the notes; published.
 **Next:** M20 (the deferred M19 minors, dynamic collections); 1.0.0 for friends when wanted (code signing then).
 **Open:** the deferred minors in `research/m19-apps-relocate-desktop-fill.md`; AE25 (a mapped network drive) not run.
+
+## 2026-10-05 — M20 small fixes (0.10.1)
+
+**Done:** the user picked "small fixes only" for M20: the deferred M19 review minors as a bounded change (design agreed in
+chat, no spec/plan). Fixed test-first (8 new Core tests, 468): the bulk fix writes its undo snapshot only when something
+is fixed ("1 item"/"N items"); programs from the app list get readable names (`ItemKinds.AppName`) and Windows' menu
+(built from `shell:AppsFolder`); Add from desktop reuses the Game Library's last scan and never counts a drive root or a
+system folder as a game folder (`DesktopSorting.UsableGameFolders`); shortcuts to Windows places and `file:///` links sort
+as folders and files (`ShellLinks.ShellTargetOf`); stale records dropped after a restore and when a check outlives its
+item; failed background checks logged. The R1 microsecond race was left as is by the user's choice. Live check AF 4/4 run
+while the PC was unattended (installed data backed up and restored). Merged to main, version 0.10.1.
+**Decisions:** none new (bounded fixes within ADR-042).
+**Next:** release 0.10.1 (approved as one sequence); then whatever the user picks (dynamic collections later).
