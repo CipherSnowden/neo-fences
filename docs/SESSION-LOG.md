@@ -585,3 +585,6 @@ decoded at the right width, cell sizes from the first frame, bounded stored cell
 tests. Live check AJ 14/15 scripted (AJ6 by hand later). Merged locally.
 **Decisions:** ADR-046.
 **Next:** release 0.13.0 when the user says so; then widgets or the folder panel element.
+**Released:** 0.13.0 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.12.1 updated itself in
+3 s; config.json gained each fence's `layout: flow`, items unchanged; plain restart back on GitHub updates), published; hub
+refreshed.
