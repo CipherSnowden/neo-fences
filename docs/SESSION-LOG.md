@@ -598,3 +598,6 @@ clock, Windows format/time-zone changes; re-graded: safe exit, GPU recovery afte
 check AK 11/13 scripted (CPU 0.016 % with four widgets). Merged locally.
 **Decisions:** ADR-047.
 **Next:** release 0.14.0 when the user says so; then the folder panel element.
+**Released:** 0.14.0 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.13.0 downloaded the
+update; the scripted tray Restart click did not land — an elevated Task Manager left open by AK8 was in front — so it
+installed on the next exit; 0.14.0 running, data unchanged; plain restart back on GitHub updates), published; hub refreshed.
