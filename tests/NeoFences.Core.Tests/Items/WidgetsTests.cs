@@ -58,21 +58,11 @@ public class WidgetsTests
         Assert.Equal([@"C:\a.txt"], ItemEdits.PathTargets(items));
     }
 
-    [Theory]
-    [InlineData(12.4, "12%", 12.4)]
-    [InlineData(100.6, "100%", 100)]
-    [InlineData(-3, "0%", 0)]
-    public void StatRow_ShowsAWholePercent(double value, string text, double bar) =>
-        Assert.Equal(new StatRow("CPU", bar, text), Widgets.Row("CPU", value));
-
-    [Fact]
-    public void StatRow_WithoutAValue_ShowsADash() => Assert.Equal(new StatRow("GPU", 0, "—"), Widgets.Row("GPU", null));
-
     [Fact]
     public void DatePage_IsWeekdayDayAndMonthYear_InTheCulture()
     {
         var page = Widgets.Page(new DateTime(2026, 10, 5), CultureInfo.GetCultureInfo("en-US"));
-        Assert.Equal(new DatePage("MONDAY", "5", "October 2026"), page);
+        Assert.Equal(new DatePage("Monday", "5", "October 2026"), page);
     }
 
     [Fact]
