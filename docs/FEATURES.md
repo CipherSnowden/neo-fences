@@ -31,7 +31,7 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Missing / unavailable targets | — | 0.9 | M18 | done | watched (≤ 64 folders), renames followed, Locate… / Remove, per-fence Refresh; a generic icon for their type (0.10) |
 | Bulk fix of missing items | — | 0.10 | M19 | done | after one Locate…, "Fix N more items?" for the others from the same old place; undo from the tray (ADR-042) |
 | Rubber-band selection | 1+ | v1 | M3 | done | M3b; Ctrl adds |
-| Folder Portals → folder views | 3+ | 0.11 | M21 | done | ADR-044: read-only (no drop into the folder, no rename/delete from NeoFences' menu); subfolders open in Explorer |
+| Folder Portals → folder views → folder panels | 3+ | 0.11 / 0.15 | M21, M26 | done | ADR-044, ADR-048: read-only (no drop into the folder, no rename/delete from NeoFences' menu); since 0.15 a panel element in any fence, subfolders browse inside it |
 | Sort (name/type/date) | 2+ | v1 | M4 | done | one time; by the names shown (0.9) |
 | Draw fence by right-drag on desktop | 1+ | v1 | M5 | done | S2 keeps the plain right-click menu (ADR-020) |
 | Quick-hide (double-click desktop) | 1+ | v1 | M5 | done | fences + desktop icons (user choice); a double-click on a native icon opens it |
@@ -65,10 +65,11 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Blur tint preference (lighter/darker) | v1.7 (M14) | done | background strength slider, one value per Windows tone (ADR-036) |
 | Search palette across all fences | — | parked | built on branch `m15-search-palette` (local history bundle only), not merged |
 | Game Library (Steam/Epic/GOG/Ubisoft Connect/EA, cover art) | v1.5 | done | launchers, Xbox, game folders, Desktop game shortcuts (ADR-032); since 0.12 games are items in any fence (cover tile or icon, Add games…, new games go to a chosen fence; ADR-045) |
-| One kind of fence: any item in any fence, its look from its kind and settings | 0.12 (M22) | done (games, sizes) | ADR-045, ADR-046; next: a folder panel element, widgets (clock, calendar) |
+| One kind of fence: any item in any fence, its look from its kind and settings | 0.12 (M22) | done (games, sizes, widgets, folder panels) | ADR-045–ADR-048; later: auto-collect rules |
 | Element sizes 1–4 × 1–4 and a fence grid (Flow packed / Free fixed positions) | 0.13 (M24) | done | ADR-046; Size ▸ picker, Layout ▸ per fence |
 | Widgets: clock, date, system stats (CPU, RAM, GPU, C:) | 0.14 (M25) | done | ADR-047; any size; idle while unseen |
-| Folder views: types, files/folders only, newest N, live sort, "+ N more" | 0.11 (M21) | done | ADR-044; Downloads/Screenshots start newest first |
+| Folder views: types, files/folders only, newest N, live sort, "+ N more" | 0.11 (M21) | done | ADR-044; Downloads/Screenshots start newest first; panels since 0.15 |
+| Folder panel element: Details / List / Icons, header sort, browse in (Back / Up / Home), Fill fence | 0.15 (M26) | done | ADR-048; folder views migrate to panels |
 | Auto-collect rules (the other half of dynamic collections) | later | — | replaces Rules (ADR-040) |
 | Theme packs: "Nanosuit" (Crysis HUD), "Animus" (Assassin's Creed) | v2 | — | |
 | Custom Win11-style compact context menu | v2 | — | |

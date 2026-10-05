@@ -644,3 +644,21 @@ Added after the M19 final review:
 | AK11 | A rolled-up fence holding a clock: hover it open | the clock shows the current time at once and keeps ticking while open |
 | AK12 | Select a widget and an app → right-click → Open | the app opens; no Windows "get an app for this link" prompt |
 | AK13 | Change the time zone (or the time) in Windows' settings | the clock follows at once |
+
+## AL — 0.15.0 the folder panel element (M26)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AL1 | Start 0.15.0 over data with a folder view (Downloads) | the fence holds one panel filling it, Icons look, same entries and order; no second title; a "Before folder views became panels" snapshot |
+| AL2 | Fence menu → Add folder panel… (Flow fence); again in a Free fence | a 4 × 4 Details panel at the end / the first free spot |
+| AL3 | Panel menu → Look ▸ Details, List, Icons; Size ▸ 2 × 3 | each look; at 1–2 cells wide Details shows Name and Date only |
+| AL4 | Click the Date modified header, then again; Name; Size | newest first, then oldest first; folders first by name; biggest first |
+| AL5 | Double-click a subfolder; Back; Up; Home; Backspace; Alt+Up | browses in; the header shows the path below the folder; Up never goes above it |
+| AL6 | Panel alone in a fence → Fill fence; resize the fence; Add item… | fills and follows the size; with the new item it sits on 4 × 4 cells again |
+| AL7 | Folder item → Show as folder panel; panel → Show as icon | a panel in place; the folder icon again |
+| AL8 | Drop a file from Explorer onto a panel; onto empty space beside it | refused over the panel; an item beside it |
+| AL9 | Drag entries out to Explorer; Add to fence ▸; Shift+right-click an entry | copies (never moved); items in that fence; Windows' menu under its warning line |
+| AL10 | A panel of the pendrive: Safely Remove while shown; plug back in | the drive ejects; "Folder not available"; back by itself |
+| AL11 | A game in front (game mode); change files in the folder; leave the game | no listing during the game; current after |
+| AL12 | NeoFences' CPU with two panels shown, idle 30 s | well under 0.1 % |
+| AL13 | Snapshot from before 0.15.0 (with a folder view) → restore | the view comes back as a filling panel |

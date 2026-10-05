@@ -1192,7 +1192,7 @@ project for now; the name is revisited only if it is ever distributed more widel
 **Consequences.** No rename work; the trademark question stays a listed risk on the hub.
 
 ## ADR-044 — Folder views: fences that show one folder live, read-only
-**Date:** 2026-10-05 · **Status:** Accepted · **Refines:** ADR-040 (Portals parked "for later as dynamic collections")
+**Date:** 2026-10-05 · **Status:** Accepted; the folder-view *fence* superseded by ADR-048 (0.15.0: a folder panel element; the read-only rules stand) · **Refines:** ADR-040 (Portals parked "for later as dynamic collections")
 
 **Context.** ADR-040 parked Portals and Rules for "dynamic collections". The user chose folder views first (M21, 0.11.0):
 game and app folders, work folders, Downloads and Screenshots, and USB sticks, each shown live in a fence.
@@ -1273,3 +1273,28 @@ system stats (CPU, RAM, GPU, disk) as bars.
 
 **Consequences.** Measured 0.003 % of the user's CPU with three widgets shown. A widget kind a newer NeoFences adds reads
 as a plain "missing" item in an older one.
+## ADR-048 — The folder panel element (folder views become panels)
+**Date:** 2026-10-05 · **Status:** Accepted · **Supersedes:** ADR-044's folder-view fence (its read-only rules stand) ·
+**Continues:** ADR-045 (one kind of fence), ADR-046 (element sizes), ADR-047 (elements beside items)
+
+**Context.** The user's vision: a fence holds elements; "show a specified folder in detailed view" was the last one named.
+Folder views (M21) were a fence kind of their own. The user chose: the panel replaces folder views; looks Details, List
+and Icons; double-clicking a subfolder browses inside the panel; sizes 1–4 × 1–4 cells or "Fill fence".
+
+**Decision.**
+- A panel is a folder item with `VirtualItem.Panel` (`FolderPanel`: look, show, patterns, newest N, sort + direction) and
+  optionally `Fill`. Being a path item, it gets missing state, Locate…, the bulk fix, rename-follow, drives coming and
+  going, copies and snapshots for free. Default span 4×4.
+- "Fill fence" works while the panel is the fence's only element; beside anything else it sits on cells (a size pick
+  turns it off). The fence list then does not scroll; the panel does.
+- Browsing (Back / Up / Home, Backspace, Alt+Up) lives in memory; each start and Home show the panel's own folder. Up
+  never goes above it.
+- Details columns Name, Date modified, Type, Size (Name and Date at 1–2 cells wide); a header click sorts (again:
+  reversed). Name and Type keep folders first; Date and Size mix them.
+- Folder views migrate once at start (and after restoring an older snapshot): a "Before folder views became panels"
+  snapshot, then each view fence holds one filling Icons panel with the view's settings; items are saved before the
+  config, so a cut-short save only repeats the migration. `Fence.View` / `FenceKind.View` stay in the code.
+- Read-only as ADR-044: drops over a panel are refused; its entry menu is NeoFences' safe one (Shift: Windows' menu).
+
+**Consequences.** One lister per panel (hidden tabs keep listing, game mode pauses them); rows are virtualized and icons
+load as rows come into view; at most 500 entries, then "+ N more". An older NeoFences shows a panel as a plain folder icon.
