@@ -10,7 +10,8 @@ public sealed record WidgetOptions
 {
     public bool Seconds { get; init; }
     public bool Date { get; init; }
-    public bool Fahrenheit { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Fahrenheit { get; init; } // M32: written only when set (clocks never carry it)
 }
 
 /// <summary>
@@ -101,12 +102,19 @@ public static class Widgets
 
     public static double Fahrenheit(double celsius) => celsius * 9 / 5 + 32;
 
-    /// <summary>The clock's date line (M31): the weekday, then the day and month in the culture's order ("Monday, 5 October").</summary>
-    public static string ClockDateLine(DateTime date, CultureInfo culture) =>
-        $"{culture.DateTimeFormat.GetDayName(date.DayOfWeek)}, {date.ToString(culture.DateTimeFormat.MonthDayPattern, culture)}";
+    /// <summary>
+    /// The clock's date line (M31): the weekday and the day with its month — "Monday, 5 October"; where the culture's long
+    /// date puts the weekday last (ja, zh, ko), after it: "10月5日 月曜日" (M32).
+    /// </summary>
+    public static string ClockDateLine(DateTime date, CultureInfo culture)
+    {
+        var weekday = culture.DateTimeFormat.GetDayName(date.DayOfWeek);
+        var monthDay = date.ToString(culture.DateTimeFormat.MonthDayPattern, culture);
+        return culture.DateTimeFormat.LongDatePattern.TrimEnd().EndsWith("dddd", StringComparison.Ordinal) ? $"{monthDay} {weekday}" : $"{weekday}, {monthDay}";
+    }
 
     public static DatePage Page(DateTime date, CultureInfo culture) =>
-        new(culture.DateTimeFormat.GetDayName(date.DayOfWeek),date.Day.ToString(culture), date.ToString(culture.DateTimeFormat.YearMonthPattern, culture)); // M28: the culture's own order (ja, zh, ko, hu)
+        new(culture.DateTimeFormat.GetDayName(date.DayOfWeek), date.Day.ToString(culture),date.ToString(culture.DateTimeFormat.YearMonthPattern, culture)); // M28: the culture's own order (ja, zh, ko, hu)
 
     /// <summary>
     /// GPU use like Task Manager's (M28, M25 review minor): the 3D engines' readings summed per adapter (the instance's
@@ -119,13 +127,31 @@ public static class Widgets
     /// memory in use (an integrated GPU has little), with its use; without memory readings, the busiest one as before.
     /// </summary>
     public static (string Adapter, double Percent) MainGpu(IReadOnlyList<(string Instance, double Value)> engines,
-        IReadOnlyList<(string Instance, double Bytes)> dedicated)
+        IReadOnlyList<(string Instance, double Bytes)> dedicated, string? previousAdapter = null)
     {
         if (dedicated.Count == 0) return BusiestGpu(engines);
-        var main = dedicated.GroupBy(memory => AdapterOf(memory.Instance), StringComparer.OrdinalIgnoreCase)
-            .MaxBy(adapter => adapter.Sum(memory => memory.Bytes))!.Key;
+        var adapters = dedicated.GroupBy(memory => AdapterOf(memory.Instance), StringComparer.OrdinalIgnoreCase)
+            .Select(adapter => (adapter.Key, MemoryMb: adapter.Sum(memory => memory.Bytes) / (1024.0 * 1024))).ToList();
+        var main = StickyGpu(previousAdapter, adapters)!; // M32: no flip on a hybrid laptop
         var percent = engines.Where(engine => string.Equals(AdapterOf(engine.Instance), main, StringComparison.OrdinalIgnoreCase)).Sum(engine => engine.Value);
         return (main, Math.Min(100, percent));
+    }
+
+    /// <summary>How much more video memory another GPU must use before the choice moves to it (M32): twice and this many MB.</summary>
+    public const double SwitchGpuMb = 1024;
+
+    /// <summary>
+    /// The main graphics card, sticky (M32): the previous choice stays unless another GPU uses at least twice its video
+    /// memory and <see cref="SwitchGpuMb"/> more — a hybrid laptop's card idling at 0 MB beside a built-in GPU holding a few
+    /// hundred does not flip. Without a previous choice (or when it is gone), the one using the most.
+    /// </summary>
+    public static string? StickyGpu(string? previous, IReadOnlyList<(string Key, double MemoryMb)> candidates)
+    {
+        if (candidates.Count == 0) return null;
+        var best = candidates.MaxBy(candidate => candidate.MemoryMb);
+        var kept = candidates.FirstOrDefault(candidate => string.Equals(candidate.Key, previous, StringComparison.OrdinalIgnoreCase));
+        if (previous is null || kept.Key is null) return best.Key;
+        return best.MemoryMb >= 2 * kept.MemoryMb && best.MemoryMb >= kept.MemoryMb + SwitchGpuMb ? best.Key : kept.Key;
     }
 
     /// <summary>The busiest adapter (its "luid_…" key) and its use (M31: its temperature is read from the same adapter).</summary>

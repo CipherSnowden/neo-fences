@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace NeoFences.Core.Items;
 
 /// <summary>What an outside monitor publishes (M31, ADR-052): the CPU temperature and the main graphics card's use and temperature.</summary>
-public sealed record SensorReading(string Source, double? CpuTemp, double? Gpu, double? GpuTemp);
+public sealed record SensorReading(string Source, double? CpuTemp, double? Gpu, double? GpuTemp, string? GpuKey = null);
 
 /// <summary>
 /// The shared-memory layouts of MSI Afterburner and HWiNFO64 (M31, ADR-052), parsed from a copy of the bytes: pure, so a
@@ -23,7 +23,7 @@ public static partial class SensorFormats
     private const uint AfterburnerSignature = 0x4D41484D; // "MAHM"; 0xDEAD once Afterburner has closed
     private const int NameLength = 260, ValueAt = 5 * NameLength; // szSrcName … szRecommendedFormat, then float data
 
-    public static SensorReading? Afterburner(ReadOnlySpan<byte> memory)
+    public static SensorReading? Afterburner(ReadOnlySpan<byte> memory, string? previousGpu = null)
     {
         if (memory.Length < 20 || U32(memory, 0) != AfterburnerSignature) return null;
         var headerSize = U32(memory, 8);
@@ -51,9 +51,9 @@ public static partial class SensorFormats
                 _ => known with { Memory = value },
             };
         }
-        var main = MainGpu(gpus.Select(pair => (pair.Key, pair.Value.Memory)));
+        var main = MainGpu(gpus.Select(pair => (pair.Key, pair.Value.Memory)), previousGpu);
         var chosen = main is { } key ? gpus[key] : default;
-        return new SensorReading("MSI Afterburner", cpuTemp, chosen.Usage, chosen.Temp);
+        return new SensorReading("MSI Afterburner", cpuTemp, chosen.Usage, chosen.Temp, main?.ToString(System.Globalization.CultureInfo.InvariantCulture));
     }
 
     [GeneratedRegex("^GPU(\\d*) (usage|temperature|memory usage)$")]
@@ -68,7 +68,7 @@ public static partial class SensorFormats
     /// <summary>The CPU temperature, best first: AMD's control/die value, Intel's package, then fallbacks.</summary>
     private static readonly string[] CpuTempLabels = ["CPU (Tctl/Tdie)", "CPU Package", "CPU Die (average)", "CPU (Tctl)", "Core Max", "CPU"];
 
-    public static SensorReading? Hwinfo(ReadOnlySpan<byte> memory)
+    public static SensorReading? Hwinfo(ReadOnlySpan<byte> memory, string? previousGpu = null)
     {
         if (memory.Length < 44 || U32(memory, 0) != HwinfoSignature) return null;
         var readingsAt = U32(memory, 32);
@@ -96,9 +96,9 @@ public static partial class SensorFormats
             }
         }
         double? cpuTemp = CpuTempLabels.FirstOrDefault(cpu.ContainsKey) is { } best ? cpu[best] : null;
-        var main = MainGpu(gpus.Where(pair => pair.Value.Temp is not null || pair.Value.Usage is not null).Select(pair => (pair.Key, pair.Value.Memory)));
+        var main = MainGpu(gpus.Where(pair => pair.Value.Temp is not null || pair.Value.Usage is not null).Select(pair => (pair.Key, pair.Value.Memory)), previousGpu);
         var chosen = main is { } key ? gpus[key] : default;
-        return new SensorReading("HWiNFO", cpuTemp, chosen.Usage, chosen.Temp);
+        return new SensorReading("HWiNFO", cpuTemp, chosen.Usage, chosen.Temp, main?.ToString(System.Globalization.CultureInfo.InvariantCulture));
     }
 
     /// <summary>
@@ -108,19 +108,21 @@ public static partial class SensorFormats
     public static SensorReading? Merge(SensorReading? first, SensorReading? second)
     {
         if (first is null || second is null) return first ?? second;
-        var merged = new SensorReading(first.Source, first.CpuTemp ?? second.CpuTemp, first.Gpu ?? second.Gpu, first.GpuTemp ?? second.GpuTemp);
+        var merged = first with { CpuTemp = first.CpuTemp ?? second.CpuTemp, Gpu = first.Gpu ?? second.Gpu, GpuTemp = first.GpuTemp ?? second.GpuTemp };
         return merged == first ? first : merged with { Source = $"{first.Source} + {second.Source}" };
     }
 
     /// <summary>
     /// The GPU using the most video memory. A lone GPU is it; several without memory readings are left to Windows (final
-    /// review I3: the first one is often the built-in GPU).
+    /// review I3: the first one is often the built-in GPU). Sticky across readings (M32, <see cref="Widgets.StickyGpu"/>).
     /// </summary>
-    private static int? MainGpu(IEnumerable<(int Key, double? Memory)> gpus)
+    private static int? MainGpu(IEnumerable<(int Key, double? Memory)> gpus, string? previous)
     {
         var list = gpus.OrderBy(gpu => gpu.Key).ToList();
         if (list.Count == 1) return list[0].Key;
-        return list.Any(gpu => gpu.Memory is not null) ? list.MaxBy(gpu => gpu.Memory ?? -1).Key : null;
+        if (!list.Any(gpu => gpu.Memory is not null)) return null;
+        var chosen = Widgets.StickyGpu(previous, [.. list.Select(gpu => (gpu.Key.ToString(System.Globalization.CultureInfo.InvariantCulture), gpu.Memory ?? 0))]);
+        return chosen is null ? null : int.Parse(chosen, System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static uint U32(ReadOnlySpan<byte> memory, int at) => BinaryPrimitives.ReadUInt32LittleEndian(memory[at..]);
