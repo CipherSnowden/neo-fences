@@ -16,7 +16,7 @@ namespace NeoFences.App;
 /// <param name="Cell">Its stored cell (M24, Free fences).</param>
 public sealed record ShownItem(string Key, string Target, string? Name = null, ItemIcon? Icon = null, string? Note = null,
     TargetState State = TargetState.Ok, bool Tile = false, (string Path, bool IsPoster)? TileArt = null, bool IsGame = false,
-    GridSpan? Span = null, GridCell? Cell = null);
+    GridSpan? Span = null, GridCell? Cell = null, WidgetOptions? Options = null);
 
 /// <summary>One item as a fence shows it. Label and icon start as placeholders and fill in from <see cref="IconLoader"/>.</summary>
 public sealed class FenceItemView : INotifyPropertyChanged
@@ -84,6 +84,8 @@ public sealed class FenceItemView : INotifyPropertyChanged
         Tile = shown.Tile;
         TileArt = shown.TileArt;
         IsGame = shown.IsGame;
+        Widget = Widgets.Of(shown.Target); // M25
+        Options = shown.Options ?? new WidgetOptions();
         Span = shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One);
         StoredCell = shown.Cell;
         State = shown.State;
@@ -102,8 +104,53 @@ public sealed class FenceItemView : INotifyPropertyChanged
         ItemKind.Website => ItemKinds.WebsiteName(target),
         _ when ItemKinds.AppIdOf(target) is { } appId => ItemKinds.AppName(appId), // a program's id holds its path (M20)
         ItemKind.Special => "",
+        ItemKind.Widget => Widgets.NameOf(Widgets.Of(target)!.Value), // M25
         _ => Path.GetFileNameWithoutExtension(target.TrimEnd('\\')) is { Length: > 0 } name ? name : target,
     };
+
+    /// <summary>The widget this element is (M25), or null for an item.</summary>
+    public WidgetKind? Widget { get; private set { field = value; Changed(); Changed(nameof(IsWidget)); Changed(nameof(WidgetKindName)); } }
+
+    public bool IsWidget => Widget is not null;
+
+    /// <summary>"Clock", "Date" or "Stats": the template shows that layout.</summary>
+    public string WidgetKindName => Widget?.ToString() ?? "";
+
+    public WidgetOptions Options { get; private set; } = new();
+
+    /// <summary>The clock's time, or the date page's weekday (M25).</summary>
+    public string WidgetMain { get; private set { field = value; Changed(); } } = "";
+
+    /// <summary>The clock's date line, or the date page's day number.</summary>
+    public string WidgetSub { get; private set { field = value; Changed(); } } = "";
+
+    /// <summary>The date page's month and year.</summary>
+    public string WidgetFoot { get; private set { field = value; Changed(); } } = "";
+
+    public IReadOnlyList<StatRow> StatRows { get; private set { field = value; Changed(); } } = [];
+
+    /// <summary>The widget's area in DIPs: its span's cells less the cell padding (no label under a widget).</summary>
+    public double WidgetWidth { get; private set { field = value; Changed(); } } = 160;
+    public double WidgetHeight { get; private set { field = value; Changed(); } } = 84;
+
+    /// <summary>Shows the widget as of <paramref name="now"/> (M25); stats from the last reading (null rows show "—").</summary>
+    public void RenderWidget(DateTime now, System.Globalization.CultureInfo culture, NeoFences.Shell.StatsSample? stats)
+    {
+        switch (Widget)
+        {
+            case WidgetKind.Clock:
+                WidgetMain = Widgets.ClockText(now, Options.Seconds, culture);
+                WidgetSub = Options.Date ? now.ToString(culture.DateTimeFormat.LongDatePattern, culture) : "";
+                break;
+            case WidgetKind.Date:
+                var page = Widgets.Page(now, culture);
+                (WidgetMain, WidgetSub, WidgetFoot) = (page.Weekday, page.Day, page.MonthYear);
+                break;
+            case WidgetKind.Stats:
+                StatRows = [Widgets.Row("CPU", stats?.Cpu), Widgets.Row("RAM", stats?.Ram), Widgets.Row("GPU", stats?.Gpu), Widgets.Row("C:", stats?.DiskC)];
+                break;
+        }
+    }
 
     /// <summary>Its size in the fence's cells (M24).</summary>
     public GridSpan Span { get; private set; } = GridSpan.One;
@@ -131,6 +178,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
         var height = Span.Rows * cellHeight - CellPaddingY - labelHeight;
         var icon = Span == GridSpan.One ? iconDips : Math.Clamp(Math.Floor(Math.Min(width - 8, height)), iconDips, MaxIcon);
         var tileHeight = Math.Max(16, Math.Floor(Math.Min(height, (width - 4) * 1.5)));
+        (WidgetWidth, WidgetHeight) = (width, Span.Rows * cellHeight - CellPaddingY); // M25: no label under a widget
         var changed = Math.Abs(icon - IconDips) > 0.5;
         (ContentWidth, IconDips, TileWidth, TileHeight) = (width, icon, Math.Floor(tileHeight / 1.5), tileHeight);
         return changed;

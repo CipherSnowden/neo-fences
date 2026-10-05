@@ -84,6 +84,11 @@
                         <MenuItem x:Name="AddItemItem" Header="Add item…" />
                         <MenuItem x:Name="AddFromDesktopItem" Header="Add from desktop…" />
                         <MenuItem x:Name="AddGamesItem" Header="Add games…" />
+                        <MenuItem x:Name="AddWidgetItem" Header="Add widget">
+                            <MenuItem x:Name="AddClockItem" Header="Clock" />
+                            <MenuItem x:Name="AddDateItem" Header="Date" />
+                            <MenuItem x:Name="AddStatsItem" Header="System stats" />
+                        </MenuItem>
                         <MenuItem x:Name="RefreshItem" Header="Refresh" />
                         <!-- Folder views (M21): shown only on a view. -->
                         <MenuItem x:Name="OpenFolderItem" Header="Open folder" Visibility="Collapsed" />
@@ -198,6 +203,50 @@
                                             </Border>
                                         </Grid>
                                     </Border>
+                                    <!-- M25: a widget draws itself in its whole span (no icon, no label). -->
+                                    <Grid x:Name="WidgetPanel" Visibility="Collapsed" Width="{Binding WidgetWidth}" Height="{Binding WidgetHeight}"
+                                          HorizontalAlignment="Center" IsHitTestVisible="False">
+                                        <Viewbox x:Name="ClockView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding WidgetMain}" Foreground="{DynamicResource FenceTitleText}" FontSize="30" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                                                <TextBlock x:Name="ClockDate" Text="{Binding WidgetSub}" Foreground="{DynamicResource FenceText}" FontSize="11"
+                                                           HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                                            </StackPanel>
+                                        </Viewbox>
+                                        <Viewbox x:Name="DateView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding WidgetMain}" Foreground="{DynamicResource FenceText}" FontSize="11" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                                                <TextBlock Text="{Binding WidgetSub}" Foreground="{DynamicResource FenceTitleText}" FontSize="40" FontWeight="Bold"
+                                                           HorizontalAlignment="Center" Margin="0,-4,0,-4" Effect="{DynamicResource LabelShadow}" />
+                                                <TextBlock Text="{Binding WidgetFoot}" Foreground="{DynamicResource FenceText}" FontSize="11"
+                                                           HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                                            </StackPanel>
+                                        </Viewbox>
+                                        <Viewbox x:Name="StatsView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
+                                            <ItemsControl ItemsSource="{Binding StatRows}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,2">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="30" />
+                                                                <ColumnDefinition Width="80" />
+                                                                <ColumnDefinition Width="34" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="11" VerticalAlignment="Center" />
+                                                            <Border Grid.Column="1" Height="6" CornerRadius="3" Background="{DynamicResource FenceHover}" VerticalAlignment="Center">
+                                                                <Border HorizontalAlignment="Left" CornerRadius="3" Background="{DynamicResource FenceTitleText}"
+                                                                        Width="{Binding Percent, Converter={x:Static local:PercentWidth.Of80}}" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="2" Text="{Binding Text}" Foreground="{DynamicResource FenceText}" FontSize="11"
+                                                                       TextAlignment="Right" VerticalAlignment="Center" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Viewbox>
+                                    </Grid>
                                     <TextBlock x:Name="Label" Margin="0,4,0,0" Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="12"
                                                Visibility="{DynamicResource LabelVisibility}"
                                                TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
@@ -207,6 +256,24 @@
                                     <DataTrigger Binding="{Binding IsTile}" Value="True">
                                         <Setter TargetName="IconGrid" Property="Visibility" Value="Collapsed" />
                                         <Setter TargetName="Tile" Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsWidget}" Value="True">
+                                        <Setter TargetName="IconGrid" Property="Visibility" Value="Collapsed" />
+                                        <Setter TargetName="Tile" Property="Visibility" Value="Collapsed" />
+                                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                                        <Setter TargetName="WidgetPanel" Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WidgetKindName}" Value="Clock">
+                                        <Setter TargetName="ClockView" Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WidgetKindName}" Value="Date">
+                                        <Setter TargetName="DateView" Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WidgetKindName}" Value="Stats">
+                                        <Setter TargetName="StatsView" Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WidgetSub}" Value="">
+                                        <Setter TargetName="ClockDate" Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding ArtKind}" Value="Poster">
                                         <Setter TargetName="TilePoster" Property="Visibility" Value="Visible" />

@@ -47,7 +47,7 @@ public partial class ItemPropertiesWindow : Window
         ArgumentsBox.Text = item.Arguments ?? "";
         AdminBox.IsChecked = item.RunAsAdmin;
         NoteBox.Text = item.Note ?? "";
-        if (item.GameId is not null)
+        if (item.GameId is not null || item.Kind == ItemKind.Widget) // M25: a widget has no target to change
         {
             // A game item points at NeoFences' own shortcut for the game; the scan keeps it there (M22, final review I2).
             TargetBox.IsReadOnly = true;

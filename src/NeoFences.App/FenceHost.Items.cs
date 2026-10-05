@@ -28,6 +28,7 @@ public sealed partial class FenceHost
     private void OpenKey(FenceWindow window, string key)
     {
         if (window.Kind != FenceKind.Items) OpenItem(key, ownerHandle: window.Handle); // the library's and a view's key is a path (M12, M21)
+        else if (_items.Find(key) is { Kind: ItemKind.Widget } widget) OpenWidget(widget, window); // M25
         else if (_items.Find(key) is { } item) OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin);
         SetPeek(false);
     }
@@ -72,6 +73,7 @@ public sealed partial class FenceHost
     private static string DisplayName(VirtualItem item) => item.OwnName ?? item.Kind switch
     {
         ItemKind.Website => ItemKinds.WebsiteName(item.Target),
+        ItemKind.Widget => Widgets.NameOf(Widgets.Of(item.Target)!.Value), // M25
         _ when ItemKinds.AppIdOf(item.Target) is { } appId => ItemKinds.AppName(appId), // until (or when uninstalled, never) Windows names it
         _ => Path.GetFileNameWithoutExtension(item.Target.TrimEnd('\\')) is { Length: > 0 } name ? name : item.Target,
     };
@@ -115,6 +117,11 @@ public sealed partial class FenceHost
             menu.Items.Add(SizeMenu(menu, items)); // M24
             Command($"Remove {items.Count} items from fence", () => RemoveItems(window, [.. items.Select(item => item.Id)]));
         }
+        else if (items[0].Kind == ItemKind.Widget)
+        {
+            ShowWidgetMenu(window, items[0], fromKeyboard); // M25
+            return;
+        }
         else if (GameItems.IsGame(items[0]))
         {
             ShowGameItemMenu(window, items[0], fromKeyboard); // M22
@@ -153,7 +160,7 @@ public sealed partial class FenceHost
     /// </summary>
     private void ShowWindowsMenu(FenceWindow window, VirtualItem item, int screenX, int screenY)
     {
-        if (item.Kind == ItemKind.Website) return; // a website has no Windows menu
+        if (item.Kind is ItemKind.Website or ItemKind.Widget) return; // a website or a widget has no Windows menu (M25)
         Task.Run(() => TargetProbe.Check(item.Target)).ContinueWith(checking =>
         {
             if (checking.IsFaulted)

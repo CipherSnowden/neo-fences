@@ -149,6 +149,8 @@ public partial class FenceWindow : Window
     public event Action? RefreshRequested;
     /// <summary>Fence menu → "New Game Library fence" (M12).</summary>
     public event Action? NewLibraryRequested;
+    /// <summary>Fence menu → Add widget ▸ (M25).</summary>
+    public event Action<WidgetKind>? AddWidgetRequested;
     /// <summary>Fence menu → Layout ▸ Flow / Free (M24).</summary>
     public event Action<FenceLayout>? LayoutRequested;
     /// <summary>Fence menu → "Add games…" (M22).</summary>
@@ -212,6 +214,9 @@ public partial class FenceWindow : Window
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
         NewFolderViewItem.Click += (_, _) => NewFolderViewRequested?.Invoke();
         AddGamesItem.Click += (_, _) => AddGamesRequested?.Invoke();
+        AddClockItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Clock); // M25
+        AddDateItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Date);
+        AddStatsItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Stats);
         LayoutFlowItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Flow);
         LayoutFreeItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Free);
         OpenFolderItem.Click += (_, _) => OpenFolderRequested?.Invoke();
@@ -311,6 +316,7 @@ public partial class FenceWindow : Window
         AddItemItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddFromDesktopItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddGamesItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        AddWidgetItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         SortItem.Visibility = _kind == FenceKind.Library ? Visibility.Collapsed : Visibility.Visible;
         foreach (var sortItem in SortItem.Items.OfType<MenuItem>()) sortItem.IsChecked = view && Equals(sortItem.Tag, fence.View!.Sort);
         OpenFolderItem.Visibility = view ? Visibility.Visible : Visibility.Collapsed;
@@ -670,14 +676,14 @@ public partial class FenceWindow : Window
                     SizeView(_items[index]); // M24
                     _items[index].ArtPath = null; // its cover decoded again at the new tile width (final review I2)
                 }
-                if ((reload || resized) && IsLoaded) _iconLoader.Request(_items[index], PxOf(_items[index]));
+                if ((reload || resized) && IsLoaded) RequestIcon(_items[index]);
                 ApplyArt(_items[index]); // shown as a cover now, or an icon again (M22); the same art is not loaded twice
                 continue;
             }
             var view = new FenceItemView(shown);
             SizeView(view); // M24: its content for its span — before its cover is decoded at the tile's width (final review I2)
             ApplyArt(view);
-            if (IsLoaded) _iconLoader.Request(view, PxOf(view)); // before that, Loaded requests them at the right DPI (M2b review)
+            if (IsLoaded) RequestIcon(view); // before that, Loaded requests them at the right DPI (M2b review)
             _items.Insert(index, view);
         }
         UpdateEmptyHint();
@@ -718,6 +724,21 @@ public partial class FenceWindow : Window
     }
 
     private int IconSizePx => (int)Math.Round(_iconSizeDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
+
+    /// <summary>An item's icon at its own size; a widget draws itself (M25: no icon to load).</summary>
+    private void RequestIcon(FenceItemView view)
+    {
+        if (!view.IsWidget) _iconLoader.Request(view, PxOf(view));
+    }
+
+    /// <summary>Widgets show <paramref name="now"/> and the last stats reading (M25; the host's timer calls this).</summary>
+    public void UpdateWidgets(DateTime now, StatsSample? stats)
+    {
+        foreach (var view in _items.Where(view => view.IsWidget)) view.RenderWidget(now, System.Globalization.CultureInfo.CurrentCulture, stats);
+    }
+
+    /// <summary>The widget kinds this window shows now (M25: the host samples stats only when one is visible).</summary>
+    public bool ShowsWidget(WidgetKind kind) => _items.Any(view => view.Widget == kind);
 
     /// <summary>An item's icon in physical pixels: its own size for its span (M24).</summary>
     private int PxOf(FenceItemView view) => (int)Math.Round(view.IconDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
@@ -784,7 +805,7 @@ public partial class FenceWindow : Window
         foreach (var view in _items)
         {
             var tileWidth = view.TileWidth;
-            if (view.ApplySize(cellWidth, cellHeight, _iconSizeDips, labelHeight) && IsLoaded) _iconLoader.Request(view, PxOf(view));
+            if (view.ApplySize(cellWidth, cellHeight, _iconSizeDips, labelHeight) && IsLoaded) RequestIcon(view);
             if (view.IsTile && Math.Abs(view.TileWidth - tileWidth) > 0.5)
             {
                 view.ArtPath = null; // a cover decoded again at the new tile width (final review I2)
@@ -1162,13 +1183,13 @@ public partial class FenceWindow : Window
     /// <summary>The Recycle Bin turned full or empty, or another special icon changed (M8c).</summary>
     public void ReloadSpecialIcons()
     {
-        foreach (var view in _items.Where(view => view.Target.StartsWith("::", StringComparison.Ordinal))) _iconLoader.Request(view, PxOf(view));
+        foreach (var view in _items.Where(view => view.Target.StartsWith("::", StringComparison.Ordinal))) RequestIcon(view);
     }
 
     /// <summary>New size or DPI, or "Refresh": every icon and name is requested again in place; selection stays (M2c review carry-over).</summary>
     public void ReloadIcons()
     {
-        foreach (var view in _items) _iconLoader.Request(view, PxOf(view));
+        foreach (var view in _items) RequestIcon(view);
     }
 
     /// <summary>Starts renaming the fence title (menu, or a freshly drawn fence).</summary>
