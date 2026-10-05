@@ -112,6 +112,7 @@ public sealed partial class FenceHost
         if (items.Count > 1)
         {
             Command("Open", () => { foreach (var item in items) OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin); });
+            menu.Items.Add(SizeMenu(menu, items)); // M24
             Command($"Remove {items.Count} items from fence", () => RemoveItems(window, [.. items.Select(item => item.Id)]));
         }
         else if (GameItems.IsGame(items[0]))
@@ -136,6 +137,7 @@ public sealed partial class FenceHost
             if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder view", () => ShowAsFolderView(item.Target)); // M21
             Command("Copy path", () => CopyText(item.Target));
             menu.Items.Add(new Separator());
+            menu.Items.Add(SizeMenu(menu, [item])); // M24
             Command("Properties…", () => ShowProperties(window, item.Id, focusName: false));
             if (check.State == TargetState.Ok) Command("Remove from fence", () => RemoveItems(window, [item.Id]));
             menu.Items.Add(new Separator());
@@ -405,6 +407,7 @@ public sealed partial class FenceHost
     /// <summary>After any item change: windows, save, watching, and a check of the targets that are new.</summary>
     private void ItemsChanged(IReadOnlyList<string> checkTargets)
     {
+        PinFreeCells(); // M24: new elements of Free fences keep the spot they show at
         RefreshWindows();
         ScheduleSave();
         UpdateWatching();
@@ -423,7 +426,17 @@ public sealed partial class FenceHost
         var fromLibrary = keys.Except(known).ToList(); // the library's and a view's key is a path (M12, M21): they become items
         if (known.Count > 0)
         {
-            _items = duplicate ? ItemEdits.Duplicate(_items, known, window.FenceId, insertAt).Document : ItemEdits.Move(_items, known, window.FenceId, insertAt);
+            if (duplicate)
+            {
+                var copies = ItemEdits.Duplicate(_items, known, window.FenceId, insertAt);
+                _items = copies.Document;
+                PlaceDropped(window, copies.NewIds, known); // M24: a Free fence puts them on the drop cell
+            }
+            else
+            {
+                _items = ItemEdits.Move(_items, known, window.FenceId, insertAt);
+                PlaceDropped(window, known, known);
+            }
             Log.Information("{Count} item(s) {Action} to fence {FenceId}", known.Count, duplicate ? "duplicated" : "moved", window.FenceId);
         }
         if (fromLibrary.Count > 0) AddTargets(window, fromLibrary, insertAt);
@@ -440,6 +453,7 @@ public sealed partial class FenceHost
     {
         var added = ItemEdits.Add(_items, window.FenceId, [.. targets.Select(VirtualItem.Create)], insertAt);
         _items = added.Document;
+        PlaceDropped(window, added.AddedIds, [.. added.AddedIds.Select(_ => (string?)null)]); // M24: a Free fence puts them on the drop cell
         Log.Information("{Added} item(s) added to fence {FenceId}; {Already} already there", added.AddedIds.Count, window.FenceId, added.AlreadyThereIds.Count);
         ItemsChanged(checkTargets: targets);
         if (added.AlreadyThereIds.Count > 0) window.SelectItems(added.AlreadyThereIds); // already in this fence: it flashes
@@ -500,6 +514,7 @@ public sealed partial class FenceHost
             try
             {
                 _items = ItemEdits.Reorder(_items, fenceId, sorted.Result); // the fence changed meanwhile: ArgumentException, its order stays
+                PackFreeFence(window); // M24: a Free fence is laid out packed in the new order
             }
             catch (Exception failure) when (failure is ArgumentException or AggregateException)
             {

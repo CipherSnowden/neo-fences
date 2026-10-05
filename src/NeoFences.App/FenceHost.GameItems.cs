@@ -132,6 +132,7 @@ public sealed partial class FenceHost
         Command(showAs, "Cover tile", () => SetShowAs(item.Id, ItemShow.Cover), isChecked: GameItems.ShowsCover(item));
         Command(showAs, "Icon", () => SetShowAs(item.Id, ItemShow.Icon), isChecked: !GameItems.ShowsCover(item));
         menu.Items.Add(showAs);
+        menu.Items.Add(SizeMenu(menu, [item])); // M24
         var openFolder = new MenuItem { Header = "Open install folder", IsEnabled = installed && LibraryItemOf(item.Target)?.Game.InstallFolder is not null }; // M23
         openFolder.Click += (_, _) => OpenInstallFolder(window, item.Target);
         menu.Items.Add(openFolder);

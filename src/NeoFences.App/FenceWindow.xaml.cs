@@ -149,6 +149,8 @@ public partial class FenceWindow : Window
     public event Action? RefreshRequested;
     /// <summary>Fence menu → "New Game Library fence" (M12).</summary>
     public event Action? NewLibraryRequested;
+    /// <summary>Fence menu → Layout ▸ Flow / Free (M24).</summary>
+    public event Action<FenceLayout>? LayoutRequested;
     /// <summary>Fence menu → "Add games…" (M22).</summary>
     public event Action? AddGamesRequested;
     /// <summary>Fence menu → "New folder view…" (M21).</summary>
@@ -210,6 +212,8 @@ public partial class FenceWindow : Window
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
         NewFolderViewItem.Click += (_, _) => NewFolderViewRequested?.Invoke();
         AddGamesItem.Click += (_, _) => AddGamesRequested?.Invoke();
+        LayoutFlowItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Flow);
+        LayoutFreeItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Free);
         OpenFolderItem.Click += (_, _) => OpenFolderRequested?.Invoke();
         ViewSettingsItem.Click += (_, _) => ViewSettingsRequested?.Invoke();
         MoreLine.MouseLeftButtonUp += (_, click) => { click.Handled = true; OpenFolderRequested?.Invoke(); };
@@ -295,6 +299,11 @@ public partial class FenceWindow : Window
         _title = fence.Title;
         TitleText.Text = fence.Title;
         _kind = fence.Kind;
+        _layout = fence.Layout; // M24
+        if (_gridPanel is { } panel) panel.Layout = _layout;
+        LayoutItem.Visibility = fence.Kind == FenceKind.Items ? Visibility.Visible : Visibility.Collapsed;
+        LayoutFlowItem.IsChecked = _layout == FenceLayout.Flow;
+        LayoutFreeItem.IsChecked = _layout == FenceLayout.Free;
         // The library is NeoFences' own A–Z list of games: no items to add or sort (M12). A folder view shows its folder
         // read-only: nothing to add; "Sort by" is its own, kept (M21).
         var items = _kind == FenceKind.Items;
@@ -360,7 +369,7 @@ public partial class FenceWindow : Window
         var kind = art.IsPoster ? "Poster" : "Logo";
         // Decoded off the UI thread (a cover is a few hundred KB); only the newest request is shown.
         // Decoded at the tile's pixel width, not more: 300 covers would otherwise hold ~160 MB (M13b).
-        var decodeWidth = Math.Max(48, (int)Math.Round(Math.Round(_iconSizeDips * 1.5) * VisualTreeHelper.GetDpi(this).DpiScaleX));
+        var decodeWidth = Math.Max(48, (int)Math.Round(view.TileWidth * VisualTreeHelper.GetDpi(this).DpiScaleX)); // M24: the tile's own width
         Task.Run(() => LoadArt(art.Path, decodeWidth)).ContinueWith(loaded =>
         {
             if (view.ArtPath != art.Path || loaded.Result is not { } image) return;
@@ -643,7 +652,6 @@ public partial class FenceWindow : Window
             if (!wanted.Contains(_items[index].Key)) _items.RemoveAt(index);
         }
         // ponytail: O(n²) moves in the worst case (a full reorder of hundreds of items); a keyed diff when that shows up.
-        var iconSizePx = IconSizePx;
         for (var index = 0; index < shownItems.Count; index++)
         {
             var shown = shownItems[index];
@@ -655,16 +663,21 @@ public partial class FenceWindow : Window
             if (found >= 0)
             {
                 if (found != index) _items.Move(found, index);
-                if (_items[index].Update(shown) && IsLoaded) _iconLoader.Request(_items[index], iconSizePx);
+                var resized = _items[index].Span != (shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One));
+                var reload = _items[index].Update(shown);
+                if (resized) SizeView(_items[index]); // M24
+                if ((reload || resized) && IsLoaded) _iconLoader.Request(_items[index], PxOf(_items[index]));
                 ApplyArt(_items[index]); // shown as a cover now, or an icon again (M22); the same art is not loaded twice
                 continue;
             }
             var view = new FenceItemView(shown);
             ApplyArt(view);
-            if (IsLoaded) _iconLoader.Request(view, iconSizePx); // before that, Loaded requests them at the right DPI (M2b review)
+            SizeView(view); // M24: its content for its span
+            if (IsLoaded) _iconLoader.Request(view, PxOf(view)); // before that, Loaded requests them at the right DPI (M2b review)
             _items.Insert(index, view);
         }
         UpdateEmptyHint();
+        GridPanel?.InvalidateMeasure(); // M24: spans or stored cells may have changed
         // Cells may have shifted under a shown name without a scroll or selection event (final review I3).
         Dispatcher.BeginInvoke(UpdateHoverLabel, System.Windows.Threading.DispatcherPriority.Loaded);
     }
@@ -701,6 +714,84 @@ public partial class FenceWindow : Window
     }
 
     private int IconSizePx => (int)Math.Round(_iconSizeDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
+
+    /// <summary>An item's icon in physical pixels: its own size for its span (M24).</summary>
+    private int PxOf(FenceItemView view) => (int)Math.Round(view.IconDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
+
+    private FenceGridPanel? _gridPanel;
+    private FenceLayout _layout;
+
+    /// <summary>The list's grid panel (M24), once the list has its template.</summary>
+    private FenceGridPanel? GridPanel
+    {
+        get
+        {
+            if (_gridPanel is null && FindDescendant<FenceGridPanel>(ItemList) is { } found)
+            {
+                _gridPanel = found;
+                ApplyCellSizes();
+                found.Layout = _layout;
+            }
+            return _gridPanel;
+        }
+    }
+
+    private static TDescendant? FindDescendant<TDescendant>(DependencyObject parent) where TDescendant : DependencyObject
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is TDescendant match) return match;
+            if (FindDescendant<TDescendant>(child) is { } deeper) return deeper;
+        }
+        return null;
+    }
+
+    /// <summary>The columns the grid shows now (M24; one until it is laid out).</summary>
+    public int Columns => GridPanel?.Columns ?? 1;
+
+    /// <summary>Where each element sits now, by key (M24): stored when a fence becomes Free, used for drops.</summary>
+    public IReadOnlyDictionary<string, GridCell> CurrentCells()
+    {
+        var cells = new Dictionary<string, GridCell>(StringComparer.Ordinal);
+        if (GridPanel?.Arrangement is not { } arrangement) return cells;
+        for (var index = 0; index < _items.Count && index < arrangement.Cells.Count; index++) cells[_items[index].Key] = arrangement.Cells[index];
+        return cells;
+    }
+
+    /// <summary>Each element's cell and span as laid out now (M24).</summary>
+    public IReadOnlyList<(string Key, GridCell Cell, GridSpan Span)> CurrentLayout()
+    {
+        if (GridPanel?.Arrangement is not { } arrangement) return [];
+        return [.. _items.Take(arrangement.Cells.Count).Select((view, index) => (view.Key, arrangement.Cells[index], arrangement.Spans[index]))];
+    }
+
+    /// <summary>The cell under the pointer during the last drop hover (M24, Free fences).</summary>
+    public GridCell? LastDropCell { get; private set; }
+
+    public void ForgetDropCell() => LastDropCell = null;
+
+    /// <summary>
+    /// Cells follow the icon size and the label mode (M24): a cell is today's item cell; each element sizes its content to
+    /// its span; an icon that changed size is loaded again.
+    /// </summary>
+    private void ApplyCellSizes()
+    {
+        var labelHeight = IsLibrary || _labelMode == LabelMode.Always ? 36.0 : 0.0;
+        var cellWidth = (double)Resources["ItemWidth"] + 8;
+        var cellHeight = _iconSizeDips + 12 + labelHeight;
+        if (_gridPanel is { } panel) (panel.CellWidth, panel.CellHeight) = (cellWidth, cellHeight);
+        foreach (var view in _items)
+        {
+            if (view.ApplySize(cellWidth, cellHeight, _iconSizeDips, labelHeight) && IsLoaded) _iconLoader.Request(view, PxOf(view));
+        }
+    }
+
+    private void SizeView(FenceItemView view)
+    {
+        var labelHeight = IsLibrary || _labelMode == LabelMode.Always ? 36.0 : 0.0;
+        view.ApplySize((double)Resources["ItemWidth"] + 8, _iconSizeDips + 12 + labelHeight, _iconSizeDips, labelHeight);
+    }
 
     /// <summary>One of <see cref="ConfigNormalizer.IconSizes"/> (DIPs). Icons are reloaded at the new size.</summary>
     public void SetIconSize(int iconSizeDips)
@@ -749,6 +840,7 @@ public partial class FenceWindow : Window
         // With labels: room for two short words under small icons. Icons only: a tight grid.
         Resources["ItemWidth"] = IsLibrary ? Math.Round(_iconSizeDips * 1.5) + 12.0
             : _labelMode == LabelMode.Always ? LabelledItemWidth : _iconSizeDips + 12.0;
+        ApplyCellSizes(); // M24
     }
 
     private double LabelledItemWidth => Math.Max(76.0, _iconSizeDips + 28.0);
@@ -1064,15 +1156,13 @@ public partial class FenceWindow : Window
     /// <summary>The Recycle Bin turned full or empty, or another special icon changed (M8c).</summary>
     public void ReloadSpecialIcons()
     {
-        var iconSizePx = IconSizePx;
-        foreach (var view in _items.Where(view => view.Target.StartsWith("::", StringComparison.Ordinal))) _iconLoader.Request(view, iconSizePx);
+        foreach (var view in _items.Where(view => view.Target.StartsWith("::", StringComparison.Ordinal))) _iconLoader.Request(view, PxOf(view));
     }
 
     /// <summary>New size or DPI, or "Refresh": every icon and name is requested again in place; selection stays (M2c review carry-over).</summary>
     public void ReloadIcons()
     {
-        var iconSizePx = IconSizePx;
-        foreach (var view in _items) _iconLoader.Request(view, iconSizePx);
+        foreach (var view in _items) _iconLoader.Request(view, PxOf(view));
     }
 
     /// <summary>Starts renaming the fence title (menu, or a freshly drawn fence).</summary>
@@ -1160,6 +1250,7 @@ public partial class FenceWindow : Window
         // Over a tab header: show that tab now, so the drop lands in it (M9).
         if (TabHeaderAt(screenX, screenY) is { } hoveredTab && hoveredTab != FenceId) TabSelected?.Invoke(hoveredTab);
         var point = ItemList.PointFromScreen(new Point(screenX, screenY));
+        LastDropCell = GridPanel is { } panel ? panel.CellAt(ItemList.TranslatePoint(point, panel)) : null; // M24: Free fences drop on a cell
         var cells = new List<(double Left, double Top, double Width, double Height)>();
         var cellIndexes = new List<int>();
         for (var index = 0; index < _items.Count; index++)
@@ -1178,7 +1269,18 @@ public partial class FenceWindow : Window
     public void ShowDropFeedback(int? insertAt)
     {
         InsertCaret.Visibility = Visibility.Collapsed;
+        DropCellMarker.Visibility = Visibility.Collapsed;
         if (insertAt is not { } position) return;
+        if (_layout == FenceLayout.Free && LastDropCell is { } cell && GridPanel is { } panel)
+        {
+            // M24: a Free fence shows the cell the drop lands on.
+            var rect = panel.TransformToAncestor(ItemList).TransformBounds(panel.CellRect(cell, GridSpan.One));
+            Canvas.SetLeft(DropCellMarker, rect.Left + 2);
+            Canvas.SetTop(DropCellMarker, rect.Top + 2);
+            (DropCellMarker.Width, DropCellMarker.Height) = (Math.Max(0, rect.Width - 4), Math.Max(0, rect.Height - 4));
+            DropCellMarker.Visibility = Visibility.Visible;
+            return;
+        }
         // Caret at the left edge of the item it goes before, or after the last item.
         var before = position < _items.Count ? ItemList.ItemContainerGenerator.ContainerFromIndex(position) as ListBoxItem : null;
         var anchor = before ?? (_items.Count > 0 ? ItemList.ItemContainerGenerator.ContainerFromIndex(_items.Count - 1) as ListBoxItem : null);

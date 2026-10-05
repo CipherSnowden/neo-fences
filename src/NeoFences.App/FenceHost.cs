@@ -269,6 +269,7 @@ public sealed partial class FenceHost
         window.NewLibraryRequested += CreateLibraryFence;
         window.NewFolderViewRequested += () => NewFolderView(window.Handle); // M21
         window.AddGamesRequested += () => AddGames(window); // M22
+        window.LayoutRequested += layout => SetFenceLayout(window, layout); // M24
         window.OpenFolderRequested += () => OpenViewFolder(window);
         window.ViewSettingsRequested += () => EditFolderView(window);
         window.StartupToggled += SetStartWithWindows;
@@ -337,7 +338,8 @@ public sealed partial class FenceHost
         }
         var covers = _items.Of(shown.Id).Any(GameItems.ShowsCover) ? LibraryArt() : null; // M22: game items shown as covers
         window.SetItems([.. _items.Of(shown.Id).Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note, StateOf(item.Target),
-            Tile: GameItems.ShowsCover(item), TileArt: covers is not null && covers.TryGetValue(item.Target, out var cover) ? cover : null, IsGame: GameItems.IsGame(item)))]);
+            Tile: GameItems.ShowsCover(item), TileArt: covers is not null && covers.TryGetValue(item.Target, out var cover) ? cover : null, IsGame: GameItems.IsGame(item),
+            Span: FenceGrid.SpanOf(item), Cell: item.Cell))]); // M24
     }
 
     /// <summary>Opens a path NeoFences knows (a library game, the logs or data folder).</summary>

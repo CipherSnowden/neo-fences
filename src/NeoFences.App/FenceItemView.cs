@@ -12,8 +12,11 @@ namespace NeoFences.App;
 /// </summary>
 /// <param name="Tile">A 2:3 tile (M22: a game item shown as its cover); <paramref name="TileArt"/> is its poster or logo.</param>
 /// <param name="IsGame">A game item (M22): "Not installed" instead of "Missing".</param>
+/// <param name="Span">Its size in cells (M24); null: 1×2 for a tile, else 1×1.</param>
+/// <param name="Cell">Its stored cell (M24, Free fences).</param>
 public sealed record ShownItem(string Key, string Target, string? Name = null, ItemIcon? Icon = null, string? Note = null,
-    TargetState State = TargetState.Ok, bool Tile = false, (string Path, bool IsPoster)? TileArt = null, bool IsGame = false);
+    TargetState State = TargetState.Ok, bool Tile = false, (string Path, bool IsPoster)? TileArt = null, bool IsGame = false,
+    GridSpan? Span = null, GridCell? Cell = null);
 
 /// <summary>One item as a fence shows it. Label and icon start as placeholders and fill in from <see cref="IconLoader"/>.</summary>
 public sealed class FenceItemView : INotifyPropertyChanged
@@ -81,6 +84,8 @@ public sealed class FenceItemView : INotifyPropertyChanged
         Tile = shown.Tile;
         TileArt = shown.TileArt;
         IsGame = shown.IsGame;
+        Span = shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One);
+        StoredCell = shown.Cell;
         State = shown.State;
         if (OwnName is not null) Label = OwnName;
         else if (reload || Label.Length == 0) Label = PlaceholderName(Target);
@@ -99,6 +104,37 @@ public sealed class FenceItemView : INotifyPropertyChanged
         ItemKind.Special => "",
         _ => Path.GetFileNameWithoutExtension(target.TrimEnd('\\')) is { Length: > 0 } name ? name : target,
     };
+
+    /// <summary>Its size in the fence's cells (M24).</summary>
+    public GridSpan Span { get; private set; } = GridSpan.One;
+
+    /// <summary>Its stored cell (M24, Free fences), or null.</summary>
+    public GridCell? StoredCell { get; private set; }
+
+    /// <summary>Width of its content (icon or tile and the label), in DIPs: its span's cells less the cell padding (M24).</summary>
+    public double ContentWidth { get; private set { field = value; Changed(); } } = 68;
+
+    /// <summary>Its icon's size in DIPs (M24): the fence's icon size at 1×1, bigger to fill a bigger span (≤ 256).</summary>
+    public double IconDips { get; private set { field = value; Changed(); } } = 48;
+
+    public double TileWidth { get; private set { field = value; Changed(); } } = 72;
+    public double TileHeight { get; private set { field = value; Changed(); } } = 108;
+
+    /// <summary>
+    /// Sizes its content for its span on cells of this size (M24, spec §1). True when the icon size changed (the icon is
+    /// loaded again at the new size).
+    /// </summary>
+    public bool ApplySize(double cellWidth, double cellHeight, double iconDips, double labelHeight)
+    {
+        const double CellPaddingX = 8, CellPaddingY = 12, MaxIcon = 256;
+        var width = Span.Columns * cellWidth - CellPaddingX;
+        var height = Span.Rows * cellHeight - CellPaddingY - labelHeight;
+        var icon = Span == GridSpan.One ? iconDips : Math.Clamp(Math.Floor(Math.Min(width - 8, height)), iconDips, MaxIcon);
+        var tileHeight = Math.Max(16, Math.Floor(Math.Min(height, (width - 4) * 1.5)));
+        var changed = Math.Abs(icon - IconDips) > 0.5;
+        (ContentWidth, IconDips, TileWidth, TileHeight) = (width, icon, Math.Floor(tileHeight / 1.5), tileHeight);
+        return changed;
+    }
 
     /// <summary>Counts icon requests (UI thread): a slower, older load (another size or target) never wins (final review I4).</summary>
     public int IconRequest { get; set; }

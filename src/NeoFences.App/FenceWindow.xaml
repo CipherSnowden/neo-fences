@@ -1,6 +1,7 @@
 <Window x:Class="NeoFences.App.FenceWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:NeoFences.App"
         Title="NeoFences fence" Width="320" Height="220"
         WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="True"
         Background="#01000000" ShowInTaskbar="False" ShowActivated="False">
@@ -96,6 +97,10 @@
                             <MenuItem x:Name="LabelsOnHoverItem" Header="On hover (icons only)" IsCheckable="True" />
                         </MenuItem>
                         <MenuItem x:Name="SortItem" Header="Sort by" />
+                        <MenuItem x:Name="LayoutItem" Header="Layout">
+                            <MenuItem x:Name="LayoutFlowItem" Header="Flow (packed)" IsCheckable="True" />
+                            <MenuItem x:Name="LayoutFreeItem" Header="Free (fixed positions)" IsCheckable="True" />
+                        </MenuItem>
                         <MenuItem x:Name="TabColorItem" Header="Colour" />
                         <MenuItem x:Name="DetachTabItem" Header="Detach tab" Visibility="Collapsed" />
                         <MenuItem x:Name="LockItem" Header="Lock position" IsCheckable="True" />
@@ -117,7 +122,8 @@
                              ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel />
+                                <!-- M24: whole cells, elements spanning 1–4 × 1–4, packed (Flow) or at stored cells (Free). -->
+                                <local:FenceGridPanel />
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                         <ListBox.ItemContainerStyle>
@@ -135,7 +141,7 @@
                                                  pop-under name does not blink between neighbours (final review I2). -->
                                             <Border Background="Transparent" Padding="2">
                                                 <Border x:Name="Chrome" Background="Transparent" CornerRadius="4" Padding="2,4">
-                                                    <ContentPresenter />
+                                                    <ContentPresenter HorizontalAlignment="Center" />
                                                 </Border>
                                             </Border>
                                             <ControlTemplate.Triggers>
@@ -153,9 +159,9 @@
                         </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel x:Name="Cell" Width="{DynamicResource ItemWidth}">
+                                <StackPanel x:Name="Cell" Width="{Binding ContentWidth}">
                                     <Grid x:Name="IconGrid" HorizontalAlignment="Center">
-                                        <Image x:Name="ItemIcon" Source="{Binding Icon}" Width="{DynamicResource IconSize}" Height="{DynamicResource IconSize}" />
+                                        <Image x:Name="ItemIcon" Source="{Binding Icon}" Width="{Binding IconDips}" Height="{Binding IconDips}" />
                                         <!-- Missing target (M18 spec §4): a small warning badge on the dimmed icon. -->
                                         <Border x:Name="MissingBadge" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                                 Width="16" Height="16" CornerRadius="8" Background="#FFE8A33D" BorderBrush="#FF3A2A10" BorderThickness="1"
@@ -174,9 +180,9 @@
                                     </Grid>
                                     <!-- Game Library tile (M12): poster, logo, or the icon centred on a dark 2:3 tile. -->
                                     <Border x:Name="Tile" Visibility="Collapsed" HorizontalAlignment="Center" CornerRadius="4" Background="#66000000"
-                                            Width="{DynamicResource TileWidth}" Height="{DynamicResource TileHeight}" ClipToBounds="True">
+                                            Width="{Binding TileWidth}" Height="{Binding TileHeight}" ClipToBounds="True">
                                         <Grid>
-                                            <Image x:Name="TileIcon" Source="{Binding Icon}" Width="{DynamicResource IconSize}" Height="{DynamicResource IconSize}" />
+                                            <Image x:Name="TileIcon" Source="{Binding Icon}" Width="{Binding IconDips}" Height="{Binding IconDips}" />
                                             <Image x:Name="TileLogo" Source="{Binding Art}" Margin="10" Stretch="Uniform" Visibility="Collapsed" />
                                             <Image x:Name="TilePoster" Source="{Binding Art}" Stretch="UniformToFill" Visibility="Collapsed" />
                                             <!-- A not-installed game shown as its cover (M22, final review I1): the same badge as on icons. -->
@@ -195,7 +201,6 @@
                                 </StackPanel>
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding IsTile}" Value="True">
-                                        <Setter TargetName="Cell" Property="Width" Value="{DynamicResource TileCellWidth}" />
                                         <Setter TargetName="IconGrid" Property="Visibility" Value="Collapsed" />
                                         <Setter TargetName="Tile" Property="Visibility" Value="Visible" />
                                     </DataTrigger>
@@ -239,6 +244,9 @@
                         <Rectangle x:Name="SelectionBand" Visibility="Collapsed" Fill="{DynamicResource FenceHover}"
                                    Stroke="{DynamicResource FenceSubtleText}" StrokeThickness="1" RadiusX="2" RadiusY="2" />
                         <!-- Drag-drop feedback (M3b review I2): where a drop lands. -->
+                        <!-- M24: where a drop lands in a Free fence. -->
+                        <Rectangle x:Name="DropCellMarker" Visibility="Collapsed" Stroke="{DynamicResource FenceText}" StrokeThickness="1.5"
+                                   StrokeDashArray="3 2" RadiusX="4" RadiusY="4" Fill="{DynamicResource FenceHover}" />
                         <Rectangle x:Name="InsertCaret" Visibility="Collapsed" Width="2" Fill="{DynamicResource FenceText}" RadiusX="1" RadiusY="1" />
                         <!-- Icon-only fences (M8b): the hovered or selected item's name, under its icon, over the neighbours. -->
                         <Border x:Name="HoverLabel" Visibility="Collapsed" CornerRadius="4" Padding="6,2"
