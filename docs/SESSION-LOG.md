@@ -529,3 +529,6 @@ item; failed background checks logged. The R1 microsecond race was left as is by
 while the PC was unattended (installed data backed up and restored). Merged to main, version 0.10.1.
 **Decisions:** none new (bounded fixes within ADR-042).
 **Next:** release 0.10.1 (approved as one sequence); then whatever the user picks (dynamic collections later).
+**Released:** 0.10.1 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.10.0 updated itself to
+0.10.1 from a local feed, config and items unchanged, plain restart back on GitHub updates), published with a plain first line;
+hub refreshed.

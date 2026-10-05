@@ -786,16 +786,22 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "d02865e",
-  phase: "0.10.0 — apps, bulk fix, Add from desktop",
-  current: "0.10.0 RELEASED and installed (the installed 0.9.0 updated itself): Store and Start apps as items, bulk fix of missing items with undo, Add from desktop… · next: M20 (deferred minors, dynamic collections)",
+  commit: "953846d",
+  phase: "0.10.1 — small fixes",
+  current: "0.10.1 RELEASED and installed (your 0.10.0 updated itself): the deferred M19 minors fixed · next: your pick (dynamic collections later)",
   waiting: [
-    "NEW in 0.10.0 — Add item… → Browse ▾ → An app… lists every Start app (Store apps too), or drag an app from Start → All onto a fence. Tray or fence menu → Add from desktop… turns your desktop into fences in one dialog (add D:\\GameLibrary in Settings → Game Library so your games sort into Games). After a Locate…, NeoFences offers to fix the other missing items from the same old place; tray → Restore snapshot → Undo the last restore or fix puts them back.",
+    "NEW in 0.10.1 — programs added from the app list show readable names (\"7-Zip File Manager\", not a long ID) and Shift+right-click gives Windows' own menu for them. Add from desktop… is quick when you have a Game Library fence and puts This PC / Control Panel shortcuts under Folders and files. Fix all only leaves an undo snapshot when it fixed something.",
+    "In 0.10.0 — Add item… → Browse ▾ → An app… lists every Start app (Store apps too), or drag an app from Start → All onto a fence. Tray or fence menu → Add from desktop… turns your desktop into fences in one dialog (add D:\\GameLibrary in Settings → Game Library so your games sort into Games). After a Locate…, NeoFences offers to fix the other missing items from the same old place; tray → Restore snapshot → Undo the last restore or fix puts them back.",
     "In 0.9.0 — virtual items: drop files, folders, apps or browser links onto a fence (right-click → Add item… works too). Each item has its own name and icon (Properties); removing an item or a fence never touches the file. Renamed targets are followed; missing ones dim with a ⚠ and offer Locate…; a pulled USB stick dims its items until it is back.",
     "Your desktop icons stay visible. Settings → \"Hide desktop icons while NeoFences runs\" hides them; they always come back (exit, crash, kill).",
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M20 · Small fixes (0.10.1)", items: [
+      { t: "You chose: small fixes only — the deferred M19 review minors; the microsecond R1 race stays as is", s: "done" },
+      { t: "Fixed test-first (468 tests): bulk-fix undo only when something is fixed, readable app names + Windows menu for apps, Add from desktop reuses the game scan and skips system folders, Windows-place shortcuts sorted as folders, stale records dropped, failed checks logged", s: "done" },
+      { t: "Live check AF 4/4 while you were away (your data backed up and restored); merged; released 0.10.1 — your 0.10.0 updated itself", s: "done" }
+    ]},
     { group: "M19 · Apps, bulk fix, Add from desktop (0.10.0)", items: [
       { t: "You chose: 0.10.0 for yourself, name stays NeoFences (ADR-043), no signing; apps from a list + Start drag; bulk fix offered after Locate…, with an undo snapshot; Add from desktop as a sorting dialog, items point at the desktop shortcuts", s: "done" },
       { t: "Prototype with live probes on your desktop (182 apps in 0.34 s, Start drag works); four findings fixed; plan of replay-verified patches", s: "done" },
@@ -1067,7 +1073,8 @@ const HUB = {
     { id: "M13", name: "v1.6 carry-overs", goal: "Review carry-overs in 3 batches: data safety (v1.6.0), Game Library + rules polish (v1.6.1), fence + Settings UX (v1.6.2)", s: "wip" },
     { id: "M18", name: "Virtual items (0.9.0)", goal: "Fences hold links with their own name and icon; no file operations; target watching; native icons visible — released as 0.9.0", s: "done" },
     { id: "M19", name: "Apps, bulk fix, Add from desktop (0.10.0)", goal: "Store/Start apps as items, bulk fix of missing items with undo, Add from desktop…, the M18 reliability leftovers — released as 0.10.0", s: "done" },
-    { id: "M20", name: "Next", goal: "The deferred M19 minors; dynamic collections (read-only folder views, auto-collect rules)", s: "todo" }
+    { id: "M20", name: "Small fixes (0.10.1)", goal: "The deferred M19 review minors — released as 0.10.1", s: "done" },
+    { id: "Next", name: "Next", goal: "Your pick; dynamic collections (read-only folder views, auto-collect rules) later", s: "todo" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
@@ -1076,6 +1083,7 @@ const HUB = {
     { v: "v1.8", s: "todo", scope: "Parked (branch m15-search-palette). Search palette (M15): Ctrl+Alt+F, items in every fence (hidden tabs, rolled-up, Portals, Game Library) and NeoFences actions; Enter opens, Shift+Enter shows in the fence." },
     { v: "0.9.0", s: "done", scope: "After the pivot (versions restart at 0.x; v1.x were dev builds): virtual items, separate items.json, target watching (renames followed, missing, unavailable), native icons visible with optional hide. Released and installed 2026-10-04." },
     { v: "0.10.0", s: "done", scope: "Store and Start apps as items (app list, drag from Start), bulk fix of missing items after one Locate… (undo from the tray), Add from desktop… (grouped into fences), generic icons for unreachable targets, no stalls on dead shares. Released 2026-10-05; the installed 0.9.0 updated itself." },
+    { v: "0.10.1", s: "done", scope: "Small fixes (M20): readable app names and Windows' menu for apps, faster Add from desktop with a Game Library, Windows-place shortcuts sorted as folders, bulk-fix undo only when something is fixed, stale records dropped. Released 2026-10-05; the installed 0.10.0 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1323,7 +1331,8 @@ const HUB = {
     { date: "2026-10-04", topic: "M13–M17: polish, appearance, search (parked), public releases", done: "v1.6.x carry-overs, appearance styles (v1.7), the search palette built then parked, v1.7.1 polish, public repo with CI draft releases and auto-update (v1.8.0).", next: "Hand checks" },
     { date: "2026-10-04", topic: "The pivot (ADR-040) and the reset", done: "You rethought the product: fences hold virtual items, never file operations; native icons visible; versions restart at 0.x; GitHub reset to one commit (0.8.0); the installed build removed (data backed up).", next: "M18 virtual items" },
     { date: "2026-10-04", topic: "M18 virtual items → 0.9.0", done: "Spec (items in their own items.json), plan, inline build, Opus review fixes, live check with you (32/32, five bugs fixed incl. a stick pulled without Safely remove), merged, released and installed 0.9.0. Then: this hub rewritten for virtual items, CI actions on v5, test files deleted.", next: "Use 0.9.0; name + signing before 1.0.0; then M19" },
-    { date: "2026-10-05", topic: "M19 apps, bulk fix, Add from desktop → 0.10.0", done: "You went straight to 0.10.0 (name stays NeoFences). Prototype with live probes, a plan of replay-verified patches, native build, Opus review fixes, live check with you (29/30), merged, released — your installed 0.9.0 updated itself to 0.10.0.", next: "M20: deferred minors, dynamic collections" }
+    { date: "2026-10-05", topic: "M19 apps, bulk fix, Add from desktop → 0.10.0", done: "You went straight to 0.10.0 (name stays NeoFences). Prototype with live probes, a plan of replay-verified patches, native build, Opus review fixes, live check with you (29/30), merged, released — your installed 0.9.0 updated itself to 0.10.0.", next: "M20: deferred minors, dynamic collections" },
+    { date: "2026-10-05", topic: "M20 small fixes → 0.10.1", done: "You picked small fixes only. The 8 deferred M19 minors fixed test-first (one left as is by your choice), live check AF 4/4 while the PC was in my care, merged, released — your installed 0.10.0 updated itself to 0.10.1.", next: "Your pick; dynamic collections later" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1748,7 +1757,14 @@ const HUB = {
     ["be57010", "docs: added the M19 live check results"],
     ["261fa0e", "docs: recorded the M19 final review, its fixes and the deferred minors"],
     ["7356eaf", "chore: bumped the version to 0.10.0"],
-    ["d02865e", "docs: recorded M19 done and merged, release 0.10.0 next"]
+    ["d02865e", "docs: recorded M19 done and merged, release 0.10.0 next"],
+    ["1387e47", "docs: recorded the 0.10.0 release and refreshed the hub"],
+    ["783826b", "docs: claimed M20 (0.10.1 small fixes)"],
+    ["17379bb", "fix: fixed the M19 review minors: bulk-fix undo only when something is fixed, readable program app names and their Windows menu, Add from desktop reuses the last game scan and skips system folders, Windows-place shortcuts sorted as folders, stale records dropped after restores and late checks, failed checks logged"],
+    ["cbdb7dc", "docs: described 0.10.1 and added checklist section AF"],
+    ["27705d7", "docs: added the 0.10.1 live check results"],
+    ["667cad4", "chore: bumped the version to 0.10.1"],
+    ["953846d", "docs: recorded M20 done and merged, release 0.10.1 next"]
   ]
 };
 /* ===== END HUB DATA ===== */
