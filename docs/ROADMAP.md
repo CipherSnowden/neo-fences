@@ -81,6 +81,7 @@ Milestone details and exit criteria: spec §9.
   - [ ] AP3, AP4, AP7 and the tray notice by hand
   - [x] Released 0.18.0 on 2026-10-06 (the installed 0.17.0 updated itself in 2 s; data unchanged; no welcome on the existing setup)
   - Deferred minors: in `research/m30-welcome.md`
+- [~] **M31 — 0.19.0: modern widgets and sensors, polish** (widget restyle; CPU/GPU temperatures via Afterburner or HWiNFO; RAM in GB; M29–M30 minors; the user's desktop set up with every feature) — claimed by session 2026-10-06 widgets
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot
