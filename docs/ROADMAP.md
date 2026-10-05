@@ -62,6 +62,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check TEST-CHECKLIST AM by script on a test folder (the real desktop, pendrive, AM12, AM14 by hand later); merged to main
   - [x] Released 0.16.0 on 2026-10-05 (the installed 0.15.0 updated itself in 3 s; data unchanged)
   - Deferred minors: in `research/m27-auto-collect.md`
+- [~] **M28 — 0.16.1: polish** (the deferred minors of M24–M27: folder panels, auto-collect, widgets, grid and sizes) — claimed by session 2026-10-05 polish
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot
