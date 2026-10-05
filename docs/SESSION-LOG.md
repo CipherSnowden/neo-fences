@@ -715,3 +715,6 @@ Merged locally.
 **Deferred minors:** a hybrid laptop's first choice at an idle start can be the built-in GPU; a Free fence loading rolled
 up may be pinned one column narrower; the fence look's Windows accent not refreshed on an accent change.
 **Next:** release 0.19.1 when the user says so.
+**Released:** 0.19.1 on 2026-10-06 — CI and the release build passed first time (6 min); draft with the delta package
+(356 KB); install check (the installed 0.19.0 updated itself in 2 s; all four fences unchanged; the user's Free Games
+fence got its cells stored at that start — the M32 fix on real data); published; hub refreshed.
