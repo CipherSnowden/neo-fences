@@ -630,3 +630,13 @@ desktop chosen as a folder) — fixed, 633 tests. Live check AM by script. Merge
 **Next:** release 0.16.0 when the user says so.
 **Released:** 0.16.0 on 2026-10-05 — CI green, draft with the delta package (413 KB), install check (the installed 0.15.0
 updated itself in 3 s through the tray's Restart to update; data unchanged; plain restart back on GitHub updates), published; hub refreshed.
+
+## 2026-10-05 — M28 polish (0.16.1), built and merged
+
+**Done:** the user chose a polish release with all four groups: 20 deferred minors of M24–M27 (folder panels, auto-collect,
+widgets, grid and sizes). Prototype with a visual probe (it caught the new content holder printing the item's type name),
+plan with replay-verified patches, native execution; Opus final review "ready to merge" with nine minors, five re-graded
+and fixed (stats-only hidden spells, the Size picker's mouse/keyboard highlight and Left key, no columns before layout, no
+offer over a game) — 643 tests. Live check AN by script. Merged locally.
+**Decisions:** none new (ADR-047 amended: unknown widget kinds).
+**Next:** release 0.16.1 when the user says so; the user to confirm cover-wide cells in mixed icon-only fences (AN20).

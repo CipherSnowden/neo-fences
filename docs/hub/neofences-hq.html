@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "2692f96",
-  phase: "0.16.0 — auto-collect",
-  current: "0.16.0 RELEASED and installed (your 0.15.0 updated itself): auto-collect rules — a fence collects new files of the desktop or a folder as items (fence menu → Auto-collect…) · next: pre-1.0 work or polish",
+  commit: "8e04679",
+  phase: "0.16.1 — polish (merged)",
+  current: "M28 polish MERGED locally (0.16.0 installed): 20 small fixes across folder panels, auto-collect, widgets, grid and sizes · next: release 0.16.1 (asked first)",
   waiting: [
     "NEW in 0.16.0 — auto-collect: fence menu → Auto-collect… → New rule. Watch your Desktop or any folder; pick kinds (apps and shortcuts, installers, documents, pictures, archives, anything) or patterns. New matching files show up as items within ~2 s; nothing is moved; removed stays removed; files from while NeoFences was closed are caught up at start.",
     "In 0.15.0 — folder panels: fence menu → Add folder panel… (or a folder item → Show as folder panel). Details / List / Icons, click a column header to sort, double-click a subfolder to browse in (Back / Up / Home), Size ▸ or Fill fence. Your Downloads view is now a panel that fills its fence.",
@@ -804,6 +804,12 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M28 · Polish (0.16.1)", items: [
+      { t: "You chose all four groups: 20 deferred minors of M24–M27", s: "done" },
+      { t: "Prototype (a visual probe caught a template bug), verified plan, native build; Opus review: 0 critical / 0 important, 5 re-graded minors fixed (643 tests)", s: "done" },
+      { t: "Live check AN by script; merged locally", s: "done" },
+      { t: "Release 0.16.1 (asked first)", s: "todo" }
+    ]},
     { group: "M27 · Auto-collect rules (0.16.0)", items: [
       { t: "You chose auto-collect and approved the defaults (desktop or any folder; kinds or patterns; removed stays removed; catch-up at start)", s: "done" },
       { t: "Prototype probed on a copy of your data (test folder), verified plan, native build; Opus review: 1 critical + 3 important + 2 re-graded fixed (633 tests)", s: "done" },
@@ -1126,7 +1132,8 @@ const HUB = {
     { id: "M25", name: "Widgets (0.14.0)", goal: "Clock, Date, System stats elements in any fence (ADR-047) — released as 0.14.0", s: "done" },
     { id: "M26", name: "Folder panels (0.15.0)", goal: "A folder as Details / List / Icons inside any fence; folder views become panels (ADR-048) — released as 0.15.0", s: "done" },
     { id: "M27", name: "Auto-collect (0.16.0)", goal: "New files of the desktop or a folder become items in a fence (ADR-049) — released as 0.16.0", s: "done" },
-    { id: "Next", name: "Next", goal: "Pre-1.0 work (code signing, first run, docs for friends) or polish from deferred minors", s: "todo" }
+    { id: "M28", name: "Polish (0.16.1)", goal: "The 20 deferred minors of M24–M27 — merged, release next", s: "doing" },
+    { id: "Next", name: "Next", goal: "Pre-1.0 work (first run, docs for friends, code signing) or new ideas", s: "todo" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
@@ -1410,7 +1417,8 @@ const HUB = {
     { date: "2026-10-05", topic: "M24 element sizes → 0.13.0", done: "You chose sizes first. Pure Core grid + WPF panel, prototype probed on a copy of your data, verified plan, native build, Opus review fixes, live check 14/15 (screenshots sent), merged locally, released — your 0.12.1 updated itself.", next: "Widgets or the folder panel" },
     { date: "2026-10-05", topic: "M25 widgets → 0.14.0", done: "You picked Clock, Date and System stats. Prototype probed on a copy of your data, verified plan, native build, Opus review fixes, live check 11/13 (screenshots sent), merged locally, released — your 0.13.0 updated itself (on exit; the scripted Restart click was blocked by an elevated Task Manager).", next: "The folder panel element" },
     { date: "2026-10-05", topic: "M26 folder panels (merged)", done: "Panels replace folder views. Prototype probed on a copy of your data (you paused the first run), verified plan, native build, Opus review fixes (606 tests), live check AL (a tall panel's wheel fixed), merged locally.", next: "Auto-collect rules or pre-1.0 work" },
-    { date: "2026-10-05", topic: "M27 auto-collect (merged)", done: "You chose auto-collect; prototype probed with a test folder; verified plan; native build; Opus review fixes (633 tests); live check AM; merged locally.", next: "Pre-1.0 work or polish" }
+    { date: "2026-10-05", topic: "M27 auto-collect (merged)", done: "You chose auto-collect; prototype probed with a test folder; verified plan; native build; Opus review fixes (633 tests); live check AM; merged locally.", next: "Pre-1.0 work or polish" },
+    { date: "2026-10-05", topic: "M28 polish (merged)", done: "All four groups; prototype + visual probe; verified plan; native build; Opus review fixes (643 tests); live check AN; merged locally.", next: "Release 0.16.1" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1923,7 +1931,16 @@ const HUB = {
     ["35bc8e6", "docs: added the M27 live check results"],
     ["d0e9293", "docs: recorded M27 merged and refreshed the hub"],
     ["bbd8878", "chore: bumped the version to 0.16.0"],
-    ["2692f96", "docs: marked the 0.16.0 release as approved"]
+    ["2692f96", "docs: marked the 0.16.0 release as approved"],
+    ["2304875", "docs: recorded the 0.16.0 release and refreshed the hub"],
+    ["e17a019", "docs: claimed M28 polish"],
+    ["676f00d", "docs: added the M28 polish design spec"],
+    ["a7578b5", "docs: added the M28 polish plan"],
+    ["230ece0", "fix: fixed the core of the M24-M27 minors: panel columns by width, unknown widgets, GPU per adapter, year-month order, drag anchor, columns and common sizes"],
+    ["9828603", "fix: fixed the M24-M27 minors in the app: lighter elements, panel menus and columns, auto-collect timing, fresh widgets, size picker keys, cover cells, drops"],
+    ["31416c7", "docs: described the M28 polish in architecture, ADR-047, checklist AN and the research note"],
+    ["9e58bbc", "fix: fixed the M28 review minors: fresh stats after stats alone were hidden, one size picker highlight, Left out of the picker, no columns before layout, no offer over a game"],
+    ["8e04679", "docs: added the M28 live check results"]
   ]
 };
 /* ===== END HUB DATA ===== */
