@@ -1272,7 +1272,9 @@ system stats (CPU, RAM, GPU, disk) as bars.
   mode, rolled up, hidden tab); stats read every 2 s on a worker, one reading at a time.
 
 **Consequences.** Measured 0.003 % of the user's CPU with three widgets shown. A widget kind a newer NeoFences adds reads
-as a plain "missing" item in an older one.
+as a plain "missing" item in an older one. (0.16.1, M28: it stays a widget — never opened through Windows — named
+"Unknown widget", shown Missing.)
+
 ## ADR-048 — The folder panel element (folder views become panels)
 **Date:** 2026-10-05 · **Status:** Accepted · **Supersedes:** ADR-044's folder-view fence (its read-only rules stand) ·
 **Continues:** ADR-045 (one kind of fence), ADR-046 (element sizes), ADR-047 (elements beside items)

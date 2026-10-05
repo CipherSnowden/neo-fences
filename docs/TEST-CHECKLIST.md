@@ -689,3 +689,22 @@ Added after the M19 final review:
 | AM13 | A Pictures rule on Downloads; rename a collected picture in place | one item, under the new name (I2) |
 | AM14 | Restore a week-old snapshot with rules; restart NeoFences | no old files collected again (I4) |
 | AM15 | Extract a 1,000-file zip into a watched folder | 200 items in one batch, one refresh (I3) |
+
+## AN — 0.16.1 polish (M28)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AN1 | A 2-cell Details panel; a filling panel in a narrow fence; widen the fence | Name and Date when narrow, all four columns from ~300 DIP |
+| AN2 | Icon-only fence (labels on hover) with a panel: hover and select the panel | no name pill over it |
+| AN3 | Select a panel row → Menu key | the entry menu opens at the row |
+| AN4 | A fence of 30 plain items: open, scroll, switch tabs | as before (no widget or panel controls built for them) |
+| AN5 | Auto-collect… → New rule on a slow network folder → OK at once | "Add these N too?" still comes, once listed |
+| AN6 | A game in front; restart NeoFences; files arrive in a watched folder | collected only when the game ends |
+| AN7 | Pause NeoFences 10 s, resume; quick-hide and back; leave a game | the clock is right at once; CPU/GPU show a fresh value |
+| AN8 | Widget → Properties… | no Change icon; the target is not previewed |
+| AN9 | A `neofences:widget/weather` item (newer NeoFences) | "Unknown widget", Missing badge; double-click opens nothing |
+| AN10 | Free fence: select three items, drag the middle one by a cell | the others keep their offsets from the middle one |
+| AN11 | Icon size Small → Extra large | icons load once (log / no flicker) |
+| AN12 | Size ▸ on two items of different sizes; arrow keys + Enter in the picker; leave the grid | nothing checked ("Mixed sizes"); the size is set; the highlight returns |
+| AN13 | Icon-only fence with game covers | covers full size (cells as wide as a cover) |
+| AN14 | Free fence: drag a fence item together with a panel entry onto a cell | both land at the drop cell |

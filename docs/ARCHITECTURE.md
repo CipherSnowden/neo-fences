@@ -171,6 +171,14 @@ games… is open; after each scan game items follow their game's shortcut and ne
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
+**0.16.1 (M28, polish)**: the deferred minors of M24–M27 — folder panels (columns by real width, no hover name over
+them, the Menu key at the row, panel and widget controls built only where used), auto-collect (the offer on a slow folder,
+no watermark going back, no catch-up during a game, items saved before the advanced watermark), widgets (right at once
+after pause / quick-hide / a game, stats rows updated in place, no Change icon, unknown kinds Missing, GPU = the busiest
+adapter, month and year in the culture's order), grid and sizes (the element under the pointer leads a group drag, one
+icon load per size change, hidden tabs' own columns, the Size picker by keyboard, full-size covers in icon-only fences,
+mixed drops at the drop cell) (`research/m28-polish.md`).
+
 **0.16.0 (M27, auto-collect rules)**: a fence can collect new files of a folder by itself (fence menu → Auto-collect…):
 the desktop or any folder, by kind (apps and shortcuts, installers, documents, pictures, archives, anything) or pattern;
 each new matching file becomes an item in the first fence whose rule matches; nothing is moved; removing an item does not
