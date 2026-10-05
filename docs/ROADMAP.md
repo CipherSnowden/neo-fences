@@ -62,10 +62,10 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check TEST-CHECKLIST AM by script on a test folder (the real desktop, pendrive, AM12, AM14 by hand later); merged to main
   - [x] Released 0.16.0 on 2026-10-05 (the installed 0.15.0 updated itself in 3 s; data unchanged)
   - Deferred minors: in `research/m27-auto-collect.md`
-- [ ] **M28 — 0.16.1: polish** (the 20 deferred minors of M24–M27; spec 2026-10-05-polish-design)
+- [x] **M28 — 0.16.1: polish** (the 20 deferred minors of M24–M27; spec 2026-10-05-polish-design)
   - [x] Prototype (a visual probe caught a template bug), plan with replay-verified patches, native build; Opus review: 0 critical / 0 important, 5 re-graded minors fixed (643 tests)
   - [x] Live check TEST-CHECKLIST AN by script (the rest by hand later); merged to main
-  - [ ] Release 0.16.1 (the user approved the sequence 2026-10-05; cover-wide cells in mixed icon-only fences kept)
+  - [x] Released 0.16.1 on 2026-10-05 (the installed 0.16.0 updated itself in 3 s; data unchanged)
   - Deferred minors: in `research/m28-polish.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 

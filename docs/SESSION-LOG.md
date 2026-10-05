@@ -640,3 +640,5 @@ and fixed (stats-only hidden spells, the Size picker's mouse/keyboard highlight 
 offer over a game) — 643 tests. Live check AN by script. Merged locally.
 **Decisions:** none new (ADR-047 amended: unknown widget kinds).
 **Next:** release 0.16.1 when the user says so; the user to confirm cover-wide cells in mixed icon-only fences (AN20).
+**Released:** 0.16.1 on 2026-10-05 — CI green, draft with the delta package (317 KB), install check (the installed 0.16.0
+updated itself in 3 s through the tray's Restart to update; data unchanged; plain restart back on GitHub updates), published; hub refreshed.
