@@ -1321,3 +1321,17 @@ this milestone and approved the proposed defaults.
 
 **Consequences.** A file moved into a watched folder while NeoFences was closed keeps its old creation time and is not
 caught up. config.json writes `collect` only for fences with rules (schema stays 5); an older NeoFences ignores it.
+
+## ADR-050 — Help lives on GitHub, linked from the app
+**Date:** 2026-10-05 · **Status:** Accepted
+
+**Context.** NeoFences is ready for friends to try; the README still described the pre-pivot design and there was no
+guide. The user chose help on GitHub, linked from the app, over an in-app help window.
+
+**Decision.** The README (what it is, install, quick start, safety) and `docs/GUIDE.md` (every feature, screenshots from a
+demo setup with nothing personal) live in the repository. The tray's **Help** and Settings → About and logs → **Help
+(online guide)** open `https://github.com/CipherSnowden/neo-fences/blob/main/docs/GUIDE.md` in the browser through the
+usual open path.
+
+**Consequences.** Help is always the current guide and needs no in-app copy kept in sync; reading it needs a network.
+Every change to a menu, a setting or a gesture also updates the guide (same commit).

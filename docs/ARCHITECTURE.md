@@ -171,6 +171,10 @@ games… is open; after each scan game items follow their game's shortcut and ne
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
+**0.17.0 (M29, a guide for friends)**: the README rewritten for the current NeoFences and `docs/GUIDE.md` (every
+feature, screenshots from a demo setup); tray → **Help** and Settings → **Help (online guide)** open the guide on GitHub
+(ADR-050, `research/m29-guide.md`).
+
 **0.16.1 (M28, polish)**: the deferred minors of M24–M27 — folder panels (columns by real width, no hover name over
 them, the Menu key at the row, panel and widget controls built only where used), auto-collect (the offer on a slow folder,
 no watermark going back, no catch-up during a game, items saved before the advanced watermark), widgets (right at once

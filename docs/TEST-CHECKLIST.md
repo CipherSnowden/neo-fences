@@ -714,3 +714,13 @@ Added after the M19 final review:
 | AN18 | Size ▸: arrow keys to 3 × 2, hover 1 × 1, leave the grid, Enter; Left at column 1 | sets the size shown; Left at the edge closes the picker |
 | AN19 | Auto-collect: a new rule on a slow share, OK, start a game before the listing returns | no question over the game (logged) |
 | AN20 | Icon-only Free fence of icons with one game cover (Ctrl-copy a cover in) | cells as wide as a cover; icons keep their stored cells or move to free ones; back when the cover goes |
+
+## AO — 0.17.0 a guide for friends (M29)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AO1 | Tray → Help | the guide opens on GitHub in the default browser |
+| AO2 | Settings → About and logs → Help (online guide) | the same |
+| AO3 | On GitHub: the README's links and images, the guide's contents links and images | every link and anchor works; every image shows |
+| AO4 | Open every screenshot in docs/guide | nothing personal (names, private files, email, private links) |
+| AO5 | Follow the README's quick start on a fresh user | a sorted desktop in about five minutes, every named entry found |
