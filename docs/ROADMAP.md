@@ -79,7 +79,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Opus review: 0 critical / 1 important (read-only start showed the welcome) + 1 raised minor (a set-up welcome fence removed), fixed (658 tests)
   - [x] Live check AP1, AP2, AP5, AP6, AP8, AP9 by script; merged to main
   - [ ] AP3, AP4, AP7 and the tray notice by hand
-  - [ ] Release 0.18.0 (the user approved the release 2026-10-06)
+  - [x] Released 0.18.0 on 2026-10-06 (the installed 0.17.0 updated itself in 2 s; data unchanged; no welcome on the existing setup)
   - Deferred minors: in `research/m30-welcome.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 

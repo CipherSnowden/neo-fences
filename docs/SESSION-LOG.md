@@ -670,3 +670,7 @@ welcome — fixed; a renamed or rule-holding welcome fence was removed by a sort
 AP by script (the notice not caught on screen). Merged locally.
 **Decisions:** ADR-051.
 **Next:** release 0.18.0 when the user says so; AP3/AP4/AP7 and the notice by hand.
+**Released:** 0.18.0 on 2026-10-06 — CI green; the release build was cancelled once by GitHub (no runner for 15 min, Actions
+degraded) and passed on a re-run; draft with the delta package (297 KB), install check (the installed 0.17.0 updated
+itself in 2 s through the tray's Restart to update; data unchanged; no welcome on the existing setup; plain restart back
+on GitHub updates), published; hub refreshed.

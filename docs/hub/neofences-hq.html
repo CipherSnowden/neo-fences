@@ -788,9 +788,9 @@ const HUB = {
   updated: "2026-10-05",
   commit: "2d16bda",
   phase: "0.18.0 — first-run welcome",
-  current: "M30 merged: the first fence welcomes a fresh install (Sort my desktop…, Add item…, Guide) and a tray notice says where the icon is · next: release 0.18.0 when you say so",
+  current: "0.18.0 RELEASED and installed (your 0.17.0 updated itself): new installs get a welcome in the first fence (Sort my desktop…, Add item…, Guide) · next: pre-1.0 work or new ideas",
   waiting: [
-    "NEW in 0.18.0 (when released) — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
+    "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
     "NEW in 0.17.0 — Help: tray → Help (or Settings → About and logs → Help (online guide)) opens the guide on GitHub: every feature with pictures, a cheat-sheet of gestures and keys, install and troubleshooting. Worth checking: the README and guide links and images on GitHub (AO3), and the quick start on a fresh user (AO5).",
     "In 0.16.0 — auto-collect: fence menu → Auto-collect… → New rule. Watch your Desktop or any folder; pick kinds (apps and shortcuts, installers, documents, pictures, archives, anything) or patterns. New matching files show up as items within ~2 s; nothing is moved; removed stays removed; files from while NeoFences was closed are caught up at start.",
     "In 0.15.0 — folder panels: fence menu → Add folder panel… (or a folder item → Show as folder panel). Details / List / Icons, click a column header to sort, double-click a subfolder to browse in (Back / Up / Home), Size ▸ or Fill fence. Your Downloads view is now a panel that fills its fence.",
@@ -810,7 +810,7 @@ const HUB = {
       { t: "You chose a welcome inside the first fence; the sort removes the empty welcome fence; hide icons via the dialog's checkbox", s: "done" },
       { t: "Spec, replay-verified plan, native build; Opus review fixes (read-only start, a set-up welcome fence kept) — 658 tests", s: "done" },
       { t: "Live check AP1, AP2, AP5, AP6, AP8, AP9 by script; merged locally", s: "done" },
-      { t: "Release 0.18.0", s: "todo" },
+      { t: "Released 0.18.0 — your 0.17.0 updated itself in 2 s; data unchanged; no welcome on your setup", s: "done" },
       { t: "AP3 (small / light), AP4 (drop on the welcome), AP7 (welcome as a tab) and the tray notice — by hand", s: "todo" }
     ]},
     { group: "M29 · A guide for friends (0.17.0)", items: [
@@ -1151,7 +1151,7 @@ const HUB = {
     { id: "M27", name: "Auto-collect (0.16.0)", goal: "New files of the desktop or a folder become items in a fence (ADR-049) — released as 0.16.0", s: "done" },
     { id: "M28", name: "Polish (0.16.1)", goal: "The 20 deferred minors of M24–M27 — released as 0.16.1", s: "done" },
     { id: "M29", name: "A guide for friends (0.17.0)", goal: "README, docs/GUIDE.md with screenshots, Help in the tray and Settings (ADR-050) — released as 0.17.0", s: "done" },
-    { id: "M30", name: "First-run welcome (0.18.0)", goal: "The first fence welcomes a fresh install; tray notice (ADR-051) — merged, release pending", s: "wip" },
+    { id: "M30", name: "First-run welcome (0.18.0)", goal: "The first fence welcomes a fresh install; tray notice (ADR-051) — released as 0.18.0", s: "done" },
     { id: "Next", name: "Next", goal: "Pre-1.0 work (code signing) or new ideas", s: "todo" }
   ],
   versions: [
@@ -1171,7 +1171,7 @@ const HUB = {
     { v: "0.16.0", s: "done", scope: "Auto-collect rules (M27): new files of the desktop or a folder become items in a fence, by kind or pattern; removed stays removed; catch-up at start. Released 2026-10-05; the installed 0.15.0 updated itself." },
     { v: "0.16.1", s: "done", scope: "Polish (M28): 20 deferred minors — panels, auto-collect, widgets, grid and sizes. Released 2026-10-05; the installed 0.16.0 updated itself." },
     { v: "0.17.0", s: "done", scope: "A guide for friends (M29): rewritten README, docs/GUIDE.md with screenshots, Help in the tray and Settings. Released 2026-10-06; the installed 0.16.1 updated itself." },
-    { v: "0.18.0", s: "todo", scope: "First-run welcome (M30): the first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is. Merged 2026-10-06; release pending." },
+    { v: "0.18.0", s: "done", scope: "First-run welcome (M30): the first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is. Released 2026-10-06; the installed 0.17.0 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1446,7 +1446,7 @@ const HUB = {
     { date: "2026-10-05", topic: "M27 auto-collect (merged)", done: "You chose auto-collect; prototype probed with a test folder; verified plan; native build; Opus review fixes (633 tests); live check AM; merged locally.", next: "Pre-1.0 work or polish" },
     { date: "2026-10-05", topic: "M28 polish (merged)", done: "All four groups; prototype + visual probe; verified plan; native build; Opus review fixes (643 tests); live check AN; merged locally.", next: "Pre-1.0 work or new ideas" },
     { date: "2026-10-05", topic: "M29 guide for friends (merged)", done: "Spec + plan; native build; 8 demo screenshots (3 as JPEG); Opus review fixes (tray overflow, download warning, wording); guide rule in CLAUDE.md; live check AO1/AO2/AO4; merged locally.", next: "Released 0.17.0; next: pre-1.0 work or new ideas" },
-    { date: "2026-10-06", topic: "M30 first-run welcome (merged)", done: "Welcome in the first fence; spec + replay-verified plan; native build; Opus review fixes (read-only start, set-up welcome fence kept; 658 tests); live check AP; merged locally.", next: "Release 0.18.0" }
+    { date: "2026-10-06", topic: "M30 first-run welcome (merged)", done: "Welcome in the first fence; spec + replay-verified plan; native build; Opus review fixes (read-only start, set-up welcome fence kept; 658 tests); live check AP; merged locally.", next: "Released 0.18.0; next: pre-1.0 work or new ideas" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1996,7 +1996,9 @@ const HUB = {
     ["eece8da", "feat: added the welcome to the first fence and the first-start tray notice"],
     ["e875f41", "docs: described the first-run welcome in the guide, README, ADR-051, architecture, features, checklist AP and the M30 note"],
     ["0b22500", "fix: fixed the welcome showing on read-only starts and removing a welcome fence the user set up"],
-    ["2d16bda", "docs: added the welcome screenshot and the M30 live check results"]
+    ["2d16bda", "docs: added the welcome screenshot and the M30 live check results"],
+    ["d717eca", "chore: bumped the version to 0.18.0"],
+    ["caf6716", "docs: marked the 0.18.0 release as approved"]
   ]
 };
 /* ===== END HUB DATA ===== */
