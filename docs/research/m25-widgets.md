@@ -53,4 +53,15 @@ is missing, Enter opening widgets' apps, PDH cost (measured live), comma lists i
 
 ## Live check
 
-(TEST-CHECKLIST AK — filled in after the run.)
+2026-10-05, branch build on a copy of the user's data (restored afterwards), scripted while the PC was unattended;
+screenshots sent to the user.
+
+- **Pass:** AK1 (Clock, Date, System stats in Apps; a clock in a Free fence at the first free spot), AK2 (1 × 1 and 4 × 4
+  scale), AK3 (seconds tick, date line), AK5 (CPU 6 % idle → 98 % under load; RAM, GPU and C: shown), AK6 (after Pause and
+  after roll-up the clock is right at once), AK7 (drag to another fence, Ctrl+copy, remove), AK8 (Clock app; Task
+  Manager), AK9 (a snapshot restore brings the widgets back with the clock's options), AK10 (0.016 % of the machine over
+  30 s with four widgets shown), AK11 (a rolled-up fence hovered open shows the current time), AK12 (Open with a widget
+  and an app selected: the app opened, no Windows prompt).
+- **By hand later:** AK4 (12/24-hour switch) and AK13 (time-zone change) — both change Windows settings.
+- Script notes: the stats percentages are not all exposed to UI Automation, so AK5 was read from screenshots; Task
+  Manager opened by AK8 runs elevated and could not be closed by the script (left for the user).
