@@ -55,7 +55,7 @@ Milestone details and exit criteria: spec §9.
 - [ ] **M26 — 0.15.0: the folder panel element** (a folder as Details / List / Icons inside any fence; replaces folder-view fences; spec 2026-10-05-folder-panel-design, ADR-048)
   - [x] Prototype probed on a copy of the user's data, plan with replay-verified patches, native build; Opus review: 4 important + 4 re-graded fixed (606 tests)
   - [x] Live check TEST-CHECKLIST AL by script (AL8, AL10, AL11, AL15, AL17, AL20 by hand later); a tall panel's wheel fix; merged to main
-  - [ ] Release 0.15.0 (asked first)
+  - [ ] Release 0.15.0 (the user approved the sequence 2026-10-05)
   - Deferred minors: in `research/m26-folder-panel.md`
 - [ ] Later — auto-collect rules (the other half of dynamic collections)
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
