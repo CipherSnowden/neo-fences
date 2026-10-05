@@ -74,6 +74,7 @@ Milestone details and exit criteria: spec §9.
   - [ ] AO3 (links on GitHub) after the push; AO5 (quick start on a fresh user) by hand
   - [x] Released 0.17.0 on 2026-10-06 (the installed 0.16.1 updated itself in 3 s; data unchanged; tray shows Help)
   - Deferred minors: in `research/m29-guide.md`
+- [~] **M30 — 0.18.0: first-run welcome** (a welcome in the first fence, Sort my desktop, the tray notice) — claimed by session 2026-10-06 welcome
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot
