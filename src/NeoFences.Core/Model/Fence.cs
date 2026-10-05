@@ -52,6 +52,10 @@ public sealed record Fence
     /// <summary>Any colour as "#RRGGBB" (M14, fence menu → Colour → Custom…); wins over <see cref="TabColor"/>.</summary>
     public string? CustomColor { get; init; }
 
+    /// <summary>The first-run welcome (M30, ADR-051): only a fresh start's first fence; cleared by its first item.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Welcome { get; init; }
+
     public static Fence Create(string title, bool isLibrary = false) => new() { Id = NewId(), Title = title, IsLibrary = isLibrary };
 
     public static string NewId() => Guid.NewGuid().ToString("N");

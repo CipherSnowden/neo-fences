@@ -21,8 +21,8 @@ public sealed record NeoFencesConfig
     /// <summary>Fingerprint of the display configuration seen last; new configurations are derived from it.</summary>
     public string? LastLayoutFingerprint { get; init; }
 
-    /// <summary>First run (spec §5): one empty fence; its hint says how to fill it.</summary>
-    public static NeoFencesConfig CreateDefault() => new() { Fences = [Fence.Create("Fence")] };
+    /// <summary>First run (spec §5): one empty fence, the welcome (M30): it shows how to start until it gets an item.</summary>
+    public static NeoFencesConfig CreateDefault() => new() { Fences = [Fence.Create("Fence") with { Welcome = true }] };
 
     public NeoFencesConfig WithFence(Fence updated) =>
         this with { Fences = Fences.Select(fence => fence.Id == updated.Id ? updated : fence).ToList() };
