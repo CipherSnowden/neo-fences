@@ -94,7 +94,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Opus review: 0 critical / 3 important (notice after a game at first start, date line with Windows' regional formats, accent on DWM's message) fixed (700 tests)
   - [x] Live check AR1 (accent change, scripted with the user's OK; restored) and AR2 (Free cells stored at start); merged to main
   - [ ] AR3–AR8 by hand
-  - [ ] Release 0.19.1 (asked first)
+  - [ ] Release 0.19.1 (the user approved the release 2026-10-06)
   - Deferred minors: in `research/m32-polish.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
