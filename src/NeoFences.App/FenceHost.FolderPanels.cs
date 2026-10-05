@@ -346,7 +346,8 @@ public sealed partial class FenceHost
         menu.Items.Add(addTo);
         menu.Items.Add(new Separator());
         menu.Items.Add(new MenuItem { Header = "Shift+right-click: Windows' menu", IsEnabled = false });
-        window.ShowItemMenu(menu, fromKeyboard);
+        if (fromKeyboard) window.ShowItemMenuAt(menu, screenX, screenY); // the Menu key: at the row (M28)
+        else window.ShowItemMenu(menu, fromKeyboard: false);
     }
 
     /// <summary>Windows' menu for a panel's entries, after a 2 s check of the folder off the UI thread (a share may have gone, M19 R2).</summary>

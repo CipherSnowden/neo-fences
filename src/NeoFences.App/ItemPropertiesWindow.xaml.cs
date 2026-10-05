@@ -52,6 +52,7 @@ public partial class ItemPropertiesWindow : Window
             // A game item points at NeoFences' own shortcut for the game; the scan keeps it there (M22, final review I2).
             TargetBox.IsReadOnly = true;
             BrowseButton.IsEnabled = false;
+            ChangeIconButton.IsEnabled = item.Kind != ItemKind.Widget; // M28: a widget draws itself, no icon to change
         }
         _preview = new FenceItemView(new ShownItem("preview", item.Target, item.Name, item.Icon));
         _preview.PropertyChanged += OnPreviewChanged;
@@ -191,6 +192,7 @@ public partial class ItemPropertiesWindow : Window
             }
             return;
         }
+        if (ItemKinds.Of(CurrentTarget ?? "") == ItemKind.Widget) return; // M28: a widget's target is never shown through Windows
         if (_preview.Update(new ShownItem("preview", CurrentTarget ?? "", NameBox.Text, _icon)) || _preview.Icon is null) _iconLoader.Request(_preview, 48);
         IconPreview.Source = _preview.Icon;
     }
@@ -215,7 +217,7 @@ public partial class ItemPropertiesWindow : Window
         if (kind != ItemKind.Path && !isApp)
         {
             _checkNumber++; // an older path check still running must not overwrite this
-            ShowStatus(kind == ItemKind.Website ? "A website: opens in your browser." : "A Windows item.", takesArguments: false);
+            ShowStatus(kind == ItemKind.Website ? "A website: opens in your browser." : kind == ItemKind.Widget ? "A widget." : "A Windows item.", takesArguments: false);
             return;
         }
         var number = ++_checkNumber;

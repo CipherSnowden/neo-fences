@@ -53,6 +53,72 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- M25: a widget draws itself in its whole span (no icon, no label); built only for widget elements (M28). -->
+        <DataTemplate x:Key="WidgetTemplate">
+            <Grid Width="{Binding WidgetWidth}" Height="{Binding WidgetHeight}"
+                  HorizontalAlignment="Center" IsHitTestVisible="False">
+                <Viewbox x:Name="ClockView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
+                    <StackPanel>
+                        <TextBlock Text="{Binding WidgetMain}" Foreground="{DynamicResource FenceTitleText}" FontSize="30" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                        <TextBlock x:Name="ClockDate" Text="{Binding WidgetSub}" Foreground="{DynamicResource FenceText}" FontSize="11"
+                                   HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                    </StackPanel>
+                </Viewbox>
+                <Viewbox x:Name="DateView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
+                    <StackPanel>
+                        <TextBlock Text="{Binding WidgetMain}" Foreground="{DynamicResource FenceText}" FontSize="11" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                        <TextBlock Text="{Binding WidgetSub}" Foreground="{DynamicResource FenceTitleText}" FontSize="40" FontWeight="Bold"
+                                   HorizontalAlignment="Center" Margin="0,-4,0,-4" Effect="{DynamicResource LabelShadow}" />
+                        <TextBlock Text="{Binding WidgetFoot}" Foreground="{DynamicResource FenceText}" FontSize="11"
+                                   HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
+                    </StackPanel>
+                </Viewbox>
+                <Viewbox x:Name="StatsView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
+                    <ItemsControl ItemsSource="{Binding StatRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="30" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="34" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="11" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Height="6" CornerRadius="3" Background="{DynamicResource FenceHover}" VerticalAlignment="Center">
+                                        <Border HorizontalAlignment="Left" CornerRadius="3" Background="{DynamicResource FenceTitleText}"
+                                                Width="{Binding Percent, Converter={x:Static local:PercentWidth.Of80}}" />
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Text="{Binding Text}" Foreground="{DynamicResource FenceText}" FontSize="11"
+                                               TextAlignment="Right" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Viewbox>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding WidgetKindName}" Value="Clock">
+                    <Setter TargetName="ClockView" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding WidgetKindName}" Value="Date">
+                    <Setter TargetName="DateView" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding WidgetKindName}" Value="Stats">
+                    <Setter TargetName="StatsView" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding WidgetSub}" Value="">
+                    <Setter TargetName="ClockDate" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+        <!-- M26: a folder panel fills its span (or, alone and set to fill, the whole fence) and takes its own clicks; built only for panels (M28). -->
+        <DataTemplate x:Key="PanelTemplate">
+            <Grid Width="{Binding WidgetWidth}" Height="{Binding WidgetHeight}">
+                <local:FolderPanelView DataContext="{Binding PanelModel}" />
+            </Grid>
+        </DataTemplate>
     </Window.Resources>
     <!-- FenceOutline / FenceVeil / FenceTitleText come from the fence's look (M14, ApplyStyle); FenceBorder stays the tone's. -->
     <Border CornerRadius="8" BorderBrush="{DynamicResource FenceOutline}" BorderThickness="1" Background="{DynamicResource FenceVeil}">
@@ -224,54 +290,9 @@
                                             </Border>
                                         </Grid>
                                     </Border>
-                                    <!-- M25: a widget draws itself in its whole span (no icon, no label). -->
-                                    <Grid x:Name="WidgetPanel" Visibility="Collapsed" Width="{Binding WidgetWidth}" Height="{Binding WidgetHeight}"
-                                          HorizontalAlignment="Center" IsHitTestVisible="False">
-                                        <Viewbox x:Name="ClockView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding WidgetMain}" Foreground="{DynamicResource FenceTitleText}" FontSize="30" FontWeight="SemiBold"
-                                                           HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
-                                                <TextBlock x:Name="ClockDate" Text="{Binding WidgetSub}" Foreground="{DynamicResource FenceText}" FontSize="11"
-                                                           HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
-                                            </StackPanel>
-                                        </Viewbox>
-                                        <Viewbox x:Name="DateView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding WidgetMain}" Foreground="{DynamicResource FenceText}" FontSize="11" FontWeight="SemiBold"
-                                                           HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
-                                                <TextBlock Text="{Binding WidgetSub}" Foreground="{DynamicResource FenceTitleText}" FontSize="40" FontWeight="Bold"
-                                                           HorizontalAlignment="Center" Margin="0,-4,0,-4" Effect="{DynamicResource LabelShadow}" />
-                                                <TextBlock Text="{Binding WidgetFoot}" Foreground="{DynamicResource FenceText}" FontSize="11"
-                                                           HorizontalAlignment="Center" Effect="{DynamicResource LabelShadow}" />
-                                            </StackPanel>
-                                        </Viewbox>
-                                        <Viewbox x:Name="StatsView" Visibility="Collapsed" Stretch="Uniform" Margin="4">
-                                            <ItemsControl ItemsSource="{Binding StatRows}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid Margin="0,2">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="30" />
-                                                                <ColumnDefinition Width="80" />
-                                                                <ColumnDefinition Width="34" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <TextBlock Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="11" VerticalAlignment="Center" />
-                                                            <Border Grid.Column="1" Height="6" CornerRadius="3" Background="{DynamicResource FenceHover}" VerticalAlignment="Center">
-                                                                <Border HorizontalAlignment="Left" CornerRadius="3" Background="{DynamicResource FenceTitleText}"
-                                                                        Width="{Binding Percent, Converter={x:Static local:PercentWidth.Of80}}" />
-                                                            </Border>
-                                                            <TextBlock Grid.Column="2" Text="{Binding Text}" Foreground="{DynamicResource FenceText}" FontSize="11"
-                                                                       TextAlignment="Right" VerticalAlignment="Center" />
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </Viewbox>
-                                    </Grid>
-                                    <!-- M26: a folder panel fills its span (or, alone and set to fill, the whole fence) and takes its own clicks. -->
-                                    <local:FolderPanelView x:Name="PanelView" Visibility="Collapsed" DataContext="{Binding PanelModel}"
-                                                           Width="{Binding DataContext.WidgetWidth, ElementName=Cell}"
-                                                           Height="{Binding DataContext.WidgetHeight, ElementName=Cell}" />
+                                    <!-- M25 widgets, M26 panels: their own templates, built only for those elements (M28: lighter items). -->
+                                    <!-- Collapsed for plain items: without a template it would print the item's type name. -->
+                                    <ContentControl x:Name="Extra" Content="{Binding}" Focusable="False" IsTabStop="False" HorizontalAlignment="Center" Visibility="Collapsed" />
                                     <TextBlock x:Name="Label" Margin="0,4,0,0" Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="12"
                                                Visibility="{DynamicResource LabelVisibility}"
                                                TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
@@ -286,25 +307,15 @@
                                         <Setter TargetName="IconGrid" Property="Visibility" Value="Collapsed" />
                                         <Setter TargetName="Tile" Property="Visibility" Value="Collapsed" />
                                         <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
-                                        <Setter TargetName="WidgetPanel" Property="Visibility" Value="Visible" />
+                                        <Setter TargetName="Extra" Property="ContentTemplate" Value="{StaticResource WidgetTemplate}" />
+                                        <Setter TargetName="Extra" Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsPanel}" Value="True">
                                         <Setter TargetName="IconGrid" Property="Visibility" Value="Collapsed" />
                                         <Setter TargetName="Tile" Property="Visibility" Value="Collapsed" />
                                         <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
-                                        <Setter TargetName="PanelView" Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding WidgetKindName}" Value="Clock">
-                                        <Setter TargetName="ClockView" Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding WidgetKindName}" Value="Date">
-                                        <Setter TargetName="DateView" Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding WidgetKindName}" Value="Stats">
-                                        <Setter TargetName="StatsView" Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding WidgetSub}" Value="">
-                                        <Setter TargetName="ClockDate" Property="Visibility" Value="Collapsed" />
+                                        <Setter TargetName="Extra" Property="ContentTemplate" Value="{StaticResource PanelTemplate}" />
+                                        <Setter TargetName="Extra" Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding ArtKind}" Value="Poster">
                                         <Setter TargetName="TilePoster" Property="Visibility" Value="Visible" />

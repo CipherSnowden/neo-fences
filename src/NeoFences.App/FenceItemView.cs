@@ -92,7 +92,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
         if (shown.Panel is { } panel) // M26
         {
             PanelModel ??= new FolderPanelModel(Key);
-            PanelModel.Apply(panel, Span);
+            PanelModel.Apply(panel);
         }
         else PanelModel = null;
         Fills = shown.Fill;
@@ -112,7 +112,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
         ItemKind.Website => ItemKinds.WebsiteName(target),
         _ when ItemKinds.AppIdOf(target) is { } appId => ItemKinds.AppName(appId), // a program's id holds its path (M20)
         ItemKind.Special => "",
-        ItemKind.Widget => Widgets.NameOf(Widgets.Of(target)!.Value), // M25
+        ItemKind.Widget => Widgets.NameOfTarget(target), // M25; M28: an unknown kind too
         _ => Path.GetFileNameWithoutExtension(target.TrimEnd('\\')) is { Length: > 0 } name ? name : target,
     };
 
@@ -166,7 +166,8 @@ public sealed class FenceItemView : INotifyPropertyChanged
                 (WidgetMain, WidgetSub, WidgetFoot) = (page.Weekday, page.Day, page.MonthYear);
                 break;
             case WidgetKind.Stats:
-                StatRows = [Widgets.Row("CPU", stats?.Cpu), Widgets.Row("RAM", stats?.Ram), Widgets.Row("GPU", stats?.Gpu), Widgets.Row("C:", stats?.DiskC)];
+                IReadOnlyList<StatRow> rows = [Widgets.Row("CPU", stats?.Cpu), Widgets.Row("RAM", stats?.Ram), Widgets.Row("GPU", stats?.Gpu), Widgets.Row("C:", stats?.DiskC)];
+                if (!rows.SequenceEqual(StatRows)) StatRows = rows; // M28: the rows are rebuilt only when a value changed
                 break;
         }
     }

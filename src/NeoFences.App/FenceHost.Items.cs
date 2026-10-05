@@ -73,7 +73,7 @@ public sealed partial class FenceHost
     private static string DisplayName(VirtualItem item) => item.OwnName ?? item.Kind switch
     {
         ItemKind.Website => ItemKinds.WebsiteName(item.Target),
-        ItemKind.Widget => Widgets.NameOf(Widgets.Of(item.Target)!.Value), // M25
+        ItemKind.Widget => Widgets.NameOfTarget(item.Target), // M25; M28: an unknown kind too
         _ when ItemKinds.AppIdOf(item.Target) is { } appId => ItemKinds.AppName(appId), // until (or when uninstalled, never) Windows names it
         _ => Path.GetFileNameWithoutExtension(item.Target.TrimEnd('\\')) is { Length: > 0 } name ? name : item.Target,
     };
@@ -430,27 +430,43 @@ public sealed partial class FenceHost
     {
         if (window.Kind != FenceKind.Items) return;
         var known = keys.Where(key => _items.Find(key) is not null).ToList();
-        var fromLibrary = keys.Except(known).ToList(); // the library's and a view's key is a path (M12, M21): they become items
+        var fromLibrary = keys.Except(known).ToList(); // the library's and a panel's key is a path (M12, M21, M26): they become items
+        // Everything that arrived is placed together (M28): in a Free fence the paths land at the drop cell too, not on the
+        // first free spots, and the element under the pointer (the drag's first key) leads.
+        var arrived = new List<string>();
+        var sources = new List<string?>();
         if (known.Count > 0)
         {
             if (duplicate)
             {
                 // The copies come in document order: their sources in the same order, so each copy gets its own offset (final review I1).
                 var copying = known.ToHashSet(StringComparer.Ordinal);
-                var sources = _items.Fences.Values.SelectMany(items => items).Where(item => copying.Contains(item.Id)).Select(item => item.Id).ToList();
+                sources.AddRange(_items.Fences.Values.SelectMany(items => items).Where(item => copying.Contains(item.Id)).Select(item => item.Id));
                 var copies = ItemEdits.Duplicate(_items, known, window.FenceId, insertAt);
                 _items = copies.Document;
-                PlaceDropped(window, copies.NewIds, sources); // M24: a Free fence puts them on the drop cell
+                arrived.AddRange(copies.NewIds);
             }
             else
             {
                 _items = ItemEdits.Move(_items, known, window.FenceId, insertAt);
-                PlaceDropped(window, known, known);
+                arrived.AddRange(known);
+                sources.AddRange(known);
             }
             Log.Information("{Count} item(s) {Action} to fence {FenceId}", known.Count, duplicate ? "duplicated" : "moved", window.FenceId);
         }
-        if (fromLibrary.Count > 0) AddTargets(window, fromLibrary, insertAt);
-        else ItemsChanged(checkTargets: []);
+        IReadOnlyList<string> alreadyThere = [];
+        if (fromLibrary.Count > 0)
+        {
+            var added = ItemEdits.Add(_items, window.FenceId, [.. fromLibrary.Select(VirtualItem.Create)], insertAt);
+            _items = added.Document;
+            arrived.AddRange(added.AddedIds);
+            sources.AddRange(added.AddedIds.Select(_ => (string?)null));
+            alreadyThere = added.AlreadyThereIds;
+            Log.Information("{Added} item(s) added to fence {FenceId}; {Already} already there", added.AddedIds.Count, window.FenceId, added.AlreadyThereIds.Count);
+        }
+        PlaceDropped(window, arrived, sources, anchorIndex: keys.Count > 0 ? Math.Max(0, sources.IndexOf(keys[0])) : 0); // M24: a Free fence puts them on the drop cell
+        ItemsChanged(checkTargets: fromLibrary);
+        if (alreadyThere.Count > 0) window.SelectItems(alreadyThere); // already in this fence: it flashes
     }
 
     /// <summary>Files, folders or a link from outside: new items at the drop point; the originals stay where they are.</summary>

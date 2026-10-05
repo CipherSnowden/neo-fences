@@ -47,8 +47,9 @@ public sealed class FolderLister : IDisposable
     /// <param name="noticeOwner">The window that receives "may this drive be removed?" (the app's message window).</param>
     /// <param name="renamed">Called on the UI thread with the old and new path when the folder itself is renamed in place (M21).</param>
     /// <param name="namesOnly">Only entries appearing, going or renamed re-list it (M27: auto-collect); writes do not.</param>
+    /// <param name="startPaused">Started during a game (M28): the first listing waits for <see cref="SetPaused"/>(false).</param>
     public FolderLister(string folder, nint noticeOwner, string label, Action<IReadOnlyList<ItemInfo>?> show, Action<Exception> logFailure,
-        Action<string, string>? renamed = null, bool namesOnly = false)
+        Action<string, string>? renamed = null, bool namesOnly = false, bool startPaused = false)
     {
         _namesOnly = namesOnly;
         _label = label;
@@ -72,7 +73,8 @@ public sealed class FolderLister : IDisposable
         };
         _retryTimer = new DispatcherTimer { Interval = RetryDelay };
         _retryTimer.Tick += (_, _) => { if (!_refreshing && !_paused) Refresh(); }; // never pile up blocked listings
-        Refresh();
+        if (startPaused) (_paused, _missedChanges) = (true, true); // listed when the game ends
+        else Refresh();
     }
 
     /// <summary>

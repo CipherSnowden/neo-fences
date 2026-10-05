@@ -61,8 +61,8 @@ public sealed partial class FenceHost
             // Names only: a file being written (a download) does not re-list the folder 4 times a second (final review M5).
             var lister = new FolderLister(folder, noticeOwner: _messages.Handle, label: "auto-collect",
                 show: listed => OnCollectListing(source, folder, listed),
-                logFailure: failure => Log.Warning(failure, "auto-collect: cannot watch {Folder}", folder), namesOnly: true);
-            if (_gameMode || _paused) lister.SetPaused(true);
+                logFailure: failure => Log.Warning(failure, "auto-collect: cannot watch {Folder}", folder), namesOnly: true,
+                startPaused: _gameMode || _paused); // M28: no catch-up during a game
             _collectListers[folder] = (source, lister);
         }
     }
@@ -138,7 +138,11 @@ public sealed partial class FenceHost
             foreach (var folder in folders.Where(folder => _collectListings.GetValueOrDefault(folder) is not null)) _collectSince[folder] = now;
         }
         if (_collectPending.Count == 0) _collectTimer?.Stop();
-        if (collected.Count > 0) ItemsChanged(checkTargets: collected);
+        if (collected.Count > 0)
+        {
+            ItemsChanged(checkTargets: collected);
+            SaveNow(itemsFirst: true); // M28: the items before the advanced watermark — a power cut in between collects them again, never skips them
+        }
         else ScheduleSave();
     }
 
@@ -160,9 +164,11 @@ public sealed partial class FenceHost
         if (dialog.ShowDialog() != true || dialog.Result is not { } rules) return;
         if (!_config.Fences.Any(candidate => candidate.Id == fenceId)) return; // a restore took the fence meanwhile
         var now = DateTimeOffset.Now;
-        var known = fence.Collect.Select(rule => rule.Id).ToHashSet(StringComparer.Ordinal);
+        // The rules as they are now: listings during the dialog advanced their watermarks (M28: an unchanged rule keeps those).
+        var current = _config.Fences.First(candidate => candidate.Id == fenceId).Collect;
+        var known = current.Select(rule => rule.Id).ToHashSet(StringComparer.Ordinal);
         // A new or changed rule starts looking now: what is there already is offered once, not collected as "new".
-        rules = [.. rules.Select(rule => fence.Collect.FirstOrDefault(old => old.Id == rule.Id) is { } old && old with { Watermark = null } == rule with { Watermark = null } ? old : rule with { Watermark = now })];
+        rules = [.. rules.Select(rule => current.FirstOrDefault(old => old.Id == rule.Id) is { } old && old with { Watermark = null } == rule with { Watermark = null } ? old : rule with { Watermark = now })];
         _config = FenceEdits.SetCollect(_config, fenceId, rules);
         Log.Information("fence {FenceId} auto-collect rules: {Rules}", fenceId, rules.Select(CollectRules.Summary));
         EnsureCollectListers();
@@ -174,6 +180,17 @@ public sealed partial class FenceHost
     /// <summary>"Add these N too?" for a new rule: the files of its folder that match now and no fence holds (at most 200).</summary>
     private void OfferExisting(FenceWindow window, string fenceId, CollectRule rule, IReadOnlyDictionary<string, IReadOnlyList<ItemInfo>?> listings)
     {
+        if (!listings.Keys.Any(source => CollectRules.SameSource(source, rule.Source)))
+        {
+            // OK while the dialog still said "Looking…" (a slow share, M28): listed now, off the UI thread, then asked.
+            Task.Run(() => AutoCollectWindow.ListSource(rule.Source)).ContinueWith(listing =>
+            {
+                if (listing.IsFaulted) Log.Warning(listing.Exception, "auto-collect: {Source} could not be listed for the offer", rule.Source);
+                else if (_windows.ContainsValue(window)) OfferExisting(window, fenceId, rule, new Dictionary<string, IReadOnlyList<ItemInfo>?> { [rule.Source] = listing.Result });
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+            return;
+        }
+        if (!_config.Fences.Any(fence => fence.Id == fenceId)) return; // the fence went meanwhile
         var entries = listings.Where(listing => listing.Value is not null && CollectRules.SameSource(listing.Key, rule.Source)).SelectMany(listing => listing.Value!).ToList();
         var lone = _config with { Fences = [.. _config.Fences.Where(fence => fence.Id == fenceId).Select(fence => fence with { Collect = [rule] })] };
         var plan = CollectRules.Plan(lone, _items, rule.Source, entries);

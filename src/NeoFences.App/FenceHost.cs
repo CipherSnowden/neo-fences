@@ -351,7 +351,8 @@ public sealed partial class FenceHost
         var items = _items.Of(shown.Id);
         var covers = items.Any(GameItems.ShowsCover) ? LibraryArt() : null; // M22: game items shown as covers
         var fills = FolderPanels.Fills(items); // M26: a lone panel set to fill takes the whole fence
-        window.SetItems([.. items.Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note, StateOf(item.Target),
+        window.SetItems([.. items.Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note,
+            Widgets.IsUnknown(item.Target) ? TargetState.Missing : StateOf(item.Target), // M28: a widget kind of a newer NeoFences shows Missing
             Tile: GameItems.ShowsCover(item), TileArt: covers is not null && covers.TryGetValue(item.Target, out var cover) ? cover : null, IsGame: GameItems.IsGame(item),
             Span: FenceGrid.SpanOf(item), Cell: item.Cell, Options: item.Widget, // M24, M25
             Panel: FolderPanels.IsPanel(item) ? item.Panel : null, Fill: fills))]); // M26
@@ -1138,7 +1139,11 @@ public sealed partial class FenceHost
         _libraryLister?.SetPaused(gameMode);
         SetPanelsPaused(gameMode); // M21, M26
         SetCollectPaused(); // M27
-        if (!gameMode) ApplyDeferredShellWork();
+        if (!gameMode)
+        {
+            ApplyDeferredShellWork();
+            OnWidgetTick(); // M28: widgets right at once
+        }
         UpdatePeekHotkey();
         _trayIcon?.SetTooltip(TrayTooltip());
         RefreshSettings();
@@ -1191,6 +1196,7 @@ public sealed partial class FenceHost
         RefreshSettings(); // a hotkey that cannot be registered on resume shows in an open Settings (final review I5)
         _trayIcon?.SetTooltip(TrayTooltip());
         Log.Information("paused: {Paused}", paused);
+        if (!paused) OnWidgetTick(); // M28: widgets right at once
     }
 
     private string TrayTooltip() =>
@@ -1302,6 +1308,7 @@ public sealed partial class FenceHost
         if (Current.IconsHidden != iconsWereHidden) SetIconsHidden(Current.IconsHidden); // RunState decides, user-hidden icons included
         if (!hidden) _iconsHiddenByUser = false;
         Log.Information("quick-hide: {Hidden}", hidden);
+        if (!hidden) OnWidgetTick(); // M28: widgets right at once
     }
 
     private void BeginDrawFence(int startX, int startY)

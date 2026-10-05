@@ -97,8 +97,6 @@ public sealed class FolderPanelModel : INotifyPropertyChanged
     public PanelSort Sort { get; private set { field = value; Changed(); } }
     public bool Descending { get; private set { field = value; Changed(); } }
 
-    /// <summary>Details columns: 2 (Name, Date) or 4.</summary>
-    public int Columns { get; private set { if (field == value) return; field = value; Changed(); LookChanged?.Invoke(); } } = 4;
 
     public string Header { get; private set { field = value; Changed(); } } = "";
     public bool ShowHeader { get; private set { field = value; Changed(); } } = true;
@@ -115,12 +113,11 @@ public sealed class FolderPanelModel : INotifyPropertyChanged
     /// <summary>"+ N more — Open folder", or null.</summary>
     public string? More { get; private set { field = value; Changed(); } }
 
-    public void Apply(FolderPanel panel, GridSpan span)
+    public void Apply(FolderPanel panel)
     {
         Look = panel.Look;
         Sort = panel.Sort;
         Descending = panel.Descending;
-        Columns = FolderPanels.Columns(span.Columns);
     }
 
     /// <summary>The host's latest listing for this panel, in place: entries that stay keep their icon, selection and scroll.</summary>

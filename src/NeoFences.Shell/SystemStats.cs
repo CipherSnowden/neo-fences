@@ -13,7 +13,7 @@ public sealed record StatsSample(double? Cpu, double? Ram, double? Gpu, double? 
 /// <summary>
 /// The System stats widget's readings (M25, spec 2026-10-05-widgets-design §3), from Windows' own counters: CPU from the
 /// difference between two <c>GetSystemTimes</c> readings, RAM from <c>GlobalMemoryStatusEx</c>, C: from
-/// <c>GetDiskFreeSpaceEx</c>, GPU from the PDH counter of every 3D engine (summed, capped at 100). One PDH query is kept.
+/// <c>GetDiskFreeSpaceEx</c>, GPU from the PDH counter of every 3D engine (summed per adapter, the busiest one, capped at 100). One PDH query is kept.
 /// Not thread-safe: one sample at a time (the host keeps at most one in flight). Every failure leaves that value null.
 /// </summary>
 public sealed class SystemStats : IDisposable
@@ -92,12 +92,12 @@ public sealed class SystemStats : IDisposable
             {
                 if (PInvoke.PdhGetFormattedCounterArray(_gpu, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes) != 0) return Reopen();
                 var items = (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes;
-                double sum = 0;
+                var engines = new List<(string Instance, double Value)>((int)count);
                 for (var index = 0; index < count; index++)
                 {
-                    if (items[index].FmtValue.CStatus is 0 or 1) sum += items[index].FmtValue.Anonymous.doubleValue; // valid data, or new data (review M2)
+                    if (items[index].FmtValue.CStatus is 0 or 1) engines.Add((items[index].szName.ToString(), items[index].FmtValue.Anonymous.doubleValue)); // valid data, or new data (review M2)
                 }
-                return Math.Min(100, sum);
+                return NeoFences.Core.Items.Widgets.GpuPercent(engines); // M28: the busiest adapter, like Task Manager
             }
         }
         catch (Exception failure) when (failure is InvalidOperationException or ExternalException)

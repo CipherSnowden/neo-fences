@@ -1,5 +1,6 @@
 using System.Windows.Controls;
 using NeoFences.Core.Items;
+using NeoFences.Core.Library;
 using NeoFences.Core.Model;
 using Serilog;
 
@@ -13,7 +14,7 @@ public sealed partial class FenceHost
 {
     /// <summary>The Size ▸ entry for these items (an items fence only).</summary>
     private MenuItem SizeMenu(ContextMenu menu, IReadOnlyList<VirtualItem> items) =>
-        SizePicker.Create(menu, items.Count == 1 ? items[0].Size : null, size => SetSize([.. items.Select(item => item.Id)], size));
+        SizePicker.Create(menu, FenceGrid.CommonSize([.. items.Select(item => item.Size)]), size => SetSize([.. items.Select(item => item.Id)], size)); // M28: mixed sizes check nothing
 
     private void SetSize(IReadOnlyList<string> itemIds, GridSpan? size)
     {
@@ -42,7 +43,8 @@ public sealed partial class FenceHost
     /// Items that just arrived in a Free fence (a drag, a drop from outside, Ctrl+drag) land on the drop cell, the others of
     /// the drag keeping their offsets (their cells where they came from); a taken spot → the nearest free one.
     /// </summary>
-    private void PlaceDropped(FenceWindow window, IReadOnlyList<string> itemIds, IReadOnlyList<string?> sourceKeys)
+    /// <param name="anchorIndex">The dropped element that was under the pointer (M28): it lands on the drop cell.</param>
+    private void PlaceDropped(FenceWindow window, IReadOnlyList<string> itemIds, IReadOnlyList<string?> sourceKeys, int anchorIndex = 0)
     {
         if (!IsFree(window.FenceId) || window.LastDropCell is not { } dropCell || itemIds.Count == 0) return;
         var arriving = itemIds.ToHashSet(StringComparer.Ordinal);
@@ -52,7 +54,7 @@ public sealed partial class FenceHost
         var shownCells = _windows.Values.SelectMany(shown => shown.CurrentCells()).GroupBy(entry => entry.Key).ToDictionary(group => group.Key, group => group.First().Value);
         var dropped = itemIds.Select((id, index) => (Span: _items.Find(id) is { } item ? FenceGrid.SpanOf(item) : GridSpan.One,
             From: sourceKeys.ElementAtOrDefault(index) is { } key && shownCells.TryGetValue(key, out var from) ? from : (GridCell?)null)).ToList();
-        var cells = FenceGrid.PlaceDropped(others, dropped, dropCell, window.Columns);
+        var cells = FenceGrid.PlaceDropped(others, dropped, dropCell, window.Columns, anchorIndex);
         _items = ItemEdits.Place(_items, itemIds.Select((id, index) => (id, cells[index])).ToDictionary(pair => pair.id, pair => pair.Item2, StringComparer.Ordinal));
         window.ForgetDropCell(); // a later addition (Add item…) never lands on an old drop cell
     }
@@ -64,11 +66,17 @@ public sealed partial class FenceHost
     private void PinFreeCells()
     {
         var cells = new Dictionary<string, GridCell>(StringComparer.Ordinal);
-        foreach (var window in _windows.Values.Where(window => IsFree(window.FenceId)))
+        foreach (var fence in _config.Fences.Where(fence => fence.Kind == FenceKind.Items && fence.Layout == FenceLayout.Free))
         {
-            var items = _items.Of(window.FenceId);
+            var items = _items.Of(fence.Id);
             if (items.All(item => item.Cell is not null)) continue;
-            var arrangement = FenceGrid.Arrange([.. items.Select(item => new GridElement(FenceGrid.SpanOf(item), item.Cell))], window.Columns, FenceLayout.Free);
+            // The shown tab: its laid-out columns; a hidden tab: its own columns at its box's width (M28), not the shown tab's.
+            var window = _windows.Values.FirstOrDefault(candidate => candidate.FenceId == fence.Id);
+            var columns = window is not null ? window.Columns
+                : FenceTabs.HostOf(_config, fence.Id) is { } host && _windows.TryGetValue(host.Id, out var box) ? box.ColumnsFor(fence, covers: items.Any(GameItems.ShowsCover))
+                : 0;
+            if (columns == 0) continue; // no window for it (yet): pinned when it shows
+            var arrangement = FenceGrid.Arrange([.. items.Select(item => new GridElement(FenceGrid.SpanOf(item), item.Cell))], columns, FenceLayout.Free);
             for (var index = 0; index < items.Count; index++)
             {
                 if (items[index].Cell is null) cells[items[index].Id] = arrangement.Cells[index];

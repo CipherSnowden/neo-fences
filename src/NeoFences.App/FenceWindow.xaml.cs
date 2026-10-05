@@ -174,6 +174,7 @@ public partial class FenceWindow : Window
     public event Action<LabelMode>? LabelModeRequested;
 
     private Point? _pressPoint;                 // left button pressed on an item: a drag may start
+    private string? _pressedKey;                // the element under the pointer: it leads a group drag (M28)
     private ListBoxItem? _deferredSelect;       // pressed on an already selected item: select it alone only on release
     private Point? _bandStart;                  // left button pressed on empty space: rubber band
     private ListBoxItem? _deferredToggle;       // Ctrl+press on a selected item: unselect it on release unless it was dragged
@@ -677,6 +678,11 @@ public partial class FenceWindow : Window
             _items.Insert(index, view);
         }
         foreach (var view in _items) HookPanel(view);
+        if (_items.Any(view => view.IsTile) != _hasCovers)
+        {
+            _hasCovers = !_hasCovers; // a cover came or went: icon-only cells follow (M28)
+            ApplyItemWidth();
+        }
         // M26: a lone panel set to fill takes the whole fence; the list then does not scroll (the panel does).
         ScrollViewer.SetVerticalScrollBarVisibility(ItemList, shownItems is [{ Fill: true }] ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto);
         ApplyFill();
@@ -716,12 +722,23 @@ public partial class FenceWindow : Window
         menu.IsOpen = true;
     }
 
+    /// <summary>A menu at a screen point (physical pixels; M28: the Menu key on a panel row opens at the row).</summary>
+    public void ShowItemMenuAt(ContextMenu menu, int screenX, int screenY)
+    {
+        _itemMenu = menu;
+        var at = ItemList.PointFromScreen(new Point(screenX, screenY));
+        menu.PlacementTarget = ItemList;
+        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Relative;
+        (menu.HorizontalOffset, menu.VerticalOffset) = (at.X, at.Y);
+        menu.IsOpen = true;
+    }
+
     private int IconSizePx => (int)Math.Round(_iconSizeDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
 
     /// <summary>An item's icon at its own size; a widget draws itself (M25), a panel shows its entries' icons (M26).</summary>
     private void RequestIcon(FenceItemView view)
     {
-        if (!view.IsWidget && !view.IsPanel) _iconLoader.Request(view, PxOf(view));
+        if (!view.IsWidget && !view.IsPanel && ItemKinds.Of(view.Target) != ItemKind.Widget) _iconLoader.Request(view, PxOf(view)); // M28: an unknown widget kind has no icon to ask Windows for
     }
 
     /// <summary>A panel's requests go to the host; its rows ask for icons as they come into view (M26).</summary>
@@ -832,7 +849,7 @@ public partial class FenceWindow : Window
     /// Cells follow the icon size and the label mode (M24): a cell is today's item cell; each element sizes its content to
     /// its span; an icon that changed size is loaded again.
     /// </summary>
-    private void ApplyCellSizes()
+    private void ApplyCellSizes(bool requestIcons = true)
     {
         var labelHeight = IsLibrary || _labelMode == LabelMode.Always ? 36.0 : 0.0;
         var cellWidth = (double)Resources["ItemWidth"] + 8;
@@ -842,7 +859,7 @@ public partial class FenceWindow : Window
         foreach (var view in _items)
         {
             var tileWidth = view.TileWidth;
-            if (view.ApplySize(cellWidth, cellHeight, _iconSizeDips, labelHeight) && IsLoaded) RequestIcon(view);
+            if (view.ApplySize(cellWidth, cellHeight, _iconSizeDips, labelHeight) && IsLoaded && requestIcons) RequestIcon(view);
             if (view.IsTile && Math.Abs(view.TileWidth - tileWidth) > 0.5)
             {
                 view.ArtPath = null; // a cover decoded again at the new tile width (final review I2)
@@ -865,7 +882,7 @@ public partial class FenceWindow : Window
         _iconSizeDips = iconSizeDips;
         Resources["IconSize"] = (double)iconSizeDips;
         Resources["ArrowSize"] = Math.Max(12.0, Math.Round(iconSizeDips * 0.36));
-        ApplyItemWidth();
+        ApplyItemWidth(requestIcons: false); // M28: the reload below asks once
         foreach (var sizeItem in IconSizeItem.Items.OfType<MenuItem>()) sizeItem.IsChecked = (int)sizeItem.Tag == iconSizeDips;
         ReloadIcons();
         ReloadArt();
@@ -896,19 +913,28 @@ public partial class FenceWindow : Window
     /// <summary>Settings → "Show shortcut arrows" (M8b, off by default).</summary>
     public void SetShortcutArrows(bool show) => Resources["ShortcutArrowVisibility"] = show ? Visibility.Visible : Visibility.Collapsed;
 
-    private void ApplyItemWidth()
+    private void ApplyItemWidth(bool requestIcons = true)
     {
         // Game Library tiles are 2:3, 1.5 × the icon size wide (M12).
         Resources["TileWidth"] = Math.Round(_iconSizeDips * 1.5);
         Resources["TileHeight"] = Math.Round(_iconSizeDips * 2.25);
         Resources["TileCellWidth"] = Math.Round(_iconSizeDips * 1.5) + 12.0; // a cover tile among icons (M22)
-        // With labels: room for two short words under small icons. Icons only: a tight grid.
-        Resources["ItemWidth"] = IsLibrary ? Math.Round(_iconSizeDips * 1.5) + 12.0
-            : _labelMode == LabelMode.Always ? LabelledItemWidth : _iconSizeDips + 12.0;
-        ApplyCellSizes(); // M24
+        Resources["ItemWidth"] = IsLibrary ? Math.Round(_iconSizeDips * 1.5) + 12.0 : ItemWidthFor(_iconSizeDips, _labelMode, covers: _hasCovers);
+        ApplyCellSizes(requestIcons); // M24
     }
 
-    private double LabelledItemWidth => Math.Max(76.0, _iconSizeDips + 28.0);
+    private bool _hasCovers; // a game cover shows: icon-only cells are as wide as a cover (M28)
+
+    /// <summary>
+    /// An element's width in a fence: with labels, room for two short words under small icons; icons only, a tight grid —
+    /// as wide as a 2:3 cover when the fence shows covers (M28: covers keep their size).
+    /// </summary>
+    private static double ItemWidthFor(int iconSize, LabelMode labels, bool covers) =>
+        labels == LabelMode.Always ? Math.Max(76.0, iconSize + 28.0) : covers ? Math.Round(iconSize * 1.5) + 12.0 : iconSize + 12.0;
+
+    /// <summary>A fence's columns at this window's width (M28: a hidden tab's own, for its new elements in a Free fence).</summary>
+    public int ColumnsFor(Fence fence, bool covers) =>
+        FenceGrid.ColumnsFor(ItemList.ActualWidth - 8, ItemWidthFor(fence.IconSize, fence.Labels, covers) + 8);
 
     private void OnItemMouseEnter(object sender, MouseEventArgs args)
     {
@@ -931,7 +957,7 @@ public partial class FenceWindow : Window
     {
         var container = _labelMode != LabelMode.OnHover ? null
             : _hoveredContainer ?? (ItemList.SelectedItems.Count == 1 ? ItemList.ItemContainerGenerator.ContainerFromItem(ItemList.SelectedItem) as ListBoxItem : null);
-        if (container is not { DataContext: FenceItemView view, IsVisible: true })
+        if (container is not { DataContext: FenceItemView { IsPanel: false } view, IsVisible: true }) // M28: never over a panel
         {
             HoverLabel.Visibility = Visibility.Collapsed;
             return;
@@ -1390,6 +1416,7 @@ public partial class FenceWindow : Window
             return;
         }
         _pressPoint = args.GetPosition(ItemList);
+        _pressedKey = (container.DataContext as FenceItemView)?.Key;
         // Ctrl+press on a selected item: unselect it on release, not now, so Ctrl+drag can still copy the selection (M3b review).
         if (container.IsSelected && Keyboard.Modifiers == ModifierKeys.Control && args.ClickCount == 1)
         {
@@ -1426,7 +1453,8 @@ public partial class FenceWindow : Window
         _pressPoint = null;
         _deferredSelect = null;
         _deferredToggle = null; // dragged: the item stays selected
-        var dragged = ItemList.SelectedItems.OfType<FenceItemView>().Select(view => view.Key).ToList();
+        // The element under the pointer first: a Free fence keeps the others' offsets from it (M28).
+        var dragged = ItemList.SelectedItems.OfType<FenceItemView>().Select(view => view.Key).OrderBy(key => key == _pressedKey ? 0 : 1).ToList();
         if (dragged.Count > 0) DragRequested?.Invoke(dragged); // returns when the drag ends (Windows' modal loop)
     }
 

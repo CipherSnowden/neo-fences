@@ -174,7 +174,7 @@ public partial class AutoCollectWindow : Window
     }
 
     /// <summary>The desktop is the user's and the Public Desktop; null when the folder (or both desktops) cannot be read.</summary>
-    private static IReadOnlyList<ItemInfo>? ListSource(string source)
+    internal static IReadOnlyList<ItemInfo>? ListSource(string source)
     {
         if (source != CollectRules.DesktopSource) return FolderItems.TryList(source);
         var user = FolderItems.TryList(DesktopItems.UserDesktop);

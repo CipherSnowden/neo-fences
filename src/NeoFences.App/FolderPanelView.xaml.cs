@@ -19,6 +19,7 @@ public partial class FolderPanelView : UserControl
     private readonly Dictionary<GridViewColumn, PanelSort> _sorts = [];
     private readonly GridViewColumn _nameColumn, _dateColumn, _typeColumn, _sizeColumn;
     private FolderPanelModel? _model;
+    private int _columns = 4; // Details columns for the panel's real width (M28)
     private Point? _pressPoint;
     private ListViewItem? _deferredSelect; // pressed on one of several selected entries: selected alone only on release
 
@@ -30,7 +31,16 @@ public partial class FolderPanelView : UserControl
         _typeColumn = Column("Type", PanelSort.Type, text: nameof(PanelEntry.TypeText));
         _sizeColumn = Column("Size", PanelSort.Size, text: nameof(PanelEntry.SizeText));
         DataContextChanged += (_, _) => Attach(DataContext as FolderPanelModel);
-        SizeChanged += (_, _) => SizeColumns();
+        SizeChanged += (_, _) =>
+        {
+            var columns = FolderPanels.Columns(ActualWidth);
+            if (columns == _columns) SizeColumns();
+            else
+            {
+                _columns = columns;
+                ApplyLook();
+            }
+        };
         EntryList.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(OnHeaderClick));
         EntryList.PreviewMouseLeftButtonDown += OnPress;
         EntryList.PreviewMouseMove += OnMove;
@@ -95,7 +105,7 @@ public partial class FolderPanelView : UserControl
         _details.Columns.Clear();
         if (look == PanelLook.Details)
         {
-            GridViewColumn[] columns = _model.Columns == 2 ? [_nameColumn, _dateColumn] : [_nameColumn, _dateColumn, _typeColumn, _sizeColumn];
+            GridViewColumn[] columns = _columns == 2 ? [_nameColumn, _dateColumn] : [_nameColumn, _dateColumn, _typeColumn, _sizeColumn];
             foreach (var column in columns) _details.Columns.Add(column);
         }
         EntryList.View = look == PanelLook.Details ? _details : null;

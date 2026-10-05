@@ -20,6 +20,7 @@ public sealed partial class FenceHost
     private bool _statsInFlight;
     private TimeSpan? _lastStatsAt; // on the monotonic clock: a clock change never freezes the stats (final review I4)
     private readonly HashSet<string> _statsFailuresLogged = new(StringComparer.Ordinal);
+    private TimeSpan? _widgetsUnseenAt; // since when no widget could be seen (M28: a fresh CPU/GPU rate afterwards)
 
     private bool HasWidgets => _items.Fences.Values.Any(items => items.Any(item => item.Kind == ItemKind.Widget));
 
@@ -56,7 +57,22 @@ public sealed partial class FenceHost
     {
         ScheduleWidgetTick();
         var windows = WidgetWindows();
-        if (windows.Count == 0) return; // nobody can see a widget: no work at all
+        if (windows.Count == 0)
+        {
+            _widgetsUnseenAt ??= Clock.Elapsed;
+            return; // nobody can see a widget: no work at all
+        }
+        if (_widgetsUnseenAt is { } unseen)
+        {
+            _widgetsUnseenAt = null;
+            // After a long hidden spell a CPU/GPU rate would average over it (M28): a first reading only primes, the next one in 2 s shows.
+            if (Clock.Elapsed - unseen > StatsEvery * 2 && _systemStats is { } primed && !_statsInFlight)
+            {
+                _statsInFlight = true;
+                _lastStatsAt = Clock.Elapsed;
+                Task.Run(primed.Sample).ContinueWith(_ => _statsInFlight = false, TaskScheduler.FromCurrentSynchronizationContext());
+            }
+        }
         var now = DateTime.Now;
         foreach (var window in windows) window.UpdateWidgets(now, _lastStats);
         var elapsed = Clock.Elapsed;
