@@ -153,6 +153,14 @@
         </DataTemplate>
         <!-- The welcome's buttons (M30): quiet on the glass, like the panel's browse buttons. -->
         <Style x:Key="WelcomeButton" TargetType="Button">
+            <!-- M31: the label wraps in a narrow fence instead of being cut off. -->
+            <Setter Property="ContentTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Margin" Value="3" />
             <Setter Property="Padding" Value="10,5" />
             <Setter Property="FontSize" Value="12" />
@@ -401,7 +409,7 @@
                     <!-- The first-run welcome (M30, ADR-051): the first fence of a fresh start, while it is empty. -->
                     <ScrollViewer x:Name="WelcomePanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel Margin="12,6,12,8" VerticalAlignment="Center">
-                            <TextBlock Text="Welcome to NeoFences" Foreground="{DynamicResource FenceTitleText}" FontSize="16" FontWeight="SemiBold"
+                            <TextBlock Text="Welcome to NeoFences" Foreground="{DynamicResource FenceText}" FontSize="16" FontWeight="SemiBold"
                                        TextWrapping="Wrap" TextAlignment="Center" Effect="{DynamicResource LabelShadow}" />
                             <TextBlock Margin="0,4,0,8" Text="Fences hold links to your apps, games, files and websites — your files never move."
                                        Foreground="{DynamicResource FenceText}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Effect="{DynamicResource LabelShadow}" />

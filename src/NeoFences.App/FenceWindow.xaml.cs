@@ -312,7 +312,7 @@ public partial class FenceWindow : Window
         _title = fence.Title;
         TitleText.Text = fence.Title;
         _kind = fence.Kind;
-        _welcome = fence.Welcome; // M30
+        _welcome = fence.Welcome; // M30 (UpdateEmptyHint below shows or ends the welcome)
         _layout = fence.Layout; // M24
         Resources["GridLayout"] = _layout; // the panel takes it through a resource (final review I3)
         LayoutItem.Visibility = fence.Kind == FenceKind.Items ? Visibility.Visible : Visibility.Collapsed;
@@ -341,7 +341,6 @@ public partial class FenceWindow : Window
         _labelMode = fence.Labels;
         SetIconSize(fence.IconSize);
         SetLabelMode(fence.Labels);
-        UpdateEmptyHint(); // M30: the welcome shows, or ends when its flag is cleared
     }
 
     /// <summary>The shown tab is the Game Library (M12).</summary>

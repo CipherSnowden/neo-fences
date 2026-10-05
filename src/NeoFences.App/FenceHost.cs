@@ -80,10 +80,11 @@ public sealed partial class FenceHost
     private const int TrayNewLibrary = 11; // M12
     private const int TraySnapshotsSettings = 12; // M13c: "More in Settings…" opens the Snapshots card
     private const int TrayAddFromDesktop = 14; // M19 §3 (13 is TrayRestartToUpdate)
+    private const int TrayNewFolderPanel = 15; // M21 (folder views), M26 (folder panels)
     private const int TrayHelp = 16; // M29
     /// <summary>The guide for friends (M29, ADR-050): help lives on GitHub, linked from the tray and Settings.</summary>
     private const string GuideUrl = "https://github.com/CipherSnowden/neo-fences/blob/main/docs/GUIDE.md";
-    private const int TrayNewFolderPanel = 15; // M21 (folder views), M26 (folder panels)
+    private bool _trayShown, _firstStartNotice; // M31: the first start's notice waits for the tray icon
     private SettingsWindow? _settingsWindow; // M6b: one at a time
 
     public event Action? ExitRequested;
@@ -162,8 +163,8 @@ public sealed partial class FenceHost
         }
         StartGameMode();
         // M30: a fresh start says where NeoFences lives; Windows 11 may tuck a new tray icon behind the ^ arrow.
-        if (loaded.Source == ConfigLoadSource.Fresh && !loaded.IsReadOnly && !_gameMode) // not for an older build on a newer config (final review I1)
-            _trayIcon?.ShowBalloon("NeoFences is running", "Its icon is in the notification area — on Windows 11 maybe behind the ^ arrow. Click it for the menu and Help.");
+        _firstStartNotice = loaded.Source == ConfigLoadSource.Fresh && !loaded.IsReadOnly && !_gameMode; // not for an older build on a newer config (final review I1)
+        ShowFirstStartNotice(); // M31: or once a retried tray icon shows
         StartWatching(); // M18: states fill in as the checks finish (spec §4)
         StartUpdates(); // M17: the first check a minute after start
         if (Appearance.WallpaperAccent) UpdateAccents(); // M14: the accent is read once at start, then on wallpaper changes
@@ -1412,18 +1413,40 @@ public sealed partial class FenceHost
     /// <summary>Adds the tray icon, retrying while Explorer is still busy (sign-in autostart, Explorer restart).</summary>
     private void ShowTrayIcon()
     {
-        if (_trayIcon is not { } trayIcon || trayIcon.Show()) return;
+        if (_trayIcon is not { } trayIcon) return;
+        if (trayIcon.Show())
+        {
+            TrayShown();
+            return;
+        }
         var attempts = 0;
         var retry = new DispatcherTimer { Interval = TrayRetryInterval };
         retry.Tick += (_, _) =>
         {
-            if (trayIcon.Show() || ++attempts >= TrayRetryAttempts)
-            {
-                retry.Stop();
-                Log.Information("tray icon retry finished after {Attempts} attempt(s)", attempts + 1);
-            }
+            var shown = trayIcon.Show();
+            if (!shown && ++attempts < TrayRetryAttempts) return;
+            retry.Stop();
+            Log.Information("tray icon retry finished after {Attempts} attempt(s)", attempts + 1);
+            if (shown) TrayShown();
         };
         retry.Start();
+    }
+
+    private void TrayShown()
+    {
+        _trayShown = true;
+        ShowFirstStartNotice();
+    }
+
+    /// <summary>
+    /// The first start's notice (M30), once the tray icon exists (M31, M30 review M5: a first add that failed and was
+    /// retried no longer loses it).
+    /// </summary>
+    private void ShowFirstStartNotice()
+    {
+        if (!_firstStartNotice || !_trayShown) return;
+        _firstStartNotice = false;
+        _trayIcon?.ShowBalloon("NeoFences is running", "Its icon is in the notification area — on Windows 11 maybe behind the ^ arrow. Click it for the menu and Help.");
     }
 
     private void ScheduleSave()

@@ -57,7 +57,11 @@ public sealed partial class FenceHost
         Log.Information("Add from desktop: {Added} item(s) added, {NewFences} new fence(s)", added, newFences);
         var beforeWelcome = _config;
         _config = WelcomeEdits.AfterDesktopFill(_config, _items, added, newFences); // M30: the empty welcome fence was only the welcome
-        if (!ReferenceEquals(beforeWelcome, _config)) Log.Information("welcome fence removed: Add from desktop made its fences");
+        if (!ReferenceEquals(beforeWelcome, _config))
+        {
+            Log.Information("welcome fence removed: Add from desktop made its fences");
+            RefreshSettings(); // M31 (M30 review M3): "New games go to" no longer offers it
+        }
         SyncBoxes();
         ItemsChanged(checkTargets: [.. plan.Groups.SelectMany(group => group.ItemRefs)]);
         SaveNow();
@@ -71,7 +75,8 @@ public sealed partial class FenceHost
         _config = WelcomeEdits.ClearIfFilled(_config, _items);
         if (ReferenceEquals(before, _config)) return;
         Log.Information("welcome ended: the welcome fence got its first item");
-        foreach (var window in _windows.Values)
-            if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is { } shown) window.Refresh(shown);
+        var ended = before.Fences.Where(fence => fence.Welcome).Select(fence => fence.Id).ToHashSet();
+        foreach (var window in _windows.Values) // M31 (M30 review M6): only the window that showed it
+            if (ended.Contains(window.FenceId) && _config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is { } shown) window.Refresh(shown);
     }
 }
