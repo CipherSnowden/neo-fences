@@ -574,3 +574,14 @@ in chat; Core test-first: `FolderViews.FolderPath`, two library fences; 526 test
 user's data (a 20,000-file view: fences answered within 6 ms while a file churned). Merged locally; released 0.12.1 (the
 installed 0.12.0 updated itself, data unchanged); hub refreshed.
 **Next:** design the next piece of the one-kind-of-fence vision (folder panel element, widgets, element sizes).
+
+## 2026-10-05 — M24 element sizes and the fence grid (0.13.0), built and merged
+
+**Done:** the user chose element sizes first (the base for widgets and a folder panel): any element 1–4 × 1–4 cells via a
+Size ▸ picker; per fence Flow (packed) or Free (fixed positions). Approach: a pure Core `FenceGrid` + a thin WPF panel
+(the user asked for flexible, robust, modern, performant). Prototype probed on a copy of the user's data, plan with
+replay-verified patches, native execution; Opus final review "with fixes" (Ctrl-drag copies in Free fences, covers
+decoded at the right width, cell sizes from the first frame, bounded stored cells, sort on its own fence) — fixed, 542
+tests. Live check AJ 14/15 scripted (AJ6 by hand later). Merged locally.
+**Decisions:** ADR-046.
+**Next:** release 0.13.0 when the user says so; then widgets or the folder panel element.
