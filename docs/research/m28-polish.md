@@ -39,3 +39,10 @@ Re-graded and fixed (App; checklist rows AN15–AN20):
 
 Deferred minor:
 - Covers are decoded twice on an icon-size change (as before M28).
+
+## Live check (2026-10-05, branch build on a copy of the user's data; the user gave the go)
+
+Scripted: AN1 (a 2 × 3 Details panel: Name and Date), AN13 (Games with labels on hover: covers full size), AN9 (an
+unknown widget: "Unknown widget", Missing; a double-click opened no window and no Windows prompt), AN8 (widget
+Properties: Change icon off, "A widget."), AN12 (Size ▸ on two items of different sizes: "Mixed sizes"), AN7 (the clock
+right to the second 0.4 s after resuming from Pause), AN11 (Icon size → Large). By hand later: AN2–AN6, AN10, AN14–AN20.
