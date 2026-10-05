@@ -116,7 +116,9 @@ public partial class AutoCollectWindow : Window
             _showing = false;
             return;
         }
-        Edit(rule => rule with { Source = picked });
+        // The desktop chosen as a folder is the desktop (both of its folders), so it is watched like one (final review M6).
+        var isDesktop = FolderViews.SameFolder(picked, DesktopItems.UserDesktop) || FolderViews.SameFolder(picked, DesktopItems.PublicDesktop);
+        Edit(rule => rule with { Source = isDesktop ? CollectRules.DesktopSource : picked });
         ShowRule();
     }
 

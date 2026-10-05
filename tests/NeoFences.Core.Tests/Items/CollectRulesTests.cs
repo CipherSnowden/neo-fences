@@ -140,6 +140,15 @@ public class CollectRulesTests
     }
 
     [Fact]
+    public void Restore_StartsEveryRuleLookingAtTheRestoreTime_SoOldFilesAreNotCollectedAgain()
+    {
+        var apps = Fence.Create("Apps") with { Collect = [Rule(CollectKinds.Apps) with { Watermark = Day.AddDays(-7) }] };
+        var snapshot = Snapshots.Take(NeoFencesConfig.CreateDefault() with { Fences = [apps] }, new ItemsDocument(), name: "Last week", now: Day.AddDays(-7));
+        var (config, _) = Snapshots.Restore(NeoFencesConfig.CreateDefault(), snapshot, restoredAt: Day);
+        Assert.Equal(Day, Assert.Single(config.Fences[0].Collect).Watermark);
+    }
+
+    [Fact]
     public void SetCollect_ReplacesAFencesRules()
     {
         var apps = Fence.Create("Apps");

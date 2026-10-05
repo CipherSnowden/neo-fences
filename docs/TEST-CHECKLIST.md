@@ -685,3 +685,7 @@ Added after the M19 final review:
 | AM9 | Copy 300 matching files into a watched folder at once | 200 items; the rest logged |
 | AM10 | Edit a rule's kinds; remove a rule; Cancel the dialog | saved / gone / nothing changed |
 | AM11 | NeoFences' CPU with two rules, idle 30 s | well under 0.1 % |
+| AM12 | A Desktop rule; exit NeoFences; a new shortcut on the **user's** Desktop; start | collected (each desktop folder catches up; final review C1) |
+| AM13 | A Pictures rule on Downloads; rename a collected picture in place | one item, under the new name (I2) |
+| AM14 | Restore a week-old snapshot with rules; restart NeoFences | no old files collected again (I4) |
+| AM15 | Extract a 1,000-file zip into a watched folder | 200 items in one batch, one refresh (I3) |

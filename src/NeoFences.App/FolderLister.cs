@@ -22,6 +22,7 @@ public sealed class FolderLister : IDisposable
     private readonly Action<Exception> _logFailure;
     private readonly string _label; // "library folder" / "folder view": log lines say which
     private readonly Action<string, string>? _renamed;
+    private readonly bool _namesOnly;
     private FolderWatcher? _watcher;
     private DeviceRemovalNotice? _removal;   // asks before the library drive is removed (USB stick, M8d)
     private readonly nint _noticeOwner;
@@ -45,9 +46,11 @@ public sealed class FolderLister : IDisposable
     /// <param name="show">Called on the UI thread with the shown folder's items, or null when it cannot be read.</param>
     /// <param name="noticeOwner">The window that receives "may this drive be removed?" (the app's message window).</param>
     /// <param name="renamed">Called on the UI thread with the old and new path when the folder itself is renamed in place (M21).</param>
+    /// <param name="namesOnly">Only entries appearing, going or renamed re-list it (M27: auto-collect); writes do not.</param>
     public FolderLister(string folder, nint noticeOwner, string label, Action<IReadOnlyList<ItemInfo>?> show, Action<Exception> logFailure,
-        Action<string, string>? renamed = null)
+        Action<string, string>? renamed = null, bool namesOnly = false)
     {
+        _namesOnly = namesOnly;
         _label = label;
         _renamed = renamed;
         _noticeOwner = noticeOwner;
@@ -90,7 +93,7 @@ public sealed class FolderLister : IDisposable
         var dispatcher = _refreshTimer.Dispatcher;
         Task.Run(() =>
         {
-            var watcher = new FolderWatcher(folder, LogWatchFailureOnce);
+            var watcher = new FolderWatcher(folder, LogWatchFailureOnce, namesOnly: _namesOnly);
             var removal = watcher.HeldFolder is { } held ? DeviceRemovalNotice.TryRegister(_noticeOwner, held, LogNoticeFailureOnce) : null;
             if (removal is not null) _inFlight[removal.Handle] = (watcher, removal);
             var items = FolderItems.TryList(folder);

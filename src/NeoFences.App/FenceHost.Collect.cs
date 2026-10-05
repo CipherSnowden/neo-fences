@@ -13,18 +13,34 @@ namespace NeoFences.App;
 /// </summary>
 public sealed partial class FenceHost
 {
+    /// <summary>
+    /// Arrivals wait this long after the folder's last change before they are collected (final review I2, I3): an item that
+    /// follows a rename in place (FenceHost.Watching settles renames after 500 ms) is held by then, a download's temporary
+    /// names are gone, and a burst is one batch (one cap, one refresh).
+    /// </summary>
+    private static readonly TimeSpan CollectSettle = TimeSpan.FromSeconds(2);
+
     private readonly Dictionary<string, (string Source, FolderLister Lister)> _collectListers = new(StringComparer.OrdinalIgnoreCase);
     // The last listing per watched folder; missing or null: none yet, or the folder was not available (the next one catches up).
     private readonly Dictionary<string, IReadOnlyList<ItemInfo>?> _collectListings = new(StringComparer.OrdinalIgnoreCase);
+    // Per folder: what its first listing catches up from — its rules' watermark when the lister started (final review C1:
+    // the desktop's two folders each catch up, whichever lists first).
+    private readonly Dictionary<string, DateTimeOffset?> _collectSince = new(StringComparer.OrdinalIgnoreCase);
+    // Per source: arrivals waiting for the folder to settle, and when the last one came (the monotonic clock).
+    private readonly Dictionary<string, (Dictionary<string, ItemInfo> Arrivals, TimeSpan LastAt)> _collectPending = new(StringComparer.OrdinalIgnoreCase);
+    private System.Windows.Threading.DispatcherTimer? _collectTimer;
     private string? _downloadsFolder;
 
     /// <summary>Every folder some rule watches, with its rule source (the desktop source is the user's and the Public Desktop).</summary>
     private IEnumerable<(string Source, string Folder)> CollectFolders() =>
         _config.Fences.Where(fence => fence.Kind == FenceKind.Items).SelectMany(fence => fence.Collect).Select(rule => rule.Source)
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .SelectMany(source => source == CollectRules.DesktopSource
-                ? new[] { (source, DesktopItems.UserDesktop), (source, DesktopItems.PublicDesktop) }
-                : [(source, source)]);
+            .SelectMany(FoldersOf);
+
+    private static IEnumerable<(string Source, string Folder)> FoldersOf(string source) =>
+        source == CollectRules.DesktopSource
+            ? [(source, DesktopItems.UserDesktop), (source, DesktopItems.PublicDesktop)]
+            : [(source, source)];
 
     /// <summary>A lister per watched folder; listers of folders no rule watches any more go (after every config change).</summary>
     private void EnsureCollectListers()
@@ -36,21 +52,29 @@ public sealed partial class FenceHost
             lister.Dispose();
             _collectListers.Remove(folder);
             _collectListings.Remove(folder);
+            _collectSince.Remove(folder);
         }
+        foreach (var source in _collectPending.Keys.Where(source => !wanted.ContainsValue(source)).ToList()) _collectPending.Remove(source);
         foreach (var (folder, source) in wanted.Where(entry => !_collectListers.ContainsKey(entry.Key)))
         {
+            _collectSince[folder] = RulesOf(source).Min(rule => rule.Watermark);
+            // Names only: a file being written (a download) does not re-list the folder 4 times a second (final review M5).
             var lister = new FolderLister(folder, noticeOwner: _messages.Handle, label: "auto-collect",
                 show: listed => OnCollectListing(source, folder, listed),
-                logFailure: failure => Log.Warning(failure, "auto-collect: cannot watch {Folder}", folder));
+                logFailure: failure => Log.Warning(failure, "auto-collect: cannot watch {Folder}", folder), namesOnly: true);
             if (_gameMode || _paused) lister.SetPaused(true);
             _collectListers[folder] = (source, lister);
         }
     }
 
+    private List<CollectRule> RulesOf(string source) =>
+        [.. _config.Fences.Where(fence => fence.Kind == FenceKind.Items).SelectMany(fence => fence.Collect).Where(rule => CollectRules.SameSource(rule.Source, source))];
+
     private void StopCollectListers()
     {
         foreach (var (_, lister) in _collectListers.Values) lister.Dispose();
         _collectListers.Clear();
+        _collectTimer?.Stop();
     }
 
     /// <summary>Game mode or Pause: changes wait; resuming lists once, and what arrived meanwhile is collected then.</summary>
@@ -62,38 +86,69 @@ public sealed partial class FenceHost
     private bool ReleaseCollectForRemoval(nint handle) => _collectListers.Values.Aggregate(false, (released, entry) => entry.Lister.ReleaseForRemoval(handle) | released);
 
     /// <summary>
-    /// A watched folder was listed (on the UI thread): what arrived since the last listing — or, with none (start, a drive
-    /// back), what was created after its rules last looked — goes to the rules' fences.
+    /// A watched folder was listed (on the UI thread): what arrived since its last listing — or, with none (start, a drive
+    /// back), what was created after its rules last looked — waits for the folder to settle (<see cref="CollectSettle"/>).
     /// </summary>
     private void OnCollectListing(string source, string folder, IReadOnlyList<ItemInfo>? listed)
     {
         if (!_collectListers.ContainsKey(folder)) return; // its rules went meanwhile
         var hadListing = _collectListings.TryGetValue(folder, out var before) && before is not null;
         _collectListings[folder] = listed;
-        if (listed is null) return; // not available: the next listing catches up by the watermark
-        var rules = _config.Fences.SelectMany(fence => fence.Collect).Where(rule => CollectRules.SameSource(rule.Source, source)).ToList();
-        if (rules.Count == 0) return;
-        var watermark = rules.Min(rule => rule.Watermark);
-        var arrivals = CollectRules.Arrivals(hadListing ? before : null, listed, watermark);
-        if (hadListing && arrivals.Count == 0) return; // nothing new: the watermark stays (no config write per change)
-        var plan = CollectRules.Plan(_config, _items, source, arrivals);
-        foreach (var fence in plan.GroupBy(entry => entry.FenceId))
+        if (listed is null) return; // not available: the next listing catches up from the folder's watermark
+        var arrivals = CollectRules.Arrivals(hadListing ? before : null, listed, _collectSince.GetValueOrDefault(folder));
+        if (arrivals.Count == 0) return;
+        if (!_collectPending.TryGetValue(source, out var pending)) pending = (new Dictionary<string, ItemInfo>(StringComparer.OrdinalIgnoreCase), TimeSpan.Zero);
+        foreach (var arrival in arrivals) pending.Arrivals[arrival.ItemRef] = arrival;
+        _collectPending[source] = (pending.Arrivals, Clock.Elapsed);
+        if (_collectTimer is null)
         {
-            _items = ItemEdits.Add(_items, fence.Key, [.. fence.Select(entry => VirtualItem.Create(entry.Path))]).Document;
-            foreach (var entry in fence) Log.Information("auto-collect: {Path} -> fence {FenceId} (rule {RuleId})", entry.Path, entry.FenceId, entry.RuleId);
+            _collectTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+            _collectTimer.Tick += (_, _) => OnCollectTick();
         }
-        if (arrivals.Count > plan.Count) Log.Information("auto-collect: {Skipped} of {Count} new entries in {Folder} not collected (no rule matched, already held, or too many at once)", arrivals.Count - plan.Count, arrivals.Count, folder);
-        // What the rules of this source have seen: a restart does not collect it again (an item the user removed stays removed).
-        var now = DateTimeOffset.Now;
+        _collectTimer.Start();
+    }
+
+    /// <summary>
+    /// Sources quiet for <see cref="CollectSettle"/>: their arrivals that still exist go to the first matching rule's fence
+    /// (nothing any fence holds; at most 200 per rule), once, with one refresh. Not during a game or while paused.
+    /// </summary>
+    private void OnCollectTick()
+    {
+        if (_gameMode || _paused) return;
+        var collected = new List<string>();
+        foreach (var (source, pending) in _collectPending.Where(entry => Clock.Elapsed - entry.Value.LastAt >= CollectSettle).ToList())
+        {
+            _collectPending.Remove(source);
+            var folders = FoldersOf(source).Select(entry => entry.Folder).ToList();
+            var present = folders.SelectMany(folder => _collectListings.GetValueOrDefault(folder) ?? []).Select(entry => entry.ItemRef).ToHashSet(ItemKinds.Comparer);
+            var arrivals = pending.Arrivals.Values.Where(arrival => present.Contains(arrival.ItemRef)).ToList(); // renamed or deleted since: not collected
+            var plan = CollectRules.Plan(_config, _items, source, arrivals);
+            foreach (var fence in plan.GroupBy(entry => entry.FenceId))
+            {
+                _items = ItemEdits.Add(_items, fence.Key, [.. fence.Select(entry => VirtualItem.Create(entry.Path))]).Document;
+                foreach (var entry in fence) Log.Information("auto-collect: {Path} -> fence {FenceId} (rule {RuleId})", entry.Path, entry.FenceId, entry.RuleId);
+            }
+            if (pending.Arrivals.Count > plan.Count) Log.Information("auto-collect: {Skipped} of {Count} new entries of {Source} not collected (gone again, no rule matched, already held, or too many at once)", pending.Arrivals.Count - plan.Count, pending.Arrivals.Count, source);
+            collected.AddRange(plan.Select(entry => entry.Path));
+            // What the rules of this source have seen — once each of its folders was listed (the desktop is two): a restart
+            // does not collect it again, so an item the user removed stays removed.
+            var now = DateTimeOffset.Now;
+            if (folders.All(folder => _collectListings.GetValueOrDefault(folder) is not null)) AdvanceWatermark(source, now);
+            // A folder that goes away and comes back (a pendrive) catches up from here, not from the start again.
+            foreach (var folder in folders.Where(folder => _collectListings.GetValueOrDefault(folder) is not null)) _collectSince[folder] = now;
+        }
+        if (_collectPending.Count == 0) _collectTimer?.Stop();
+        if (collected.Count > 0) ItemsChanged(checkTargets: collected);
+        else ScheduleSave();
+    }
+
+    private void AdvanceWatermark(string source, DateTimeOffset now) =>
         _config = _config with
         {
             Fences = [.. _config.Fences.Select(fence => fence.Collect.Any(rule => CollectRules.SameSource(rule.Source, source))
                 ? fence with { Collect = [.. fence.Collect.Select(rule => CollectRules.SameSource(rule.Source, source) ? rule with { Watermark = now } : rule)] }
                 : fence)],
         };
-        if (plan.Count > 0) ItemsChanged(checkTargets: [.. plan.Select(entry => entry.Path)]);
-        else ScheduleSave();
-    }
 
     /// <summary>Fence menu → Auto-collect…: the fence's rules; a new rule offers the files that match now ("Add these N too?").</summary>
     private void EditCollectRules(FenceWindow window)

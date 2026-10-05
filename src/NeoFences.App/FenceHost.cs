@@ -976,7 +976,7 @@ public sealed partial class FenceHost
             return;
         }
         Log.Information("restoring snapshot {Name} from {Path}", snapshot.Name, path);
-        (_config, _items) = Snapshots.Restore(_config, snapshot);
+        (_config, _items) = Snapshots.Restore(_config, snapshot, restoredAt: DateTimeOffset.Now); // M27: rules start looking now
         MigrateGames(_library.Items.Count > 0 ? _library : LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: a snapshot from before games became items
         MigrateFolderViews(); // M26: a snapshot from before folder views became panels
         SaveNow();

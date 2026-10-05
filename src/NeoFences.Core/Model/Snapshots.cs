@@ -54,15 +54,18 @@ public static class Snapshots
     /// <summary>
     /// The arrangement of <paramref name="snapshot"/> applied to <paramref name="current"/> (spec §3; M18: items as saved):
     /// the snapshot's fences, places and items; Settings and setups the snapshot never saw stay as they are. Items of
-    /// fences the snapshot does not have are dropped (a damaged or hand-edited file).
+    /// fences the snapshot does not have are dropped (a damaged or hand-edited file). Auto-collect rules start looking at
+    /// <paramref name="restoredAt"/> (M27 final review I4): files from the snapshot's time on are not collected again.
     /// </summary>
-    public static (NeoFencesConfig Config, ItemsDocument Items) Restore(NeoFencesConfig current, Snapshot snapshot)
+    public static (NeoFencesConfig Config, ItemsDocument Items) Restore(NeoFencesConfig current, Snapshot snapshot, DateTimeOffset? restoredAt = null)
     {
         // The snapshot file may be damaged or hand-edited: the normalizer gives it unique ids and sane tabs.
         var saved = ConfigNormalizer.Normalize(new NeoFencesConfig { Fences = snapshot.Fences, Layouts = snapshot.Layouts });
         var layouts = new Dictionary<string, Layout>(current.Layouts);
         foreach (var (fingerprint, layout) in saved.Layouts) layouts[fingerprint] = layout;
         var config = ConfigNormalizer.Normalize(current with { Fences = saved.Fences, Layouts = layouts });
+        if (restoredAt is { } now)
+            config = config with { Fences = [.. config.Fences.Select(fence => fence.Collect.Count == 0 ? fence : fence with { Collect = [.. fence.Collect.Select(rule => rule with { Watermark = now })] })] };
         var items = ItemEdits.Repair(new ItemsDocument { Fences = snapshot.Items ?? new Dictionary<string, IReadOnlyList<VirtualItem>>() });
         return (config, ItemEdits.Prune(items, config.Fences.Select(fence => fence.Id).ToHashSet(StringComparer.Ordinal)));
     }

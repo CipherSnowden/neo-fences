@@ -19,11 +19,36 @@ config edit never lands while the app runs); a test folder must start empty (lef
 
 ### Where the build departs from the spec (the final review weighs them)
 
-- No separate 1 s settle: the folder lister's 250 ms coalescing, and arrivals found by comparing listings — files
-  renamed or moved in while NeoFences runs count too (the spec named created and renamed).
+- Arrivals are found by comparing listings — files renamed or moved in while NeoFences runs count too (the spec named
+  created and renamed); the settle is 2 s of quiet (final review I2).
 - A rule's `Watermark` is updated when a listing had arrivals or was the first one (not on every change), so config.json
   is not rewritten while a file keeps being written.
 - At start, the source's earliest watermark is used for all its rules.
 - A rule whose settings change starts looking again from then (its watermark resets).
 - "Add these N too?" is asked after OK for each new rule, from the listings the dialog made; at most the first 200.
 - The fence menu shows the count ("Auto-collect… (2 rules)") instead of a separate mark.
+
+## Final review (Opus, 2026-10-05): with fixes
+
+One critical, three important; fixed (checklist rows AM12–AM15):
+- **C1** — the desktop's two folders shared one watermark: whichever listed first at start advanced it, so the other
+  (usually the user's own Desktop) never caught up. Each watched folder now keeps its own catch-up point; the rules'
+  watermark advances once every folder of the source was listed (AM12).
+- **I2** — a file renamed in place became a second item (the collect listing saw the new name before the item watcher
+  followed the rename): arrivals now wait until the folder has been quiet for 2 s, then only those still there and held by
+  no fence are collected (the spec's settle, restored; AM13).
+- **I3** — the 200 cap counted per listing, not per burst (a slow extraction re-lists every 250 ms): a burst is one batch
+  after the 2 s quiet — one cap, one refresh (AM15).
+- **I4** — restoring an older snapshot brought back its old watermarks, so a week of old files came back at the next
+  start: a restore starts every rule looking at the restore time (`Snapshots.Restore(..., restoredAt)`, test; AM14).
+- **M5 → fixed** (re-graded: Downloads re-listed 4 times a second during every download) — auto-collect listers watch
+  names only.
+- **M6 → fixed** (re-graded: a rule silently never fired) — the Desktop chosen through "Choose folder…" is the desktop
+  source.
+- Also: a folder that goes away and comes back (a pendrive) catches up from its last batch, not from the start.
+
+Deferred minors:
+- "Add these N too?" is skipped when OK is clicked before the dialog's listing finished (a slow network folder).
+- Watermarks of unchanged rules are written back from before the dialog (they can go back by the dialog's open time).
+- A power cut between the config and items writes can lose that batch's arrivals.
+- A lister started during a game lists (and catches up) once before it pauses.
