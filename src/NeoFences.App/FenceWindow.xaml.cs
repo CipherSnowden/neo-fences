@@ -1189,6 +1189,13 @@ public partial class FenceWindow : Window
         };
         shadow.Freeze();
         Resources["LabelShadow"] = shadow;
+        // M31: the widgets' softer shadow, and their bars in the Windows accent (style A's gradient).
+        var widgetShadow = new DropShadowEffect { Color = light ? Colors.White : Colors.Black, ShadowDepth = light ? 0 : 1, BlurRadius = 8, Opacity = 0.45 };
+        widgetShadow.Freeze();
+        Resources["WidgetShadow"] = widgetShadow;
+        var bar = light ? new LinearGradientBrush(SystemColors.AccentColorDark1, SystemColors.AccentColor, 0) : new LinearGradientBrush(SystemColors.AccentColorLight2, SystemColors.AccentColorLight1, 0);
+        bar.Freeze();
+        Resources["WidgetBar"] = bar;
     }
 
     private FenceStyle? _style;

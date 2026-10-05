@@ -146,28 +146,29 @@ public sealed class FenceItemView : INotifyPropertyChanged
     /// <summary>The date page's month and year.</summary>
     public string WidgetFoot { get; private set { field = value; Changed(); } } = "";
 
-    public IReadOnlyList<StatRow> StatRows { get; private set { field = value; Changed(); } } = [];
+    /// <summary>The stats widget's tiles (M31): CPU, CPU TEMP, GPU, GPU TEMP, RAM.</summary>
+    public IReadOnlyList<StatTile> StatTiles { get; private set { field = value; Changed(); } } = [];
 
     /// <summary>The widget's area in DIPs: its span's cells less the cell padding (no label under a widget).</summary>
     public double WidgetWidth { get; private set { field = value; Changed(); } } = 160;
     public double WidgetHeight { get; private set { field = value; Changed(); } } = 84;
 
     /// <summary>Shows the widget as of <paramref name="now"/> (M25); stats from the last reading (null rows show "—").</summary>
-    public void RenderWidget(DateTime now, System.Globalization.CultureInfo culture, NeoFences.Shell.StatsSample? stats)
+    public void RenderWidget(DateTime now, System.Globalization.CultureInfo culture, StatsSample? stats)
     {
         switch (Widget)
         {
             case WidgetKind.Clock:
                 WidgetMain = Widgets.ClockText(now, Options.Seconds, culture);
-                WidgetSub = Options.Date ? now.ToString(culture.DateTimeFormat.LongDatePattern, culture) : "";
+                WidgetSub = Options.Date ? Widgets.ClockDateLine(now, culture) : ""; // M31: "Monday, 5 October"
                 break;
             case WidgetKind.Date:
                 var page = Widgets.Page(now, culture);
                 (WidgetMain, WidgetSub, WidgetFoot) = (page.Weekday, page.Day, page.MonthYear);
                 break;
             case WidgetKind.Stats:
-                IReadOnlyList<StatRow> rows = [Widgets.Row("CPU", stats?.Cpu), Widgets.Row("RAM", stats?.Ram), Widgets.Row("GPU", stats?.Gpu), Widgets.Row("C:", stats?.DiskC)];
-                if (!rows.SequenceEqual(StatRows)) StatRows = rows; // M28: the rows are rebuilt only when a value changed
+                var tiles = Widgets.Tiles(stats, Options.Fahrenheit, culture); // M31
+                if (!tiles.SequenceEqual(StatTiles)) StatTiles = tiles; // M28: rebuilt only when a value changed
                 break;
         }
     }

@@ -17,6 +17,7 @@ public sealed partial class FenceHost
     private DispatcherTimer? _widgetTimer;
     private SystemStats? _systemStats;
     private StatsSample? _lastStats;
+    private string? _statsSource = ""; // M31: the outside monitor last read ("" before the first reading)
     private bool _statsInFlight;
     private TimeSpan? _lastStatsAt; // on the monotonic clock: a clock change never freezes the stats (final review I4)
     private readonly HashSet<string> _statsFailuresLogged = new(StringComparer.Ordinal);
@@ -92,6 +93,7 @@ public sealed partial class FenceHost
                 return;
             }
             _lastStats = sampling.Result;
+            if (stats.Source != _statsSource) Log.Information("system stats: sensors from {Source}", (_statsSource = stats.Source) ?? "Windows only"); // M31
             foreach (var window in WidgetWindows().Where(window => window.ShowsWidget(WidgetKind.Stats))) window.UpdateWidgets(DateTime.Now, _lastStats);
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
@@ -117,7 +119,7 @@ public sealed partial class FenceHost
         }
     }
 
-    /// <summary>A widget's menu: the clock's options, Size ▸, Properties…, Remove from fence.</summary>
+    /// <summary>A widget's menu: the clock's options (M31: the stats' °F), Size ▸, Properties…, Remove from fence.</summary>
     private void ShowWidgetMenu(FenceWindow window, VirtualItem item, bool fromKeyboard)
     {
         var menu = new ContextMenu();
@@ -132,6 +134,12 @@ public sealed partial class FenceHost
             var options = item.Widget ?? new WidgetOptions();
             Command("Show seconds", () => SetWidgetOptions(item.Id, options with { Seconds = !options.Seconds }), isChecked: options.Seconds);
             Command("Show date", () => SetWidgetOptions(item.Id, options with { Date = !options.Date }), isChecked: options.Date);
+            menu.Items.Add(new Separator());
+        }
+        if (Widgets.Of(item.Target) == WidgetKind.Stats) // M31
+        {
+            var options = item.Widget ?? new WidgetOptions();
+            Command("Temperature in °F", () => SetWidgetOptions(item.Id, options with { Fahrenheit = !options.Fahrenheit }), isChecked: options.Fahrenheit);
             menu.Items.Add(new Separator());
         }
         menu.Items.Add(SizeMenu(menu, [item]));

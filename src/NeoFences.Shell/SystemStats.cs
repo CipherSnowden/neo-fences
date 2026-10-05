@@ -1,4 +1,6 @@
+using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
+using NeoFences.Core.Items;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Performance;
@@ -7,18 +9,18 @@ using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
 namespace NeoFences.Shell;
 
-/// <summary>One System stats reading (M25): percents 0–100, or null when Windows did not give that value.</summary>
-public sealed record StatsSample(double? Cpu, double? Ram, double? Gpu, double? DiskC);
-
 /// <summary>
-/// The System stats widget's readings (M25, spec 2026-10-05-widgets-design §3), from Windows' own counters: CPU from the
-/// difference between two <c>GetSystemTimes</c> readings, RAM from <c>GlobalMemoryStatusEx</c>, C: from
-/// <c>GetDiskFreeSpaceEx</c>, GPU from the PDH counter of every 3D engine (summed per adapter, the busiest one, capped at 100). One PDH query is kept.
-/// Not thread-safe: one sample at a time (the host keeps at most one in flight). Every failure leaves that value null.
+/// The System stats widget's readings (M25, spec 2026-10-05-widgets-design §3; M31, ADR-052): CPU from the difference
+/// between two <c>GetSystemTimes</c> readings, RAM from <c>GlobalMemoryStatusEx</c>; the CPU temperature and the main
+/// graphics card from MSI Afterburner or HWiNFO when one shares its sensors (read-only, no admin), otherwise GPU use from
+/// the PDH counter of every 3D engine (the busiest adapter) and its temperature the way Task Manager reads it. One PDH
+/// query is kept. Not thread-safe: one sample at a time (the host keeps at most one in flight). Every failure leaves that
+/// value null.
 /// </summary>
 public sealed class SystemStats : IDisposable
 {
     private const string GpuCounter = @"\GPU Engine(*engtype_3D)\Utilization Percentage";
+    private const long MaxSensorBytes = 4 << 20; // a sane cap on a mapping's copy (Afterburner's is ~90 KB)
     private readonly Action<string, Exception?> _logOnce;
     private (ulong Idle, ulong Busy)? _lastCpu;
     private PdhCloseQuerySafeHandle? _query;
@@ -30,9 +32,115 @@ public sealed class SystemStats : IDisposable
     /// <param name="logOnce">Told the first time a value cannot be read (the host logs each name once).</param>
     public SystemStats(Action<string, Exception?> logOnce) => _logOnce = logOnce;
 
+    /// <summary>The outside monitor the last reading came from ("MSI Afterburner", "HWiNFO"), or null: Windows only.</summary>
+    public string? Source { get; private set; }
+
     public StatsSample Sample()
     {
-        lock (_gate) return _disposed ? new StatsSample(null, null, null, null) : new(Cpu(), Ram(), Gpu(), DiskC());
+        lock (_gate)
+        {
+            if (_disposed) return new StatsSample(null, null, null, null, null, null);
+            var outside = Outside();
+            Source = outside?.Source;
+            var cpu = Cpu();
+            var (used, total) = Ram();
+            double? gpu = outside?.Gpu, gpuTemp = outside?.GpuTemp;
+            if (gpu is null || gpuTemp is null)
+            {
+                var (windowsGpu, adapter) = Gpu();
+                gpu ??= windowsGpu;
+                gpuTemp ??= Widgets.LuidOf(adapter) is { } luid ? AdapterTemperature(luid) : null;
+            }
+            return new StatsSample(cpu, outside?.CpuTemp, gpu, gpuTemp, used, total);
+        }
+    }
+
+    // ---------- MSI Afterburner, then HWiNFO (M31, ADR-052) ----------
+
+    private delegate SensorReading? SensorParser(ReadOnlySpan<byte> memory);
+
+    private SensorReading? Outside() =>
+        Shared(SensorFormats.AfterburnerMapping, SensorFormats.Afterburner) ?? Shared(SensorFormats.HwinfoMapping, SensorFormats.Hwinfo);
+
+    /// <summary>A copy of a monitor's shared memory, parsed; null when it is not running (the usual case) or unreadable.</summary>
+    private SensorReading? Shared(string mapping, SensorParser parse)
+    {
+        try
+        {
+            using var map = MemoryMappedFile.OpenExisting(mapping, MemoryMappedFileRights.Read);
+            using var view = map.CreateViewStream(0, 0, MemoryMappedFileAccess.Read);
+            var bytes = new byte[Math.Min(view.Length, MaxSensorBytes)];
+            view.ReadExactly(bytes);
+            return parse(bytes);
+        }
+        catch (FileNotFoundException)
+        {
+            return null; // not running
+        }
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
+        {
+            _logOnce(mapping, failure);
+            return null;
+        }
+    }
+
+    // ---------- GPU temperature as Task Manager reads it (M31) ----------
+    // CsWin32 has no D3DKMT functions without the WDK metadata package (a new dependency), so these few are declared here
+    // (CLAUDE.md hard rule 5's exception).
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct OpenAdapterFromLuid { public uint LuidLow; public int LuidHigh; public uint Adapter; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private unsafe struct QueryAdapterInfo { public uint Adapter; public int Type; public void* Data; public uint DataSize; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct AdapterPerfData
+    {
+        public uint PhysicalAdapterIndex;
+        public ulong MemoryFrequency, MaxMemoryFrequency, MaxMemoryFrequencyOc, MemoryBandwidth, PcieBandwidth;
+        public uint FanRpm, Power, Temperature; // Temperature in tenths of a degree Celsius
+        public byte PowerStateOverride;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct CloseAdapter { public uint Adapter; }
+
+    private const int AdapterPerfDataType = 62; // KMTQAITYPE_ADAPTERPERFDATA (WDDM 2.7)
+
+    [DllImport("gdi32.dll")]
+    private static extern int D3DKMTOpenAdapterFromLuid(ref OpenAdapterFromLuid open);
+
+    [DllImport("gdi32.dll")]
+    private static extern unsafe int D3DKMTQueryAdapterInfo(QueryAdapterInfo* query);
+
+    [DllImport("gdi32.dll")]
+    private static extern int D3DKMTCloseAdapter(ref CloseAdapter close);
+
+    /// <summary>The adapter's temperature in °C, or null (an older driver, no sensor, or the call failed).</summary>
+    private unsafe double? AdapterTemperature((int High, uint Low) luid)
+    {
+        try
+        {
+            var open = new OpenAdapterFromLuid { LuidLow = luid.Low, LuidHigh = luid.High };
+            if (D3DKMTOpenAdapterFromLuid(ref open) != 0) return null;
+            try
+            {
+                var perf = new AdapterPerfData();
+                var query = new QueryAdapterInfo { Adapter = open.Adapter, Type = AdapterPerfDataType, Data = &perf, DataSize = (uint)sizeof(AdapterPerfData) };
+                return D3DKMTQueryAdapterInfo(&query) == 0 && perf.Temperature > 0 ? perf.Temperature / 10.0 : null;
+            }
+            finally
+            {
+                var close = new CloseAdapter { Adapter = open.Adapter };
+                D3DKMTCloseAdapter(ref close);
+            }
+        }
+        catch (Exception failure) when (failure is EntryPointNotFoundException or DllNotFoundException)
+        {
+            _logOnce("GPU temperature", failure);
+            return null;
+        }
     }
 
     private double? Cpu()
@@ -55,24 +163,20 @@ public sealed class SystemStats : IDisposable
 
     private static ulong Ticks(FILETIME time) => ((ulong)(uint)time.dwHighDateTime << 32) | (uint)time.dwLowDateTime;
 
-    private double? Ram()
+    /// <summary>RAM in use and installed, in GB (M31: absolute, not a percent).</summary>
+    private (double? Used, double? Total) Ram()
     {
+        const double Gb = 1024.0 * 1024 * 1024;
         var status = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>() };
-        if (PInvoke.GlobalMemoryStatusEx(ref status)) return status.dwMemoryLoad;
+        if (PInvoke.GlobalMemoryStatusEx(ref status)) return ((status.ullTotalPhys - status.ullAvailPhys) / Gb, status.ullTotalPhys / Gb);
         _logOnce("RAM", new System.ComponentModel.Win32Exception());
-        return null;
+        return (null, null);
     }
 
-    private double? DiskC()
+    /// <summary>GPU use (the busiest adapter, like Task Manager) and that adapter's key, whose temperature is read too (M31).</summary>
+    private unsafe (double? Percent, string Adapter) Gpu()
     {
-        if (PInvoke.GetDiskFreeSpaceEx(@"C:\", out _, out var total, out var free) && total > 0) return 100.0 * (total - free) / total;
-        _logOnce("C: drive", new System.ComponentModel.Win32Exception());
-        return null;
-    }
-
-    private unsafe double? Gpu()
-    {
-        if (_gpuFailed) return null;
+        if (_gpuFailed) return (null, "");
         try
         {
             if (_query is null)
@@ -81,12 +185,12 @@ public sealed class SystemStats : IDisposable
                 _query = query;
                 Check(PInvoke.PdhAddEnglishCounter(_query, GpuCounter, 0, out _gpu), "add");
                 Check(PInvoke.PdhCollectQueryData(new PDH_HQUERY(_query.DangerousGetHandle())), "first collect");
-                return null; // a rate needs two collections
+                return (null, ""); // a rate needs two collections
             }
             if (PInvoke.PdhCollectQueryData(new PDH_HQUERY(_query.DangerousGetHandle())) != 0) return Reopen(); // a GPU driver update: try again from scratch
             uint size = 0, count = 0;
             var status = PInvoke.PdhGetFormattedCounterArray(_gpu, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, null);
-            if (status != (uint)PInvoke.PDH_MORE_DATA || size == 0) return status == 0 ? 0 : Reopen(); // no 3D engines: 0 %
+            if (status != (uint)PInvoke.PDH_MORE_DATA || size == 0) return status == 0 ? (0, "") : Reopen(); // no 3D engines: 0 %
             var buffer = new byte[size];
             fixed (byte* bytes = buffer)
             {
@@ -97,14 +201,15 @@ public sealed class SystemStats : IDisposable
                 {
                     if (items[index].FmtValue.CStatus is 0 or 1) engines.Add((items[index].szName.ToString(), items[index].FmtValue.Anonymous.doubleValue)); // valid data, or new data (review M2)
                 }
-                return NeoFences.Core.Items.Widgets.GpuPercent(engines); // M28: the busiest adapter, like Task Manager
+                var (adapter, percent) = Widgets.BusiestGpu(engines); // M28: the busiest adapter, like Task Manager
+                return (percent, adapter);
             }
         }
         catch (Exception failure) when (failure is InvalidOperationException or ExternalException)
         {
             _gpuFailed = true; // the counter cannot be opened or added: no GPU counters on this PC, "—" from now on
             _logOnce("GPU", failure);
-            return null;
+            return (null, "");
         }
     }
 
@@ -112,11 +217,11 @@ public sealed class SystemStats : IDisposable
     /// A reading failed after the query worked (a GPU driver update removes the engines for a moment): the query is closed
     /// and opened again at the next reading, which shows "—" once (final review M2).
     /// </summary>
-    private double? Reopen()
+    private (double?, string) Reopen()
     {
         _query?.Dispose();
         _query = null;
-        return null;
+        return (null, "");
     }
 
     private static void Check(uint status, string what)
