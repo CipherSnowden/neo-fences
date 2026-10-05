@@ -52,3 +52,14 @@ Deferred minors:
 - Watermarks of unchanged rules are written back from before the dialog (they can go back by the dialog's open time).
 - A power cut between the config and items writes can lose that batch's arrivals.
 - A lister started during a game lists (and catches up) once before it pauses.
+
+## Live check (2026-10-05, branch build on a copy of the user's data; the PC unattended, standing go)
+
+Scripted on the script's own folder `%USERPROFILE%\NeoFences-m27-test` (removed afterwards), with Games collecting
+installers and Apps apps + installers + `*.burst`: AM2 (`new.url` → Apps, `notes.txt` not), AM5 (`ToolSetup.exe` →
+Games, the first fence), AM4 (`Big.exe.crdownload` renamed to `BigSetup.exe`: one item, the final name), AM13 (a
+collected file renamed in place: still one item, the new name), AM3 (removed stays removed), AM7 (Pause holds; collected
+on resume), AM9 (300 files: 200 items in one batch), AM10 (the dialog: the rule, "305 items here match now"), AM6
+(`while-off.url` caught up at start; the removed item not back), AM11 (0.003 % CPU). By hand later: AM1 and AM2 on the
+real desktop, AM8 (pendrive), AM12 (the user's Desktop catch-up), AM14 (restore + restart), AM7 in a game.
+Script lesson: an `--exit` sent right after a start is ignored; write config only while the app is stopped.
