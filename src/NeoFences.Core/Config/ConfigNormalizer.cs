@@ -40,6 +40,7 @@ public static class ConfigNormalizer
                 IconSize = IconSizes.Contains(loadedFence.IconSize) ? loadedFence.IconSize : 48,
                 CustomColor = Appearance.Argb.FromHex(loadedFence.CustomColor)?.ToHex(), // M14: a broken colour is none
             };
+            fence = fence with { View = fence.IsLibrary ? null : Items.FolderViews.Normalize(loadedFence.View) }; // M21: never on the Library
             seenFenceIds.Add(fence.Id);
             libraryFound |= fence.IsLibrary;
             fences.Add(fence);

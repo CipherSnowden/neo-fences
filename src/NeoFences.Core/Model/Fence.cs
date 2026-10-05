@@ -18,6 +18,12 @@ public sealed record Fence
     /// <summary>The Game Library fence (M12): at most one; it lists the library folder, never virtual items.</summary>
     public bool IsLibrary { get; init; }
 
+    /// <summary>A folder view (M21): the fence shows this folder live instead of virtual items. Never set on the Library.</summary>
+    public FolderView? View { get; init; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public FenceKind Kind => IsLibrary ? FenceKind.Library : View is not null ? FenceKind.View : FenceKind.Items;
+
     public int IconSize { get; init; } = 48;
     public bool RolledUp { get; init; }
     public bool Locked { get; init; }

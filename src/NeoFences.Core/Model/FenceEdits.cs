@@ -60,6 +60,27 @@ public static class FenceEdits
         return (config with { Fences = [.. config.Fences, fence] }, fence);
     }
 
+    /// <summary>A new folder view (M21), titled with its folder's name.</summary>
+    public static (NeoFencesConfig Config, Fence Fence) CreateView(NeoFencesConfig config, FolderView view)
+    {
+        var (created, fence) = CreateFence(config, Items.FolderViews.NameOf(view.Path));
+        fence = fence with { View = view };
+        return (created.WithFence(fence), fence);
+    }
+
+    /// <summary>
+    /// A view's settings or folder changed (M21; its folder renamed, or chosen again): the title follows the folder while it
+    /// still is the old folder's name.
+    /// </summary>
+    /// <exception cref="ArgumentException">No fence with that id, or it is the Game Library.</exception>
+    public static NeoFencesConfig SetView(NeoFencesConfig config, string fenceId, FolderView view)
+    {
+        var fence = Require(config, fenceId);
+        if (fence.IsLibrary) throw new ArgumentException("The Game Library cannot be a folder view.", nameof(fenceId));
+        var follows = fence.View is { } old && fence.Title == Items.FolderViews.NameOf(old.Path) && !Items.FolderViews.SameFolder(old.Path, view.Path);
+        return config.WithFence(fence with { View = view, Title = follows ? Items.FolderViews.NameOf(view.Path) : fence.Title });
+    }
+
     /// <summary>
     /// Deletes a fence (a tab leaves its box first; a host hands the box to the next tab, M9). Its items go with it from
     /// items.json; their targets are never touched (hard rule 1).
