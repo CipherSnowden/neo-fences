@@ -20,7 +20,7 @@ public partial class MissingItemWindow : Window
             Explanation.Text = "The game was uninstalled, or its launcher no longer lists it. Reinstall it and the item comes back by itself.";
             TargetText.Text = "";
             LocateButton.Visibility = Visibility.Collapsed;
-            RemoveButton.IsDefault = true;
+            LocateButton.IsDefault = false; // Enter must not remove the item (final review M2): no default button here
             RemoveButton.Click += (_, _) => Choose(MissingItemChoice.Remove);
             return;
         }

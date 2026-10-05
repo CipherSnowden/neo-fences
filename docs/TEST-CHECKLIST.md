@@ -590,3 +590,8 @@ Added after the M19 final review:
 | AH11 | Settings → New games go to: Nowhere; add another test game | no item added anywhere |
 | AH12 | Restore the "Before games became items" snapshot | the library fence comes back and becomes game items again (one more snapshot first) |
 | AH13 | Delete the new-games fence | Settings → New games go to: Nowhere |
+| AH14 | A not-installed game shown as a cover tile, with labels always and with labels on hover | the tile is dimmed with the ⚠ badge in both modes |
+| AH15 | Properties of a game item | the target box is read-only and Browse is off |
+| AH16 | Open a not-installed game; press Enter in the question | nothing happens (no default button); the item stays |
+| AH17 | Shift+right-click a game item → Delete | only the item leaves the fence; NeoFences' shortcut for the game stays |
+| AH18 | Move a game from Games to Apps; make it come back as new (remove its test folder, scan, put it back, scan) | it stays in Apps only; no copy appears in Games |

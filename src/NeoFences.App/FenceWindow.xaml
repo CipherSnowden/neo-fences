@@ -179,6 +179,13 @@
                                             <Image x:Name="TileIcon" Source="{Binding Icon}" Width="{DynamicResource IconSize}" Height="{DynamicResource IconSize}" />
                                             <Image x:Name="TileLogo" Source="{Binding Art}" Margin="10" Stretch="Uniform" Visibility="Collapsed" />
                                             <Image x:Name="TilePoster" Source="{Binding Art}" Stretch="UniformToFill" Visibility="Collapsed" />
+                                            <!-- A not-installed game shown as its cover (M22, final review I1): the same badge as on icons. -->
+                                            <Border x:Name="TileBadge" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="4"
+                                                    Width="16" Height="16" CornerRadius="8" Background="#FFE8A33D" BorderBrush="#FF3A2A10" BorderThickness="1"
+                                                    IsHitTestVisible="False">
+                                                <TextBlock Text="!" Foreground="#FF3A2A10" FontWeight="Bold" FontSize="11"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
                                         </Grid>
                                     </Border>
                                     <TextBlock x:Name="Label" Margin="0,4,0,0" Text="{Binding Label}" Foreground="{DynamicResource FenceText}" FontSize="12"
@@ -205,11 +212,14 @@
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding State}" Value="Missing">
                                         <Setter TargetName="ItemIcon" Property="Opacity" Value="0.45" />
+                                        <Setter TargetName="Tile" Property="Opacity" Value="0.45" />
+                                        <Setter TargetName="TileBadge" Property="Visibility" Value="Visible" />
                                         <Setter TargetName="Label" Property="Opacity" Value="0.6" />
                                         <Setter TargetName="MissingBadge" Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding State}" Value="Unavailable">
                                         <Setter TargetName="ItemIcon" Property="Opacity" Value="0.45" />
+                                        <Setter TargetName="Tile" Property="Opacity" Value="0.45" />
                                         <Setter TargetName="Label" Property="Opacity" Value="0.6" />
                                     </DataTrigger>
                                 </DataTemplate.Triggers>

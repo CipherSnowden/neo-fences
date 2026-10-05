@@ -64,6 +64,46 @@ public class GameItemsTests
     }
 
     [Fact]
+    public void Migrate_DoesNotDuplicateGamesTheFenceAlreadyHolds()
+    {
+        // A save cut short (power loss, a read-only items.json) leaves game items under a fence that is still a library
+        // fence: the next migration must not add every game twice (final review I4).
+        var (config, library) = WithLibraryFence();
+        var items = new ItemsDocument().With(library.Id, [GameItems.Create(Game("steam:1", "Blur"), Folder)]);
+        var migration = GameItems.Migrate(config, items, State(Game("steam:1", "Blur"), Game("steam:2", "Hades")), Folder);
+        Assert.Equal(["steam:1", "steam:2"], migration.Items.Of(library.Id).Select(item => item.GameId));
+    }
+
+    [Fact]
+    public void NewGames_OnAFirstScan_AreNone()
+    {
+        // No earlier scan (never used, or an unreadable index): the whole library is not "new" (final review I3).
+        Assert.Empty(GameItems.NewGames(State(), State(Game("steam:1", "Blur"), Game("epic:7", "Alan Wake 2"))));
+    }
+
+    [Fact]
+    public void NotInAnyFence_DropsGamesSomeFenceAlreadyHolds()
+    {
+        // A game that comes back (a drive plugged in again, Show again) is not copied into the new-games fence when the
+        // user keeps it elsewhere (final review I5).
+        var apps = Fence.NewId();
+        var items = new ItemsDocument().With(apps, [GameItems.Create(Game("folder:hades", "Hades"), Folder)]);
+        var back = GameItems.NotInAnyFence(items, [Game("steam:9", "Hades", "folder:hades"), Game("epic:7", "Alan Wake 2")]);
+        Assert.Equal(["epic:7"], back.Select(game => game.Game.Id));
+    }
+
+    [Fact]
+    public void Retarget_UpdatesEveryCopyOfAGame_InEveryFence()
+    {
+        var games = Fence.NewId();
+        var apps = Fence.NewId();
+        var blur = GameItems.Create(Game("steam:1", "Blur"), Folder);
+        var items = new ItemsDocument().With(games, [blur]).With(apps, [blur with { Id = VirtualItem.NewId(), ShowAs = ItemShow.Icon }]);
+        var result = GameItems.Retarget(items, State(Game("steam:1", "Blur (2010)")), Folder);
+        Assert.All(result.Fences.Values.SelectMany(list => list), item => Assert.EndsWith("Blur (2010).url", item.Target));
+    }
+
+    [Fact]
     public void NewGames_AreTheOnesNoEarlierGameHadAnIdOf()
     {
         var previous = State(Game("steam:1", "Blur"), Game("folder:hades", "Hades"));

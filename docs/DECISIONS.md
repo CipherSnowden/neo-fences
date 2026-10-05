@@ -1233,5 +1233,6 @@ of several sizes. The first step (M22, 0.12.0) makes games ordinary items.
 - Kinds stay in the code (`Fence.IsLibrary`, `FenceKind.Library`); "New Game Library fence" leaves the menus.
 - Folder views stay a fence setting for now (not decided).
 
-**Consequences.** A removed game item is not added again; an uninstalled game's items show "not installed" and come back
-on reinstall. Hiding games stays in Settings. Mixed fences size each cell by its item (tile or icon).
+**Consequences.** Only games no fence holds go to the new-games fence, and never on a first scan (no earlier scan to
+compare with); a migration cut short runs again without doubling games, and none runs while a store is read-only. An
+uninstalled game's items show "not installed" (dimmed, ⚠, covers too) and come back on reinstall. Hiding games stays in Settings. Mixed fences size each cell by its item (tile or icon).

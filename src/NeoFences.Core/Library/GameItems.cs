@@ -32,17 +32,34 @@ public static class GameItems
         foreach (var fence in libraryFences)
         {
             config = config.WithFence(fence with { IsLibrary = false });
-            items = items.With(fence.Id, [.. items.Of(fence.Id), .. library.Items.Select(game => Create(game, libraryFolder))]);
+            // Games the fence already holds stay single: a migration whose save was cut short runs again (final review I4).
+            var held = items.Of(fence.Id).Where(IsGame).Select(item => item.GameId!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            items = items.With(fence.Id, [.. items.Of(fence.Id),
+                .. library.Items.Where(game => !GameCatalog.IdsOf(game.Game).Any(held.Contains)).Select(game => Create(game, libraryFolder))]);
         }
         if (config.Library.NewGamesFence is null) config = config with { Library = config.Library with { NewGamesFence = libraryFences[0].Id } };
         return new Migration(config, items, [.. libraryFences.Select(fence => fence.Id)]);
     }
 
-    /// <summary>Games in <paramref name="current"/> that no game of <paramref name="previous"/> had an id of (merged ids count).</summary>
+    /// <summary>
+    /// Games in <paramref name="current"/> that no game of <paramref name="previous"/> had an id of (merged ids count). No
+    /// earlier scan (never used, an unreadable index): none — the whole library is not "new" (final review I3).
+    /// </summary>
     public static IReadOnlyList<LibraryItem> NewGames(LibraryState previous, LibraryState current)
     {
+        if (previous.Items.Count == 0) return [];
         var known = previous.Items.SelectMany(item => GameCatalog.IdsOf(item.Game)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return [.. current.Items.Where(item => !GameCatalog.IdsOf(item.Game).Any(known.Contains))];
+    }
+
+    /// <summary>
+    /// The games no fence holds an item of: a game that comes back (a drive plugged in again, Show again, a reinstall) is
+    /// not copied into the new-games fence when the user keeps it elsewhere (final review I5).
+    /// </summary>
+    public static IReadOnlyList<LibraryItem> NotInAnyFence(ItemsDocument items, IReadOnlyList<LibraryItem> games)
+    {
+        var held = items.Fences.Values.SelectMany(list => list).Where(IsGame).Select(item => item.GameId!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return [.. games.Where(game => !GameCatalog.IdsOf(game.Game).Any(held.Contains))];
     }
 
     /// <summary>New games at the end of a fence; a game the fence already holds (by id) is not added again.</summary>

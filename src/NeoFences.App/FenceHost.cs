@@ -51,6 +51,7 @@ public sealed partial class FenceHost
     private FolderLister? _libraryLister; // the Game Library fence's folder (M12), while that fence exists
     private NeoFencesConfig _config = NeoFencesConfig.CreateDefault();
     private ItemsDocument _items = new();
+    private bool _configReadOnly, _itemsReadOnly; // a store that cannot be saved this session (M22: no migration then)
     private IReadOnlyList<MonitorPlacement> _monitors = [];
     private bool _lightTheme = SystemTheme.AppsUseLightTheme();
     private bool _sessionEnding;
@@ -112,10 +113,12 @@ public sealed partial class FenceHost
         Log.Information("config loaded from {Source} (read-only: {IsReadOnly}, corrupt copy: {CorruptCopyPath})",
             loaded.Source, loaded.IsReadOnly, loaded.CorruptCopyPath);
         _config = loaded.Config;
+        _configReadOnly = loaded.IsReadOnly;
         var loadedItems = _itemStore.Load();
         Log.Information("items loaded from {Source} (read-only: {IsReadOnly}, corrupt copy: {CorruptCopyPath}): {Count} item(s)",
             loadedItems.Source, loadedItems.IsReadOnly, loadedItems.CorruptCopyPath, loadedItems.Document.Fences.Values.Sum(items => items.Count));
         _items = loadedItems.Document;
+        _itemsReadOnly = loadedItems.IsReadOnly;
         MigrateGames(LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: an old Game Library fence becomes game items (a snapshot first)
         if (loadedItems.Source == ConfigLoadSource.Primary && !loadedItems.IsReadOnly) CleanUnusedPictures(ItemEdits.ImagesInUse(_items), _snapshots.Directory);
         _watchdog.LaunchDetached(Environment.ProcessId);
@@ -1391,9 +1394,12 @@ public sealed partial class FenceHost
     /// Both files, the config first (ADR-041). Item lists are never dropped here: a fence's delete removes its own list, and
     /// a config that is only a fallback (fresh, an old backup) must not cost the user their items (final review I1).
     /// </summary>
-    private void SaveNow()
+    /// <param name="itemsFirst">The items before the config (M22 migration): cut short in between, the config still
+    /// names the old fence kind and the migration runs again.</param>
+    private void SaveNow(bool itemsFirst = false)
     {
         _saveTimer.Stop();
+        if (itemsFirst) SaveItems();
         try
         {
             if (!_store.Save(_config)) Log.Warning("config not saved: config.json is read-only this session");
@@ -1403,6 +1409,11 @@ public sealed partial class FenceHost
         {
             Log.Error(failure, "config save failed");
         }
+        if (!itemsFirst) SaveItems();
+    }
+
+    private void SaveItems()
+    {
         try
         {
             if (!_itemStore.Save(_items)) Log.Warning("items not saved: items.json is read-only this session");

@@ -47,6 +47,12 @@ public partial class ItemPropertiesWindow : Window
         ArgumentsBox.Text = item.Arguments ?? "";
         AdminBox.IsChecked = item.RunAsAdmin;
         NoteBox.Text = item.Note ?? "";
+        if (item.GameId is not null)
+        {
+            // A game item points at NeoFences' own shortcut for the game; the scan keeps it there (M22, final review I2).
+            TargetBox.IsReadOnly = true;
+            BrowseButton.IsEnabled = false;
+        }
         _preview = new FenceItemView(new ShownItem("preview", item.Target, item.Name, item.Icon));
         _preview.PropertyChanged += OnPreviewChanged;
 

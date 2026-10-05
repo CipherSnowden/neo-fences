@@ -170,9 +170,12 @@ public sealed partial class FenceHost
                 window.ShowItemMenu(menu, fromKeyboard: false);
                 return;
             }
-            ShellItemMenu.Show(window.Handle, [item.Target], screenX, screenY, extended: true,
+            // A game item's target is NeoFences' own shortcut: Delete there only removes the item (M22, final review M3).
+            var game = GameItems.IsGame(item);
+            var choice = ShellItemMenu.Show(window.Handle, [item.Target], screenX, screenY, extended: true,
                 logFailure: failure => Log.Warning(failure, "Windows' menu or its command failed for {Target}", item.Target),
-                header: "Windows menu — acts on the real file", customCommands: [], handDeleteBack: false, out _);
+                header: "Windows menu — acts on the real file", customCommands: [], handDeleteBack: game, out _);
+            if (game && choice == ItemMenuChoice.Delete) RemoveItems(window, [item.Id]);
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 

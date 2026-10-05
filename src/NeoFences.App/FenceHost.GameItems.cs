@@ -23,6 +23,12 @@ public sealed partial class FenceHost
     private bool MigrateGames(LibraryState library)
     {
         if (!_config.Fences.Any(fence => fence.IsLibrary) || library.Items.Count == 0) return false;
+        if (_configReadOnly || _itemsReadOnly)
+        {
+            // Half a migration saved (one file read-only) would empty the fence or double its games (final review I4).
+            Log.Information("games not made into items: config.json or items.json is read-only this session");
+            return false;
+        }
         var now = DateTimeOffset.Now;
         if (_snapshots.Save(Snapshots.Take(_config, _items, name: $"Before games became items ({now:d MMM HH:mm})", now: now)) is null)
         {
@@ -32,7 +38,7 @@ public sealed partial class FenceHost
         var migration = GameItems.Migrate(_config, _items, library, AppPaths.LibraryDirectory);
         (_config, _items) = (migration.Config, migration.Items);
         Log.Information("Game Library fence(s) {FenceIds} now hold {Count} game items", migration.MigratedFenceIds, library.Items.Count);
-        SaveNow();
+        SaveNow(itemsFirst: true); // cut short after the items, the next start migrates again without doubling (final review I4)
         return true;
     }
 
@@ -60,7 +66,8 @@ public sealed partial class FenceHost
         var changed = !ReferenceEquals(retargeted, _items);
         _items = retargeted;
         IReadOnlyList<string> added = [];
-        if (_config.Library.NewGamesFence is { } fenceId && GameItems.NewGames(previous, current) is { Count: > 0 } newGames)
+        // A game some fence already holds is not copied in when it comes back (final review I5).
+        if (_config.Library.NewGamesFence is { } fenceId && GameItems.NotInAnyFence(_items, GameItems.NewGames(previous, current)) is { Count: > 0 } newGames)
         {
             var result = GameItems.AddNew(_items, fenceId, newGames, AppPaths.LibraryDirectory);
             _items = result.Document;
