@@ -47,6 +47,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check TEST-CHECKLIST AJ 14/15 (AJ6, a drop from Explorer onto a Free cell, by hand later); merged to main
   - [x] Released 0.13.0 on 2026-10-05: CI green, draft with delta, install check (the installed 0.12.1 updated itself; config gained each fence's layout, nothing else changed), published, hub refreshed
   - Deferred minors: in `research/m24-element-sizes.md`
+- [~] **M25 — 0.14.0: widgets (clock, date, system stats)** (spec 2026-10-05-widgets-design) — claimed by session 2026-10-05 m25-widgets
 - [ ] Later (the user's vision 2026-10-05: a fence holds *elements*; kinds stay in code): a folder panel element (a folder in a list / detailed view inside a fence), widgets (clock, calendar), element sizes
 - [ ] Later (user idea 2026-10-05): **item sizes** — one virtual item can take 1×1, 1×2, 2×1, 2×2 … cells in its fence (a grid layout instead of the wrap panel).
 - [ ] Later — auto-collect rules (the other half of dynamic collections)
