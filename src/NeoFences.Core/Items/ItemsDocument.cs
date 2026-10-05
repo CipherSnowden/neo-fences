@@ -178,6 +178,23 @@ public static class ItemEdits
         };
     }
 
+    /// <summary>Size ▸ (M24): these items take this size (null: the default). The same document when none of them is known.</summary>
+    public static ItemsDocument SetSize(ItemsDocument document, IReadOnlyCollection<string> itemIds, GridSpan? size) =>
+        Change(document, item => itemIds.Contains(item.Id) ? item with { Size = size?.Clamp(GridSpan.Max) } : null);
+
+    /// <summary>Free fences (M24): these items (by id) store these cells.</summary>
+    public static ItemsDocument Place(ItemsDocument document, IReadOnlyDictionary<string, GridCell> cells) =>
+        Change(document, item => cells.TryGetValue(item.Id, out var cell) ? item with { Cell = cell } : null);
+
+    private static ItemsDocument Change(ItemsDocument document, Func<VirtualItem, VirtualItem?> change)
+    {
+        if (!document.Fences.Values.Any(items => items.Any(item => change(item) is not null))) return document;
+        return document with
+        {
+            Fences = document.Fences.ToDictionary(entry => entry.Key, entry => (IReadOnlyList<VirtualItem>)entry.Value.Select(item => change(item) ?? item).ToList()),
+        };
+    }
+
     /// <summary>Picture files in <c>icons\</c> some item still uses (the others are deleted at start).</summary>
     public static IReadOnlySet<string> ImagesInUse(ItemsDocument document) =>
         document.Fences.Values.SelectMany(items => items).Select(item => item.Icon?.Image).OfType<string>().ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -199,6 +216,8 @@ public static class ItemEdits
                     Id = string.IsNullOrWhiteSpace(item.Id) || !seenIds.Add(item.Id) ? VirtualItem.NewId() : item.Id,
                     Target = item.Target.Trim(),
                     Icon = item.Icon is { File: null or "", Image: null or "" } ? null : item.Icon,
+                    Size = item.Size?.Clamp(GridSpan.Max), // M24: a hand-edited size within 1–4 each way
+                    Cell = item.Cell is { Column: >= 0, Row: >= 0 } ? item.Cell : null,
                 })
                 .ToList();
         }

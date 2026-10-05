@@ -52,6 +52,12 @@ public sealed record VirtualItem
     /// <summary>Null: the item's usual look (a game's cover tile).</summary>
     public ItemShow? ShowAs { get; init; }
 
+    /// <summary>Its size in the fence's cells (M24); null: the default (<see cref="FenceGrid.SpanOf"/>).</summary>
+    public GridSpan? Size { get; init; }
+
+    /// <summary>Its stored cell in a Free fence (M24); unused in Flow fences.</summary>
+    public GridCell? Cell { get; init; }
+
     [JsonIgnore]
     public ItemKind Kind => ItemKinds.Of(Target);
 

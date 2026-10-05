@@ -41,6 +41,10 @@ public static class FenceEdits
     public static NeoFencesConfig SetRolledUp(NeoFencesConfig config, string fenceId, bool rolledUp) =>
         config.WithFence(Require(config, fenceId) with { RolledUp = rolledUp });
 
+    /// <summary>Layout ▸ (M24): packed in order, or at fixed positions.</summary>
+    public static NeoFencesConfig SetLayout(NeoFencesConfig config, string fenceId, Items.FenceLayout layout) =>
+        config.WithFence(Require(config, fenceId) with { Layout = layout });
+
     /// <summary>Icon-only (M8b): labels always shown, or only on hover / selection.</summary>
     public static NeoFencesConfig SetLabels(NeoFencesConfig config, string fenceId, LabelMode labels) =>
         config.WithFence(Require(config, fenceId) with { Labels = labels });

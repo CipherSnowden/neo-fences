@@ -21,6 +21,9 @@ public sealed record Fence
     /// <summary>A folder view (M21): the fence shows this folder live instead of virtual items. Never set on the Library.</summary>
     public FolderView? View { get; init; }
 
+    /// <summary>How its elements sit (M24): packed in order, or at fixed positions.</summary>
+    public Items.FenceLayout Layout { get; init; }
+
     [System.Text.Json.Serialization.JsonIgnore]
     public FenceKind Kind => IsLibrary ? FenceKind.Library : View is not null ? FenceKind.View : FenceKind.Items;
 
