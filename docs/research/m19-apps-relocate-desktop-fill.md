@@ -83,6 +83,16 @@ except the R1 race, left as is by the user's choice** (a removal in those micros
 - R1: a microsecond race between registering a removal notice and tracking it;
 - a stray blank line in `FenceHost.Items` `DisplayName`.
 
+### 0.10.1 live check (TEST-CHECKLIST AF, 2026-10-05, PC unattended; installed data backed up and restored)
+
+| ID | Result | Notes |
+|---|---|---|
+| AF1 | PASS | Shift+right-click: Windows' menu for Sticky Notes ("Open", "Uninstall") and for 7-Zip File Manager ("Open", "Open file location"), under the header line |
+| AF2 | PASS | `shell:AppsFolder\{6D809377-…}\Fake\Fake App.exe`: "● Not installed", label "Fake App" |
+| AF3 | PASS | test shortcuts to This PC and Control Panel listed under Folders and files (removed afterwards) |
+| AF4 | PASS | with a Game Library fence the dialog uses its scan: Games 10 (5 without), listed in ~0.75 s both times |
+| AF5 | reading | `FixItems` filters before the snapshot and returns with a log line when nothing is left |
+
 Script lessons (memory `feedback-desktop-automation`): dialogs can open behind other windows (bring to front and
 uncover first); a double-click on an item scrolled out of view lands on the desktop and quick-hides everything (scroll
 the item into view and check the point is on the fence first); a restore can recreate fence windows (look them up again).
