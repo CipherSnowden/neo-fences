@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "363de39",
-  phase: "0.19.0 — modern widgets and sensors",
-  current: "0.19.0 RELEASED and installed (your 0.18.0 updated itself): modern widgets, CPU / GPU temperatures from Afterburner or HWiNFO, RAM in GB · your desktop now uses every feature · next: pre-1.0 work or new ideas",
+  commit: "3bab453",
+  phase: "0.19.1 — polish",
+  current: "M32 merged: accent bars follow at once, sticky GPU, HWiNFO lock, CJK date line, Free spots saved at start · next: release 0.19.1 when you say so",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -807,6 +807,13 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M32 · Polish (0.19.1)", items: [
+      { t: "You chose a polish release: every M31 minor and the Free-layout bug from your desktop setup", s: "done" },
+      { t: "Prototype + replay-verified plan, native build; Opus review fixes (notice after a game, date line with Windows' formats, accent on DWM's message) — 700 tests", s: "done" },
+      { t: "Live check: accent switched to Blue and back (bars followed at once; your Red restored); Free spots stored at start; merged locally", s: "done" },
+      { t: "Release 0.19.1", s: "todo" },
+      { t: "By hand: AR3–AR8 (hint line, notice after a game, Afterburner without CPU temp, HWiNFO off/on, two-GPU idle, Japanese date)", s: "todo" }
+    ]},
     { group: "M31 · Modern widgets and sensors (0.19.0)", items: [
       { t: "You chose style B with A's bars in the visual companion; stats CPU, CPU TEMP, GPU, GPU TEMP, RAM in GB; °F option", s: "done" },
       { t: "Temperatures from MSI Afterburner or HWiNFO (read-only shared memory), value by value, then Windows (ADR-052)", s: "done" },
@@ -1163,6 +1170,7 @@ const HUB = {
     { id: "M29", name: "A guide for friends (0.17.0)", goal: "README, docs/GUIDE.md with screenshots, Help in the tray and Settings (ADR-050) — released as 0.17.0", s: "done" },
     { id: "M30", name: "First-run welcome (0.18.0)", goal: "The first fence welcomes a fresh install; tray notice (ADR-051) — released as 0.18.0", s: "done" },
     { id: "M31", name: "Modern widgets and sensors (0.19.0)", goal: "Restyled widgets; CPU / GPU temperatures via Afterburner or HWiNFO; RAM in GB (ADR-052) — released as 0.19.0", s: "done" },
+    { id: "M32", name: "Polish (0.19.1)", goal: "The M31 minors and the Free-layout bug — merged, release pending", s: "wip" },
     { id: "Next", name: "Next", goal: "Pre-1.0 work (code signing) or new ideas", s: "todo" }
   ],
   versions: [
@@ -1184,6 +1192,7 @@ const HUB = {
     { v: "0.17.0", s: "done", scope: "A guide for friends (M29): rewritten README, docs/GUIDE.md with screenshots, Help in the tray and Settings. Released 2026-10-06; the installed 0.16.1 updated itself." },
     { v: "0.18.0", s: "done", scope: "First-run welcome (M30): the first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is. Released 2026-10-06; the installed 0.17.0 updated itself." },
     { v: "0.19.0", s: "done", scope: "Modern widgets and sensors (M31): tiles with accent bars; CPU, CPU TEMP, GPU, GPU TEMP, RAM in GB; Afterburner / HWiNFO. Released 2026-10-06; the installed 0.18.0 updated itself." },
+    { v: "0.19.1", s: "todo", scope: "Polish (M32): accent bars follow at once, sticky GPU, HWiNFO lock, CJK date line, Free spots saved at start. Merged 2026-10-06; release pending." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1461,7 +1470,8 @@ const HUB = {
     { date: "2026-10-05", topic: "M28 polish (merged)", done: "All four groups; prototype + visual probe; verified plan; native build; Opus review fixes (643 tests); live check AN; merged locally.", next: "Pre-1.0 work or new ideas" },
     { date: "2026-10-05", topic: "M29 guide for friends (merged)", done: "Spec + plan; native build; 8 demo screenshots (3 as JPEG); Opus review fixes (tray overflow, download warning, wording); guide rule in CLAUDE.md; live check AO1/AO2/AO4; merged locally.", next: "Released 0.17.0; next: pre-1.0 work or new ideas" },
     { date: "2026-10-06", topic: "M30 first-run welcome (merged)", done: "Welcome in the first fence; spec + replay-verified plan; native build; Opus review fixes (read-only start, set-up welcome fence kept; 658 tests); live check AP; merged locally.", next: "Released 0.18.0; next: pre-1.0 work or new ideas" },
-    { date: "2026-10-06", topic: "M31 modern widgets and sensors (merged)", done: "Visual companion mockups; spec; prototype checked against Afterburner; replay-verified plan; native build; Opus review fixes (682 tests); live check AQ; new guide shots; merged locally.", next: "Released 0.19.0; next: your desktop with every feature" }
+    { date: "2026-10-06", topic: "M31 modern widgets and sensors (merged)", done: "Visual companion mockups; spec; prototype checked against Afterburner; replay-verified plan; native build; Opus review fixes (682 tests); live check AQ; new guide shots; merged locally.", next: "Released 0.19.0; next: your desktop with every feature" },
+    { date: "2026-10-06", topic: "M32 polish (merged)", done: "Every M31 minor + the Free-layout bug; prototype; replay-verified plan; native build; Opus review fixes (700 tests); live AR1 (accent, restored) and AR2; merged locally.", next: "Release 0.19.1" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2031,7 +2041,19 @@ const HUB = {
     ["018f914", "docs: refreshed the hub for the merged M31 widgets"],
     ["94f7597", "chore: bumped the version to 0.19.0"],
     ["03ccbd7", "docs: marked the 0.19.0 release as approved"],
-    ["363de39", "docs: recorded the 0.19.0 release"]
+    ["363de39", "docs: recorded the 0.19.0 release"],
+    ["5234059", "docs: refreshed the hub for the 0.19.0 release"],
+    ["2cda782", "docs: recorded the user's desktop set up with every feature"],
+    ["e40285c", "docs: marked the desktop setup done in the hub"],
+    ["bd8c377", "docs: claimed M32 polish"],
+    ["82aea6a", "docs: added the M32 polish design spec"],
+    ["bebd893", "docs: added the M32 polish plan"],
+    ["b1fcab7", "feat: added the sticky main GPU, the clock date line in the culture's order and the quiet °F option in Core"],
+    ["769c79d", "fix: fixed the M31 leftovers in the app: accent bars, rented sensor buffer, HWiNFO lock, sticky GPUs, hint line, notice after a game, Free cells stored at first layout"],
+    ["7463b39", "docs: described the M32 polish in ADR-052, architecture, checklist AR and the research note"],
+    ["62f1b4b", "fix: fixed the M32 review findings: the notice after a game at first start, the date line with Windows' regional formats, the accent bars on DWM's colour change"],
+    ["ec56ac4", "docs: added the M32 live check results"],
+    ["3bab453", "docs: recorded M32 merged"]
   ]
 };
 /* ===== END HUB DATA ===== */
