@@ -45,6 +45,11 @@ public static class FenceEdits
     public static NeoFencesConfig SetLayout(NeoFencesConfig config, string fenceId, Items.FenceLayout layout) =>
         config.WithFence(Require(config, fenceId) with { Layout = layout });
 
+    /// <summary>Auto-collect… (M27): the fence's rules, replaced as a whole.</summary>
+    /// <exception cref="ArgumentException">No fence with that id.</exception>
+    public static NeoFencesConfig SetCollect(NeoFencesConfig config, string fenceId, IReadOnlyList<Items.CollectRule> rules) =>
+        config.WithFence(Require(config, fenceId) with { Collect = [.. rules] });
+
     /// <summary>Icon-only (M8b): labels always shown, or only on hover / selection.</summary>
     public static NeoFencesConfig SetLabels(NeoFencesConfig config, string fenceId, LabelMode labels) =>
         config.WithFence(Require(config, fenceId) with { Labels = labels });

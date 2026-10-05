@@ -21,6 +21,14 @@ public sealed record Fence
     /// <summary>A folder view (M21): the fence shows this folder live instead of virtual items. Never set on the Library.</summary>
     public FolderView? View { get; init; }
 
+    /// <summary>Its auto-collect rules (M27): new matching files of their folders become items here. Empty: none.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IReadOnlyList<Items.CollectRule> Collect { get; init; } = [];
+
+    /// <summary>config.json's "collect": written only when the fence has rules.</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("collect"), System.Text.Json.Serialization.JsonInclude]
+    private IReadOnlyList<Items.CollectRule>? CollectJson { get => Collect.Count == 0 ? null : Collect; init => Collect = value ?? []; }
+
     /// <summary>How its elements sit (M24): packed in order, or at fixed positions.</summary>
     public Items.FenceLayout Layout { get; init; }
 

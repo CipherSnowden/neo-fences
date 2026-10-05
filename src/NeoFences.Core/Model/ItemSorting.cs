@@ -2,7 +2,8 @@ namespace NeoFences.Core.Model;
 
 /// <summary>What sorting needs to know about one item (filled in by NeoFences.Shell).</summary>
 /// <param name="Size">A file's size in bytes (M26: a folder panel's Size column); null for folders and when unknown.</param>
-public sealed record ItemInfo(string ItemRef, string Name, bool IsFolder, string TypeName, DateTimeOffset Modified, long? Size = null);
+/// <param name="Created">When it was created (M27: an auto-collect rule's catch-up at start); MinValue when unknown.</param>
+public sealed record ItemInfo(string ItemRef, string Name, bool IsFolder, string TypeName, DateTimeOffset Modified, long? Size = null, DateTimeOffset Created = default);
 
 /// <summary>
 /// Item order for "Sort by" (one time) and the library's listing. Name and Type put folders first, like
