@@ -104,17 +104,23 @@ public static class Widgets
 
     /// <summary>
     /// The clock's date line (M31): the weekday and the day with its month — "Monday, 5 October"; where the culture's long
-    /// date puts the weekday last (ja, zh, ko), after it: "10月5日 月曜日" (M32).
+    /// date puts the weekday after the month (ja, zh, ko), after it: "10月5日 月曜日" (M32). Windows' own regional formats
+    /// may leave the weekday out (ja-JP, zh-CN): the culture's default pattern decides then (M32 final review I2).
     /// </summary>
     public static string ClockDateLine(DateTime date, CultureInfo culture)
     {
         var weekday = culture.DateTimeFormat.GetDayName(date.DayOfWeek);
         var monthDay = date.ToString(culture.DateTimeFormat.MonthDayPattern, culture);
-        return culture.DateTimeFormat.LongDatePattern.TrimEnd().EndsWith("dddd", StringComparison.Ordinal) ? $"{monthDay} {weekday}" : $"{weekday}, {monthDay}";
+        var pattern = culture.DateTimeFormat.LongDatePattern;
+        if (!pattern.Contains("dddd", StringComparison.Ordinal)) pattern = CultureInfo.GetCultureInfo(culture.Name).DateTimeFormat.LongDatePattern;
+        var bare = System.Text.RegularExpressions.Regex.Replace(pattern, "'[^']*'", ""); // quoted literals are not fields
+        var weekdayAt = bare.IndexOf("dddd", StringComparison.Ordinal);
+        var monthAt = bare.IndexOf('M');
+        return weekdayAt >= 0 && monthAt >= 0 && weekdayAt > monthAt ? $"{monthDay} {weekday}" : $"{weekday}, {monthDay}";
     }
 
     public static DatePage Page(DateTime date, CultureInfo culture) =>
-        new(culture.DateTimeFormat.GetDayName(date.DayOfWeek), date.Day.ToString(culture),date.ToString(culture.DateTimeFormat.YearMonthPattern, culture)); // M28: the culture's own order (ja, zh, ko, hu)
+        new(culture.DateTimeFormat.GetDayName(date.DayOfWeek), date.Day.ToString(culture), date.ToString(culture.DateTimeFormat.YearMonthPattern, culture)); // M28: the culture's own order (ja, zh, ko, hu)
 
     /// <summary>
     /// GPU use like Task Manager's (M28, M25 review minor): the 3D engines' readings summed per adapter (the instance's

@@ -60,10 +60,6 @@ public sealed partial class FenceHost
     }
 
     /// <summary>
-    /// Elements of a Free fence that have no stored cell yet (added by Add item…, Add games…, new games) store the free spot
-    /// they show at, so a later addition never moves them.
-    /// </summary>
-    /// <summary>
     /// A Free fence's elements without a stored cell are stored where they show once its window has laid out (M32): not only
     /// at the next item change (a fence written with a Free layout and no cells kept them unsaved until then).
     /// </summary>
@@ -77,6 +73,10 @@ public sealed partial class FenceHost
         ScheduleSave();
     }
 
+    /// <summary>
+    /// Elements of a Free fence that have no stored cell yet (added by Add item…, Add games…, new games) store the free spot
+    /// they show at, so a later addition never moves them.
+    /// </summary>
     private void PinFreeCells()
     {
         var cells = new Dictionary<string, GridCell>(StringComparer.Ordinal);

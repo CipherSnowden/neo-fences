@@ -98,3 +98,29 @@ public class PolishM32Tests
         Assert.True(ConfigJson.DeserializeItems(json).Of("f")[1].Widget!.Fahrenheit);
     }
 }
+
+/// <summary>M32 final review: the date line with Windows' own regional formats, the sticky threshold's other half.</summary>
+public class PolishM32ReviewTests
+{
+    [Fact]
+    public void ClockDateLine_WithWindowsJapaneseFormats_PutsTheWeekdayLast()
+    {
+        // Final review I2: Windows' ja-JP and zh-CN long date has no weekday ("yyyy'年'M'月'd'日'"); the user's culture
+        // carries that, so the culture's own (ICU) order decides.
+        var japanese = (CultureInfo)CultureInfo.GetCultureInfo("ja-JP").Clone();
+        japanese.DateTimeFormat.LongDatePattern = "yyyy'年'M'月'd'日'";
+        Assert.Equal("10月5日 月曜日", Widgets.ClockDateLine(new DateTime(2026, 10, 5), japanese));
+    }
+
+    [Fact]
+    public void ClockDateLine_WithALiteralAfterTheWeekday_StillPutsItLast()
+    {
+        var culture = (CultureInfo)CultureInfo.GetCultureInfo("en-GB").Clone();
+        culture.DateTimeFormat.LongDatePattern = "yyyy MMMM d, dddd 'day'";
+        Assert.EndsWith("Monday", Widgets.ClockDateLine(new DateTime(2026, 10, 5), culture));
+    }
+
+    [Fact]
+    public void StickyGpu_DoesNotSwitch_OnAGigabyteMoreButLessThanTwice() =>
+        Assert.Equal("1", Widgets.StickyGpu(previous: "1", [("1", 2000), ("2", 3500)]));
+}

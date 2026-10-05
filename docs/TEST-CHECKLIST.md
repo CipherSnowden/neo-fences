@@ -761,4 +761,5 @@ Added after the M19 final review:
 | AR4 | First start of a fresh install while a full-screen game runs | no notice during the game; it shows after the game ends |
 | AR5 | Afterburner without its CPU temperature graph, HWiNFO running | CPU TEMP from HWiNFO |
 | AR6 | HWiNFO sharing switched off (DEAD), then on again | tiles fall back, then return |
-| AR7 | A two-GPU PC at idle without Afterburner or HWiNFO | GPU TEMP steady on the graphics card |
+| AR7 | A two-GPU PC at idle without Afterburner or HWiNFO | GPU TEMP steady on the GPU first chosen (the graphics card on a desktop) |
+| AR8 | Windows Region → Regional format: Japanese; clock with the date line | "10月5日 月曜日" (weekday last); back to the user's format afterwards |

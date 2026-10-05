@@ -96,6 +96,7 @@ public sealed partial class FenceHost
         _messages.ExplorerRestarted += OnExplorerRestarted;
         _messages.DisplayChanged += OnDisplayChanged;
         _messages.ThemeChanged += OnThemeChanged;
+        _messages.AccentChanged += OnAccentChanged; // M32 final review I3
         _messages.WallpaperChanged += () => { if (Appearance.WallpaperAccent) UpdateAccents(); }; // M14
         _messages.TimeSettingsChanged += () =>
         {
@@ -163,7 +164,7 @@ public sealed partial class FenceHost
         }
         StartGameMode();
         // M30: a fresh start says where NeoFences lives; Windows 11 may tuck a new tray icon behind the ^ arrow.
-        _firstStartNotice = loaded.Source == ConfigLoadSource.Fresh && !loaded.IsReadOnly && !_gameMode; // not for an older build on a newer config (final review I1)
+        _firstStartNotice = loaded.Source == ConfigLoadSource.Fresh && !loaded.IsReadOnly; // not for an older build on a newer config (final review I1); held while a game runs (M32 review I1)
         ShowFirstStartNotice(); // M31: or once a retried tray icon shows
         StartWatching(); // M18: states fill in as the checks finish (spec §4)
         StartUpdates(); // M17: the first check a minute after start
@@ -550,6 +551,16 @@ public sealed partial class FenceHost
         RestyleAll(); // M14: the tone's strength and ink
         RefreshSettings();
     }
+
+    /// <summary>
+    /// DWM's colour changed (M32 final review I3): WPF refreshes <c>SystemColors.AccentColor*</c> on this message, which can
+    /// come after "ImmersiveColorSet"; the bars are rebuilt once WPF has handled it too.
+    /// </summary>
+    private void OnAccentChanged() =>
+        Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+        {
+            foreach (var window in _windows.Values) window.ApplyWidgetBar(_lightTheme);
+        });
 
     private void OnDisplayChanged()
     {

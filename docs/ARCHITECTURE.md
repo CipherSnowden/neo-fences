@@ -172,9 +172,9 @@ Game Library fence becomes an items fence once (a "Before games became items" sn
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
 **0.19.1 (M32, polish)**: the M31 leftovers — the widgets' bars follow an accent change at once (`ApplyWidgetBar` on every
-`ImmersiveColorSet`), the sensor copy is a rented buffer taken under HWiNFO's mutex, the main GPU is sticky per source
+`ImmersiveColorSet` and DWM colour change), the sensor copy is a rented buffer taken under HWiNFO's mutex, the main GPU is sticky per source
 (`Widgets.StickyGpu`), "—" tiles without a hint have no empty line, the first-start notice waits for a game to end, the
-clock's date line follows the culture's order (weekday last for ja, zh, ko), `fahrenheit` is written only when set, and a
+clock's date line follows the culture's order (weekday last where the long date has it after the month — ja, zh, ko — also with Windows' own regional formats that leave the weekday out), `fahrenheit` is written only when set, and a
 Free fence's cells are stored once its window has laid out (`PinAfterLayout`). `research/m32-polish.md`.
 
 **0.19.0 (M31, modern widgets and sensors)**: the widgets in Windows 11's display font, the stats as tiles with thin

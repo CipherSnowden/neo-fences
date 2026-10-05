@@ -1373,6 +1373,6 @@ switched on again). NeoFences never starts, closes or configures them. A later s
 (clocks, power, fans, FPS are all there).
 
 **Amended 2026-10-06 (M32, 0.19.1).** The main GPU is sticky: each source keeps its last choice until another GPU uses at
-least twice its video memory and 1 GB more (`Widgets.StickyGpu`), so a hybrid laptop's card idling at 0 MB beside a
-built-in GPU does not flip the tiles. HWiNFO's copy is taken while holding `Global\HWiNFO_SM2_MUTEX` (at most 20 ms;
+least twice its video memory and 1 GB more (`Widgets.StickyGpu`), so the tiles do not flip back and forth once a GPU is chosen (a
+hybrid laptop's first choice at an idle start may still be the built-in GPU until the card uses clearly more). HWiNFO's copy is taken while holding `Global\HWiNFO_SM2_MUTEX` (at most 20 ms;
 without it as before). The copy is a rented buffer.

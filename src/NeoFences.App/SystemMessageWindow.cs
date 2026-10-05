@@ -19,12 +19,15 @@ public sealed class SystemMessageWindow : IDisposable
     private const int WmDpiChanged = 0x02E0;
     private const int SpiSetWorkArea = 0x002F;
     private const int SpiSetDeskWallpaper = 0x0014; // M14: the wallpaper accent reads the new wallpaper
+    private const int WmDwmColorizationColorChanged = 0x0320; // M32: the accent; WPF refreshes its accent colours on this one
 
     private readonly HwndSource _source;
 
     public event Action? ExplorerRestarted;
     public event Action? DisplayChanged;
     public event Action? ThemeChanged;
+    /// <summary>DWM's colour changed (M32 final review I3): WPF's accent colours are fresh once it has seen this too.</summary>
+    public event Action? AccentChanged;
     public event Action? WallpaperChanged;
     /// <summary>Windows' regional formats, the time or the time zone changed (M25: clocks and dates follow).</summary>
     public event Action? TimeSettingsChanged;
@@ -77,6 +80,9 @@ public sealed class SystemMessageWindow : IDisposable
                 return 0;
             case WmSettingChange when wParam == SpiSetDeskWallpaper:
                 WallpaperChanged?.Invoke();
+                return 0;
+            case WmDwmColorizationColorChanged:
+                AccentChanged?.Invoke();
                 return 0;
             // Light/dark switch: WM_SETTINGCHANGE with the string "ImmersiveColorSet".
             case WmSettingChange when lParam != 0 && Marshal.PtrToStringUni(lParam) == "ImmersiveColorSet":
