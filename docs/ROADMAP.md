@@ -35,6 +35,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Released 0.11.0 on 2026-10-05: CI green, draft with delta, install check (the installed 0.10.1 updated itself to 0.11.0, data unchanged), published, hub refreshed
   - Deferred minors: selection on the UI thread per re-list; a hidden tab's title after a rename-follow; relative paths and the newest-N box in the settings
 - [ ] **Next candidate (user idea 2026-10-05): one kind of fence.** Instead of separate normal / Game Library / folder-view fences, every fence can serve each use through per-fence settings (personalization). Keep `Fence.Kind` and the kinds in code — they may be needed later; do not remove them outright. Needs brainstorming + spec.
+- [ ] Later (user idea 2026-10-05): **item sizes** — one virtual item can take 1×1, 1×2, 2×1, 2×2 … cells in its fence (a grid layout instead of the wrap panel).
 - [ ] Later — auto-collect rules (the other half of dynamic collections)
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
