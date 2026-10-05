@@ -26,6 +26,7 @@ public sealed class FolderLister : IDisposable
     private DeviceRemovalNotice? _removal;   // asks before the library drive is removed (USB stick, M8d)
     private readonly nint _noticeOwner;
     private volatile bool _noticeFailureLogged;
+    private volatile bool _watchFailureLogged; // an unavailable folder fails at every 7 s retry: said once per outage (final review I1)
     private readonly DispatcherTimer _backoffTimer;
     private TimeSpan _failureDelay = NeoFences.Core.Lifecycle.WatcherBackoff.First;
     private DateTime _lastArm = DateTime.MinValue;
@@ -57,7 +58,7 @@ public sealed class FolderLister : IDisposable
             if (_paused) _missedChanges = true; // re-listed when the game ends (M8d review I1)
             else Refresh();
         };
-        Folder = folder.TrimEnd('\\');
+        Folder = NeoFences.Core.Items.FolderViews.ListedFolder(folder); // a drive root keeps its "\" (final review I2)
         _show = show;
         _logFailure = logFailure;
         _refreshTimer = new DispatcherTimer { Interval = RefreshDelay };
@@ -89,7 +90,7 @@ public sealed class FolderLister : IDisposable
         var dispatcher = _refreshTimer.Dispatcher;
         Task.Run(() =>
         {
-            var watcher = new FolderWatcher(folder, _logFailure);
+            var watcher = new FolderWatcher(folder, LogWatchFailureOnce);
             var removal = watcher.HeldFolder is { } held ? DeviceRemovalNotice.TryRegister(_noticeOwner, held, LogNoticeFailureOnce) : null;
             if (removal is not null) _inFlight[removal.Handle] = (watcher, removal);
             var items = FolderItems.TryList(folder);
@@ -120,6 +121,7 @@ public sealed class FolderLister : IDisposable
                 }
                 if (watcher.HasFailed) OnWatcherFailed(); // it failed while arming, before this subscription (M8d review I2)
                 // Unreadable or unwatched (drive not there yet): try again every few seconds until it is.
+                if (items is not null && watcher.IsWatching) _watchFailureLogged = false; // back: the next outage is said again
                 if (items is null || !watcher.IsWatching) _retryTimer.Start();
                 else _retryTimer.Stop();
                 _show(items);
@@ -168,6 +170,13 @@ public sealed class FolderLister : IDisposable
         _show(null);
         _retryTimer.Start(); // every 7 s, after the grace: back when the drive is, or when the removal was refused
         return true;
+    }
+
+    private void LogWatchFailureOnce(Exception failure)
+    {
+        if (_watchFailureLogged) return;
+        _watchFailureLogged = true;
+        _logFailure(failure);
     }
 
     /// <summary>A drive that refuses removal notices (a virtual drive reporting "Fixed") is said once, not on every refresh (M8d review).</summary>

@@ -569,3 +569,6 @@ Added after the M19 final review:
 | AG17 | Sort by → Type on a view; restart NeoFences | the sort is checked in the menu and kept after the restart |
 | AG18 | Merge a view into another fence's box as a tab; switch tabs | the view lists as a tab; switching back shows its entries at once |
 | AG19 | Take snapshot; delete the view fence; restore the snapshot | the folder is untouched by the delete; the restore brings the view back, listing |
+| AG20 | A view of the pendrive's root `G:\` (New folder view… → the drive) | the stick's own root is listed (not some folder on G: NeoFences was started in); title "G:" |
+| AG21 | A view of an unreachable share (`\\nosuchhost\share`) → Folder view settings… → Browse… | the window greys for at most 2 s, then the folder dialog opens at Windows' default place; no fence freezes |
+| AG22 | Leave a view's stick unplugged for a minute; read the log | one "cannot watch" warning for the outage, not one every 7 s |

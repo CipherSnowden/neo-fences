@@ -79,6 +79,12 @@ public static class FolderViews
     /// <summary>The folder's own name ("Downloads"), the share ("share" of \\nas\share), or the drive ("D:") for a drive root.</summary>
     public static string NameOf(string path) => path.Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? path;
 
+    /// <summary>
+    /// The path a view lists and watches: a trailing separator goes, except on a drive root — "C:" alone means the current
+    /// folder on drive C, not its root (final review I2).
+    /// </summary>
+    public static string ListedFolder(string path) => Path.TrimEndingDirectorySeparator(path);
+
     public static bool SameFolder(string left, string right) =>
         string.Equals(left.TrimEnd('\\', '/'), right.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
 

@@ -119,10 +119,17 @@ public sealed partial class FenceHost
     /// <summary>View fence menu → "Folder view settings…".</summary>
     private void EditFolderView(FenceWindow window)
     {
-        if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId)?.View is not { } current) return;
+        var fenceId = window.FenceId; // the window may show another tab by the time the dialog closes
+        if (_config.Fences.FirstOrDefault(fence => fence.Id == fenceId)?.View is not { } current) return;
         var dialog = new FolderViewWindow(current) { Owner = window };
         if (dialog.ShowDialog() != true || dialog.Result is not { } view) return;
-        SetView(window.FenceId, view);
+        // A tray restore while the dialog was open may have removed the view or made it another kind (final review M5).
+        if (_config.Fences.FirstOrDefault(fence => fence.Id == fenceId)?.View is null)
+        {
+            Log.Information("folder view {FenceId} changed while its settings were open; the new settings are not applied", fenceId);
+            return;
+        }
+        SetView(fenceId, view);
     }
 
     /// <summary>A view's new settings: saved, its lister on the (new) folder, its window, title and menus updated.</summary>

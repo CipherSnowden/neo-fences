@@ -102,6 +102,24 @@ public class FolderViewsTests
     [InlineData(@"\\nas\share", "share")]
     public void NameOf_IsTheFolderName_OrTheDrive(string path, string expected) => Assert.Equal(expected, FolderViews.NameOf(path));
 
+    [Theory]
+    [InlineData(@"C:\", @"C:\")]
+    [InlineData(@"G:\", @"G:\")]
+    [InlineData(@"D:\GameLibrary\", @"D:\GameLibrary")]
+    [InlineData(@"\\nas\share\", @"\\nas\share")]
+    public void ListedFolder_KeepsADriveRootsSeparator(string path, string expected) =>
+        Assert.Equal(expected, FolderViews.ListedFolder(path)); // "C:" alone is the current folder on C:, not its root (final review I2)
+
+    [Fact]
+    public void Config_RepairsATypoInAViewsShowOrSort_InsteadOfFailingTheFile()
+    {
+        var (config, fence) = FenceEdits.CreateView(NeoFencesConfig.CreateDefault(), new FolderView { Path = @"D:\X" });
+        var json = ConfigJson.Serialize(config).Replace("\"path\"", "\"show\": \"sideways\", \"sort\": \"newest\", \"path\"");
+        var view = ConfigNormalizer.Normalize(ConfigJson.Deserialize(json)).Fences.Single(candidate => candidate.Id == fence.Id).View!;
+        Assert.Equal(ViewShow.All, view.Show);
+        Assert.Equal(FenceSort.Name, view.Sort);
+    }
+
     [Fact]
     public void Status_SaysWhatTheFenceShowsInsteadOfItems()
     {

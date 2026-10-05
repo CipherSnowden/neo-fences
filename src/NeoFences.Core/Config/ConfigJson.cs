@@ -23,6 +23,8 @@ public static class ConfigJson
         {
             // Appearance enums (M14): a hand-edited style or weight is repaired by the normalizer, never fails the file.
             new LenientEnumConverter<ColourStyle>(), new LenientEnumConverter<TitleWeight>(),
+            // Folder views (M21): a typo in a view's show or sort is repaired too, not the whole file lost (final review).
+            new LenientEnumConverter<ViewShow>(), new LenientEnumConverter<FenceSort>(),
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
         },
     };

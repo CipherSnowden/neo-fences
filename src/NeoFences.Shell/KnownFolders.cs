@@ -19,7 +19,7 @@ public static class KnownFolders
             PInvoke.SHGetKnownFolderPath(&folderId, KNOWN_FOLDER_FLAG.KF_FLAG_DEFAULT, default, &path).ThrowOnFailure();
             return path.ToString();
         }
-        catch (Exception failure) when (failure is System.Runtime.InteropServices.COMException or FileNotFoundException or UnauthorizedAccessException)
+        catch (Exception failure) when (failure is not OutOfMemoryException) // E_INVALIDARG (an id this Windows lacks) is an ArgumentException (hard rule 7)
         {
             logFailure(failure); // no such folder on this PC (Screenshots before the first one): no busy-folder default
             return null;

@@ -31,12 +31,7 @@ public partial class FolderViewWindow : Window
         PatternsBox.TextChanged += (_, _) => Validate();
         NewestBox.TextChanged += (_, _) => Validate();
         NewestCheck.Click += (_, _) => Validate();
-        BrowseButton.Click += (_, _) =>
-        {
-            var picked = PathPicker.TryPickFolder(new WindowInteropHelper(this).Handle, "Choose the folder to show",
-                failure => Serilog.Log.Warning(failure, "folder view: the folder dialog failed"), startFolder: FolderBox.Text.Trim());
-            if (picked is not null) FolderBox.Text = picked;
-        };
+        BrowseButton.Click += (_, _) => Browse(FolderBox.Text.Trim());
         OkButton.Click += (_, _) =>
         {
             if (Read() is not { } read) return;
@@ -45,6 +40,25 @@ public partial class FolderViewWindow : Window
         };
         Loaded += (_, _) => FolderBox.Focus();
         Validate();
+    }
+
+    /// <summary>
+    /// Windows' folder dialog at the folder typed, checked off the UI thread first (M19 R2, final review I3): the dialog parses
+    /// its start folder on the UI thread, and a dead share would freeze every fence. Not answering within 2 s: Windows'
+    /// default place.
+    /// </summary>
+    private void Browse(string start)
+    {
+        IsEnabled = false; // no second click while the check runs (at most 2 s)
+        Task.Run(() => start.Length > 0 && TargetChecks.RootOf(start) is not null && TargetProbe.Check(start).State == TargetState.Ok).ContinueWith(checking =>
+        {
+            IsEnabled = true;
+            if (checking.IsFaulted) Serilog.Log.Warning(checking.Exception, "folder view: {Folder} could not be checked; the dialog opens at its default place", start);
+            var reachable = !checking.IsFaulted && checking.Result;
+            var picked = PathPicker.TryPickFolder(new WindowInteropHelper(this).Handle, "Choose the folder to show",
+                failure => Serilog.Log.Warning(failure, "folder view: the folder dialog failed"), startFolder: reachable ? start : null);
+            if (picked is not null) FolderBox.Text = picked;
+        }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     private void Validate()
