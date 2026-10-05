@@ -37,6 +37,7 @@ public partial class FolderPanelView : UserControl
         EntryList.PreviewMouseLeftButtonUp += OnRelease;
         EntryList.MouseDoubleClick += OnDoubleClick;
         EntryList.KeyDown += OnKeyDown;
+        EntryList.PreviewMouseWheel += OnWheel;
         // A press on the panel's own space never selects the panel element behind it (an invisible selection Delete would remove; final review M12).
         EntryList.MouseLeftButtonDown += (_, press) => { press.Handled = true; EntryList.Focus(); };
         EntryList.ContextMenuOpening += OnEntryMenu;
@@ -206,6 +207,30 @@ public partial class FolderPanelView : UserControl
         }
         key.Handled = true;
         Send(command);
+    }
+
+    /// <summary>
+    /// The wheel scrolls the panel; at its top or bottom it scrolls the fence instead, so a panel taller than its fence never
+    /// hides its own header (live check M26).
+    /// </summary>
+    private void OnWheel(object sender, MouseWheelEventArgs wheel)
+    {
+        if (FindDescendant<ScrollViewer>(EntryList) is not { } rows) return;
+        var atEnd = wheel.Delta > 0 ? rows.VerticalOffset <= 0 : rows.VerticalOffset >= rows.ScrollableHeight;
+        if (!atEnd || VisualTreeHelper.GetParent(this) is not UIElement parent) return;
+        wheel.Handled = true;
+        parent.RaiseEvent(new MouseWheelEventArgs(wheel.MouseDevice, wheel.Timestamp, wheel.Delta) { RoutedEvent = MouseWheelEvent, Source = this });
+    }
+
+    private static TDescendant? FindDescendant<TDescendant>(DependencyObject parent) where TDescendant : DependencyObject
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is TDescendant match) return match;
+            if (FindDescendant<TDescendant>(child) is { } deeper) return deeper;
+        }
+        return null;
     }
 
     /// <summary>Right-click on an entry: the entry menu (the host's); on empty space the fence shows the panel's own menu.</summary>

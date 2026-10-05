@@ -64,3 +64,19 @@ Deferred minors:
   would build it only for panels).
 - The Menu key on a panel row places the entry menu at the fence's selected element, not the row.
 - DECISIONS.md: no blank line between ADR-047's last line and ADR-048's heading.
+## Live check (2026-10-05, branch build on a copy of the user's data; the user gave the go)
+
+Scripted, three runs (the first two found script misses: clicks on rows and buttons outside the visible part of a
+panel taller than its fence). Passed: AL1 (migration, snapshot first, no second title), AL2/AL7 (Add item → Show as
+folder panel 4 × 4; Show as icon), AL3 (List, Icons, Details; 2 × 3 shows Name and Date), AL4 (Date newest / oldest
+first, Size, Name; arrows on the headers), AL5 (into Blur › levels; Up, Back, Home, Backspace; Up off at home), AL6
+(2 × 2 turns Fill off; Fill fence on again), AL9 (Add to fence ▸ Apps), AL12 (0 % CPU over 30 s), AL13 (the snapshot's
+view came back as a filling panel), AL14 (an item beside: the panel on 4 × 4 cells), AL16/AL18 (Down and Left at the last
+row, Delete, Delete after a click on empty panel space: nothing removed), AL19 (Sort by Name / Date on the filled
+fence sorts its panel). A Delete while a panel *element* was selected (from its menu) removed that element, as for
+any item (the outline shows the selection). By hand later: AL8 (a drop from Explorer onto a panel), AL10 (pendrive),
+AL11 (game mode), AL15 (Free move by one cell), AL17 (a growing download), AL20.
+
+Found and fixed: a panel taller than its fence hid its own name row and buttons, and the wheel over it never scrolled the
+fence — at the panel's top or bottom the wheel now scrolls the fence (AL20; the spec said the wheel scrolls only the
+panel).

@@ -668,3 +668,4 @@ Added after the M19 final review:
 | AL17 | A file growing in a Downloads panel (a download running) | its row keeps its icon and selection; size and date update (I4) |
 | AL18 | Click empty space inside a panel → Delete; select the panel by its name row | nothing removed; the panel shows a thin outline when selected (M12) |
 | AL19 | Fence menu → Sort by on a fence its panel fills (a migrated view) | the panel sorts (Date newest first) (M11) |
+| AL20 | A panel taller than its fence: wheel over its rows to their top, then on | the fence scrolls up to the panel's name row |
