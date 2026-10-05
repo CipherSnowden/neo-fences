@@ -42,6 +42,7 @@ Milestone details and exit criteria: spec §9.
 - [x] **M23 — 0.12.1: the M21/M22 review minors** (bounded; design agreed in chat 2026-10-05)
   - [x] Fixes (Core test-first: FolderPath, two library fences; 526 tests); live check TEST-CHECKLIST AI 6/6 (20,000-file view: fences answered within 6 ms during churn); merged to main
   - [x] Released 0.12.1 on 2026-10-05: CI green, draft with delta, install check (the installed 0.12.0 updated itself, data unchanged), published, hub refreshed
+- [~] **M24 — 0.13.0: element sizes and the fence grid** (spec 2026-10-05-element-sizes-design) — claimed by session 2026-10-05 m24-element-sizes
 - [ ] Later (the user's vision 2026-10-05: a fence holds *elements*; kinds stay in code): a folder panel element (a folder in a list / detailed view inside a fence), widgets (clock, calendar), element sizes
 - [ ] Later (user idea 2026-10-05): **item sizes** — one virtual item can take 1×1, 1×2, 2×1, 2×2 … cells in its fence (a grid layout instead of the wrap panel).
 - [ ] Later — auto-collect rules (the other half of dynamic collections)
