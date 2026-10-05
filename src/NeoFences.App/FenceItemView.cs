@@ -14,9 +14,10 @@ namespace NeoFences.App;
 /// <param name="IsGame">A game item (M22): "Not installed" instead of "Missing".</param>
 /// <param name="Span">Its size in cells (M24); null: 1×2 for a tile, else 1×1.</param>
 /// <param name="Cell">Its stored cell (M24, Free fences).</param>
+/// <param name="Panel">A folder shown as a panel (M26); <paramref name="Fill"/>: it takes the whole fence.</param>
 public sealed record ShownItem(string Key, string Target, string? Name = null, ItemIcon? Icon = null, string? Note = null,
     TargetState State = TargetState.Ok, bool Tile = false, (string Path, bool IsPoster)? TileArt = null, bool IsGame = false,
-    GridSpan? Span = null, GridCell? Cell = null, WidgetOptions? Options = null);
+    GridSpan? Span = null, GridCell? Cell = null, WidgetOptions? Options = null, FolderPanel? Panel = null, bool Fill = false);
 
 /// <summary>One item as a fence shows it. Label and icon start as placeholders and fill in from <see cref="IconLoader"/>.</summary>
 public sealed class FenceItemView : INotifyPropertyChanged
@@ -88,6 +89,13 @@ public sealed class FenceItemView : INotifyPropertyChanged
         Options = shown.Options ?? new WidgetOptions();
         Span = shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One);
         StoredCell = shown.Cell;
+        if (shown.Panel is { } panel) // M26
+        {
+            PanelModel ??= new FolderPanelModel(Key);
+            PanelModel.Apply(panel, Span);
+        }
+        else PanelModel = null;
+        Fills = shown.Fill;
         State = shown.State;
         if (OwnName is not null) Label = OwnName;
         else if (reload || Label.Length == 0) Label = PlaceholderName(Target);
@@ -107,6 +115,17 @@ public sealed class FenceItemView : INotifyPropertyChanged
         ItemKind.Widget => Widgets.NameOf(Widgets.Of(target)!.Value), // M25
         _ => Path.GetFileNameWithoutExtension(target.TrimEnd('\\')) is { Length: > 0 } name ? name : target,
     };
+
+    /// <summary>The folder panel this element shows (M26), or null.</summary>
+    public FolderPanelModel? PanelModel { get; private set { if (field == value) return; field = value; Changed(); Changed(nameof(IsPanel)); } }
+
+    public bool IsPanel => PanelModel is not null;
+
+    /// <summary>A panel that takes the whole fence (M26): the window sizes it to the fence instead of its span.</summary>
+    public bool Fills { get; private set; }
+
+    /// <summary>A filling panel's size: the fence's list area less the cell padding (M26).</summary>
+    public void ApplyFill(double width, double height) => (ContentWidth, WidgetWidth, WidgetHeight) = (width, width, height);
 
     /// <summary>The widget this element is (M25), or null for an item.</summary>
     public WidgetKind? Widget { get; private set { field = value; Changed(); Changed(nameof(IsWidget)); Changed(nameof(WidgetKindName)); } }
@@ -178,7 +197,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
         var height = Span.Rows * cellHeight - CellPaddingY - labelHeight;
         var icon = Span == GridSpan.One ? iconDips : Math.Clamp(Math.Floor(Math.Min(width - 8, height)), iconDips, MaxIcon);
         var tileHeight = Math.Max(16, Math.Floor(Math.Min(height, (width - 4) * 1.5)));
-        (WidgetWidth, WidgetHeight) = (width, Span.Rows * cellHeight - CellPaddingY); // M25: no label under a widget
+        (WidgetWidth, WidgetHeight) = (width, Span.Rows * cellHeight - CellPaddingY); // M25: no label under a widget (M26: a panel's area too)
         var changed = Math.Abs(icon - IconDips) > 0.5;
         (ContentWidth, IconDips, TileWidth, TileHeight) = (width, icon, Math.Floor(tileHeight / 1.5), tileHeight);
         return changed;

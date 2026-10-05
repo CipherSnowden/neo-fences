@@ -80,7 +80,7 @@ public sealed partial class FenceHost
     private const int TrayNewLibrary = 11; // M12
     private const int TraySnapshotsSettings = 12; // M13c: "More in Settings…" opens the Snapshots card
     private const int TrayAddFromDesktop = 14; // M19 §3 (13 is TrayRestartToUpdate)
-    private const int TrayNewFolderView = 15; // M21
+    private const int TrayNewFolderPanel = 15; // M21 (folder views), M26 (folder panels)
     private SettingsWindow? _settingsWindow; // M6b: one at a time
 
     public event Action? ExitRequested;
@@ -108,7 +108,7 @@ public sealed partial class FenceHost
         {
             if (_libraryLister?.ReleaseForRemoval(handle) == true) Log.Information("the library folder's drive is being removed: released it");
             if (ReleaseLibraryForRemoval(handle)) Log.Information("a drive the game library watches is being removed: released it");
-            if (ReleaseViewsForRemoval(handle)) Log.Information("a drive a folder view shows is being removed: released it");
+            if (ReleasePanelsForRemoval(handle)) Log.Information("a drive a folder panel shows is being removed: released it");
             if (ReleaseTargetWatcherForRemoval(handle)) Log.Information("a drive holding item targets is being removed: released it");
         };
         _specialIconsTimer.Tick += (_, _) => RefreshSpecialIcons();
@@ -127,6 +127,7 @@ public sealed partial class FenceHost
         _items = loadedItems.Document;
         _itemsReadOnly = loadedItems.IsReadOnly;
         MigrateGames(LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: an old Game Library fence becomes game items (a snapshot first)
+        MigrateFolderViews(); // M26: an old folder view becomes a fence holding one panel (a snapshot first)
         if (loadedItems.Source == ConfigLoadSource.Primary && !loadedItems.IsReadOnly) CleanUnusedPictures(ItemEdits.ImagesInUse(_items), _snapshots.Directory);
         _watchdog.LaunchDetached(Environment.ProcessId);
         ApplyStartup(); // after a power loss NeoFences must come back by itself (ADR-019)
@@ -134,8 +135,7 @@ public sealed partial class FenceHost
         RefreshMonitors();
         foreach (var box in FenceTabs.Boxes(_config)) OpenWindow(box); // one window per box (M9)
         EnsureLibraryLister();
-        EnsureViewListers(); // M21
-        RefreshWindows();
+        RefreshWindows(); // M26: panels list their folders from here
         StartSpecialIconNotifications();
         ApplyLayout();
         if (_config.Settings.HideDesktopIcons) SetIconsHidden(true);
@@ -209,7 +209,7 @@ public sealed partial class FenceHost
         StopWatching();
         _specialIcons?.Dispose();
         _libraryLister?.Dispose();
-        StopViewListers();
+        StopPanelListers(); // M26
         _widgetTimer?.Stop(); // M25
         _systemStats?.Dispose();
         StopLibraryWatchers();
@@ -276,13 +276,13 @@ public sealed partial class FenceHost
         window.RefreshRequested += () => RefreshFence(window);
         window.DrivesChanged += OnDrivesChanged;
         window.NewLibraryRequested += CreateLibraryFence;
-        window.NewFolderViewRequested += () => NewFolderView(window.Handle); // M21
+        window.NewFolderPanelRequested += () => NewFolderPanel(window.Handle); // M26
+        window.AddFolderPanelRequested += () => AddFolderPanel(window);
+        window.PanelCommandRequested += (itemId, command) => OnPanelCommand(window, itemId, command);
         window.AddGamesRequested += () => AddGames(window); // M22
         window.LayoutRequested += layout => SetFenceLayout(window, layout); // M24
         window.AddWidgetRequested += kind => AddWidget(window, kind); // M25
         window.ItemsShownChanged += OnWidgetTick; // a rolled-up fence opened: its widgets show the right time at once
-        window.OpenFolderRequested += () => OpenViewFolder(window);
-        window.ViewSettingsRequested += () => EditFolderView(window);
         window.StartupToggled += SetStartWithWindows;
         window.SettingsRequested += OpenSettings;
         window.LabelModeRequested += labels => SetFenceLabels(window, labels);
@@ -336,6 +336,7 @@ public sealed partial class FenceHost
     /// <summary>Every window shows its fence's items as they are now (the library lists itself, FolderLister; views show their last listing).</summary>
     private void RefreshWindows()
     {
+        EnsurePanelListers(); // M26: a lister per panel, on the folder it shows
         foreach (var window in _windows.Values) RefreshWindow(window);
         UpdateWidgetTimer(); // M25: a timer only while some fence holds a widget
     }
@@ -343,16 +344,15 @@ public sealed partial class FenceHost
     private void RefreshWindow(FenceWindow window)
     {
         if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { IsLibrary: false } shown) return;
-        if (shown.View is not null)
-        {
-            RenderView(window, shown); // M21
-            return;
-        }
-        var covers = _items.Of(shown.Id).Any(GameItems.ShowsCover) ? LibraryArt() : null; // M22: game items shown as covers
-        window.SetItems([.. _items.Of(shown.Id).Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note, StateOf(item.Target),
+        var items = _items.Of(shown.Id);
+        var covers = items.Any(GameItems.ShowsCover) ? LibraryArt() : null; // M22: game items shown as covers
+        var fills = FolderPanels.Fills(items); // M26: a lone panel set to fill takes the whole fence
+        window.SetItems([.. items.Select(item => new ShownItem(item.Id, item.Target, item.OwnName, item.Icon, item.Note, StateOf(item.Target),
             Tile: GameItems.ShowsCover(item), TileArt: covers is not null && covers.TryGetValue(item.Target, out var cover) ? cover : null, IsGame: GameItems.IsGame(item),
-            Span: FenceGrid.SpanOf(item), Cell: item.Cell, Options: item.Widget))]); // M24, M25
+            Span: FenceGrid.SpanOf(item), Cell: item.Cell, Options: item.Widget, // M24, M25
+            Panel: FolderPanels.IsPanel(item) ? item.Panel : null, Fill: fills))]); // M26
         window.UpdateWidgets(DateTime.Now, _lastStats); // M25: a new widget shows its content at once
+        RenderPanels(window, items); // M26
     }
 
     /// <summary>Opens a path NeoFences knows (a library game, the logs or data folder).</summary>
@@ -374,7 +374,7 @@ public sealed partial class FenceHost
         {
             _dropRegistrations[window.BoxId] = ShellDragDrop.RegisterFence(window.Handle, new FenceDropHandlers(
                 HitTest: window.HitTest,
-                AcceptsDrops: () => window.Kind == FenceKind.Items, // the library shows its own shortcuts (M12); a view never writes to its folder (M21)
+                AcceptsDrops: () => window.Kind == FenceKind.Items && !window.DropOverPanel, // the library shows its own shortcuts (M12); a panel never writes to its folder (M21, M26)
                 ItemsDropped: (keys, insertAt, duplicate) => OnItemsDropped(window, keys, insertAt, duplicate),
                 TargetsDropped: (targets, insertAt) => OnTargetsDropped(window, targets, insertAt),
                 ShowFeedback: window.ShowDropFeedback,
@@ -561,7 +561,6 @@ public sealed partial class FenceHost
         }
         foreach (var box in boxes.Where(box => !_windows.ContainsKey(box.Id))) OpenWindow(box);
         EnsureLibraryLister();
-        EnsureViewListers(); // M21
         foreach (var box in boxes)
         {
             var window = _windows[box.Id];
@@ -973,6 +972,7 @@ public sealed partial class FenceHost
         Log.Information("restoring snapshot {Name} from {Path}", snapshot.Name, path);
         (_config, _items) = Snapshots.Restore(_config, snapshot);
         MigrateGames(_library.Items.Count > 0 ? _library : LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: a snapshot from before games became items
+        MigrateFolderViews(); // M26: a snapshot from before folder views became panels
         SaveNow();
         SyncBoxes();
         // Windows that kept their fence still show its old title, icon size and labels (final review I1).
@@ -982,7 +982,7 @@ public sealed partial class FenceHost
             window.Refresh(shown);
             window.SetTitle(shown.Title);
         }
-        RefreshWindows(); // a fence that became (or stopped being) a folder view shows its new kind (M21)
+        RefreshWindows();
         UpdateLibrary(); // M22: the restored fences may hold game items, or none
         ForgetGoneTargets(); // records of items the restore took away (M20)
         CheckAllTargets(); // the restored items' targets may have changed since
@@ -1130,7 +1130,7 @@ public sealed partial class FenceHost
         }
         UpdateMouseHook();
         _libraryLister?.SetPaused(gameMode);
-        SetViewsPaused(gameMode); // M21
+        SetPanelsPaused(gameMode); // M21, M26
         if (!gameMode) ApplyDeferredShellWork();
         UpdatePeekHotkey();
         _trayIcon?.SetTooltip(TrayTooltip());
@@ -1207,7 +1207,7 @@ public sealed partial class FenceHost
         [
             .. UpdateTrayItems(), // M17: "Restart to update to v…" first while an update waits
             new TrayMenuItem(TrayNewFence, "New fence", Enabled: !_paused),
-            new TrayMenuItem(TrayNewFolderView, "New folder view…", Enabled: !_paused),
+            new TrayMenuItem(TrayNewFolderPanel, "New folder panel…", Enabled: !_paused),
             new TrayMenuItem(TrayAddFromDesktop, "Add from desktop…", Enabled: !_paused),
             new TrayMenuItem(TrayQuickHide, "Quick-hide", Checked: _quickHidden, Enabled: !_paused),
             new TrayMenuItem(TrayPeek, $"Peek\t{PeekHotkeyDisplay}", Checked: _peeking, Enabled: !_paused),
@@ -1227,7 +1227,7 @@ public sealed partial class FenceHost
                 CreateFence();
                 break;
             case TrayNewLibrary: CreateLibraryFence(); break;
-            case TrayNewFolderView: NewFolderView(ownerHandle: 0); break;
+            case TrayNewFolderPanel: NewFolderPanel(ownerHandle: 0); break;
             case TrayAddFromDesktop:
                 SetQuickHidden(false); // the new items must be seen landing
                 ShowDesktopFill();

@@ -46,7 +46,6 @@ public partial class FenceWindow : Window
     private string _title = "";
     private FenceKind _kind; // the shown tab: items, the Game Library (M12: tiles, its own menu) or a folder view (M21: read-only)
     private const string ItemsHint = "Drop files, folders or links here — or right-click → Add item…";
-    private string? _viewStatus; // a folder view's line instead of entries: not available, empty, nothing matching (M21)
     private IReadOnlyDictionary<string, (string Path, bool IsPoster)> _libraryArt = new Dictionary<string, (string, bool)>();
     private DragTracker? _drag;
     private bool _locked;
@@ -155,12 +154,12 @@ public partial class FenceWindow : Window
     public event Action<FenceLayout>? LayoutRequested;
     /// <summary>Fence menu → "Add games…" (M22).</summary>
     public event Action? AddGamesRequested;
-    /// <summary>Fence menu → "New folder view…" (M21).</summary>
-    public event Action? NewFolderViewRequested;
-    /// <summary>A folder view's "Open folder" (its menu, or the "+ N more" line).</summary>
-    public event Action? OpenFolderRequested;
-    /// <summary>A folder view's "Folder view settings…".</summary>
-    public event Action? ViewSettingsRequested;
+    /// <summary>Fence menu → "New folder panel…" (M26; M21's "New folder view…").</summary>
+    public event Action? NewFolderPanelRequested;
+    /// <summary>Fence menu → "Add folder panel…" (M26).</summary>
+    public event Action? AddFolderPanelRequested;
+    /// <summary>A folder panel asks for something (M26): the panel item's key and what.</summary>
+    public event Action<string, PanelCommand>? PanelCommandRequested;
     /// <summary>A drive arrived or was removed (Windows tells top-level windows): missing and unavailable items are checked again.</summary>
     public event Action? DrivesChanged;
     /// <summary>The "Start with Windows" toggle changed (ADR-019).</summary>
@@ -212,16 +211,15 @@ public partial class FenceWindow : Window
         TitleBar.SizeChanged += (_, _) => UpdateTabStripWidth();
         PreviewKeyDown += OnTabKeys;
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
-        NewFolderViewItem.Click += (_, _) => NewFolderViewRequested?.Invoke();
+        NewFolderPanelItem.Click += (_, _) => NewFolderPanelRequested?.Invoke(); // M26
+        AddFolderPanelItem.Click += (_, _) => AddFolderPanelRequested?.Invoke();
         AddGamesItem.Click += (_, _) => AddGamesRequested?.Invoke();
         AddClockItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Clock); // M25
         AddDateItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Date);
         AddStatsItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Stats);
         LayoutFlowItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Flow);
         LayoutFreeItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Free);
-        OpenFolderItem.Click += (_, _) => OpenFolderRequested?.Invoke();
-        ViewSettingsItem.Click += (_, _) => ViewSettingsRequested?.Invoke();
-        MoreLine.MouseLeftButtonUp += (_, click) => { click.Handled = true; OpenFolderRequested?.Invoke(); };
+        ItemList.SizeChanged += (_, _) => ApplyFill(); // M26: a filling panel follows the fence's size
         AddItemItem.Click += (_, _) => AddItemRequested?.Invoke();
         AddFromDesktopItem.Click += (_, _) => AddFromDesktopRequested?.Invoke();
         RefreshItem.Click += (_, _) => RefreshRequested?.Invoke();
@@ -317,17 +315,15 @@ public partial class FenceWindow : Window
         AddFromDesktopItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddGamesItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddWidgetItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        AddFolderPanelItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         SortItem.Visibility = _kind == FenceKind.Library ? Visibility.Collapsed : Visibility.Visible;
         foreach (var sortItem in SortItem.Items.OfType<MenuItem>()) sortItem.IsChecked = view && Equals(sortItem.Tag, fence.View!.Sort);
-        OpenFolderItem.Visibility = view ? Visibility.Visible : Visibility.Collapsed;
-        ViewSettingsItem.Visibility = view ? Visibility.Visible : Visibility.Collapsed;
         DeleteItem.Header = _kind switch
         {
             FenceKind.Library => "Delete fence (your games are not touched)",
             FenceKind.View => "Delete fence (the folder is not touched)",
             _ => "Delete fence (your files are not touched)",
         };
-        if (!view) SetViewStatus(center: null, more: null);
         UpdateEmptyHint();
         _labelMode = fence.Labels;
         SetIconSize(fence.IconSize);
@@ -339,18 +335,6 @@ public partial class FenceWindow : Window
 
     /// <summary>The shown tab's kind (M21): items, the Game Library, or a folder view.</summary>
     public FenceKind Kind => _kind;
-
-    /// <summary>
-    /// A folder view's status (M21 spec §3): a line instead of entries (not available, empty, nothing matching), and a
-    /// clickable "+ N more — Open folder" under them.
-    /// </summary>
-    public void SetViewStatus(string? center, string? more)
-    {
-        _viewStatus = center;
-        MoreText.Text = more ?? "";
-        MoreLine.Visibility = more is null ? Visibility.Collapsed : Visibility.Visible;
-        UpdateEmptyHint();
-    }
 
     /// <summary>The library's tile art by item ref: a 2:3 poster, or a logo shown centred (M12).</summary>
     public void SetLibraryArt(IReadOnlyDictionary<string, (string Path, bool IsPoster)> art)
@@ -686,6 +670,10 @@ public partial class FenceWindow : Window
             if (IsLoaded) RequestIcon(view); // before that, Loaded requests them at the right DPI (M2b review)
             _items.Insert(index, view);
         }
+        foreach (var view in _items) HookPanel(view);
+        // M26: a lone panel set to fill takes the whole fence; the list then does not scroll (the panel does).
+        ScrollViewer.SetVerticalScrollBarVisibility(ItemList, shownItems is [{ Fill: true }] ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto);
+        ApplyFill();
         UpdateEmptyHint();
         GridPanel?.InvalidateMeasure(); // M24: spans or stored cells may have changed
         // Cells may have shifted under a shown name without a scroll or selection event (final review I3).
@@ -695,8 +683,7 @@ public partial class FenceWindow : Window
     /// <summary>An empty fence (not the library) says how to fill it (spec §5).</summary>
     private void UpdateEmptyHint()
     {
-        // A folder view shows its status line in the same place (M21).
-        var text = _kind == FenceKind.View ? _viewStatus : _kind == FenceKind.Items && _items.Count == 0 ? ItemsHint : null;
+        var text = _kind == FenceKind.Items && _items.Count == 0 ? ItemsHint : null;
         EmptyHint.Text = text ?? "";
         EmptyHint.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
     }
@@ -725,11 +712,47 @@ public partial class FenceWindow : Window
 
     private int IconSizePx => (int)Math.Round(_iconSizeDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
 
-    /// <summary>An item's icon at its own size; a widget draws itself (M25: no icon to load).</summary>
+    /// <summary>An item's icon at its own size; a widget draws itself (M25), a panel shows its entries' icons (M26).</summary>
     private void RequestIcon(FenceItemView view)
     {
-        if (!view.IsWidget) _iconLoader.Request(view, PxOf(view));
+        if (!view.IsWidget && !view.IsPanel) _iconLoader.Request(view, PxOf(view));
     }
+
+    /// <summary>A panel's requests go to the host; its rows ask for icons as they come into view (M26).</summary>
+    private void HookPanel(FenceItemView view)
+    {
+        if (view.PanelModel is not { Commands: null } model) return;
+        model.Commands = command => PanelCommandRequested?.Invoke(view.Key, command);
+        model.IconWanted = entry => RequestEntryIcon(model, entry);
+    }
+
+    /// <summary>Small icons in rows (Details, List), the fence's icon size as tiles (Icons); asked again after a look or DPI change.</summary>
+    private void RequestEntryIcon(FolderPanelModel model, PanelEntry entry)
+    {
+        var dips = model.Look == PanelLook.Icons ? _iconSizeDips : 16;
+        var px = (int)Math.Round(dips * VisualTreeHelper.GetDpi(this).DpiScaleX);
+        if (entry.RequestedPx == px) return;
+        entry.RequestedPx = px;
+        _iconLoader.Request(entry.Item, px);
+    }
+
+    /// <summary>The host's latest listing for a panel element (M26).</summary>
+    public void SetPanelContent(string key, PanelContent content) =>
+        _items.FirstOrDefault(view => view.Key == key)?.PanelModel?.SetContent(content, System.Globalization.CultureInfo.CurrentCulture);
+
+    /// <summary>A filling panel takes the list's area less its padding (4 each side) and the cell's (2 + 2 across, 2 + 4 down).</summary>
+    private void ApplyFill()
+    {
+        if (_items is not [{ Fills: true } filling]) return;
+        filling.ApplyFill(Math.Max(0, ItemList.ActualWidth - 16), Math.Max(0, ItemList.ActualHeight - 20));
+    }
+
+    /// <summary>A mouse or key event inside a panel that the panel handles itself (its entries, buttons, lines).</summary>
+    private static bool InPanel(object source) =>
+        source is DependencyObject element && FindAncestor<FolderPanelView>(element) is { } panel && panel.OwnsInput(element);
+
+    /// <summary>The last drop hover was over a panel (M26): drops there are refused, never written into the folder.</summary>
+    public bool DropOverPanel { get; private set; }
 
     /// <summary>Widgets show <paramref name="now"/> and the last stats reading (M25; the host's timer calls this).</summary>
     public void UpdateWidgets(DateTime now, StatsSample? stats)
@@ -820,6 +843,7 @@ public partial class FenceWindow : Window
                 ApplyArt(view);
             }
         }
+        ApplyFill(); // M26: a filling panel keeps the fence's size, not its span's
     }
 
     private void SizeView(FenceItemView view)
@@ -1239,6 +1263,7 @@ public partial class FenceWindow : Window
 
     private void OnItemListKeyDown(object sender, KeyEventArgs args)
     {
+        if (InPanel(args.OriginalSource)) return; // M26: Enter, Delete and the arrows inside a panel are the panel's
         var selected = ItemList.SelectedItems.OfType<FenceItemView>().ToList();
         var key = args.Key == Key.System ? args.SystemKey : args.Key; // Alt+Enter arrives as Key.System
         switch (key)
@@ -1288,12 +1313,14 @@ public partial class FenceWindow : Window
         if (TabHeaderAt(screenX, screenY) is { } hoveredTab && hoveredTab != FenceId) TabSelected?.Invoke(hoveredTab);
         var point = ItemList.PointFromScreen(new Point(screenX, screenY));
         LastDropCell = GridPanel is { } panel ? panel.CellAt(ItemList.TranslatePoint(point, panel)) : null; // M24: Free fences drop on a cell
+        DropOverPanel = false;
         var cells = new List<(double Left, double Top, double Width, double Height)>();
         var cellIndexes = new List<int>();
         for (var index = 0; index < _items.Count; index++)
         {
             if (ItemList.ItemContainerGenerator.ContainerFromIndex(index) is not ListBoxItem container) continue;
             var bounds = container.TransformToAncestor(ItemList).TransformBounds(new Rect(container.RenderSize));
+            if (_items[index].IsPanel && bounds.Contains(point)) DropOverPanel = true; // M26: never into the folder
             cells.Add((bounds.Left, bounds.Top, bounds.Width, bounds.Height));
             cellIndexes.Add(index);
         }
@@ -1340,6 +1367,7 @@ public partial class FenceWindow : Window
 
     private void OnListPress(object sender, MouseButtonEventArgs args)
     {
+        if (InPanel(args.OriginalSource)) return; // M26: a panel selects and drags its own entries
         if (args.OriginalSource is DependencyObject source && FindAncestor<System.Windows.Controls.Primitives.ScrollBar>(source) is not null) return;
         // Text selection in a text box must never start a drag (M3b review I3).
         if (args.OriginalSource is DependencyObject pressed && FindAncestor<TextBox>(pressed) is not null) return;
@@ -1443,7 +1471,7 @@ public partial class FenceWindow : Window
 
     private void OnItemDoubleClick(object sender, MouseButtonEventArgs args)
     {
-        if (args.ChangedButton != MouseButton.Left) return;
+        if (args.ChangedButton != MouseButton.Left || InPanel(args.OriginalSource)) return; // M26: the panel opens its own entries
         if (ItemsControl.ContainerFromElement(ItemList, (DependencyObject)args.OriginalSource) is ListBoxItem { DataContext: FenceItemView view })
             OpenRequested?.Invoke(view.Key);
     }

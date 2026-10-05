@@ -7,26 +7,27 @@ using NeoFences.Shell;
 namespace NeoFences.App;
 
 /// <summary>
-/// "Folder view settings" (M21 spec §2): the folder, what it shows, the types, the sort and "only the newest N". OK gives
-/// <see cref="Result"/>; an invalid pattern or count marks its box and disables OK.
+/// "Folder panel settings" (M21 spec §2 as folder view settings; M26): the folder, what it shows, the types and "only the
+/// newest N" (the sort is the headers' and Sort by's). OK gives <see cref="Result"/>; an invalid pattern or count marks its
+/// box and disables OK.
 /// </summary>
 public partial class FolderViewWindow : Window
 {
-    private static readonly FenceSort[] Sorts = [FenceSort.Name, FenceSort.Type, FenceSort.Date];
     private readonly string _patternsHint;
+    private readonly FolderPanel _panel;
 
-    public FolderView? Result { get; private set; }
+    public (string Folder, FolderPanel Panel)? Result { get; private set; }
 
-    public FolderViewWindow(FolderView view)
+    public FolderViewWindow(string folder, FolderPanel panel)
     {
         InitializeComponent();
+        _panel = panel;
         _patternsHint = PatternsHint.Text;
-        FolderBox.Text = view.Path;
-        ShowBox.SelectedIndex = (int)view.Show;
-        PatternsBox.Text = view.Patterns;
-        SortBox.SelectedIndex = Math.Max(0, Array.IndexOf(Sorts, view.Sort));
-        NewestCheck.IsChecked = view.Newest is not null;
-        NewestBox.Text = (view.Newest ?? FolderViews.BusyFolderNewest).ToString();
+        FolderBox.Text = folder;
+        ShowBox.SelectedIndex = (int)panel.Show;
+        PatternsBox.Text = panel.Patterns;
+        NewestCheck.IsChecked = panel.Newest is not null;
+        NewestBox.Text = (panel.Newest ?? FolderViews.BusyFolderNewest).ToString();
         FolderBox.TextChanged += (_, _) => Validate();
         PatternsBox.TextChanged += (_, _) => Validate();
         NewestBox.TextChanged += (_, _) => Validate();
@@ -53,10 +54,10 @@ public partial class FolderViewWindow : Window
         Task.Run(() => start.Length > 0 && TargetChecks.RootOf(start) is not null && TargetProbe.Check(start).State == TargetState.Ok).ContinueWith(checking =>
         {
             IsEnabled = true;
-            if (checking.IsFaulted) Serilog.Log.Warning(checking.Exception, "folder view: {Folder} could not be checked; the dialog opens at its default place", start);
+            if (checking.IsFaulted) Serilog.Log.Warning(checking.Exception, "folder panel: {Folder} could not be checked; the dialog opens at its default place", start);
             var reachable = !checking.IsFaulted && checking.Result;
             var picked = PathPicker.TryPickFolder(new WindowInteropHelper(this).Handle, "Choose the folder to show",
-                failure => Serilog.Log.Warning(failure, "folder view: the folder dialog failed"), startFolder: reachable ? start : null);
+                failure => Serilog.Log.Warning(failure, "folder panel: the folder dialog failed"), startFolder: reachable ? start : null);
             if (picked is not null) FolderBox.Text = picked;
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
@@ -78,8 +79,8 @@ public partial class FolderViewWindow : Window
         OkButton.IsEnabled = Read() is not null;
     }
 
-    /// <summary>The view as entered, or null while something is not valid.</summary>
-    private FolderView? Read()
+    /// <summary>The folder and settings as entered, or null while something is not valid.</summary>
+    private (string Folder, FolderPanel Panel)? Read()
     {
         // A full path only, variables expanded (M23): a relative one would be read against NeoFences' own folder.
         if (FolderViews.FolderPath(FolderBox.Text) is not { } folder || FolderViews.ParsePatterns(PatternsBox.Text) is null) return null;
@@ -89,13 +90,6 @@ public partial class FolderViewWindow : Window
             if (!int.TryParse(NewestBox.Text.Trim(), out var count) || count < 1 || count > FolderViews.MaxNewest) return null;
             newest = count;
         }
-        return new FolderView
-        {
-            Path = folder,
-            Show = (ViewShow)Math.Max(0, ShowBox.SelectedIndex),
-            Patterns = PatternsBox.Text.Trim(),
-            Sort = Sorts[Math.Max(0, SortBox.SelectedIndex)],
-            Newest = newest,
-        };
+        return (folder, _panel with { Show = (ViewShow)Math.Max(0, ShowBox.SelectedIndex), Patterns = PatternsBox.Text.Trim(), Newest = newest });
     }
 }

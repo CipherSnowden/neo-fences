@@ -255,7 +255,10 @@ public sealed partial class FenceHost
             ScanLibrary(full: true);
             return;
         }
-        if (_viewListers.TryGetValue(window.FenceId, out var viewLister)) viewLister.Refresh(); // a folder view lists again (M21)
+        foreach (var panel in _items.Of(window.FenceId).Where(FolderPanels.IsPanel))
+        {
+            if (_panelListers.TryGetValue(panel.Id, out var panelLister)) panelLister.Refresh(); // its panels list again (M21, M26)
+        }
         CheckFence(window.FenceId);
         window.ReloadIcons();
     }

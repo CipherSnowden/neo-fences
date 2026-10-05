@@ -30,6 +30,9 @@ public sealed class FenceGridPanel : Panel
     /// <summary>The last layout: each child's cell and span, in child order.</summary>
     public GridArrangement Arrangement { get; private set; } = new([], [], 0);
 
+    // M26: a lone panel set to "Fill fence" takes the whole area (the list does not scroll then: its height is finite).
+    private bool _filling;
+
     // ponytail: arranged at every measure (one pass over a map of cells, ~µs for 500 elements); cache per element set if a profile ever shows it.
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -46,6 +49,12 @@ public sealed class FenceGridPanel : Panel
             Serilog.Log.Warning(failure, "fence grid: layout failed; one element per cell in order"); // never a crash (spec §4)
             Arrangement = FenceGrid.Arrange([.. elements.Select(_ => new GridElement(GridSpan.One, null))], Columns, FenceLayout.Flow);
         }
+        _filling = children is [FrameworkElement { DataContext: FenceItemView { Fills: true } }] && double.IsFinite(availableSize.Width) && double.IsFinite(availableSize.Height);
+        if (_filling)
+        {
+            children[0].Measure(availableSize);
+            return availableSize;
+        }
         for (var index = 0; index < children.Count; index++)
         {
             var span = Arrangement.Spans[index];
@@ -58,6 +67,11 @@ public sealed class FenceGridPanel : Panel
     protected override Size ArrangeOverride(Size finalSize)
     {
         var children = InternalChildren.Cast<UIElement>().ToList();
+        if (_filling && children.Count == 1)
+        {
+            children[0].Arrange(new Rect(finalSize));
+            return finalSize;
+        }
         for (var index = 0; index < children.Count && index < Arrangement.Cells.Count; index++)
         {
             children[index].Arrange(CellRect(Arrangement.Cells[index], Arrangement.Spans[index]));

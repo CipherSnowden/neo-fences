@@ -92,11 +92,6 @@ public sealed partial class FenceHost
             ShowLibraryItemMenu(window, keys, screenX, screenY, extended: shift);
             return;
         }
-        if (window.Kind == FenceKind.View)
-        {
-            ShowViewItemMenu(window, keys, extended: shift, screenX, screenY, fromKeyboard); // M21
-            return;
-        }
         var items = keys.Select(_items.Find).OfType<VirtualItem>().ToList();
         if (items.Count == 0) return;
         if (shift)
@@ -116,6 +111,11 @@ public sealed partial class FenceHost
             Command("Open", () => { foreach (var item in items) OpenKey(window, item.Id); }); // a widget opens its own app, never ShellExecute on its target (M25 review I2)
             menu.Items.Add(SizeMenu(menu, items)); // M24
             Command($"Remove {items.Count} items from fence", () => RemoveItems(window, [.. items.Select(item => item.Id)]));
+        }
+        else if (FolderPanels.IsPanel(items[0]))
+        {
+            ShowPanelMenu(window, items[0], fromKeyboard); // M26
+            return;
         }
         else if (items[0].Kind == ItemKind.Widget)
         {
@@ -141,7 +141,7 @@ public sealed partial class FenceHost
             Command("Open", () => OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin));
             if (onDisk && !check.IsFolder) Command("Run as administrator", () => OpenVirtualItem(window, item, runAsAdmin: true));
             if (onDisk) Command("Open file location", () => ShowInFolder(item.Target));
-            if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder view", () => ShowAsFolderView(item.Target)); // M21
+            if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder panel", () => SetPanelShown(item.Id, FolderPanels.Create(item.Target, BusyFolders).Panel)); // M26
             Command("Copy path", () => CopyText(item.Target));
             menu.Items.Add(new Separator());
             menu.Items.Add(SizeMenu(menu, [item])); // M24
@@ -477,17 +477,6 @@ public sealed partial class FenceHost
         {
             (files, urls) = (keys, []); // NeoFences' own shortcuts (M12)
         }
-        else if (window.Kind == FenceKind.View)
-        {
-            // A view's entries are its folder's: asked once now, at most 2 s (M19 R2), so a share gone since the listing cannot freeze the drag.
-            var folder = Path.GetDirectoryName(keys[0]) ?? keys[0];
-            if (TargetProbe.Check(folder).State != TargetState.Ok)
-            {
-                Log.Information("drag from folder view: {Folder} is not reachable", folder);
-                return;
-            }
-            (files, urls) = (keys, []);
-        }
         else
         {
             var items = keys.Select(_items.Find).OfType<VirtualItem>().ToList();
@@ -508,12 +497,7 @@ public sealed partial class FenceHost
     /// <summary>"Sort by" (one time): by the names shown, type or date; dragging keeps working afterwards.</summary>
     private void SortFence(FenceWindow window, FenceSort sort)
     {
-        if (window.IsLibrary) return;
-        if (window.Kind == FenceKind.View)
-        {
-            SortView(window, sort); // M21: the view's own sort, kept
-            return;
-        }
+        if (window.Kind != FenceKind.Items) return;
         var fenceId = window.FenceId;
         var items = _items.Of(fenceId);
         // Targets not seen OK are sorted without asking their disk (a dead share answers only after its timeout).
