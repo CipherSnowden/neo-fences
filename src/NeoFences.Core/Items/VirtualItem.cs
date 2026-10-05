@@ -18,7 +18,7 @@ public sealed record ItemIcon
 public enum ItemShow { Cover, Icon }
 
 /// <summary>What an item points at. A path may be a file or a folder: that is known only when it is checked.</summary>
-public enum ItemKind { Path, Website, Special }
+public enum ItemKind { Path, Website, Special, Widget }
 
 /// <summary>
 /// A virtual item (ADR-040, spec 2026-10-04-virtual-items-design §1): NeoFences' own record of a target with its own
@@ -58,6 +58,9 @@ public sealed record VirtualItem
     /// <summary>Its stored cell in a Free fence (M24); unused in Flow fences.</summary>
     public GridCell? Cell { get; init; }
 
+    /// <summary>A clock widget's options (M25); null: the defaults.</summary>
+    public WidgetOptions? Widget { get; init; }
+
     [JsonIgnore]
     public ItemKind Kind => ItemKinds.Of(Target);
 
@@ -77,7 +80,8 @@ public static class ItemKinds
     public static StringComparer Comparer { get; } = StringComparer.OrdinalIgnoreCase;
 
     public static ItemKind Of(string target) =>
-        target.StartsWith("::", StringComparison.Ordinal) || target.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) ? ItemKind.Special
+        Widgets.Of(target) is not null ? ItemKind.Widget // M25: nothing on disk behind it
+        : target.StartsWith("::", StringComparison.Ordinal) || target.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) ? ItemKind.Special
         : IsWebsite(target) ? ItemKind.Website
         : ItemKind.Path;
 
