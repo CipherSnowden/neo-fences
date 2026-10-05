@@ -1,0 +1,20 @@
+<Window x:Class="NeoFences.App.StoppedWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="NeoFences stopped" Width="480" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" ShowInTaskbar="True" Topmost="True" ThemeMode="System">
+    <!-- M33 (ADR-053): safe mode stopped too; one window, one start at most — never a loop. -->
+    <StackPanel Margin="24,18,24,20">
+        <TextBlock Text="NeoFences stopped after repeated crashes" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,8" />
+        <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                   Text="It stopped several times in a row, also in safe mode. Your files are not touched, and your desktop icons are back." />
+        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,18"
+                   Text="Start from a backup first saves your current setup as a snapshot, then starts NeoFences in safe mode with your newest daily backup. The logs help when you report the problem." />
+        <TextBlock x:Name="ResultText" TextWrapping="Wrap" Visibility="Collapsed" Margin="0,0,0,12" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="OpenLogsButton" Content="Open logs" MinWidth="90" Margin="0,0,8,0" />
+            <Button x:Name="BackupButton" Content="Start from a backup" IsDefault="True" Style="{DynamicResource AccentButtonStyle}" MinWidth="90" Margin="0,0,8,0" />
+            <Button Content="Close" IsCancel="True" MinWidth="90" />
+        </StackPanel>
+    </StackPanel>
+</Window>

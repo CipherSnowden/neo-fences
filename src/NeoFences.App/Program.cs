@@ -33,6 +33,13 @@ public static class Program
                 return 0;
             case [Watchdog.RunArgument, var mainProcessIdText]:
                 return RunWatchdog(int.Parse(mainProcessIdText, CultureInfo.InvariantCulture));
+            // M33 (ADR-053): how the watchdog starts NeoFences after a crash.
+            case [Watchdog.RestartedArgument]:
+                return new App(AppStart.Restarted).Run();
+            case [Watchdog.SafeModeArgument]:
+                return new App(AppStart.SafeMode).Run();
+            case [Watchdog.StoppedArgument]:
+                return new App(AppStart.Stopped).Run();
         }
 
         var app = new App();

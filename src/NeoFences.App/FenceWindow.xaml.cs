@@ -47,6 +47,7 @@ public partial class FenceWindow : Window
     private FenceKind _kind; // the shown tab: items, the Game Library (M12: tiles, its own menu) or a folder view (M21: read-only)
     private const string ItemsHint = "Drop files, folders or links here — or right-click → Add item…";
     private bool _welcome; // M30: the first fence of a fresh start (ADR-051)
+    private readonly System.Windows.Threading.DispatcherTimer _undoTimer = new() { Interval = TimeSpan.FromSeconds(10) }; // M33
     private IReadOnlyDictionary<string, (string Path, bool IsPoster)> _libraryArt = new Dictionary<string, (string, bool)>();
     private DragTracker? _drag;
     private bool _locked;
@@ -132,6 +133,8 @@ public partial class FenceWindow : Window
     public event Action<int>? IconSizeRequested;
     public event Action<bool>? LockToggled;
     public event Action? DeleteRequested;
+    /// <summary>Ctrl+Z or the undo bar (M33, ADR-054): the last removal or deletion comes back.</summary>
+    public event Action? UndoRequested;
     /// <summary>Right-click or menu key on items: keys (the clicked item first), screen point, opened from the keyboard.</summary>
     public event Action<IReadOnlyList<string>, int, int, bool>? ItemMenuRequested;
     /// <summary>Del: take these items out of the fence (their targets are never touched, ADR-040).</summary>
@@ -216,6 +219,8 @@ public partial class FenceWindow : Window
         DetachTabItem.Click += (_, _) => DetachTabRequested?.Invoke();
         TitleBar.SizeChanged += (_, _) => UpdateTabStripWidth();
         PreviewKeyDown += OnTabKeys;
+        UndoButton.Click += (_, _) => UndoRequested?.Invoke(); // M33
+        _undoTimer.Tick += (_, _) => HideUndo();
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
         NewFolderPanelItem.Click += (_, _) => NewFolderPanelRequested?.Invoke(); // M26
         AddFolderPanelItem.Click += (_, _) => AddFolderPanelRequested?.Invoke();
@@ -566,11 +571,31 @@ public partial class FenceWindow : Window
         BodyContextMenu.IsOpen = true;
     }
 
+    /// <summary>The undo bar for about 10 seconds (M33): "Removed 3 items · Undo".</summary>
+    public void ShowUndo(string label)
+    {
+        UndoText.Text = label;
+        UndoBar.Visibility = Visibility.Visible;
+        _undoTimer.Stop();
+        _undoTimer.Start();
+    }
+
+    public void HideUndo()
+    {
+        _undoTimer.Stop();
+        UndoBar.Visibility = Visibility.Collapsed;
+    }
+
     private void OnTabKeys(object sender, KeyEventArgs key)
     {
         if (key.Key == Key.Escape && _tabPressId is not null)
         {
             EndTabGesture();
+            key.Handled = true;
+        }
+        else if (key.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control && key.OriginalSource is not TextBox) // M33: a title being edited keeps its own undo
+        {
+            UndoRequested?.Invoke();
             key.Handled = true;
         }
         else if (key.Key == Key.Tab && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && _tabs.Count > 1)

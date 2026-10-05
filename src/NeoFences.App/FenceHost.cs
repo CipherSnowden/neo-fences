@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Interop;
@@ -85,6 +86,16 @@ public sealed partial class FenceHost
     /// <summary>The guide for friends (M29, ADR-050): help lives on GitHub, linked from the tray and Settings.</summary>
     private const string GuideUrl = "https://github.com/CipherSnowden/neo-fences/blob/main/docs/GUIDE.md";
     private bool _trayShown, _firstStartNotice; // M31: the first start's notice waits for the tray icon
+    private const int TrayUndoDelete = 17, TrayLeaveSafeMode = 18; // M33
+    /// <summary>How this start came about (M33, ADR-053): normal, after a crash, in safe mode.</summary>
+    public AppStart StartMode { get; init; }
+    private bool SafeMode => StartMode == AppStart.SafeMode;
+    private UndoEntry? _undo; // M33 (ADR-054): one level, in memory
+    private DateTimeOffset _undoDeleteUntil; // tray "Undo delete" is offered until then
+    private string? _banner; // M33: a problem Settings shows on top (safe mode, saving)
+    private string? _saveProblem; // M33: the save problem last shown (once per cause)
+    private readonly List<(string Title, string Text)> _pendingNotices = []; // M33: notices waiting for the tray icon or a game's end
+    private volatile bool _stopping; // M33: ends the watchdog keeper
     private SettingsWindow? _settingsWindow; // M6b: one at a time
 
     public event Action? ExitRequested;
@@ -132,10 +143,13 @@ public sealed partial class FenceHost
             loadedItems.Source, loadedItems.IsReadOnly, loadedItems.CorruptCopyPath, loadedItems.Document.Fences.Values.Sum(items => items.Count));
         _items = loadedItems.Document;
         _itemsReadOnly = loadedItems.IsReadOnly;
+        LoadNotices(configSource: loaded.Source, configReadOnly: loaded.IsReadOnly, itemsSource: loadedItems.Source, itemsReadOnly: loadedItems.IsReadOnly); // M33
         MigrateGames(LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: an old Game Library fence becomes game items (a snapshot first)
         MigrateFolderViews(); // M26: an old folder view becomes a fence holding one panel (a snapshot first)
         if (loadedItems.Source == ConfigLoadSource.Primary && !loadedItems.IsReadOnly) CleanUnusedPictures(ItemEdits.ImagesInUse(_items), _snapshots.Directory);
         _watchdog.LaunchDetached(Environment.ProcessId);
+        if (SafeMode) TryMarker(() => _watchdog.MarkSafeMode(Environment.ProcessId), what: "safe-mode marker"); // M33: a crash now stops and asks
+        KeepWatchdogAlive(); // M33
         ApplyStartup(); // after a power loss NeoFences must come back by itself (ADR-019)
 
         RefreshMonitors();
@@ -163,6 +177,12 @@ public sealed partial class FenceHost
             Log.Error(failure, "tray icon unavailable; fences and gestures keep working"); // hard rule 7: only the tray is lost
         }
         StartGameMode();
+        if (SafeMode)
+        {
+            Log.Warning("started in safe mode after repeated crashes: icons, gestures, widgets, panels, auto-collect and the library are off");
+            _banner = "Safe mode: NeoFences stopped unexpectedly several times. Fences work; extras are off. Tray → Leave safe mode to start normally.";
+            Notify("NeoFences started in safe mode", "It stopped unexpectedly several times. Fences work; extras are off. Tray → Leave safe mode.");
+        }
         // M30: a fresh start says where NeoFences lives; Windows 11 may tuck a new tray icon behind the ^ arrow.
         _firstStartNotice = loaded.Source == ConfigLoadSource.Fresh && !loaded.IsReadOnly; // not for an older build on a newer config (final review I1); held while a game runs (M32 review I1)
         ShowFirstStartNotice(); // M31: or once a retried tray icon shows
@@ -182,7 +202,8 @@ public sealed partial class FenceHost
 
     /// <summary>All of NeoFences' run-time modes together (Core rules: which fences, icons and hooks they imply).</summary>
     private RunState Current => new(HideIcons: _config.Settings.HideDesktopIcons, QuickHidden: _quickHidden, Paused: _paused, GameMode: _gameMode,
-        IconsHiddenByUser: _iconsHiddenByUser);
+        IconsHiddenByUser: _iconsHiddenByUser)
+        { SafeMode = SafeMode, QuickHideGesture = _config.Settings.QuickHideGesture, DrawGesture = _config.Settings.DrawGesture }; // M33
 
     /// <summary>
     /// Windows asked to end the session (WPF's SessionEnding, inside WM_QUERYENDSESSION). WPF then shuts the app
@@ -192,6 +213,7 @@ public sealed partial class FenceHost
     public void OnSessionEnding()
     {
         _sessionEnding = true;
+        _stopping = true; // M33
         ApplyDeferredShellWork(); // renames seen during a game must be saved too (M6a review M2)
         SaveNow();
         if (Current.IconsHidden || _watchdog.IsIconsHiddenMarked) SetIconsHidden(false);
@@ -201,6 +223,7 @@ public sealed partial class FenceHost
     /// <summary>Orderly exit: save, bring icons back, tell the watchdog all is well.</summary>
     public void Shutdown()
     {
+        _stopping = true; // M33: the watchdog keeper stops first
         WatchWallpaperEngine(watch: false); // M14
         _libraryStopped = true; // also on session end: a library scan finishing now writes and re-arms nothing (M13a review)
         ApplyDeferredShellWork(); // renames seen during a game must be saved too (M6a review M2)
@@ -283,6 +306,7 @@ public sealed partial class FenceHost
         window.RemoveRequested += keys => RemoveItems(window, keys);
         window.PropertiesRequested += (key, focusName) => ShowProperties(window, key, focusName);
         window.AddItemRequested += () => AddItem(window);
+        window.UndoRequested += UndoLast; // M33
         window.AddFromDesktopRequested += ShowDesktopFill;
         window.GuideRequested += () => OpenItem(GuideUrl, ownerHandle: 0); // M30: the welcome's Guide
         window.RefreshRequested += () => RefreshFence(window);
@@ -365,7 +389,7 @@ public sealed partial class FenceHost
             Widgets.IsUnknown(item.Target) ? TargetState.Missing : StateOf(item.Target), // M28: a widget kind of a newer NeoFences shows Missing
             Tile: GameItems.ShowsCover(item), TileArt: covers is not null && covers.TryGetValue(item.Target, out var cover) ? cover : null, IsGame: GameItems.IsGame(item),
             Span: FenceGrid.SpanOf(item), Cell: item.Cell, Options: item.Widget, // M24, M25
-            Panel: FolderPanels.IsPanel(item) ? item.Panel : null, Fill: fills))]); // M26
+            Panel: FolderPanels.IsPanel(item) && Current.ExtrasWanted ? item.Panel : null, Fill: fills && Current.ExtrasWanted))]); // M26; M33: plain folders in safe mode
         window.UpdateWidgets(DateTime.Now, _lastStats); // M25: a new widget shows its content at once
         RenderPanels(window, items); // M26
     }
@@ -513,16 +537,23 @@ public sealed partial class FenceHost
     }
 
     /// <summary>
-    /// Removes the shown tab's fence and its items (asked first when it has any). Their targets are never touched (hard
-    /// rule 1). The config is saved before the items: a crash in between leaves only an unused list (ADR-041).
+    /// Removes the shown tab's fence and its items. Their targets are never touched (hard rule 1). The config is saved before
+    /// the items: a crash in between leaves only an unused list (ADR-041). M33 (ADR-054): a snapshot "Before deleting" is saved
+    /// first and the delete can be undone (Ctrl+Z, tray → Undo delete); only if that snapshot cannot be saved does it ask.
     /// </summary>
     private void DeleteFence(FenceWindow window)
     {
         var fence = _config.Fences.First(candidate => candidate.Id == window.FenceId);
         var count = _items.Of(fence.Id).Count;
-        if (count > 0 && MessageBox.Show(window,
+        var now = DateTimeOffset.Now;
+        var saved = _snapshots.Save(Snapshots.Take(_config, _items, name: $"Before deleting {fence.Title} ({now:d MMM HH:mm})", now: now)) is not null;
+        if (!saved) Log.Warning(_snapshots.LastFailure, "the snapshot before deleting a fence could not be saved; asking instead");
+        if (!saved && count > 0 && MessageBox.Show(window,
                 $"Delete \"{fence.Title}\" and its {count} item{(count == 1 ? "" : "s")}?\n\nYour files, folders and apps are not touched.",
                 "NeoFences", MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel) != MessageBoxResult.OK) return;
+        _undo = Undo.ForDeletion(_config, _items, fence.Id); // M33
+        _undoDeleteUntil = now.AddMinutes(2);
+        _trayIcon?.ShowBalloon("Fence deleted", $"\"{fence.Title}\" is gone. Press Ctrl+Z in a fence, or tray → Undo delete, to bring it back."); // M33
         Log.Information("fence {FenceId} deleted with {Count} item(s)", fence.Id, count);
         _config = FenceEdits.DeleteFence(_config, fence.Id); // the shown tab; the rest of its box stays (M9)
         _items = ItemEdits.RemoveFence(_items, fence.Id);
@@ -722,8 +753,13 @@ public sealed partial class FenceHost
     /// <returns>True when Windows confirmed the new state.</returns>
     private bool SetIconsHidden(bool hidden)
     {
-        // The watchdog must know whenever icons may be hidden: mark before hiding, unmark only after a confirmed show.
-        if (hidden) TryMarker(() => _watchdog.SetIconsHiddenMarker(true), what: "icons-hidden marker");
+        // The watchdog must know whenever icons may be hidden: mark before hiding, unmark only after a confirmed show. M33
+        // (hard rule 2): without the marker the icons are not hidden at all.
+        if (hidden && !TryMarker(() => _watchdog.SetIconsHiddenMarker(true), what: "icons-hidden marker"))
+        {
+            Notify("Desktop icons not hidden", "NeoFences could not write its recovery marker, so it leaves Windows' icons visible (see the log).");
+            return false;
+        }
         var applied = DesktopIcons.TrySetHidden(hidden);
         if (applied && !hidden) TryMarker(() => _watchdog.SetIconsHiddenMarker(false), what: "icons-hidden marker");
         if (applied) Log.Information("desktop icons hidden: {Hidden}", hidden);
@@ -736,15 +772,18 @@ public sealed partial class FenceHost
         Current.IconsHidden ? SetIconsHidden(true)
         : !_watchdog.IsIconsHiddenMarked || SetIconsHidden(false);
 
-    private static void TryMarker(Action writeMarker, string what)
+    /// <returns>True when the marker was written.</returns>
+    private static bool TryMarker(Action writeMarker, string what)
     {
         try
         {
             writeMarker();
+            return true;
         }
         catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
         {
             Log.Error(failure, "could not update the {What}", what);
+            return false;
         }
     }
 
@@ -859,6 +898,8 @@ public sealed partial class FenceHost
         var window = new SettingsWindow();
         window.StartWithWindowsChanged += SetStartWithWindows;
         window.HideDesktopIconsChanged += SetHideDesktopIcons;
+        window.QuickHideGestureChanged += enabled => SetGestures(quickHide: enabled, draw: _config.Settings.DrawGesture); // M33
+        window.DrawGestureChanged += enabled => SetGestures(quickHide: _config.Settings.QuickHideGesture, draw: enabled);
         window.PeekHotkeyChosen += text =>
         {
             var (saved, message) = SetPeekHotkey(text);
@@ -951,6 +992,9 @@ public sealed partial class FenceHost
         DataFolder: AppPaths.DataDirectory,
         DefaultLabels: _config.Settings.DefaultLabels,
         ShowShortcutArrows: _config.Settings.ShowShortcutArrows,
+        QuickHideGesture: _config.Settings.QuickHideGesture, // M33
+        DrawGesture: _config.Settings.DrawGesture,
+        Banner: _banner,
         Snapshots: ListSnapshots(),
         Library: LibrarySettingsView(),
         Appearance: AppearanceView(),
@@ -991,6 +1035,7 @@ public sealed partial class FenceHost
     /// </summary>
     private void RestoreSnapshot(string path)
     {
+        _undo = null; // M33: a restore replaces everything; nothing older to undo
         if (_snapshots.Load(path) is not { } snapshot)
         {
             Log.Warning(_snapshots.LastFailure, "snapshot {Path} could not be read", path);
@@ -1248,6 +1293,7 @@ public sealed partial class FenceHost
         restoreItems.Add(new TrayMenuItem(TraySnapshotsSettings, "More in Settings…"));
         var chosen = TrayMenu.Show(_messages.Handle,
         [
+            .. SafetyTrayItems(), // M33: "Leave safe mode", "Undo delete" first while they apply
             .. UpdateTrayItems(), // M17: "Restart to update to v…" first while an update waits
             new TrayMenuItem(TrayNewFence, "New fence", Enabled: !_paused),
             new TrayMenuItem(TrayNewFolderPanel, "New folder panel…", Enabled: !_paused),
@@ -1286,6 +1332,8 @@ public sealed partial class FenceHost
                 OpenSettings();
                 _settingsWindow?.ShowSnapshotsCard();
                 break;
+            case TrayUndoDelete: UndoLast(); break; // M33
+            case TrayLeaveSafeMode: LeaveSafeMode(); break;
             case TrayExit: ExitRequested?.Invoke(); break;
             case TrayTakeSnapshot: TakeSnapshot(); break;
             case TrayRestoreBefore when beforeRestore is not null: RestoreSnapshot(beforeRestore.Path); break;
@@ -1300,11 +1348,11 @@ public sealed partial class FenceHost
         switch (gesture)
         {
             // A double-click on a visible native icon opens it; only empty desktop toggles quick-hide.
-            case DesktopGesture.DoubleClick when Current.IconsHidden
-                || !DesktopWindows.IsOverDesktopIcon(screenX, screenY, log: message => Log.Warning("{Message}", message)):
+            case DesktopGesture.DoubleClick when Current.QuickHideGesture && (Current.IconsHidden
+                || !DesktopWindows.IsOverDesktopIcon(screenX, screenY, log: message => Log.Warning("{Message}", message))):
                 SetQuickHidden(!_quickHidden);
                 break;
-            case DesktopGesture.RightDragStarted:
+            case DesktopGesture.RightDragStarted when Current.DrawGesture: // M33: the switch
                 BeginDrawFence(screenX, screenY);
                 break;
             case DesktopGesture.RightDragCompleted:
@@ -1456,6 +1504,96 @@ public sealed partial class FenceHost
     {
         _trayShown = true;
         ShowFirstStartNotice();
+        FlushNotices(); // M33
+    }
+
+    /// <summary>A warning notice (M33): now, or once the tray icon exists and no game runs.</summary>
+    private void Notify(string title, string text)
+    {
+        _pendingNotices.Add((title, text));
+        FlushNotices();
+    }
+
+    private void FlushNotices()
+    {
+        if (!_trayShown || _gameMode) return;
+        foreach (var (title, text) in _pendingNotices) _trayIcon?.ShowBalloon(title, text, warning: true);
+        _pendingNotices.Clear();
+    }
+
+    /// <summary>A load that fell back or cannot save is shown, not only logged (M33).</summary>
+    private void LoadNotices(ConfigLoadSource configSource, bool configReadOnly, ConfigLoadSource itemsSource, bool itemsReadOnly)
+    {
+        if (configReadOnly || itemsReadOnly)
+        {
+            _banner = "Changes are not saved this session: NeoFences' files could not be read safely (locked, or from a newer version). See the log.";
+            Notify("Changes are not saved this session", "NeoFences' files could not be read safely. Restart NeoFences, or see the log.");
+        }
+        else if (configSource is ConfigLoadSource.Backup or ConfigLoadSource.DailyBackup || itemsSource is ConfigLoadSource.Backup or ConfigLoadSource.DailyBackup)
+        {
+            Notify("Restored from a backup", "A NeoFences file was damaged; your fences came back from the newest good backup (the damaged copy is kept).");
+        }
+    }
+
+    /// <summary>A failed save is shown once per cause (M33), and cleared by the next good save.</summary>
+    private void SaveProblem(string? problem)
+    {
+        if (problem == _saveProblem) return;
+        _saveProblem = problem;
+        if (problem is null)
+        {
+            if (_banner?.StartsWith("Changes are not saved", StringComparison.Ordinal) == true) _banner = null;
+            RefreshSettings();
+            return;
+        }
+        _banner = $"Changes are not saved: {problem}";
+        Notify("Changes are not saved", problem);
+        RefreshSettings();
+    }
+
+    /// <summary>
+    /// The watchdog must keep running while NeoFences does (M33, hard rule 2): if it ends (killed by antivirus or by hand),
+    /// another one is started for this process.
+    /// </summary>
+    private void KeepWatchdogAlive()
+    {
+        var mainId = Environment.ProcessId;
+        Task.Run(async () =>
+        {
+            while (!_stopping)
+            {
+                int? watchdogId = null;
+                for (var attempt = 0; watchdogId is null && attempt < 40 && !_stopping; attempt++)
+                {
+                    watchdogId = _watchdog.WatchdogProcessOf(mainId);
+                    if (watchdogId is null) await Task.Delay(500);
+                }
+                if (watchdogId is { } id)
+                {
+                    try
+                    {
+                        using var process = Process.GetProcessById(id);
+                        await process.WaitForExitAsync();
+                    }
+                    catch (ArgumentException)
+                    {
+                        // already gone
+                    }
+                }
+                if (_stopping) return;
+                Log.Warning("the watchdog is not running; starting another");
+                try
+                {
+                    _watchdog.LaunchDetached(mainId);
+                    if (SafeMode) _watchdog.MarkSafeMode(mainId);
+                }
+                catch (Exception failure) when (failure is not OutOfMemoryException)
+                {
+                    Log.Error(failure, "could not start the watchdog");
+                }
+                await Task.Delay(TimeSpan.FromSeconds(10));
+            }
+        });
     }
 
     /// <summary>
@@ -1498,8 +1636,10 @@ public sealed partial class FenceHost
         catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
         {
             Log.Error(failure, "config save failed");
+            SaveProblem("NeoFences could not write config.json (see the log)."); // M33
+            return;
         }
-        if (!itemsFirst) SaveItems();
+        if (!itemsFirst && SaveItems()) SaveProblem(null);
     }
 
     /// <returns>True when items.json was written.</returns>
@@ -1518,6 +1658,7 @@ public sealed partial class FenceHost
         catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
         {
             Log.Error(failure, "items save failed");
+            SaveProblem("NeoFences could not write items.json (see the log)."); // M33
             return false;
         }
     }
@@ -1532,5 +1673,56 @@ public sealed partial class FenceHost
         {
             Log.Warning(failure, "cannot create {Folder}", folder); // the fence then shows nothing (hard rule 7)
         }
+    }
+
+    // ---------- M33: undo, safe mode, gestures ----------
+
+    /// <summary>Ctrl+Z / Undo / tray → Undo delete: the last removal or deletion comes back (one level, ADR-054).</summary>
+    private void UndoLast()
+    {
+        if (_undo is not { } entry) return;
+        _undo = null;
+        (_config, _items) = Undo.Apply(_config, _items, entry);
+        Log.Information("undone: {Label}", entry.Label);
+        foreach (var window in _windows.Values) window.HideUndo();
+        SyncBoxes();
+        ItemsChanged(checkTargets: []);
+        SaveNow();
+        RefreshSettings();
+    }
+
+    /// <summary>"Leave safe mode": the crash count starts over and NeoFences starts again normally.</summary>
+    private void LeaveSafeMode()
+    {
+        _watchdog.ClearRestarts();
+        try
+        {
+            Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false })?.Dispose(); // waits for this one to exit
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            Log.Error(failure, "could not start NeoFences normally");
+            return;
+        }
+        Log.Information("leaving safe mode");
+        ExitRequested?.Invoke();
+    }
+
+    private IEnumerable<TrayMenuItem> SafetyTrayItems()
+    {
+        var any = false;
+        if (SafeMode) { any = true; yield return new TrayMenuItem(TrayLeaveSafeMode, "Leave safe mode"); }
+        if (_undo is FenceDeleted deleted && DateTimeOffset.Now < _undoDeleteUntil) { any = true; yield return new TrayMenuItem(TrayUndoDelete, $"Undo delete ({deleted.Fence.Title})"); }
+        if (any) yield return TrayMenuItem.Separator;
+    }
+
+    /// <summary>Settings → the desktop gesture switches (M33): both off means the mouse hook is not installed at all.</summary>
+    private void SetGestures(bool quickHide, bool draw)
+    {
+        _config = _config with { Settings = _config.Settings with { QuickHideGesture = quickHide, DrawGesture = draw } };
+        Log.Information("desktop gestures: quick-hide {QuickHide}, draw {Draw}", quickHide, draw);
+        UpdateMouseHook();
+        ScheduleSave();
+        RefreshSettings();
     }
 }

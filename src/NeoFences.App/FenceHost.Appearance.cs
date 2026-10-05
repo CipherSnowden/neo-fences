@@ -70,7 +70,7 @@ public sealed partial class FenceHost
     private void UpdateAccents()
     {
         var generation = ++_accentGeneration;
-        if (!Appearance.WallpaperAccent)
+        if (!Appearance.WallpaperAccent || !Current.ExtrasWanted) // M33: no wallpaper watching in safe mode
         {
             _accents = [];
             WatchWallpaperEngine(watch: false);
@@ -132,7 +132,7 @@ public sealed partial class FenceHost
     /// </summary>
     private void WatchWallpaperEngine(bool watch)
     {
-        if (!watch)
+        if (!watch || !Current.ExtrasWanted)
         {
             _wallpaperEngineWatcher?.Dispose();
             _wallpaperEngineWatcher = null;

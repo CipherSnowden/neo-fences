@@ -45,7 +45,7 @@ public sealed partial class FenceHost
     /// <summary>A lister per watched folder; listers of folders no rule watches any more go (after every config change).</summary>
     private void EnsureCollectListers()
     {
-        var wanted = CollectFolders().GroupBy(entry => entry.Folder, StringComparer.OrdinalIgnoreCase).ToDictionary(group => group.Key, group => group.First().Source, StringComparer.OrdinalIgnoreCase);
+        var wanted = CollectFolders().Where(_ => Current.ExtrasWanted).GroupBy(entry => entry.Folder, StringComparer.OrdinalIgnoreCase).ToDictionary(group => group.Key, group => group.First().Source, StringComparer.OrdinalIgnoreCase);
         foreach (var (folder, (_, lister)) in _collectListers.ToList())
         {
             if (wanted.ContainsKey(folder)) continue;

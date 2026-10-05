@@ -11,7 +11,8 @@ namespace NeoFences.App;
 public sealed record SettingsView(
     bool StartWithWindows, bool HideDesktopIcons, string PeekHotkey, bool PeekHotkeyActive, RollupExpand RollupExpand,
     bool GameModeEnabled, bool GameModeActive, string Version, string DataFolder, LabelMode DefaultLabels, bool ShowShortcutArrows,
-    IReadOnlyList<NeoFences.Core.Config.SnapshotEntry> Snapshots, LibraryView Library, AppearanceView Appearance, UpdatesView Updates);
+    IReadOnlyList<NeoFences.Core.Config.SnapshotEntry> Snapshots, LibraryView Library, AppearanceView Appearance, UpdatesView Updates,
+    bool QuickHideGesture = true, bool DrawGesture = true, string? Banner = null);
 
 /// <summary>One row of the Snapshots list (M10).</summary>
 public sealed record SnapshotRow(string Path, string Name, string When)
@@ -30,6 +31,9 @@ public partial class SettingsWindow : Window
     public event Action<bool>? StartWithWindowsChanged;
     /// <summary>"Hide desktop icons while NeoFences runs" (M18).</summary>
     public event Action<bool>? HideDesktopIconsChanged;
+    /// <summary>Settings → the desktop gesture switches (M33).</summary>
+    public event Action<bool>? QuickHideGestureChanged;
+    public event Action<bool>? DrawGestureChanged;
     /// <summary>A new Peek hotkey was pressed in the box (text like "Ctrl+Alt+P"); answer with <see cref="ShowHotkeyResult"/>.</summary>
     public event Action<string>? PeekHotkeyChosen;
     /// <summary>Settings → Updates (M17).</summary>
@@ -61,6 +65,9 @@ public partial class SettingsWindow : Window
         // Checked/Unchecked, not Click: UI Automation (Narrator, Toggle) changes the box without a click (M6b smoke).
         OnToggled(StartupBox, isChecked => StartWithWindowsChanged?.Invoke(isChecked));
         OnToggled(HideIconsBox, isChecked => HideDesktopIconsChanged?.Invoke(isChecked));
+        OnToggled(QuickHideGestureBox, isChecked => QuickHideGestureChanged?.Invoke(isChecked)); // M33
+        OnToggled(DrawGestureBox, isChecked => DrawGestureChanged?.Invoke(isChecked));
+        BannerLogsButton.Click += (_, _) => OpenLogsRequested?.Invoke();
         OnToggled(GameModeBox, isChecked => GameModeChanged?.Invoke(isChecked));
         RollupBox.SelectionChanged += (_, _) =>
         {
@@ -82,7 +89,7 @@ public partial class SettingsWindow : Window
         LabelsApplyAllButton.Click += (_, _) => LabelsAppliedToAll?.Invoke(SelectedLabels);
         // Screen readers read each setting's description with it (M6b review carry-over).
         foreach (var (control, description) in new (UIElement, TextBlock)[]
-                 { (StartupBox, StartupDescription), (HideIconsBox, HideIconsDescription), (HotkeyBox, HotkeyDescription),
+                 { (StartupBox, StartupDescription), (HideIconsBox, HideIconsDescription), (QuickHideGestureBox, QuickHideGestureDescription), (DrawGestureBox, DrawGestureDescription), (HotkeyBox, HotkeyDescription),
                    (LabelsBox, LabelsDescription), (ArrowsBox, ArrowsDescription), (RollupBox, RollupDescription), (GameModeBox, GameModeDescription) })
         {
             System.Windows.Automation.AutomationProperties.SetHelpText(control, description.Text);
@@ -224,6 +231,10 @@ public partial class SettingsWindow : Window
         }
         StartupBox.IsChecked = view.StartWithWindows;
         HideIconsBox.IsChecked = view.HideDesktopIcons;
+        QuickHideGestureBox.IsChecked = view.QuickHideGesture; // M33
+        DrawGestureBox.IsChecked = view.DrawGesture;
+        BannerText.Text = view.Banner ?? "";
+        Banner.Visibility = view.Banner is null ? Visibility.Collapsed : Visibility.Visible;
         HotkeyBox.Text = view.PeekHotkey;
         RollupBox.SelectedIndex = view.RollupExpand == RollupExpand.Click ? 1 : 0;
         GameModeBox.IsChecked = view.GameModeEnabled;

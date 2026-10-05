@@ -67,11 +67,14 @@ public sealed partial class FenceHost
             _updateStatus = "Updates are unavailable (see the log).";
             return;
         }
-        _updateTimer = new DispatcherTimer { Interval = FirstCheckDelay };
+        // M33: after a crash, look for a fix soon (it may be the cure), within the user's choice and never in a game.
+        var afterCrash = StartMode is AppStart.Restarted or AppStart.SafeMode;
+        _updateTimer = new DispatcherTimer { Interval = afterCrash ? TimeSpan.FromSeconds(10) : FirstCheckDelay };
         _updateTimer.Tick += (_, _) =>
         {
             _updateTimer.Interval = UpdateTick;
-            CheckForUpdate(manual: false);
+            CheckForUpdate(manual: afterCrash && _config.Settings.AutoUpdate && !_gameMode);
+            afterCrash = false;
         };
         _updateTimer.Start();
     }

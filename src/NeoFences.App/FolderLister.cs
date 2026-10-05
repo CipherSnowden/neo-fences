@@ -95,42 +95,60 @@ public sealed class FolderLister : IDisposable
         var dispatcher = _refreshTimer.Dispatcher;
         Task.Run(() =>
         {
-            var watcher = new FolderWatcher(folder, LogWatchFailureOnce, namesOnly: _namesOnly);
-            var removal = watcher.HeldFolder is { } held ? DeviceRemovalNotice.TryRegister(_noticeOwner, held, LogNoticeFailureOnce) : null;
-            if (removal is not null) _inFlight[removal.Handle] = (watcher, removal);
-            var items = FolderItems.TryList(folder);
-            dispatcher.BeginInvoke(() =>
+            try
             {
-                // Only this listing's own entry: a handle value reused by a newer listing keeps its entry (M13c).
-                if (removal is not null) _inFlight.TryRemove(new KeyValuePair<nint, (FolderWatcher, DeviceRemovalNotice)>(removal.Handle, (watcher, removal)));
-                if (generation == _generation) _refreshing = false;
-                if (_disposed || generation != _generation)
+                ListOnWorker(folder, generation, dispatcher);
+            }
+            catch (Exception failure) when (failure is not OutOfMemoryException) // M33: a failed listing ends this refresh, never the panel
+            {
+                Serilog.Log.Warning(failure, "folder listing failed: {Folder}", folder);
+                dispatcher.BeginInvoke(() =>
                 {
-                    watcher.Dispose(); // a newer refresh (or the fence's deletion) superseded this one
-                    removal?.Dispose();
-                    return;
-                }
-                _watcher?.Dispose();
-                _watcher = watcher;
-                _removal?.Dispose();
-                _removal = removal;
-                _lastArm = DateTime.UtcNow;
-                watcher.Changed += () => dispatcher.BeginInvoke(ScheduleRefresh);
-                watcher.Failed += () => dispatcher.BeginInvoke(OnWatcherFailed);
-                if (_renamed is { } renamed)
+                    if (generation == _generation) _refreshing = false;
+                    if (!_disposed) _retryTimer.Start();
+                });
+            }
+        });
+    }
+
+    /// <summary>The listing's worker part: watcher, removal notice and the entries, then shown on the UI thread.</summary>
+    private void ListOnWorker(string folder, int generation, System.Windows.Threading.Dispatcher dispatcher)
+    {
+        var watcher = new FolderWatcher(folder, LogWatchFailureOnce, namesOnly: _namesOnly);
+        var removal = watcher.HeldFolder is { } held ? DeviceRemovalNotice.TryRegister(_noticeOwner, held, LogNoticeFailureOnce) : null;
+        if (removal is not null) _inFlight[removal.Handle] = (watcher, removal);
+        var items = FolderItems.TryList(folder);
+        dispatcher.BeginInvoke(() =>
+        {
+            // Only this listing's own entry: a handle value reused by a newer listing keeps its entry (M13c).
+            if (removal is not null) _inFlight.TryRemove(new KeyValuePair<nint, (FolderWatcher, DeviceRemovalNotice)>(removal.Handle, (watcher, removal)));
+            if (generation == _generation) _refreshing = false;
+            if (_disposed || generation != _generation)
+            {
+                watcher.Dispose(); // a newer refresh (or the fence's deletion) superseded this one
+                removal?.Dispose();
+                return;
+            }
+            _watcher?.Dispose();
+            _watcher = watcher;
+            _removal?.Dispose();
+            _removal = removal;
+            _lastArm = DateTime.UtcNow;
+            watcher.Changed += () => dispatcher.BeginInvoke(ScheduleRefresh);
+            watcher.Failed += () => dispatcher.BeginInvoke(OnWatcherFailed);
+            if (_renamed is { } renamed)
+            {
+                watcher.Renamed += (oldPath, newPath) =>
                 {
-                    watcher.Renamed += (oldPath, newPath) =>
-                    {
-                        if (NeoFences.Core.Items.FolderViews.SameFolder(oldPath, folder)) dispatcher.BeginInvoke(() => { if (!_disposed) renamed(oldPath, newPath); });
-                    };
-                }
-                if (watcher.HasFailed) OnWatcherFailed(); // it failed while arming, before this subscription (M8d review I2)
-                // Unreadable or unwatched (drive not there yet): try again every few seconds until it is.
-                if (items is not null && watcher.IsWatching) _watchFailureLogged = false; // back: the next outage is said again
-                if (items is null || !watcher.IsWatching) _retryTimer.Start();
-                else _retryTimer.Stop();
-                _show(items);
-            });
+                    if (NeoFences.Core.Items.FolderViews.SameFolder(oldPath, folder)) dispatcher.BeginInvoke(() => { if (!_disposed) renamed(oldPath, newPath); });
+                };
+            }
+            if (watcher.HasFailed) OnWatcherFailed(); // it failed while arming, before this subscription (M8d review I2)
+            // Unreadable or unwatched (drive not there yet): try again every few seconds until it is.
+            if (items is not null && watcher.IsWatching) _watchFailureLogged = false; // back: the next outage is said again
+            if (items is null || !watcher.IsWatching) _retryTimer.Start();
+            else _retryTimer.Stop();
+            _show(items);
         });
     }
 

@@ -29,6 +29,14 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,16,28,28">
             <TextBlock Text="Settings" FontSize="28" FontWeight="SemiBold" />
+            <!-- M33: a problem on top (safe mode, changes not saved), with the logs one click away. -->
+            <Border x:Name="Banner" Visibility="Collapsed" Margin="0,12,0,0" Padding="14,10" CornerRadius="6"
+                    Background="{DynamicResource SystemFillColorCautionBackgroundBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <DockPanel>
+                    <Button x:Name="BannerLogsButton" Content="Open logs" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="12,0,0,0" />
+                    <TextBlock x:Name="BannerText" TextWrapping="Wrap" VerticalAlignment="Center" />
+                </DockPanel>
+            </Border>
 
             <TextBlock Text="General" Style="{StaticResource SectionHeader}" />
             <Border Style="{StaticResource Card}">
@@ -46,6 +54,24 @@
                     <StackPanel>
                         <TextBlock Text="Hide desktop icons while NeoFences runs" TextWrapping="Wrap" />
                         <TextBlock x:Name="HideIconsDescription" Style="{StaticResource Description}" Text="Windows' own desktop icons go away while NeoFences runs and come back when it is paused, closed, or stops unexpectedly. Your files stay where they are." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <DockPanel>
+                    <CheckBox x:Name="QuickHideGestureBox" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Double-click the desktop to quick-hide" />
+                    <StackPanel>
+                        <TextBlock Text="Double-click the desktop to quick-hide" TextWrapping="Wrap" />
+                        <TextBlock x:Name="QuickHideGestureDescription" Style="{StaticResource Description}" Text="Double-click empty desktop to hide all fences (and the icons); again to bring them back. Quick-hide stays in the tray menu." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <DockPanel>
+                    <CheckBox x:Name="DrawGestureBox" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Right-drag on the desktop to draw a fence" />
+                    <StackPanel>
+                        <TextBlock Text="Right-drag on the desktop to draw a fence" TextWrapping="Wrap" />
+                        <TextBlock x:Name="DrawGestureDescription" Style="{StaticResource Description}" Text="Hold the right mouse button on empty desktop and draw a rectangle. With both desktop gestures off, NeoFences watches no mouse clicks at all." />
                     </StackPanel>
                 </DockPanel>
             </Border>

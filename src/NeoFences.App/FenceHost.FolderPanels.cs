@@ -37,7 +37,7 @@ public sealed partial class FenceHost
     /// <summary>A lister for every panel, on the folder it shows; listers of panels that are gone (or moved on) go.</summary>
     private void EnsurePanelListers()
     {
-        var panels = AllPanels.GroupBy(panel => panel.Id).ToDictionary(group => group.Key, group => ShownFolder(group.First()), StringComparer.Ordinal);
+        var panels = AllPanels.Where(_ => Current.ExtrasWanted).GroupBy(panel => panel.Id).ToDictionary(group => group.Key, group => ShownFolder(group.First()), StringComparer.Ordinal);
         foreach (var (itemId, lister) in _panelListers.ToList())
         {
             if (panels.TryGetValue(itemId, out var folder) && FolderViews.SameFolder(folder, lister.Folder)) continue;
@@ -109,6 +109,7 @@ public sealed partial class FenceHost
     /// <summary>Every panel of the shown fence gets its content (RefreshWindow calls this after the items).</summary>
     private void RenderPanels(FenceWindow window, IReadOnlyList<VirtualItem> items)
     {
+        if (!Current.ExtrasWanted) return; // M33: safe mode shows panels as plain folders
         foreach (var panel in items.Where(FolderPanels.IsPanel)) window.SetPanelContent(panel.Id, PanelContentOf(panel));
     }
 

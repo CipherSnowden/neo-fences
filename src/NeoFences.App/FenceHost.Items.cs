@@ -217,11 +217,15 @@ public sealed partial class FenceHost
             return;
         }
         if (window.Kind == FenceKind.View) return; // a view shows its folder as it is; nothing to remove (M21)
-        if (keys.Count > 1 && MessageBox.Show(window, $"Remove {keys.Count} items from this fence?\n\nYour files, folders and apps are not touched.",
-                "NeoFences", MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel) != MessageBoxResult.OK) return;
-        _items = ItemEdits.Remove(_items, keys.ToHashSet(StringComparer.Ordinal));
+        // M33 (ADR-054): no question; the removal can be undone (the bar in this fence, or Ctrl+Z).
+        var removing = keys.ToHashSet(StringComparer.Ordinal);
+        var undo = Undo.ForRemoval(_items, removing);
+        if (undo.Items.Count == 0) return;
+        _undo = undo;
+        _items = ItemEdits.Remove(_items, removing);
         Log.Information("{Count} item(s) removed from fence {FenceId}", keys.Count, window.FenceId);
         ItemsChanged(checkTargets: []);
+        window.ShowUndo(undo.Label);
     }
 
     /// <summary>Properties (F2: the name selected; Alt+Enter; the menu): changes only the item (spec §3).</summary>

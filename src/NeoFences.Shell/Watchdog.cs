@@ -14,6 +14,12 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
 {
     public const string LaunchArgument = "--watchdog-launch";
     public const string RunArgument = "--watchdog";
+    /// <summary>Main started by the watchdog after a crash (M33): it checks for an update at once.</summary>
+    public const string RestartedArgument = "--restarted";
+    /// <summary>Main started in safe mode after a crash loop (M33, ADR-053).</summary>
+    public const string SafeModeArgument = "--safe-mode";
+    /// <summary>Safe mode crashed too (M33): only the "NeoFences stopped" window, nothing else starts.</summary>
+    public const string StoppedArgument = "--stopped";
 
     private const int RestoreAttempts = 10;
     private static readonly TimeSpan RestoreRetryDelay = TimeSpan.FromMilliseconds(500);
@@ -24,6 +30,8 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
     private string RestartLogPath => Path.Combine(dataDirectory, "watchdog-restarts.txt");
     private string CleanMarkerPath(int processId) => Path.Combine(dataDirectory, $"clean-shutdown-{processId}");
     private string SessionEndingMarkerPath(int processId) => Path.Combine(dataDirectory, $"session-ending-{processId}");
+    private string SafeModeMarkerPath(int processId) => Path.Combine(dataDirectory, $"safe-mode-{processId}");
+    private string WatchdogPidPath(int mainProcessId) => Path.Combine(dataDirectory, $"watchdog-{mainProcessId}");
 
     public bool IsIconsHiddenMarked => File.Exists(IconsHiddenPath);
 
@@ -33,6 +41,8 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
         Directory.CreateDirectory(dataDirectory);
         File.Delete(CleanMarkerPath(mainProcessId));
         File.Delete(SessionEndingMarkerPath(mainProcessId));
+        File.Delete(SafeModeMarkerPath(mainProcessId));
+        File.Delete(WatchdogPidPath(mainProcessId));
         StartSelf($"{LaunchArgument} {mainProcessId}");
     }
 
@@ -53,9 +63,29 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
     /// <summary>Main process, when Windows asks to end the session (WPF then exits the app; ADR-013).</summary>
     public void MarkSessionEnding(int mainProcessId) => WriteMarker(SessionEndingMarkerPath(mainProcessId));
 
+    /// <summary>Main process, started in safe mode (M33): a crash now stops and asks instead of restarting again soon.</summary>
+    public void MarkSafeMode(int mainProcessId) => WriteMarker(SafeModeMarkerPath(mainProcessId));
+
+    /// <summary>"Leave safe mode" or "Start from a backup" (M33): the crash count starts over.</summary>
+    public void ClearRestarts() => TryDelete(RestartLogPath);
+
+    /// <summary>The watchdog watching this main process, once it has started (M33: the main process keeps it alive).</summary>
+    public int? WatchdogProcessOf(int mainProcessId)
+    {
+        try
+        {
+            return int.TryParse(File.ReadAllText(WatchdogPidPath(mainProcessId)).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) ? id : null;
+        }
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     /// <summary><c>--watchdog</c> mode. Returns when the main process has exited and recovery is done.</summary>
     public void Run(int mainProcessId)
     {
+        TryWrite(WatchdogPidPath(mainProcessId), Environment.ProcessId.ToString(CultureInfo.InvariantCulture)); // M33: found and watched by main
         log($"watching {mainProcessId}");
         try
         {
@@ -67,6 +97,8 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
             log("main process already gone");
         }
 
+        var wasSafeMode = ConsumeMarker(SafeModeMarkerPath(mainProcessId));
+        TryDelete(WatchdogPidPath(mainProcessId));
         var plan = WatchdogPlan.For(
             cleanShutdown: ConsumeMarker(CleanMarkerPath(mainProcessId)),
             sessionEnding: ConsumeMarker(SessionEndingMarkerPath(mainProcessId)),
@@ -80,18 +112,28 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
             case WatchdogRestart.Never:
                 return;
             case WatchdogRestart.IfSessionContinues:
-                if (WaitForSessionToContinue()) RestartMain(reason: "session end was cancelled");
+                if (WaitForSessionToContinue()) RestartMain(reason: "session end was cancelled", arguments: wasSafeMode ? SafeModeArgument : "");
                 else log("session is ending; not restarting");
                 return;
             case WatchdogRestart.Throttled:
+                // M33 (ADR-053): below the limit a normal restart; at the limit safe mode; safe mode crashing soon again stops
+                // and shows the "NeoFences stopped" window instead of a silent end.
                 var now = DateTimeOffset.Now;
-                if (!RestartThrottle.ShouldRestart(recentRestarts: ReadRestarts(), now: now))
+                switch (CrashRecovery.Decide(recentRestarts: ReadRestarts(), now: now, lastStartWasSafe: wasSafeMode))
                 {
-                    log("restart limit reached (3 per 10 min), staying down");
-                    return;
+                    case CrashRestart.Normal:
+                        TryAppendRestart(now);
+                        RestartMain(reason: "unclean exit", arguments: RestartedArgument);
+                        break;
+                    case CrashRestart.SafeMode:
+                        TryAppendRestart(now);
+                        RestartMain(reason: "unclean exit, restart limit reached: safe mode", arguments: SafeModeArgument);
+                        break;
+                    default:
+                        log("safe mode stopped too; showing the NeoFences stopped window");
+                        if (!SessionState.IsShuttingDown()) RestartMain(reason: "repeated crashes", arguments: StoppedArgument);
+                        break;
                 }
-                TryAppendRestart(now);
-                RestartMain(reason: "unclean exit");
                 return;
         }
     }
@@ -119,11 +161,11 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
         if (DesktopIcons.ShowWithRetry(giveUpAfter: RestoreRetryDelay * RestoreAttempts, log: log)) TryDelete(IconsHiddenPath);
     }
 
-    private void RestartMain(string reason)
+    private void RestartMain(string reason, string arguments)
     {
         try
         {
-            StartSelf(arguments: "");
+            StartSelf(arguments: arguments);
             log($"main restarted ({reason})");
         }
         catch (Exception failure) when (failure is not OutOfMemoryException)
@@ -143,6 +185,19 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
     {
         Directory.CreateDirectory(dataDirectory);
         File.WriteAllText(path, Timestamp());
+    }
+
+    private void TryWrite(string path, string text)
+    {
+        try
+        {
+            Directory.CreateDirectory(dataDirectory);
+            File.WriteAllText(path, text);
+        }
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
+        {
+            log($"could not write {Path.GetFileName(path)}: {failure.Message}");
+        }
     }
 
     private void TryAppendRestart(DateTimeOffset now)

@@ -300,7 +300,11 @@ public sealed partial class FenceHost
         }
         var batch = ++_checkBatch;
         Task.Run(() => TargetProbe.CheckAll(targets))
-            .ContinueWith(checks => ApplyChecks(checks.Result, batch), TaskScheduler.FromCurrentSynchronizationContext());
+            .ContinueWith(checks =>
+            {
+                if (checks.IsFaulted) Log.Warning(checks.Exception, "target checks failed; the next change checks again"); // M33: never fatal
+                else ApplyChecks(checks.Result, batch);
+            }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     /// <summary>New states: the fences holding a target whose state changed refresh (at most once every 2 s each).</summary>

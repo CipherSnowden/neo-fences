@@ -33,13 +33,13 @@ public sealed partial class FenceHost
     /// The scan runs while games are wanted (M22): an old library fence, a game item in any fence, a fence new games go to,
     /// or the Add games… list open. Otherwise it sleeps (no watchers).
     /// </summary>
-    private bool LibraryWanted => HasLibraryFence || _config.Library.NewGamesFence is not null || _addGamesWindow is not null
-                                  || _items.Fences.Values.Any(items => items.Any(GameItems.IsGame));
+    private bool LibraryWanted => Current.ExtrasWanted && (HasLibraryFence || _config.Library.NewGamesFence is not null || _addGamesWindow is not null
+                                  || _items.Fences.Values.Any(items => items.Any(GameItems.IsGame))); // M33: safe mode scans nothing
 
     /// <summary>The library folder's lister while the Game Library fence exists (a hidden library tab keeps listing, M9).</summary>
     private void EnsureLibraryLister()
     {
-        var hasFence = HasLibraryFence;
+        var hasFence = HasLibraryFence && Current.ExtrasWanted; // M33
         if (!hasFence && _libraryLister is not null)
         {
             _libraryLister.Dispose(); // NeoFences' own folder stays as it is

@@ -429,6 +429,14 @@
                     <!-- An empty fence says how to fill it (M18 spec §5). -->
                     <TextBlock x:Name="EmptyHint" Visibility="Collapsed" Margin="12" TextWrapping="Wrap" TextAlignment="Center"
                                VerticalAlignment="Center" Foreground="{DynamicResource FenceSubtleText}" IsHitTestVisible="False" />
+                    <!-- M33 (ADR-054): removed items can come back for a few seconds ("Removed 3 items · Undo"; Ctrl+Z too). -->
+                    <Border x:Name="UndoBar" Visibility="Collapsed" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="8" Padding="12,6,6,6"
+                            CornerRadius="6" Background="{DynamicResource HoverLabelBackground}" BorderBrush="{DynamicResource FenceBorder}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="UndoText" VerticalAlignment="Center" Foreground="{DynamicResource FenceText}" FontSize="12" Margin="0,0,10,0" />
+                            <Button x:Name="UndoButton" Content="Undo" Style="{StaticResource WelcomeButton}" Margin="0" Padding="10,3" AutomationProperties.Name="Undo" />
+                        </StackPanel>
+                    </Border>
                     <!-- Rubber-band selection (M3b): drawn while dragging on empty space. -->
                     <Canvas IsHitTestVisible="False" ClipToBounds="True">
                         <Rectangle x:Name="SelectionBand" Visibility="Collapsed" Fill="{DynamicResource FenceHover}"

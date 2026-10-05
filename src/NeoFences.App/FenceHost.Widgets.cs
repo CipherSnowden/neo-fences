@@ -27,7 +27,7 @@ public sealed partial class FenceHost
     /// <summary>The timer exists exactly while some fence holds a widget (after every item change).</summary>
     private void UpdateWidgetTimer()
     {
-        if (!HasWidgets)
+        if (!HasWidgets || !Current.ExtrasWanted) // M33: no widget work in safe mode
         {
             _widgetTimer?.Stop();
             _widgetTimer = null;
