@@ -59,4 +59,19 @@ dropping games on unplugged drives (existing; its consequence fixed by I5); two 
 
 ## Live check
 
-(TEST-CHECKLIST AH — filled in after the run.)
+2026-10-05, branch build on a copy of the user's data (restored afterwards), scripted while the PC was unattended;
+screenshots sent to the user.
+
+- **Pass (all 18):** AH1 (the "Games" library fence became an items fence with the 12 games, the safety snapshot listed,
+  new games go to Games), AH2 (no "New Game Library fence"; "Add games…" in the fence menu), AH3/AH4 (Blur Ctrl-dragged
+  into Apps as a cover, Icon, back to Cover), AH5 (menu; Open install folder opened Forza Horizon 6's folder), AH6 (own
+  name under the cover), AH7 (12 games, Blur "already here" unticked), AH8 (a test game folder in `D:\GameLibrary` → one
+  new item in Games, none in Apps), AH9 (removed → "… is not installed" with Remove from fence / Cancel, no Locate…),
+  AH10 (back by itself), AH11 (Nowhere: no item added), AH12 (restoring the pre-migration snapshot migrated again, a
+  second safety snapshot), AH13 (deleting Games → New games go to: Nowhere), AH14 (the not-installed cover dimmed with
+  the ⚠ badge, labels always and on hover), AH15 (target read-only, Browse off), AH16 (Enter does nothing), AH17 (Windows'
+  menu → Delete removed only the item; NeoFences' shortcut stayed), AH18 (a game moved to Apps came back as "new": no copy
+  in Games).
+- Script note: the first pass lost track of the Games fence after AH6 renamed PRAGMATA; AH3/AH4, AH9/AH14/AH16 and AH18
+  were rerun on reset data with title-based finders.
+- Test game folders (`D:\GameLibrary\NeoFences-test-game*`) created and removed by the script only.
