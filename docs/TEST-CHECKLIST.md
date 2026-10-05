@@ -750,3 +750,15 @@ Added after the M19 final review:
 | AQ5 | Close Afterburner (by the user) | CPU TEMP "—" with "needs Afterburner or HWiNFO"; GPU TEMP from Windows; back when Afterburner returns |
 | AQ6 | The welcome fence at its minimum size | button labels wrap, nothing cut off |
 | AQ7 | GUIDE §3, §5, §14 on GitHub | game menu order with Size; the widgets text; the Issues link works |
+
+## AR — 0.19.1 polish (M32)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AR1 | Change the Windows accent colour (Settings → Personalization → Colors) | the stats bars take the new colour at once |
+| AR2 | A Free fence written without cells (or the first start after switching one to Free elsewhere) | its cells are stored right after start (config shows them); nothing moves |
+| AR3 | A "—" tile without a hint (GPU TEMP or RAM unavailable) | no empty line under it |
+| AR4 | First start of a fresh install while a full-screen game runs | no notice during the game; it shows after the game ends |
+| AR5 | Afterburner without its CPU temperature graph, HWiNFO running | CPU TEMP from HWiNFO |
+| AR6 | HWiNFO sharing switched off (DEAD), then on again | tiles fall back, then return |
+| AR7 | A two-GPU PC at idle without Afterburner or HWiNFO | GPU TEMP steady on the graphics card |

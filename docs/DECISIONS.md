@@ -1371,3 +1371,8 @@ HWiNFO". RAM shows GB used of installed; the disk tile is gone.
 **Consequences.** CPU temperature needs one of the two monitors running (HWiNFO free stops sharing after 12 hours until
 switched on again). NeoFences never starts, closes or configures them. A later sensor picker can use the same readings
 (clocks, power, fans, FPS are all there).
+
+**Amended 2026-10-06 (M32, 0.19.1).** The main GPU is sticky: each source keeps its last choice until another GPU uses at
+least twice its video memory and 1 GB more (`Widgets.StickyGpu`), so a hybrid laptop's card idling at 0 MB beside a
+built-in GPU does not flip the tiles. HWiNFO's copy is taken while holding `Global\HWiNFO_SM2_MUTEX` (at most 20 ms;
+without it as before). The copy is a rented buffer.
