@@ -708,3 +708,9 @@ Added after the M19 final review:
 | AN12 | Size ▸ on two items of different sizes; arrow keys + Enter in the picker; leave the grid | nothing checked ("Mixed sizes"); the size is set; the highlight returns |
 | AN13 | Icon-only fence with game covers | covers full size (cells as wide as a cover) |
 | AN14 | Free fence: drag a fence item together with a panel entry onto a cell | both land at the drop cell |
+| AN15 | Auto-collect… open while files arrive; OK without changing a rule; restart | nothing collected again (the newer watermark kept) |
+| AN16 | A Free fence as a hidden tab; Add item… into it through the tray drop or Add from desktop; show the tab | the new items sit in that fence's own columns |
+| AN17 | Stats in a rolled-up fence while a clock elsewhere stays visible; open the roll-up after a minute | the first CPU/GPU value is fresh (a 2 s rate), not the minute's average |
+| AN18 | Size ▸: arrow keys to 3 × 2, hover 1 × 1, leave the grid, Enter; Left at column 1 | sets the size shown; Left at the edge closes the picker |
+| AN19 | Auto-collect: a new rule on a slow share, OK, start a game before the listing returns | no question over the game (logged) |
+| AN20 | Icon-only Free fence of icons with one game cover (Ctrl-copy a cover in) | cells as wide as a cover; icons keep their stored cells or move to free ones; back when the cover goes |

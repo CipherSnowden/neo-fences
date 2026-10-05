@@ -21,3 +21,21 @@ badge, and a 2 × 3 Details panel showing Name and Date.
   the name "Unknown widget"; it shows as an item (no layout), opens nothing, and has the widget menu.
 - **W1**: after a hidden spell longer than 4 s, a first stats reading only primes; the shown one comes 2 s later.
 - In a narrow Details panel Name stays short (the Date column keeps its width); not in scope.
+
+## Final review (Opus, 2026-10-05): ready to merge, nine minors
+
+No critical or important findings; all 20 items addressed, every caller of the widened `ItemKind.Widget` checked.
+Re-graded and fixed (App; checklist rows AN15–AN20):
+- **M1 → fixed** (W1 was only half done: stats hidden while a clock stayed visible still averaged) — a stats reading
+  older than 4 s primes; the shown one comes 2 s later (AN17).
+- **M2, M3 → fixed** (the Size picker: Enter picked a size the mouse had un-highlighted; Left at column 1 trapped the
+  keyboard) — one highlight for mouse and keys; Left at the edge closes the submenu (AN18).
+- **M4 → fixed** (a window not laid out yet gave one column, stored for good in a Free fence) — no pinning until laid out.
+- **M7 → fixed** (a late "Add these N too?" could pop over a fullscreen game) — dropped (logged) in game mode (AN19).
+- **M6, M8** — ARCHITECTURE says "rebuilt only when a value changes" for W2; rows AN15 (A2), AN16 (G3) added. G6 is App
+  and A4 departed, so neither has a Core test.
+- **M5 — ruling kept**: cover-wide cells in an icon-only fence with any cover; the mixed case is row AN20 (asked of the
+  user in the release message).
+
+Deferred minor:
+- Covers are decoded twice on an icon-size change (as before M28).

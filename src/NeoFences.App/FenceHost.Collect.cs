@@ -191,6 +191,11 @@ public sealed partial class FenceHost
             return;
         }
         if (!_config.Fences.Any(fence => fence.Id == fenceId)) return; // the fence went meanwhile
+        if (_gameMode)
+        {
+            Log.Information("auto-collect: the offer for a new rule was dropped: a game is in front"); // never a question over a game (final review M7)
+            return;
+        }
         var entries = listings.Where(listing => listing.Value is not null && CollectRules.SameSource(listing.Key, rule.Source)).SelectMany(listing => listing.Value!).ToList();
         var lone = _config with { Fences = [.. _config.Fences.Where(fence => fence.Id == fenceId).Select(fence => fence with { Collect = [rule] })] };
         var plan = CollectRules.Plan(lone, _items, rule.Source, entries);

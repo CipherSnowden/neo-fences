@@ -934,7 +934,8 @@ public partial class FenceWindow : Window
 
     /// <summary>A fence's columns at this window's width (M28: a hidden tab's own, for its new elements in a Free fence).</summary>
     public int ColumnsFor(Fence fence, bool covers) =>
-        FenceGrid.ColumnsFor(ItemList.ActualWidth - 8, ItemWidthFor(fence.IconSize, fence.Labels, covers) + 8);
+        !ItemList.IsLoaded || ItemList.ActualWidth <= 0 ? 0 // not laid out yet: no columns to pin with (final review M4)
+            : FenceGrid.ColumnsFor(ItemList.ActualWidth - 8, ItemWidthFor(fence.IconSize, fence.Labels, covers) + 8);
 
     private void OnItemMouseEnter(object sender, MouseEventArgs args)
     {

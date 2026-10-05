@@ -22,6 +22,7 @@ public static class SizePicker
         var caption = new TextBlock { Margin = new Thickness(2, 6, 0, 0), FontSize = 12, Text = Shown() };
         var grid = new UniformGrid4();
         var squares = new Border[GridSpan.Max, GridSpan.Max];
+        var (keyColumns, keyRows) = current is { } start ? (start.Columns, start.Rows) : (1, 1);
         void Highlight(int columns, int rows)
         {
             for (var row = 0; row < GridSpan.Max; row++)
@@ -43,7 +44,12 @@ public static class SizePicker
                     BorderBrush = SystemColors.GrayTextBrush, Background = Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand,
                 };
                 System.Windows.Automation.AutomationProperties.SetName(square, $"{columns} × {rows}");
-                square.MouseEnter += (_, _) => { Highlight(columns, rows); caption.Text = $"{columns} × {rows}"; };
+                square.MouseEnter += (_, _) =>
+                {
+                    (keyColumns, keyRows) = (columns, rows); // Enter picks what is highlighted (final review M2)
+                    Highlight(columns, rows);
+                    caption.Text = $"{columns} × {rows}";
+                };
                 square.MouseLeftButtonUp += (_, click) =>
                 {
                     click.Handled = true;
@@ -54,7 +60,6 @@ public static class SizePicker
                 grid.Children.Add(square);
             }
         }
-        var (keyColumns, keyRows) = current is { } start ? (start.Columns, start.Rows) : (1, 1);
         void ShowCurrent()
         {
             if (current is { } chosen) Highlight(chosen.Columns, chosen.Rows);
@@ -62,7 +67,11 @@ public static class SizePicker
             caption.Text = Shown();
         }
         ShowCurrent();
-        grid.MouseLeave += (_, _) => ShowCurrent();
+        grid.MouseLeave += (_, _) =>
+        {
+            (keyColumns, keyRows) = current is { } back ? (back.Columns, back.Rows) : (1, 1); // what shows is what Enter picks (final review M2)
+            ShowCurrent();
+        };
         var panel = new StackPanel { Margin = new Thickness(0, 2, 0, 2) };
         panel.Children.Add(grid);
         panel.Children.Add(caption);
@@ -74,7 +83,7 @@ public static class SizePicker
         {
             switch (key.Key)
             {
-                case System.Windows.Input.Key.Left: keyColumns = Math.Max(1, keyColumns - 1); break;
+                case System.Windows.Input.Key.Left when keyColumns > 1: keyColumns--; break; // at the edge Left closes the submenu (final review M3)
                 case System.Windows.Input.Key.Right: keyColumns = Math.Min(GridSpan.Max, keyColumns + 1); break;
                 case System.Windows.Input.Key.Up when keyRows > 1: keyRows--; break;
                 case System.Windows.Input.Key.Down when keyRows < GridSpan.Max: keyRows++; break;

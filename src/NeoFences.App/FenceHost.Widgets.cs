@@ -20,7 +20,6 @@ public sealed partial class FenceHost
     private bool _statsInFlight;
     private TimeSpan? _lastStatsAt; // on the monotonic clock: a clock change never freezes the stats (final review I4)
     private readonly HashSet<string> _statsFailuresLogged = new(StringComparer.Ordinal);
-    private TimeSpan? _widgetsUnseenAt; // since when no widget could be seen (M28: a fresh CPU/GPU rate afterwards)
 
     private bool HasWidgets => _items.Fences.Values.Any(items => items.Any(item => item.Kind == ItemKind.Widget));
 
@@ -57,30 +56,23 @@ public sealed partial class FenceHost
     {
         ScheduleWidgetTick();
         var windows = WidgetWindows();
-        if (windows.Count == 0)
-        {
-            _widgetsUnseenAt ??= Clock.Elapsed;
-            return; // nobody can see a widget: no work at all
-        }
-        if (_widgetsUnseenAt is { } unseen)
-        {
-            _widgetsUnseenAt = null;
-            // After a long hidden spell a CPU/GPU rate would average over it (M28): a first reading only primes, the next one in 2 s shows.
-            if (Clock.Elapsed - unseen > StatsEvery * 2 && _systemStats is { } primed && !_statsInFlight)
-            {
-                _statsInFlight = true;
-                _lastStatsAt = Clock.Elapsed;
-                Task.Run(primed.Sample).ContinueWith(_ => _statsInFlight = false, TaskScheduler.FromCurrentSynchronizationContext());
-            }
-        }
+        if (windows.Count == 0) return; // nobody can see a widget: no work at all
         var now = DateTime.Now;
         foreach (var window in windows) window.UpdateWidgets(now, _lastStats);
         var elapsed = Clock.Elapsed;
         if (!_statsInFlight && (_lastStatsAt is not { } last || elapsed - last >= StatsEvery - TimeSpan.FromMilliseconds(100)) // timer jitter: every 2 s, not 3
             && windows.Any(window => window.ShowsWidget(WidgetKind.Stats)))
         {
+            // The last reading is old (stats hidden — the whole fence, a roll-up, a tab — while time went on): a CPU/GPU rate would
+            // average over that spell, so this reading only primes and the shown one comes 2 s later (M28, final review M1).
+            var stale = _lastStatsAt is { } previous && elapsed - previous > StatsEvery * 2;
             _lastStatsAt = elapsed;
-            SampleStats();
+            if (stale && _systemStats is { } primed)
+            {
+                _statsInFlight = true;
+                Task.Run(primed.Sample).ContinueWith(_ => _statsInFlight = false, TaskScheduler.FromCurrentSynchronizationContext());
+            }
+            else SampleStats();
         }
     }
 
