@@ -545,3 +545,27 @@ Added after the M19 final review:
 | AF3 | A test shortcut to This PC and one to Control Panel on the desktop; Add from desktop… | both listed under Folders and files; removed afterwards |
 | AF4 | Add from desktop… twice with a Game Library fence present | the second opening lists at once (the library's last scan reused); log has no scan errors |
 | AF5 | Bulk fix: Fix after every proposed item was changed by hand meanwhile | log "nothing fixed"; `before-restore.json` unchanged |
+
+## AG — 0.11.0 folder views (M21)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AG1 | Tray → New folder view… → Cancel in the folder dialog; again → pick a folder → Cancel in the settings | nothing created either time |
+| AG2 | Tray → New folder view… → Downloads | settings prefilled: Date (newest first), only the newest 30; OK → a fence titled "Downloads" with the newest 30 entries, newest first |
+| AG3 | Fence menu → New folder view… → `D:\GameLibrary`, Show: Folders only | only the game folders, A–Z; double-click one → Explorer opens it |
+| AG4 | Folder view settings… → Types `*.png;*.jpg`; then `a|b` | only those files (and subfolders when showing all); `a|b` marks the hint red and disables OK |
+| AG5 | In Explorer: add, rename and delete a file in a viewed folder | the view follows within a second each time; selection and scroll stay |
+| AG6 | Rename the viewed folder itself in Explorer | the view follows; its title follows while it was the folder's name |
+| AG7 | Delete the viewed folder (to the Recycle Bin), then restore it | "Folder not available: <path>", then the entries again within ~7 s |
+| AG8 | A view of `G:\NeoFences-test` (pendrive): pull the stick; plug it back | "Folder not available", then back by itself |
+| AG9 | With that view shown: Safely Remove the stick | Windows allows it; the view says "not available"; back after replugging |
+| AG10 | A game in front (game mode), change the viewed folder, leave the game | no change during the game; one re-list afterwards |
+| AG11 | Drag an entry from a view to Explorer; drag one onto an items fence; drop a file onto the view | a copy in Explorer (the original stays); a new item in the fence; the drop is refused |
+| AG12 | Right-click an entry → Add to fence ▸ <fence>; Copy path; Open file location | the item is added and selected there; the path is on the clipboard; Explorer shows the entry |
+| AG13 | Shift+right-click an entry | Windows' menu under "Windows menu — acts on the real files" |
+| AG14 | Del, F2, Alt+Enter on a selected entry | nothing happens; the file is untouched |
+| AG15 | A folder item in an items fence → right-click → Show as folder view | a view of that folder beside the fence |
+| AG16 | A view of a folder with 600 files (`G:\NeoFences-test\many`) | 500 entries, then "+ 100 more — Open folder"; clicking it opens Explorer |
+| AG17 | Sort by → Type on a view; restart NeoFences | the sort is checked in the menu and kept after the restart |
+| AG18 | Merge a view into another fence's box as a tab; switch tabs | the view lists as a tab; switching back shows its entries at once |
+| AG19 | Take snapshot; delete the view fence; restore the snapshot | the folder is untouched by the delete; the restore brings the view back, listing |

@@ -1190,3 +1190,27 @@ and releases are public (ADR-039); the user decided on 2026-10-05 to keep the na
 project for now; the name is revisited only if it is ever distributed more widely (1.0.0 for friends or beyond).
 
 **Consequences.** No rename work; the trademark question stays a listed risk on the hub.
+
+## ADR-044 — Folder views: fences that show one folder live, read-only
+**Date:** 2026-10-05 · **Status:** Accepted · **Refines:** ADR-040 (Portals parked "for later as dynamic collections")
+
+**Context.** ADR-040 parked Portals and Rules for "dynamic collections". The user chose folder views first (M21, 0.11.0):
+game and app folders, work folders, Downloads and Screenshots, and USB sticks, each shown live in a fence.
+
+**Decision.**
+- A fence is one of three kinds: items (items.json), the Game Library, or a **folder view** (`Fence.View`, a
+  `FolderView { path, show, sort, newest, patterns }` in config.json; schema stays 5, an older NeoFences ignores it).
+- **Read-only**: NeoFences never writes to the folder. Drops onto a view are refused; NeoFences' own menu has Open, Open
+  file location, Copy path and Add to fence ▸; Del, F2 and Alt+Enter do nothing. Windows' menu (Shift+right-click) stays,
+  as for items: what the user picks there is Windows' action.
+- Subfolders open in Explorer (no browsing inside the fence, user choice). Entries dragged out are copies; dragged onto an
+  items fence they become items.
+- Per view: show (all / files / folders), type patterns (subfolders always pass when showing all), sort (Name / Type /
+  Date, kept and live), only the newest N (1–500). New views of Downloads and Screenshots start newest first with 30.
+- At most 500 entries are shown, then "+ N more — Open folder".
+- Listing reuses the Game Library's machinery (`FolderLister`, former Portal code): off the UI thread, 250 ms coalescing,
+  7 s retry while unavailable, watcher backoff, removal notices (Safely Remove), game-mode pause; the view follows its
+  folder's rename.
+
+**Consequences.** Each view holds two `FileSystemWatcher`s and, on a removable drive, a removal notice; no limit on the
+number of views (personal use). Auto-collect rules stay for later.
