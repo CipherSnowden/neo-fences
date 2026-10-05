@@ -606,3 +606,20 @@ Added after the M19 final review:
 | AI4 | Settings open; delete a fence | "New games go to" no longer lists it |
 | AI5 | Settings → "New games go to" dropdown open while a scan finishes | the dropdown stays open |
 | AI6 | Right-click a game that is not installed | "Open install folder" greyed out |
+
+## AJ — 0.13.0 element sizes and the fence grid (M24)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AJ1 | Right-click Steam in Apps → Size ▸, hover the squares, click 2 × 2 | the caption follows the hover; Steam becomes a big icon on 2 × 2 cells; smaller apps fill the gaps beside it |
+| AJ2 | Select three apps → Size ▸ 2 × 1; then Default size | all three wide; then back to 1 × 1 |
+| AJ3 | Games fence | covers on 1 × 2 cells; a cover set to 2 × 2 is a bigger poster |
+| AJ4 | Apps → Layout ▸ Free (fixed positions) | nothing moves; Layout ▸ shows Free checked |
+| AJ5 | Free: drag an icon onto an empty cell; onto a taken one; drag three at once | lands on the cell; the nearest free spot; the three keep their arrangement |
+| AJ6 | Free: drop a file from Explorer onto an empty cell | the new item on that cell; the dashed cell marker shows during the drag |
+| AJ7 | Free: Sort by → Name | packed from the top-left in name order |
+| AJ8 | Free: make the fence narrower than an element's cell, then wider again | it shows in a free spot meanwhile; back at its cell afterwards |
+| AJ9 | Arrow keys in Apps | selection moves to the nearest element in that direction |
+| AJ10 | Labels on hover; icon size 32 and 96 | cells shrink and grow; big icons reload sharp |
+| AJ11 | A 500-entry folder view | lays out without a visible pause |
+| AJ12 | Take snapshot; change sizes and layout; restore | sizes, layout and cells come back |

@@ -1236,3 +1236,21 @@ of several sizes. The first step (M22, 0.12.0) makes games ordinary items.
 **Consequences.** Only games no fence holds go to the new-games fence, and never on a first scan (no earlier scan to
 compare with); a migration cut short runs again without doubling games, and none runs while a store is read-only. An
 uninstalled game's items show "not installed" (dimmed, ⚠, covers too) and come back on reinstall. Hiding games stays in Settings. Mixed fences size each cell by its item (tile or icon).
+
+## ADR-046 — Element sizes and the fence grid
+**Date:** 2026-10-05 · **Status:** Accepted · **Continues:** ADR-045 (one kind of fence)
+
+**Context.** Widgets and a folder panel (the user's vision) need room bigger than one icon; the user also wants sizes for
+any element and a choice of how elements sit, per fence.
+
+**Decision.**
+- Every element spans 1–4 columns × 1–4 rows of its fence's cells (`VirtualItem.Size`; default 1×1, 1×2 for a game
+  cover). A cell is the fence's icon cell (icon size + label mode).
+- Each fence is **Flow** (packed in order; smaller elements fill gaps) or **Free** (`VirtualItem.Cell`; elements without a
+  usable cell go to the first free spot without changing what is stored). Switching to Free stores the shown cells.
+- The layout is a pure Core function (`FenceGrid`) with a thin WPF panel (`FenceGridPanel`) replacing the WrapPanel; a
+  failed pass falls back to 1×1 in order.
+- Free drops land on the cell under the pointer (offsets kept; a taken spot → the nearest free one); Sort in Free packs.
+
+**Consequences.** Folder-view entries and the old library fence stay 1×1; no resize handles (menu picker only); spans
+above 4 later if wanted. config.json writes each fence's `layout`; items.json writes `size` / `cell` only when set.

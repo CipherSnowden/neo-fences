@@ -50,10 +50,11 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 ```
 ┌─────────────────────────── NeoFences.App (WPF) ───────────────────────────┐
 │ FenceHost (+ .Items .Watching .Library .Appearance .Updates .DesktopFill  │
-│            .FolderViews .GameItems)                                       │
+│            .FolderViews .GameItems .Grid)                                 │
 │ FenceWindow · FenceItemView · IconLoader · ItemPropertiesWindow           │
 │ AppPickerWindow · RelocateWindow · DesktopFillWindow · MissingItemWindow  │
 │ FolderViewWindow · AddGamesWindow · SettingsWindow · FolderLister         │
+│ FenceGridPanel · SizePicker                                               │
 │ DrawFenceOverlay                                                          │
 └──────────────┬────────────────────────────────────────────────────────────┘
 ┌──────────────▼─────────── NeoFences.Shell (Win32/COM, CsWin32) ───────────┐
@@ -80,6 +81,8 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 | Core/FenceEdits, FenceTabs, Snapping | rename / icon size / lock / colours / new / delete fence; tabs (ADR-029); snap to 8 px gap or aligned edges during drags (ADR-015) | — |
 | Core/FencePlacement, Core/Lifecycle | px↔DIP placement, containing monitor; `RunState` (hide icons, quick-hide, Pause, game mode), session-end policy, restart throttle, watcher backoff | — |
 | Core/Library | Valve/Epic parsing, `GameCatalog` merge, `LibraryFiles` plan, `GameLaunchers.LauncherOf` (ADR-032); `GameItems` (M22): `Migrate` (a library fence → game items), `NewGames`, `AddNew`, `Retarget` (by game id), `ShowsCover` | — |
+| Core/Items (M24) | `GridSpan` (1–4 × 1–4), `GridCell`, `FenceLayout` (Flow / Free), `FenceGrid.Arrange` (dense packing; Free: stored cells, collisions and out-of-width elements to free spots), `CellAt`, `NearestFree`, `PlaceDropped`, `SpanOf` (covers 1×2); `ItemEdits.SetSize`, `Place`; repairs | — |
+| App/FenceGridPanel, SizePicker, FenceHost.Grid (M24) | the fence list's items panel: whole cells from the icon size and label mode, columns from the width, elements placed where `FenceGrid` says (a failed pass falls back to 1×1 in order); Size ▸ 4×4 picker; Layout ▸ (Flow → Free stores the shown cells); Free drops on the cell under the pointer (offsets kept, taken → nearest free); Sort in Free packs and stores; new elements of Free fences store their spot | WPF Panel |
 | App/FenceHost.GameItems, AddGamesWindow (M22) | games as items (ADR-045): migration at start / after a restore / after a scan (a snapshot first), new games into `Library.NewGamesFence`, Add games…, the game item menu (Show as cover / icon, Open install folder), "not installed" | WPF (Fluent) |
 | App/FenceHost | orchestrates config + items, monitors, windows, debounced saves (both files, config first), display changes, Explorer restarts, session end, snapshots, tray | — |
 | App/FenceHost.Items | open (arguments, run as administrator; a missing target asks Locate… / Remove), NeoFences' item menu, Windows' menu on Shift+right-click, Properties, Add item…, Locate…, drops, drag-out, one-time sort, item pictures copied into `icons\` | WPF ContextMenu, Clipboard |
@@ -122,9 +125,9 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 
 `%LOCALAPPDATA%\NeoFences\`
 - `config.json` (+ `.bak`, `.tmp` transient) — schema 5
-  - shape: `{ schemaVersion, settings: { hideDesktopIcons, peekHotkey, … }, fences: [ { id, title, isLibrary, view: { path, show, sort, newest, patterns } (M21), iconSize, rolledUp, locked, labels, tabs, activeTab, tabColor, customColor } ], layouts: { <fingerprint>: { monitors, fences: { <fenceId>: { monitor, x, y, w, h } } } }, library, lastLayoutFingerprint }`
+  - shape: `{ schemaVersion, settings: { hideDesktopIcons, peekHotkey, … }, fences: [ { id, title, isLibrary, view: { path, show, sort, newest, patterns } (M21), layout (M24), iconSize, rolledUp, locked, labels, tabs, activeTab, tabColor, customColor } ], layouts: { <fingerprint>: { monitors, fences: { <fenceId>: { monitor, x, y, w, h } } } }, library, lastLayoutFingerprint }`
 - `items.json` (+ `.bak`) — schema 1 (ADR-041)
-  - shape: `{ schema, fences: { <fenceId>: [ { id, target, name, icon: { file, index } | { image }, arguments, runAsAdmin, note, gameId, showAs (M22) } ] } }`
+  - shape: `{ schema, fences: { <fenceId>: [ { id, target, name, icon: { file, index } | { image }, arguments, runAsAdmin, note, gameId, showAs (M22), size: { columns, rows }, cell: { column, row } (M24) } ] } }`
   - a list is removed only with its fence (Delete fence); lists of fences the config does not have stay (a fallback config never costs items; ADR-041 amended)
 - `icons\<itemId>-<guid>.png` — pictures chosen as item icons (≤ 256 px); unused ones deleted at start
 - `backups\config-<yyyyMMdd>.json`, `backups\items-<yyyyMMdd>.json` (keep 10 each), `backups\pre-schema-5-config.json`
@@ -161,6 +164,11 @@ NeoFences' own shortcut for it in `library\`; any fence can hold games next to o
 games… is open; after each scan game items follow their game's shortcut and new games go to the chosen fence. An old
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
+
+**0.13.0 (M24, element sizes and the fence grid)**: every element spans 1–4 columns × 1–4 rows of its fence's cells
+(Size ▸, a 4×4 picker); a bigger element shows a bigger icon (≤ 256 px) or cover; game covers default to 1×2. Each fence is
+Flow (packed in order, smaller elements fill gaps) or Free (fixed positions; switching keeps everything where it is; a
+drop lands on the cell under the pointer or the nearest free spot) (ADR-046, `research/m24-element-sizes.md`).
 
 **0.12.1 (M23)**: the M21/M22 review minors — a folder view sorts its listing off the UI thread; a hidden view tab's title
 follows its folder's rename; Folder view settings takes full paths only (variables expanded) and says why OK is greyed
