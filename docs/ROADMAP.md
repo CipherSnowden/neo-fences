@@ -89,6 +89,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Released 0.19.0 on 2026-10-06 (the installed 0.18.0 updated itself in 2 s; data unchanged)
   - [x] The user's desktop with every feature (2026-10-06): Desk top-left (Clock with date, Date, Stats), Clair Obscur and Detroit at 2×2 in a Free Games fence, Downloads as a Details panel; snapshot 2026-10-06 02:45 first
   - Deferred minors: in `research/m31-widgets.md` and the session log
+- [~] **M32 — 0.19.1: polish** (M31 minors: accent bars, sensor buffer, sticky GPU, hint line, HWiNFO lock, CJK date, notice in a game, Free spots saved at first layout, tidy-ups, checklist) — claimed by session 2026-10-06 polish
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot
