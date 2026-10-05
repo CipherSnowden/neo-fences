@@ -740,6 +740,14 @@ public partial class FenceWindow : Window
     /// <summary>The widget kinds this window shows now (M25: the host samples stats only when one is visible).</summary>
     public bool ShowsWidget(WidgetKind kind) => _items.Any(view => view.Widget == kind);
 
+    public bool HasWidgets => _items.Any(view => view.IsWidget);
+
+    /// <summary>Its items can be seen: not rolled up, or rolled up and opened by hover or click (M25, final review I3).</summary>
+    public bool ItemsShown => !_rolledUp || _expansion.Expanded;
+
+    /// <summary>The fence opened or closed (roll-up hover/click): widgets update at once (M25).</summary>
+    public event Action? ItemsShownChanged;
+
     /// <summary>An item's icon in physical pixels: its own size for its span (M24).</summary>
     private int PxOf(FenceItemView view) => (int)Math.Round(view.IconDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
 
@@ -1024,6 +1032,7 @@ public partial class FenceWindow : Window
     {
         if (!_rolledUp || !_expansion.Click()) return false;
         AnimateHeight(_fullHeightPx);
+        ItemsShownChanged?.Invoke(); // M25: widgets update at once
         return true;
     }
 
@@ -1071,6 +1080,7 @@ public partial class FenceWindow : Window
         var inside = cursorX >= rect.X && cursorX < rect.X + rect.Width && cursorY >= rect.Y && cursorY < rect.Y + height;
         if (!_expansion.Tick(inside)) return;
         AnimateHeight(_expansion.Expanded ? _fullHeightPx : RolledUpHeightPx);
+        ItemsShownChanged?.Invoke(); // M25
     }
 
     /// <summary>Colours for Windows' light or dark app mode (M2c: fences follow Windows).</summary>

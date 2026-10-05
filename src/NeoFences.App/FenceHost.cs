@@ -93,6 +93,13 @@ public sealed partial class FenceHost
         _messages.DisplayChanged += OnDisplayChanged;
         _messages.ThemeChanged += OnThemeChanged;
         _messages.WallpaperChanged += () => { if (Appearance.WallpaperAccent) UpdateAccents(); }; // M14
+        _messages.TimeSettingsChanged += () =>
+        {
+            // .NET caches the user's formats and time zone: clocks follow a 12/24-hour or time-zone change at once (M25 review I5).
+            System.Globalization.CultureInfo.CurrentCulture.ClearCachedData();
+            TimeZoneInfo.ClearCachedData();
+            OnWidgetTick();
+        };
         _messages.HotkeyPressed += OnHotkey;
         _messages.TrayMenuRequested += ShowTrayMenu;
         _messages.SessionUnlocked += OnSessionUnlocked;
@@ -273,6 +280,7 @@ public sealed partial class FenceHost
         window.AddGamesRequested += () => AddGames(window); // M22
         window.LayoutRequested += layout => SetFenceLayout(window, layout); // M24
         window.AddWidgetRequested += kind => AddWidget(window, kind); // M25
+        window.ItemsShownChanged += OnWidgetTick; // a rolled-up fence opened: its widgets show the right time at once
         window.OpenFolderRequested += () => OpenViewFolder(window);
         window.ViewSettingsRequested += () => EditFolderView(window);
         window.StartupToggled += SetStartWithWindows;

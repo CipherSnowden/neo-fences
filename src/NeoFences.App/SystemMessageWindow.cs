@@ -14,6 +14,7 @@ namespace NeoFences.App;
 public sealed class SystemMessageWindow : IDisposable
 {
     private const int WmSettingChange = 0x001A;
+    private const int WmTimeChange = 0x001E;
     private const int WmDisplayChange = 0x007E;
     private const int WmDpiChanged = 0x02E0;
     private const int SpiSetWorkArea = 0x002F;
@@ -25,6 +26,8 @@ public sealed class SystemMessageWindow : IDisposable
     public event Action? DisplayChanged;
     public event Action? ThemeChanged;
     public event Action? WallpaperChanged;
+    /// <summary>Windows' regional formats, the time or the time zone changed (M25: clocks and dates follow).</summary>
+    public event Action? TimeSettingsChanged;
     /// <summary>A RegisterHotKey hotkey of this window was pressed (its id).</summary>
     public event Action<int>? HotkeyPressed;
     /// <summary>The tray icon was clicked: show the tray menu at this screen point (px).</summary>
@@ -78,6 +81,11 @@ public sealed class SystemMessageWindow : IDisposable
             // Light/dark switch: WM_SETTINGCHANGE with the string "ImmersiveColorSet".
             case WmSettingChange when lParam != 0 && Marshal.PtrToStringUni(lParam) == "ImmersiveColorSet":
                 ThemeChanged?.Invoke();
+                return 0;
+            // M25 (final review I5): regional formats ("intl") or the time / time zone changed: clocks follow at once.
+            case WmSettingChange when lParam != 0 && Marshal.PtrToStringUni(lParam) == "intl":
+            case WmTimeChange:
+                TimeSettingsChanged?.Invoke();
                 return 0;
         }
         if (SpecialIconNotifications.IsRecycleBinNotice(message))

@@ -19,6 +19,38 @@ copy of the user's data (restored afterwards): Clock (17:16, then 17:17:28 with 
 - A second widget of a kind is appended directly (not through `ItemEdits.Add`, which merges the same target).
 - An unknown `neofences:widget/…` kind reads as a plain item (shows Missing; can be removed).
 
+## Final review (Opus, 2026-10-05): with fixes
+
+No critical findings. Fixed (App and Shell; checklist rows AK11–AK13):
+- **I1** — stats failures were queued to a dispatcher created on the worker thread, so "logged once" never happened:
+  the UI's dispatcher is captured first.
+- **I2** — Open on several selected items with a widget among them ran ShellExecute on `neofences:widget/…` (Windows'
+  "get an app" prompt): the menu opens each through the same path as a double-click (AK12).
+- **I3** — a rolled-up fence opened by hover or click showed frozen widgets: "can be seen" includes an opened roll-up, and
+  opening it updates them at once (AK11).
+- **I4** — the stats throttle used wall-clock time (a clock change froze it): the monotonic clock, with timer jitter
+  allowed for, so stats come every 2 s (also review M4).
+- **I5** — 12/24-hour and time-zone changes were not followed until a restart (.NET caches them): Windows' "intl" and
+  time-change messages clear the caches and update the widgets at once (AK13; AK4).
+- **M1 → fixed** (re-graded: a possible fault at exit) — a reading and Dispose never overlap (a lock; a disposed reader
+  returns no values).
+- **M2 → fixed** (re-graded: a GPU driver update left GPU at "—" until restart) — only an unopenable counter is final;
+  a failed reading reopens the query; "new data" readings count.
+
+Deferred minors:
+- Stale content for up to a second after pause, quick-hide or game mode ends; the first CPU/GPU reading after a long
+  hidden spell averages over it.
+- The stats rows are rebuilt every second; the widget layouts are created (collapsed) for every element.
+- Properties on a widget still offers Change icon and asks the shell to preview the widget target.
+- An unknown widget kind reads as an item that opens through Windows (not "Missing").
+- GPU usage of two active adapters is summed (Task Manager takes the busiest).
+- "MMMM yyyy" gives the wrong month/year order in a few cultures (ja, zh, ko, hu); `YearMonthPattern` would fix it.
+
+Set aside by the reviewer, ruled to stand: the 1 Hz timer while widgets are unseen (a plan departure), title colour and
+default font (a departure), first readings "—" (a departure), C: only (the spec), unreadable stats at 1 × 1, Viewbox
+scale shifts, tone contrast (to the live check), name pop-ups on widgets, Windows' own error dialog when the Clock app
+is missing, Enter opening widgets' apps, PDH cost (measured live), comma lists in hand-edited targets, older versions.
+
 ## Live check
 
 (TEST-CHECKLIST AK — filled in after the run.)

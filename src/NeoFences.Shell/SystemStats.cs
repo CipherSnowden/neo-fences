@@ -24,11 +24,16 @@ public sealed class SystemStats : IDisposable
     private PdhCloseQuerySafeHandle? _query;
     private PDH_HCOUNTER _gpu;
     private bool _gpuFailed;
+    private readonly object _gate = new(); // a reading and Dispose never overlap (exit while a reading runs; final review M1)
+    private bool _disposed;
 
     /// <param name="logOnce">Told the first time a value cannot be read (the host logs each name once).</param>
     public SystemStats(Action<string, Exception?> logOnce) => _logOnce = logOnce;
 
-    public StatsSample Sample() => new(Cpu(), Ram(), Gpu(), DiskC());
+    public StatsSample Sample()
+    {
+        lock (_gate) return _disposed ? new StatsSample(null, null, null, null) : new(Cpu(), Ram(), Gpu(), DiskC());
+    }
 
     private double? Cpu()
     {
@@ -78,29 +83,40 @@ public sealed class SystemStats : IDisposable
                 Check(PInvoke.PdhCollectQueryData(new PDH_HQUERY(_query.DangerousGetHandle())), "first collect");
                 return null; // a rate needs two collections
             }
-            Check(PInvoke.PdhCollectQueryData(new PDH_HQUERY(_query.DangerousGetHandle())), "collect");
+            if (PInvoke.PdhCollectQueryData(new PDH_HQUERY(_query.DangerousGetHandle())) != 0) return Reopen(); // a GPU driver update: try again from scratch
             uint size = 0, count = 0;
             var status = PInvoke.PdhGetFormattedCounterArray(_gpu, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, null);
-            if (status != (uint)PInvoke.PDH_MORE_DATA || size == 0) return status == 0 ? 0 : null; // no 3D engines: 0 %
+            if (status != (uint)PInvoke.PDH_MORE_DATA || size == 0) return status == 0 ? 0 : Reopen(); // no 3D engines: 0 %
             var buffer = new byte[size];
             fixed (byte* bytes = buffer)
             {
-                Check(PInvoke.PdhGetFormattedCounterArray(_gpu, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes), "read");
+                if (PInvoke.PdhGetFormattedCounterArray(_gpu, PDH_FMT.PDH_FMT_DOUBLE, &size, &count, (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes) != 0) return Reopen();
                 var items = (PDH_FMT_COUNTERVALUE_ITEM_W*)bytes;
                 double sum = 0;
                 for (var index = 0; index < count; index++)
                 {
-                    if (items[index].FmtValue.CStatus == 0) sum += items[index].FmtValue.Anonymous.doubleValue;
+                    if (items[index].FmtValue.CStatus is 0 or 1) sum += items[index].FmtValue.Anonymous.doubleValue; // valid data, or new data (review M2)
                 }
                 return Math.Min(100, sum);
             }
         }
         catch (Exception failure) when (failure is InvalidOperationException or ExternalException)
         {
-            _gpuFailed = true; // no GPU counters on this PC (or a driver without them): "—" from now on
+            _gpuFailed = true; // the counter cannot be opened or added: no GPU counters on this PC, "—" from now on
             _logOnce("GPU", failure);
             return null;
         }
+    }
+
+    /// <summary>
+    /// A reading failed after the query worked (a GPU driver update removes the engines for a moment): the query is closed
+    /// and opened again at the next reading, which shows "—" once (final review M2).
+    /// </summary>
+    private double? Reopen()
+    {
+        _query?.Dispose();
+        _query = null;
+        return null;
     }
 
     private static void Check(uint status, string what)
@@ -110,7 +126,11 @@ public sealed class SystemStats : IDisposable
 
     public void Dispose()
     {
-        _query?.Dispose(); // PdhCloseQuery
-        _query = null;
+        lock (_gate)
+        {
+            _disposed = true;
+            _query?.Dispose(); // PdhCloseQuery
+            _query = null;
+        }
     }
 }

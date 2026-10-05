@@ -641,3 +641,6 @@ Added after the M19 final review:
 | AK8 | Double-click the clock; the stats | Windows' Clock app; Task Manager |
 | AK9 | Snapshot, remove the widgets, restore | widgets back with their sizes and options |
 | AK10 | NeoFences' CPU with three widgets shown (Task Manager or a 30 s measurement) | well under 0.1 % |
+| AK11 | A rolled-up fence holding a clock: hover it open | the clock shows the current time at once and keeps ticking while open |
+| AK12 | Select a widget and an app → right-click → Open | the app opens; no Windows "get an app for this link" prompt |
+| AK13 | Change the time zone (or the time) in Windows' settings | the clock follows at once |

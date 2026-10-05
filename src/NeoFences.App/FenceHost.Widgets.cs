@@ -18,7 +18,7 @@ public sealed partial class FenceHost
     private SystemStats? _systemStats;
     private StatsSample? _lastStats;
     private bool _statsInFlight;
-    private DateTime _lastStatsAt = DateTime.MinValue;
+    private TimeSpan? _lastStatsAt; // on the monotonic clock: a clock change never freezes the stats (final review I4)
     private readonly HashSet<string> _statsFailuresLogged = new(StringComparer.Ordinal);
 
     private bool HasWidgets => _items.Fences.Values.Any(items => items.Any(item => item.Kind == ItemKind.Widget));
@@ -50,8 +50,7 @@ public sealed partial class FenceHost
     /// <summary>Windows a widget can be seen in now; none while paused, quick-hidden or in game mode.</summary>
     private IReadOnlyList<FenceWindow> WidgetWindows() =>
         !Current.FencesVisible || _gameMode ? []
-        : [.. _windows.Values.Where(window => window.IsVisible && window.ShowsWidget(WidgetKind.Clock) | window.ShowsWidget(WidgetKind.Date) | window.ShowsWidget(WidgetKind.Stats)
-            && _config.Fences.FirstOrDefault(fence => fence.Id == window.BoxId)?.RolledUp != true)];
+        : [.. _windows.Values.Where(window => window.IsVisible && window.HasWidgets && window.ItemsShown)]; // a hovered-open roll-up counts (final review I3)
 
     private void OnWidgetTick()
     {
@@ -60,17 +59,22 @@ public sealed partial class FenceHost
         if (windows.Count == 0) return; // nobody can see a widget: no work at all
         var now = DateTime.Now;
         foreach (var window in windows) window.UpdateWidgets(now, _lastStats);
-        if (!_statsInFlight && now - _lastStatsAt >= StatsEvery && windows.Any(window => window.ShowsWidget(WidgetKind.Stats))) SampleStats();
+        var elapsed = Clock.Elapsed;
+        if (!_statsInFlight && (_lastStatsAt is not { } last || elapsed - last >= StatsEvery - TimeSpan.FromMilliseconds(100)) // timer jitter: every 2 s, not 3
+            && windows.Any(window => window.ShowsWidget(WidgetKind.Stats)))
+        {
+            _lastStatsAt = elapsed;
+            SampleStats();
+        }
     }
 
     /// <summary>One reading on a worker; shown at once in the windows that show stats.</summary>
     private void SampleStats()
     {
         _statsInFlight = true;
-        _lastStatsAt = DateTime.Now;
+        var dispatcher = Dispatcher.CurrentDispatcher; // the UI's: the readings report failures from a worker thread (final review I1)
         var stats = _systemStats ??= new SystemStats(logOnce: (what, failure) =>
-            Dispatcher.CurrentDispatcher.BeginInvoke(() => { if (_statsFailuresLogged.Add(what)) Log.Information(failure, "system stats: {What} not available", what); }));
-        var dispatcher = Dispatcher.CurrentDispatcher;
+            dispatcher.BeginInvoke(() => { if (_statsFailuresLogged.Add(what)) Log.Information(failure, "system stats: {What} not available", what); }));
         Task.Run(stats.Sample).ContinueWith(sampling =>
         {
             _statsInFlight = false;

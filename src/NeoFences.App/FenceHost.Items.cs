@@ -113,7 +113,7 @@ public sealed partial class FenceHost
         }
         if (items.Count > 1)
         {
-            Command("Open", () => { foreach (var item in items) OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin); });
+            Command("Open", () => { foreach (var item in items) OpenKey(window, item.Id); }); // a widget opens its own app, never ShellExecute on its target (M25 review I2)
             menu.Items.Add(SizeMenu(menu, items)); // M24
             Command($"Remove {items.Count} items from fence", () => RemoveItems(window, [.. items.Select(item => item.Id)]));
         }
