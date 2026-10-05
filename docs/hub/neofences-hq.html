@@ -786,10 +786,11 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "0ff7771",
-  phase: "0.17.0 — a guide for friends",
-  current: "0.17.0 RELEASED and installed (your 0.16.1 updated itself): README, docs/GUIDE.md with screenshots, Help in the tray and Settings · next: pre-1.0 work or new ideas",
+  commit: "2d16bda",
+  phase: "0.18.0 — first-run welcome",
+  current: "M30 merged: the first fence welcomes a fresh install (Sort my desktop…, Add item…, Guide) and a tray notice says where the icon is · next: release 0.18.0 when you say so",
   waiting: [
+    "NEW in 0.18.0 (when released) — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
     "NEW in 0.17.0 — Help: tray → Help (or Settings → About and logs → Help (online guide)) opens the guide on GitHub: every feature with pictures, a cheat-sheet of gestures and keys, install and troubleshooting. Worth checking: the README and guide links and images on GitHub (AO3), and the quick start on a fresh user (AO5).",
     "In 0.16.0 — auto-collect: fence menu → Auto-collect… → New rule. Watch your Desktop or any folder; pick kinds (apps and shortcuts, installers, documents, pictures, archives, anything) or patterns. New matching files show up as items within ~2 s; nothing is moved; removed stays removed; files from while NeoFences was closed are caught up at start.",
     "In 0.15.0 — folder panels: fence menu → Add folder panel… (or a folder item → Show as folder panel). Details / List / Icons, click a column header to sort, double-click a subfolder to browse in (Back / Up / Home), Size ▸ or Fill fence. Your Downloads view is now a panel that fills its fence.",
@@ -805,6 +806,13 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M30 · First-run welcome (0.18.0)", items: [
+      { t: "You chose a welcome inside the first fence; the sort removes the empty welcome fence; hide icons via the dialog's checkbox", s: "done" },
+      { t: "Spec, replay-verified plan, native build; Opus review fixes (read-only start, a set-up welcome fence kept) — 658 tests", s: "done" },
+      { t: "Live check AP1, AP2, AP5, AP6, AP8, AP9 by script; merged locally", s: "done" },
+      { t: "Release 0.18.0", s: "todo" },
+      { t: "AP3 (small / light), AP4 (drop on the welcome), AP7 (welcome as a tab) and the tray notice — by hand", s: "todo" }
+    ]},
     { group: "M29 · A guide for friends (0.17.0)", items: [
       { t: "You chose a guide for friends; help on GitHub, linked from the app (ADR-050)", s: "done" },
       { t: "README rewrite, docs/GUIDE.md (15 sections, cheat-sheet), 8 screenshots from a demo setup", s: "done" },
@@ -1143,7 +1151,8 @@ const HUB = {
     { id: "M27", name: "Auto-collect (0.16.0)", goal: "New files of the desktop or a folder become items in a fence (ADR-049) — released as 0.16.0", s: "done" },
     { id: "M28", name: "Polish (0.16.1)", goal: "The 20 deferred minors of M24–M27 — released as 0.16.1", s: "done" },
     { id: "M29", name: "A guide for friends (0.17.0)", goal: "README, docs/GUIDE.md with screenshots, Help in the tray and Settings (ADR-050) — released as 0.17.0", s: "done" },
-    { id: "Next", name: "Next", goal: "Pre-1.0 work (first run, code signing) or new ideas", s: "todo" }
+    { id: "M30", name: "First-run welcome (0.18.0)", goal: "The first fence welcomes a fresh install; tray notice (ADR-051) — merged, release pending", s: "wip" },
+    { id: "Next", name: "Next", goal: "Pre-1.0 work (code signing) or new ideas", s: "todo" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
@@ -1162,6 +1171,7 @@ const HUB = {
     { v: "0.16.0", s: "done", scope: "Auto-collect rules (M27): new files of the desktop or a folder become items in a fence, by kind or pattern; removed stays removed; catch-up at start. Released 2026-10-05; the installed 0.15.0 updated itself." },
     { v: "0.16.1", s: "done", scope: "Polish (M28): 20 deferred minors — panels, auto-collect, widgets, grid and sizes. Released 2026-10-05; the installed 0.16.0 updated itself." },
     { v: "0.17.0", s: "done", scope: "A guide for friends (M29): rewritten README, docs/GUIDE.md with screenshots, Help in the tray and Settings. Released 2026-10-06; the installed 0.16.1 updated itself." },
+    { v: "0.18.0", s: "todo", scope: "First-run welcome (M30): the first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is. Merged 2026-10-06; release pending." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1278,6 +1288,7 @@ const HUB = {
     ["Folder panels: Details / List / Icons, browse in, Fill fence", "3+ (Portals)", "0.15", "M26", "done", "Replaces folder views (ADR-048)", "extra"],
     ["Auto-collect rules: desktop or a folder, by kind or pattern", "Fences rules (v1-era: moved files)", "0.16", "M27", "done", "Never moves files; items only (ADR-049)", "extra"],
     ["Help: online guide with screenshots", "Help / knowledge base", "0.17", "M29", "done", "docs/GUIDE.md on GitHub; tray Help and Settings Help open it (ADR-050)", "extra"],
+    ["First-run welcome", "First-run setup", "0.18", "M30", "done", "The first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is (ADR-051)", "extra"],
     ["Store / Start apps as items", "—", "0.10", "M19", "done", "App list (Add item… → An app…) or a drag from Start; Missing when uninstalled (ADR-042)", "extra"],
     ["Add from desktop…", "—", "0.10", "M19", "done", "Desktop grouped into Games / Apps / Folders and files / Web links, each into a fence (ADR-042)", "extra"],
     ["Bulk fix of missing items", "—", "0.10", "M19", "done", "After one Locate…, the others from the same old place; undo from the tray (ADR-042)", "extra"],
@@ -1344,7 +1355,8 @@ const HUB = {
     { id: "ADR-047", t: "Widgets: clock, date, system stats", s: "Accepted", d: "Widgets are elements stored like items (neofences:widget/<kind>, ItemKind.Widget): sizes, layouts, drags, copies and snapshots for free; never checked or watched. Readings from Windows' own counters via CsWin32 (PDH for GPU). One timer on whole seconds; no work while unseen.", c: "0.003–0.016 % CPU measured; unknown widget kinds read as plain items in older versions." },
     { id: "ADR-048", t: "The folder panel element", s: "Accepted", d: "A panel is a folder item with panel settings (look, filters, sort): missing state, Locate…, rename-follow, copies and snapshots for free. Details / List / Icons; browsing in memory; 1–4 × 1–4 cells or Fill fence while alone. Folder views migrate once (a snapshot first; items saved before config).", c: "Supersedes ADR-044's view fence; read-only rules stand. An older version shows a panel as a folder icon." },
     { id: "ADR-049", t: "Auto-collect rules", s: "Accepted", d: "A fence's rules watch the desktop (both folders) or any folder; new matching files (kinds by name, or patterns) become items in the first matching fence; never a file operation; removed stays removed; catch-up at start by watermark; a 2 s settle per burst.", c: "Files moved in while NeoFences was closed are not caught up; collect is written only for fences with rules." },
-    { id: "ADR-050", t: "Help lives on GitHub, linked from the app", s: "Accepted", d: "The guide is docs/GUIDE.md in the repo; tray Help and Settings Help (online guide) open its GitHub page; menu, setting or gesture changes update the guide in the same commit.", c: "Always the current guide; needs a network; Help 404s until the guide is on GitHub main." }
+    { id: "ADR-050", t: "Help lives on GitHub, linked from the app", s: "Accepted", d: "The guide is docs/GUIDE.md in the repo; tray Help and Settings Help (online guide) open its GitHub page; menu, setting or gesture changes update the guide in the same commit.", c: "Always the current guide; needs a network; Help 404s until the guide is on GitHub main." },
+    { id: "ADR-051", t: "The welcome lives in the first fence", s: "Accepted", d: "A fresh, writable start's first fence carries welcome: true and shows Sort my desktop…, Add item…, Guide while empty; its first item ends it; an Add from desktop that fills new fences removes it while still an untouched empty Fence; one tray notice on a fresh start.", c: "Updating copies never see it; no way to show it again; a fallback fresh start shows it, a read-only one never." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1433,7 +1445,8 @@ const HUB = {
     { date: "2026-10-05", topic: "M26 folder panels (merged)", done: "Panels replace folder views. Prototype probed on a copy of your data (you paused the first run), verified plan, native build, Opus review fixes (606 tests), live check AL (a tall panel's wheel fixed), merged locally.", next: "Auto-collect rules or pre-1.0 work" },
     { date: "2026-10-05", topic: "M27 auto-collect (merged)", done: "You chose auto-collect; prototype probed with a test folder; verified plan; native build; Opus review fixes (633 tests); live check AM; merged locally.", next: "Pre-1.0 work or polish" },
     { date: "2026-10-05", topic: "M28 polish (merged)", done: "All four groups; prototype + visual probe; verified plan; native build; Opus review fixes (643 tests); live check AN; merged locally.", next: "Pre-1.0 work or new ideas" },
-    { date: "2026-10-05", topic: "M29 guide for friends (merged)", done: "Spec + plan; native build; 8 demo screenshots (3 as JPEG); Opus review fixes (tray overflow, download warning, wording); guide rule in CLAUDE.md; live check AO1/AO2/AO4; merged locally.", next: "Released 0.17.0; next: pre-1.0 work or new ideas" }
+    { date: "2026-10-05", topic: "M29 guide for friends (merged)", done: "Spec + plan; native build; 8 demo screenshots (3 as JPEG); Opus review fixes (tray overflow, download warning, wording); guide rule in CLAUDE.md; live check AO1/AO2/AO4; merged locally.", next: "Released 0.17.0; next: pre-1.0 work or new ideas" },
+    { date: "2026-10-06", topic: "M30 first-run welcome (merged)", done: "Welcome in the first fence; spec + replay-verified plan; native build; Opus review fixes (read-only start, set-up welcome fence kept; 658 tests); live check AP; merged locally.", next: "Release 0.18.0" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1973,7 +1986,17 @@ const HUB = {
     ["09752a5", "docs: added the keep-the-guide-current rule to CLAUDE.md"],
     ["0c316d9", "docs: recorded the M29 guide as built and merged"],
     ["d38d789", "chore: bumped the version to 0.17.0"],
-    ["998134f", "docs: marked the 0.17.0 release as approved"]
+    ["998134f", "docs: marked the 0.17.0 release as approved"],
+    ["0ff7771", "docs: recorded the 0.17.0 release and refreshed the hub"],
+    ["00b55ae", "docs: pointed the hub at the 0.17.0 release commit"],
+    ["7b2b167", "docs: claimed M30 first-run welcome"],
+    ["2ca5aa3", "docs: added the M30 first-run welcome design spec"],
+    ["2b251d2", "docs: added the M30 first-run welcome plan"],
+    ["806913c", "feat: added the welcome fence flag and when the welcome ends"],
+    ["eece8da", "feat: added the welcome to the first fence and the first-start tray notice"],
+    ["e875f41", "docs: described the first-run welcome in the guide, README, ADR-051, architecture, features, checklist AP and the M30 note"],
+    ["0b22500", "fix: fixed the welcome showing on read-only starts and removing a welcome fence the user set up"],
+    ["2d16bda", "docs: added the welcome screenshot and the M30 live check results"]
   ]
 };
 /* ===== END HUB DATA ===== */

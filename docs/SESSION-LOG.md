@@ -658,3 +658,15 @@ AO3/AO5 by hand.
 mode on — a fullscreen video — so no update check ran, as designed; rerun when the screen was free: the installed 0.16.1
 updated itself in 3 s through the tray's Restart to update; data unchanged; the tray shows Help; plain restart back on
 GitHub updates), published; hub refreshed.
+
+## 2026-10-06 — M30 first-run welcome (0.18.0), built and merged
+
+**Done:** the user chose a first-run welcome inside the first fence: a fresh start's fence carries `welcome: true` and
+shows Welcome to NeoFences with **Sort my desktop…**, **Add item…**, **Guide**; its first item ends it; an Add from
+desktop that fills new fences removes the still-empty welcome fence; a tray notice on the first start says where the icon
+is. Hiding Windows' icons reuses the Add from desktop checkbox (spec ruling, approved in review). Prototype and
+replay-verified plan, native execution; Opus final review: a read-only start (older build, newer config) showed the
+welcome — fixed; a renamed or rule-holding welcome fence was removed by a sort — raised and fixed. 658 tests. Live check
+AP by script (the notice not caught on screen). Merged locally.
+**Decisions:** ADR-051.
+**Next:** release 0.18.0 when the user says so; AP3/AP4/AP7 and the notice by hand.

@@ -74,7 +74,13 @@ Milestone details and exit criteria: spec §9.
   - [ ] AO3 (links on GitHub) after the push; AO5 (quick start on a fresh user) by hand
   - [x] Released 0.17.0 on 2026-10-06 (the installed 0.16.1 updated itself in 3 s; data unchanged; tray shows Help)
   - Deferred minors: in `research/m29-guide.md`
-- [~] **M30 — 0.18.0: first-run welcome** (a welcome in the first fence, Sort my desktop, the tray notice) — claimed by session 2026-10-06 welcome
+- [x] **M30 — 0.18.0: first-run welcome** (a welcome in the first fence, Sort my desktop, the tray notice)
+  - [x] Spec, plan with replay-verified patches, native build (655 tests)
+  - [x] Opus review: 0 critical / 1 important (read-only start showed the welcome) + 1 raised minor (a set-up welcome fence removed), fixed (658 tests)
+  - [x] Live check AP1, AP2, AP5, AP6, AP8, AP9 by script; merged to main
+  - [ ] AP3, AP4, AP7 and the tray notice by hand
+  - [ ] Release 0.18.0 (asked first)
+  - Deferred minors: in `research/m30-welcome.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 
 ## Before the pivot
