@@ -601,3 +601,16 @@ check AK 11/13 scripted (CPU 0.016 % with four widgets). Merged locally.
 **Released:** 0.14.0 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.13.0 downloaded the
 update; the scripted tray Restart click did not land — an elevated Task Manager left open by AK8 was in front — so it
 installed on the next exit; 0.14.0 running, data unchanged; plain restart back on GitHub updates), published; hub refreshed.
+
+## 2026-10-05 — M26 the folder panel element (0.15.0), built and merged
+
+**Done:** the user chose the folder panel to replace folder-view fences: a folder item shown as Details (columns that
+sort), List or Icons inside any fence, browsing into subfolders (Back / Up / Home), 1–4 × 1–4 cells or Fill fence (ADR-048).
+Folder views migrate once to a fence holding one filling panel (a snapshot first). Prototype probed on a copy of the user's
+data (the user paused the first probe; ran on their go), plan with replay-verified patches, native execution; Opus final
+review "with fixes" (a panel leaving fill was clipped, panels could not move a cell in Free fences, arrow keys leaked to
+the fence, rows blinked during downloads; re-graded: safe migration saves, no snapshot per start with a read-only config,
+Sort by on a filled fence, invisible panel selection) — fixed, 606 tests. Live check AL by script; found and fixed: a panel
+taller than its fence hid its header (the wheel now scrolls the fence at the panel's ends). Merged locally.
+**Decisions:** ADR-048 (supersedes ADR-044's folder-view fence).
+**Next:** release 0.15.0 when the user says so; then auto-collect rules or pre-1.0 work.
