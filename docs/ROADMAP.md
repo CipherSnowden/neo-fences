@@ -87,7 +87,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Live check AQ1, AQ3, AQ4 by script (stats equal Afterburner); new guide shots; merged to main
   - [ ] AQ2 (light mode), AQ5 (Afterburner closed), AQ6 by hand
   - [x] Released 0.19.0 on 2026-10-06 (the installed 0.18.0 updated itself in 2 s; data unchanged)
-  - [ ] Then the user's desktop with every feature (Task 7 of the plan, asked first)
+  - [x] The user's desktop with every feature (2026-10-06): Desk top-left (Clock with date, Date, Stats), Clair Obscur and Detroit at 2×2 in a Free Games fence, Downloads as a Details panel; snapshot 2026-10-06 02:45 first
   - Deferred minors: in `research/m31-widgets.md` and the session log
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 

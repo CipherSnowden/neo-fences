@@ -695,3 +695,8 @@ temperature, HWiNFO DEAD; `PercentWidth.Of80` unused.
 release build in 7 min; draft with the delta package (424 KB); install check while the user was away (the installed
 0.18.0 updated itself in 2 s through the tray's Restart to update; data unchanged; plain restart back on GitHub
 updates); published; hub refreshed. The desktop setup with every feature waits for the user's picks.
+**Desktop set up (Task 7):** with the user's picks — a Desk fence top-left (Clock with date, Date, System stats at 3×3),
+Clair Obscur and Detroit at 2×2 first in a Free Games fence (taller; Downloads moved below it), Downloads' live panel
+switched to Details, newest first; the existing auto-collect rules kept. Snapshot `snapshot-2026-10-06_02-45-50` taken first
+(tray → Restore snapshot undoes it). Seen: a Free fence written without cells shows them arranged but pins them only
+at the next item change (noted for later).
