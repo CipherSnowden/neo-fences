@@ -9,7 +9,7 @@ Almost everything starts from two places:
 - **The fence menu** — right-click a fence's title or its empty space.
 - **The tray menu** — click NeoFences' icon in the notification area (left or right click).
 
-![A desktop with NeoFences: Games, Apps, Downloads and a Desk fence with widgets](guide/desktop.png)
+![A desktop with NeoFences: Games, Apps, Downloads and a Desk fence with widgets](guide/desktop.jpg)
 
 ## Contents
 
@@ -93,7 +93,7 @@ first so it can be undone.
 **Order:** drag to rearrange, or fence menu → **Sort by** (Name, Type, Date) to sort once. **Refresh** checks the links
 again and reloads their icons.
 
-![An item's menu](guide/item-menu.png)
+![An item's menu](guide/item-menu.jpg)
 
 ## 3. Games
 
@@ -107,7 +107,7 @@ Store**, the **game folders** you add, and game shortcuts on your desktop — an
 - A game's menu: **Open**, **Open install folder**, **Show as ▸ Cover tile / Icon**, **Copy path**, **Properties…**,
   **Remove from fence**. A game that is no longer installed says "Not installed".
 
-![A Games fence with covers](guide/games.png)
+![A Games fence with covers](guide/games.jpg)
 
 ## 4. Sizes and layout
 

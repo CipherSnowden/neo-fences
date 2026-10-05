@@ -5,7 +5,7 @@ desktop hold **links** to your apps, games, files, folders and websites — neve
 widgets (a clock, the date, system stats) and live folder panels. Built for a gaming PC first: it goes quiet while you
 play, and it never moves, renames or deletes anything of yours.
 
-![NeoFences on a desktop: a Games fence with covers, an Apps fence, a Downloads folder panel and widgets](docs/guide/desktop.png)
+![NeoFences on a desktop: a Games fence with covers, an Apps fence, a Downloads folder panel and widgets](docs/guide/desktop.jpg)
 
 ## Install
 
