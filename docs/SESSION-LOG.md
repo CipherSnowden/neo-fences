@@ -563,3 +563,6 @@ folder view), desktop icons hidden at the user's request.
 **Decisions:** ADR-045. The user: merge finished milestones into main locally until 1.0 (saved as feedback); item sizes
 1×1/1×2/2×1/2×2 later.
 **Next:** release 0.12.0 when the user says so; then the folder panel element, widgets or element sizes.
+**Released:** 0.12.0 on 2026-10-05 — CI green, draft with the delta package, install check (the installed 0.11.0 updated itself in
+2 s; the user's Games fence became 12 game items after the safety snapshot; plain restart back on GitHub updates),
+published with a plain first line; hub refreshed.

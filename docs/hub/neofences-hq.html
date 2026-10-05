@@ -786,11 +786,12 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-05",
-  commit: "acc50b6",
-  phase: "0.11.0 — folder views",
-  current: "0.11.0 RELEASED and installed (your 0.10.1 updated itself): folder views — a fence shows one folder live, read-only · next candidate: one kind of fence with per-fence settings (your idea)",
+  commit: "3589ed5",
+  phase: "0.12.0 — games as items",
+  current: "0.12.0 RELEASED and installed (your 0.11.0 updated itself): one kind of fence — games are items in any fence, as covers or icons; your Games fence became game items · next: your pick (a folder panel element, widgets, element sizes)",
   waiting: [
-    "NEW in 0.11.0 — folder views: tray or fence menu → New folder view…, or right-click a folder item → Show as folder view. The fence shows that folder live (Downloads, a games folder, a USB stick), read-only: open, copy path, Add to fence ▸, drag out as a copy. Fence menu → Folder view settings… for files/folders only, types like *.png;*.jpg, sort, only the newest N. Downloads and Screenshots start newest first; past 500 entries a \"+ N more — Open folder\" line. A missing folder says \"Folder not available\"; fence menu → Refresh lists again.",
+    "NEW in 0.12.0 — games are items: put any game in any fence next to your apps (Ctrl+drag a cover into Apps); right-click → Show as → Cover tile / Icon. Fence menu → Add games… lists every game found. Settings → Game Library → New games go to picks the fence that gets newly installed games. An uninstalled game dims with ⚠ and comes back when reinstalled. Your Games fence is now a normal fence (tray → Restore snapshot has \"Before games became items\").",
+    "In 0.11.0 — folder views: tray or fence menu → New folder view…, or right-click a folder item → Show as folder view. The fence shows that folder live (Downloads, a games folder, a USB stick), read-only: open, copy path, Add to fence ▸, drag out as a copy. Fence menu → Folder view settings… for files/folders only, types like *.png;*.jpg, sort, only the newest N. Downloads and Screenshots start newest first; past 500 entries a \"+ N more — Open folder\" line. A missing folder says \"Folder not available\"; fence menu → Refresh lists again.",
     "In 0.10.1 — programs added from the app list show readable names (\"7-Zip File Manager\", not a long ID) and Shift+right-click gives Windows' own menu for them. Add from desktop… is quick when you have a Game Library fence and puts This PC / Control Panel shortcuts under Folders and files. Fix all only leaves an undo snapshot when it fixed something.",
     "In 0.10.0 — Add item… → Browse ▾ → An app… lists every Start app (Store apps too), or drag an app from Start → All onto a fence. Tray or fence menu → Add from desktop… turns your desktop into fences in one dialog (add D:\\GameLibrary in Settings → Game Library so your games sort into Games). After a Locate…, NeoFences offers to fix the other missing items from the same old place; tray → Restore snapshot → Undo the last restore or fix puts them back.",
     "In 0.9.0 — virtual items: drop files, folders, apps or browser links onto a fence (right-click → Add item… works too). Each item has its own name and icon (Properties); removing an item or a fence never touches the file. Renamed targets are followed; missing ones dim with a ⚠ and offer Locate…; a pulled USB stick dims its items until it is back.",
@@ -798,6 +799,12 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M22 · One kind of fence: games as items (0.12.0)", items: [
+      { t: "Your direction: no fence types — a fence holds elements; their kind and settings decide the look. First step: games as items (cover or icon, Add games…, new games go to a chosen fence)", s: "done" },
+      { t: "Prototype probed on a copy of your data, verified plan, native build; Opus review: 5 important + 2 re-graded fixed (515 tests)", s: "done" },
+      { t: "Live check AH 18/18 while the PC was in my care (screenshots sent); merged locally (your rule until 1.0); released 0.12.0 — your 0.11.0 updated itself and your Games fence became game items", s: "done" },
+      { t: "Later: a folder panel element, widgets (clock, calendar), element sizes 1×1 / 1×2 / 2×1 / 2×2", s: "todo" }
+    ]},
     { group: "M21 · Folder views (0.11.0)", items: [
       { t: "You chose: dynamic collections → folder views only; subfolders open in Explorer; types, files/folders only, newest N; all four uses (games, work, Downloads, USB)", s: "done" },
       { t: "Prototype, plan with replay-verified patches, native build; Opus review: drive-root views, log once per outage, Browse on a dead share + 3 re-graded fixes (502 tests)", s: "done" },
@@ -1082,7 +1089,8 @@ const HUB = {
     { id: "M19", name: "Apps, bulk fix, Add from desktop (0.10.0)", goal: "Store/Start apps as items, bulk fix of missing items with undo, Add from desktop…, the M18 reliability leftovers — released as 0.10.0", s: "done" },
     { id: "M20", name: "Small fixes (0.10.1)", goal: "The deferred M19 review minors — released as 0.10.1", s: "done" },
     { id: "M21", name: "Folder views (0.11.0)", goal: "A fence that shows one folder live, read-only (ADR-044) — released as 0.11.0", s: "done" },
-    { id: "Next", name: "Next", goal: "Candidate (your idea): one kind of fence with per-fence settings for items, games and folder views; auto-collect rules later", s: "todo" }
+    { id: "M22", name: "Games as items (0.12.0)", goal: "One kind of fence, first step: games are items in any fence (ADR-045) — released as 0.12.0", s: "done" },
+    { id: "Next", name: "Next", goal: "Your pick: a folder panel element, widgets (clock, calendar), element sizes; auto-collect rules later", s: "todo" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
@@ -1093,6 +1101,7 @@ const HUB = {
     { v: "0.10.0", s: "done", scope: "Store and Start apps as items (app list, drag from Start), bulk fix of missing items after one Locate… (undo from the tray), Add from desktop… (grouped into fences), generic icons for unreachable targets, no stalls on dead shares. Released 2026-10-05; the installed 0.9.0 updated itself." },
     { v: "0.10.1", s: "done", scope: "Small fixes (M20): readable app names and Windows' menu for apps, faster Add from desktop with a Game Library, Windows-place shortcuts sorted as folders, bulk-fix undo only when something is fixed, stale records dropped. Released 2026-10-05; the installed 0.10.0 updated itself." },
     { v: "0.11.0", s: "done", scope: "Folder views (M21): a fence shows one folder live, read-only — types, files/folders only, newest N, kept sort, 500 cap with + N more, not available / Refresh, follows the folder's rename; Show as folder view on folder items. Released 2026-10-05; the installed 0.10.1 updated itself." },
+    { v: "0.12.0", s: "done", scope: "Games as items (M22): any game in any fence as a cover tile or an icon, Add games…, new games go to a chosen fence, not-installed games dim and come back; the Game Library fence became game items (a snapshot first). Released 2026-10-05; the installed 0.11.0 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1202,7 +1211,8 @@ const HUB = {
     ["Live blur over Wallpaper Engine", "—", "v1", "M0/M2", "wip", "Layered + accent blur (ADR-011); tint approved", "extra"],
     ["Blur strength per Windows tone", "—", "v1.7", "M14", "done", "Background strength slider (ADR-036)", "extra"],
     ["Wallpaper-adaptive accent colour", "—", "v1.7", "M14", "done", "Wallpaper Engine preview → Windows wallpaper → accent (ADR-036)", "extra"],
-    ["Game Library fence with cover art", "—", "v1.5", "M12", "done", "A game dragged into a fence becomes an item (0.9) (ADR-032)", "extra"],
+    ["Game Library with cover art", "—", "v1.5", "M12", "done", "Since 0.12 games are items in any fence, cover or icon (ADR-032, ADR-045)", "extra"],
+    ["One kind of fence (elements decide their look)", "—", "0.12", "M22", "wip", "Games done; next: folder panel, widgets, element sizes (ADR-045)", "extra"],
     ["Store / Start apps as items", "—", "0.10", "M19", "done", "App list (Add item… → An app…) or a drag from Start; Missing when uninstalled (ADR-042)", "extra"],
     ["Add from desktop…", "—", "0.10", "M19", "done", "Desktop grouped into Games / Apps / Folders and files / Web links, each into a fence (ADR-042)", "extra"],
     ["Bulk fix of missing items", "—", "0.10", "M19", "done", "After one Locate…, the others from the same old place; undo from the tray (ADR-042)", "extra"],
@@ -1263,7 +1273,8 @@ const HUB = {
     { id: "ADR-041", t: "Items in their own items.json; saves never prune item lists", s: "Accepted, amended in M18", d: "Config (schema 5) and virtual items live in separate files with the same safe store (atomic write, .bak, daily backups, corrupt recovery, read-only for newer schemas). Amended after review: saves never drop item lists, so a fallback config never costs items.", c: "Two files can disagree after a crash in between: the config is written first, an unused list stays harmless." },
     { id: "ADR-042", t: "0.10.0: Store apps as items, bulk fix with an undo snapshot, Add from desktop", s: "Accepted", d: "App items are shell:AppsFolder\\<AppUserModelID> (opened through Explorer, Missing when uninstalled; from an app list or dragged from Start). After a Locate…, the other missing or unavailable items under the same old folder are offered when their files exist at the new place; Fix saves a snapshot in the restore slot first. Add from desktop groups the desktop (Games / Apps / Folders and files / Web links) into fences; items point at the desktop entries.", c: "App items take no arguments or run as admin; one undo slot for restores and fixes; deleting a desktop shortcut later makes its item Missing." },
     { id: "ADR-043", t: "The name stays NeoFences", s: "Accepted", d: "The product, executable, folders and code keep the name NeoFences; a personal project for now; revisited only if it is ever distributed more widely. Supersedes ADR-009.", c: "No rename work; the trademark question stays a listed risk." },
-    { id: "ADR-044", t: "Folder views: fences that show one folder live, read-only", s: "Accepted", d: "A fence is items, the Game Library, or a folder view (Fence.View: path, show, sort, newest, patterns; schema stays 5). NeoFences never writes to the folder: drops refused, no rename/delete in its menu (Windows' Shift+right-click menu stays). Subfolders open in Explorer; 500 cap; listing reuses the Library's FolderLister.", c: "Two watchers per view, no limit on views; auto-collect rules later." }
+    { id: "ADR-044", t: "Folder views: fences that show one folder live, read-only", s: "Accepted", d: "A fence is items, the Game Library, or a folder view (Fence.View: path, show, sort, newest, patterns; schema stays 5). NeoFences never writes to the folder: drops refused, no rename/delete in its menu (Windows' Shift+right-click menu stays). Subfolders open in Explorer; 500 cap; listing reuses the Library's FolderLister.", c: "Two watchers per view, no limit on views; auto-collect rules later." },
+    { id: "ADR-045", t: "One kind of fence: games become items", s: "Accepted", d: "A game item is a virtual item with GameId pointing at NeoFences' own shortcut; ShowAs cover/icon. The library scan is the engine (runs while games are wanted); new games go to Library.NewGamesFence; an old library fence becomes game items once, after a safety snapshot. Kinds stay in the code.", c: "Only games no fence holds are added, never on a first scan; uninstalled games dim and come back." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1344,7 +1355,8 @@ const HUB = {
     { date: "2026-10-04", topic: "M18 virtual items → 0.9.0", done: "Spec (items in their own items.json), plan, inline build, Opus review fixes, live check with you (32/32, five bugs fixed incl. a stick pulled without Safely remove), merged, released and installed 0.9.0. Then: this hub rewritten for virtual items, CI actions on v5, test files deleted.", next: "Use 0.9.0; name + signing before 1.0.0; then M19" },
     { date: "2026-10-05", topic: "M19 apps, bulk fix, Add from desktop → 0.10.0", done: "You went straight to 0.10.0 (name stays NeoFences). Prototype with live probes, a plan of replay-verified patches, native build, Opus review fixes, live check with you (29/30), merged, released — your installed 0.9.0 updated itself to 0.10.0.", next: "M20: deferred minors, dynamic collections" },
     { date: "2026-10-05", topic: "M20 small fixes → 0.10.1", done: "You picked small fixes only. The 8 deferred M19 minors fixed test-first (one left as is by your choice), live check AF 4/4 while the PC was in my care, merged, released — your installed 0.10.0 updated itself to 0.10.1.", next: "Your pick; dynamic collections later" },
-    { date: "2026-10-05", topic: "M21 folder views → 0.11.0", done: "You picked folder views. Prototype, verified plan, native build, Opus review fixes, live check (19 pass, screenshots sent), stacking bug found and fixed, merged, released — your installed 0.10.1 updated itself to 0.11.0.", next: "Candidate: one kind of fence with per-fence settings (your idea)" }
+    { date: "2026-10-05", topic: "M21 folder views → 0.11.0", done: "You picked folder views. Prototype, verified plan, native build, Opus review fixes, live check (19 pass, screenshots sent), stacking bug found and fixed, merged, released — your installed 0.10.1 updated itself to 0.11.0.", next: "Candidate: one kind of fence with per-fence settings (your idea)" },
+    { date: "2026-10-05", topic: "M22 games as items → 0.12.0", done: "Your direction: no fence types. Desktop populated and icons hidden for you; prototype probed on a copy of your data, verified plan, native build, Opus review fixes, live check 18/18 (screenshots sent), merged locally, released — your 0.11.0 updated itself and Games became game items.", next: "Your pick: folder panel, widgets or element sizes" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -1789,7 +1801,20 @@ const HUB = {
     ["45cad72", "docs: added the M21 live check results"],
     ["14d135b", "docs: recorded M21 done and merged, release 0.11.0 next"],
     ["7645ef0", "chore: bumped the version to 0.11.0"],
-    ["acc50b6", "docs: marked the 0.11.0 release as approved"]
+    ["acc50b6", "docs: marked the 0.11.0 release as approved"],
+    ["3ece957", "docs: recorded the 0.11.0 release, the one-kind-of-fence idea and refreshed the hub"],
+    ["7c44a82", "docs: noted the item sizes idea for later"],
+    ["02beaba", "docs: claimed M22 (0.12.0 games as items)"],
+    ["7838bc1", "docs: added the M22 games as items design spec"],
+    ["3af63d4", "docs: added the M22 games as items implementation plan"],
+    ["f68789f", "feat: added game items to the core: migration, new games, retarget and the new-games fence"],
+    ["889fd32", "feat: made games items in any fence, shown as covers or icons, with Add games and a new-games fence"],
+    ["d3c1f5a", "docs: described games as items in ADR-045, architecture, features, checklist AH and the M22 research note"],
+    ["e584b50", "fix: fixed the M22 review findings: dimmed not-installed covers, read-only game targets, no flood of new games on a first scan, safe migration saves, returning games not copied, safe defaults in the not-installed question and Windows' menu"],
+    ["060f7b3", "docs: added the M22 live check results"],
+    ["815ee11", "docs: recorded M22 done and merged, release 0.12.0 next"],
+    ["4a1ca67", "chore: bumped the version to 0.12.0"],
+    ["3589ed5", "docs: marked the 0.12.0 release as approved"]
   ]
 };
 /* ===== END HUB DATA ===== */
