@@ -1214,3 +1214,24 @@ game and app folders, work folders, Downloads and Screenshots, and USB sticks, e
 
 **Consequences.** Each view holds two `FileSystemWatcher`s and, on a removable drive, a removal notice; no limit on the
 number of views (personal use). Auto-collect rules stay for later.
+
+## ADR-045 — One kind of fence: games become items
+**Date:** 2026-10-05 · **Status:** Accepted · **Refines:** ADR-032 (Game Library), ADR-044 (folder views)
+
+**Context.** The user (2026-10-05): fences should not have types to choose. A fence is a container of elements whose
+kind and own settings decide how they look; later it also holds a folder panel, widgets (clock, calendar) and elements
+of several sizes. The first step (M22, 0.12.0) makes games ordinary items.
+
+**Decision.**
+- A game item is a virtual item with `GameId` whose target is NeoFences' own shortcut for the game in `library\`;
+  `ShowAs` (Cover / Icon, null = cover) picks its look. Opening, Missing, drag, Properties and snapshots are the items'.
+- The library scan is the engine, not a fence: it runs while game items exist, `Library.NewGamesFence` is set, or Add
+  games… is open. After each scan game items follow their game's current shortcut (`Retarget`) and games no earlier scan
+  had go to `NewGamesFence`.
+- An old Game Library fence becomes an items fence with one game item per game, once, after a snapshot "Before games
+  became items"; it becomes the new-games fence when none is chosen.
+- Kinds stay in the code (`Fence.IsLibrary`, `FenceKind.Library`); "New Game Library fence" leaves the menus.
+- Folder views stay a fence setting for now (not decided).
+
+**Consequences.** A removed game item is not added again; an uninstalled game's items show "not installed" and come back
+on reinstall. Hiding games stays in Settings. Mixed fences size each cell by its item (tile or icon).

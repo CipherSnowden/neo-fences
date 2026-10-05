@@ -572,3 +572,21 @@ Added after the M19 final review:
 | AG20 | A view of the pendrive's root `G:\` (New folder view… → the drive) | the stick's own root is listed (not some folder on G: NeoFences was started in); title "G:" |
 | AG21 | A view of an unreachable share (`\\nosuchhost\share`) → Folder view settings… → Browse… | the window greys for at most 2 s, then the folder dialog opens at Windows' default place; no fence freezes |
 | AG22 | Leave a view's stick unplugged for a minute; read the log | one "cannot watch" warning for the outage, not one every 7 s |
+
+## AH — 0.12.0 games as items (M22)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AH1 | Start 0.12.0 with a Game Library fence | the fence is now a normal fence with the same games in the same order, as cover tiles; tray → Restore snapshot lists "Before games became items (…)"; Settings → Game Library → New games go to: that fence |
+| AH2 | Tray and fence menus | no "New Game Library fence"; fence menu of an items fence has "Add games…" |
+| AH3 | Ctrl+drag a game tile into another fence (Apps) | a copy there, shown as a cover tile; its row grows, other cells keep their size |
+| AH4 | Right-click it → Show as → Icon; then back to Cover tile | an icon cell like the apps around it; then the tile again |
+| AH5 | Right-click a game item | Open · Show as · Open install folder · Copy path · Properties… · Remove from fence; Open install folder opens the game's folder |
+| AH6 | Properties → a name of your own | the name shows under the cover; the target box is NeoFences' shortcut |
+| AH7 | Fence menu → Add games… in Apps | every game listed with its source; games already in Apps unticked and marked "already here"; Add puts the ticked ones at the end |
+| AH8 | A new game: a new sub-folder with a .exe in `D:\GameLibrary` (test), wait for the scan | a new item at the end of the new-games fence; nowhere else |
+| AH9 | Remove that test folder; wait for the scan | its items show "Not installed" (dimmed, ⚠); opening asks "… is not installed" with Remove from fence / Cancel (no Locate…) |
+| AH10 | Put the test folder back | the items are back by themselves |
+| AH11 | Settings → New games go to: Nowhere; add another test game | no item added anywhere |
+| AH12 | Restore the "Before games became items" snapshot | the library fence comes back and becomes game items again (one more snapshot first) |
+| AH13 | Delete the new-games fence | Settings → New games go to: Nowhere |
