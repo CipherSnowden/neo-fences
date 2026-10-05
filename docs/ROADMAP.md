@@ -86,7 +86,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Opus review: 0 critical / 5 important (odd names, per-value sources, the graphics card by video memory, 2×2 legibility) + RAM installed, fixed (682 tests)
   - [x] Live check AQ1, AQ3, AQ4 by script (stats equal Afterburner); new guide shots; merged to main
   - [ ] AQ2 (light mode), AQ5 (Afterburner closed), AQ6 by hand
-  - [ ] Release 0.19.0 (asked first)
+  - [ ] Release 0.19.0 (the user approved the release 2026-10-06)
   - [ ] Then the user's desktop with every feature (Task 7 of the plan, asked first)
   - Deferred minors: in `research/m31-widgets.md` and the session log
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
