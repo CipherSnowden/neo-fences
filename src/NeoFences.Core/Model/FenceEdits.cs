@@ -90,7 +90,11 @@ public static class FenceEdits
     {
         Require(config, fenceId);
         config = FenceTabs.Leave(config, fenceId);
-        return config with { Fences = config.Fences.Where(fence => fence.Id != fenceId).ToList() };
+        return config with
+        {
+            Fences = config.Fences.Where(fence => fence.Id != fenceId).ToList(),
+            Library = config.Library.NewGamesFence == fenceId ? config.Library with { NewGamesFence = null } : config.Library, // M22
+        };
     }
 
     private static Fence Require(NeoFencesConfig config, string fenceId) =>

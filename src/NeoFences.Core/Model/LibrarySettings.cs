@@ -10,6 +10,9 @@ public sealed record LibrarySettings
 
     /// <summary>Game ids the user hid ("steam:431960").</summary>
     public IReadOnlyList<string> Hidden { get; init; } = [];
+
+    /// <summary>The fence newly installed games go to (M22), or null: nowhere.</summary>
+    public string? NewGamesFence { get; init; }
 }
 
 /// <summary>Which sources the library reads; all on by default.</summary>

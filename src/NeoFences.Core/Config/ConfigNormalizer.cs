@@ -52,7 +52,11 @@ public static class ConfigNormalizer
             Settings = settings,
             Fences = FenceTabs.Repair(fences), // M9: one consistent box per tab
             Layouts = NormalizeLayouts(config.Layouts),
-            Library = NormalizeLibrary(config.Library),
+            Library = NormalizeLibrary(config.Library) with
+            {
+                // M22: only a fence that holds items (not a folder view, not gone)
+                NewGamesFence = fences.Any(fence => fence.Id == config.Library?.NewGamesFence && fence.View is null) ? config.Library!.NewGamesFence : null,
+            },
         };
     }
 

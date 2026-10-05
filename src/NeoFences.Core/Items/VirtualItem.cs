@@ -14,6 +14,9 @@ public sealed record ItemIcon
     public string? Image { get; init; }
 }
 
+/// <summary>How an item shows (M22): a game item is a cover tile unless set to an icon; other items ignore it so far.</summary>
+public enum ItemShow { Cover, Icon }
+
 /// <summary>What an item points at. A path may be a file or a folder: that is known only when it is checked.</summary>
 public enum ItemKind { Path, Website, Special }
 
@@ -42,6 +45,12 @@ public sealed record VirtualItem
 
     /// <summary>Shown as the item's tooltip.</summary>
     public string? Note { get; init; }
+
+    /// <summary>A game (M22): the Game Library's id for it; the target is NeoFences' own shortcut for the game.</summary>
+    public string? GameId { get; init; }
+
+    /// <summary>Null: the item's usual look (a game's cover tile).</summary>
+    public ItemShow? ShowAs { get; init; }
 
     [JsonIgnore]
     public ItemKind Kind => ItemKinds.Of(Target);
