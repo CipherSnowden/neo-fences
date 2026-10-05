@@ -65,7 +65,7 @@ Milestone details and exit criteria: spec §9.
 - [ ] **M28 — 0.16.1: polish** (the 20 deferred minors of M24–M27; spec 2026-10-05-polish-design)
   - [x] Prototype (a visual probe caught a template bug), plan with replay-verified patches, native build; Opus review: 0 critical / 0 important, 5 re-graded minors fixed (643 tests)
   - [x] Live check TEST-CHECKLIST AN by script (the rest by hand later); merged to main
-  - [ ] Release 0.16.1 (asked first)
+  - [ ] Release 0.16.1 (the user approved the sequence 2026-10-05; cover-wide cells in mixed icon-only fences kept)
   - Deferred minors: in `research/m28-polish.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
 

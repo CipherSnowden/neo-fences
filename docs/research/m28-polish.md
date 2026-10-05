@@ -34,8 +34,8 @@ Re-graded and fixed (App; checklist rows AN15–AN20):
 - **M7 → fixed** (a late "Add these N too?" could pop over a fullscreen game) — dropped (logged) in game mode (AN19).
 - **M6, M8** — ARCHITECTURE says "rebuilt only when a value changes" for W2; rows AN15 (A2), AN16 (G3) added. G6 is App
   and A4 departed, so neither has a Core test.
-- **M5 — ruling kept**: cover-wide cells in an icon-only fence with any cover; the mixed case is row AN20 (asked of the
-  user in the release message).
+- **M5 — ruling kept**: cover-wide cells in an icon-only fence with any cover; the mixed case is row AN20 (the user
+  chose to keep it, 2026-10-05).
 
 Deferred minor:
 - Covers are decoded twice on an icon-size change (as before M28).
