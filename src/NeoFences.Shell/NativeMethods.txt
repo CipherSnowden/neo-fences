@@ -211,3 +211,13 @@ SHCreateItemFromIDList
 SHGetKnownFolderPath
 FOLDERID_Downloads
 FOLDERID_Screenshots
+GetSystemTimes
+GlobalMemoryStatusEx
+GetDiskFreeSpaceEx
+PdhOpenQuery
+PdhAddEnglishCounter
+PdhCollectQueryData
+PdhGetFormattedCounterArray
+PdhCloseQuery
+PDH_FMT
+PDH_MORE_DATA
