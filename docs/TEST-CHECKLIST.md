@@ -763,3 +763,21 @@ Added after the M19 final review:
 | AR6 | HWiNFO sharing switched off (DEAD), then on again | tiles fall back, then return |
 | AR7 | A two-GPU PC at idle without Afterburner or HWiNFO | GPU TEMP steady on the GPU first chosen (the graphics card on a desktop) |
 | AR8 | Windows Region → Regional format: Japanese; clock with the date line | "10月5日 月曜日" (weekday last); back to the user's format afterwards |
+
+## AS — 0.20.0 safety net (M33)
+
+Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once it runs); Release for AS5–AS11.
+
+| ID | Steps | Expected |
+|---|---|---|
+| AS1 | One crash | restarted within seconds (log "unclean exit"); update check within ~10 s |
+| AS2 | Three crashes in 10 minutes | safe mode: notice "NeoFences started in safe mode", tray **Leave safe mode**, Settings banner; no mouse hook, widgets still, panels as folder items, no collect |
+| AS3 | A crash in safe mode | the "NeoFences stopped" window; **Close** ends it and nothing restarts |
+| AS4 | **Start from a backup** in that window | a "Before starting from a backup" snapshot; safe mode starts with the newest daily backup |
+| AS5 | End the watchdog process in Task Manager while NeoFences runs | a new watchdog within ~10 s; after Exit no watchdog is left |
+| AS6 | Select 3 items, **Del** | no question; "Removed 3 items · Undo" bar; **Undo** brings them back in place; again with **Ctrl+Z** |
+| AS7 | Fence menu → Delete fence | no question; snapshot "Before deleting …", notice; **Ctrl+Z** or tray **Undo delete (name)** brings it back where it was |
+| AS8 | Lock `config.json` (another program holding it) and start | after ~5 s a read-only start: notice "Changes are not saved this session" and the Settings banner |
+| AS9 | Settings: both desktop gestures off | log says no mouse hook; right-click on the desktop is Windows' own; one switch on → only that gesture works |
+| AS10 | Open the newest log | the profile folder shows as `%USERPROFILE%`, never the user name |
+| AS11 | Safe mode → tray **Leave safe mode** | NeoFences restarts normally; widgets, panels and gestures back |

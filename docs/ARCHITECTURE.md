@@ -171,6 +171,16 @@ games… is open; after each scan game items follow their game's shortcut and ne
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
+**0.20.0 (M33, safety net)**: a crash loop ends visibly — normal restarts (`--restarted`, update check about 10 s in),
+then safe mode at the limit (`--safe-mode`: fences only, no hook, widget timers, panels, collect or accents; notice, banner,
+tray Leave safe mode), then the "NeoFences stopped" window when safe mode crashes too (`--stopped`; `CrashRecovery.Decide`,
+`safe-mode-<pid>` marker; ADR-053). The main process keeps its watchdog alive (`watchdog-<pid>`) and writes the
+icons-hidden marker before hiding. One-level undo (`Undo`, ADR-054): undo bar and Ctrl+Z after removing items, a snapshot
+and tray Undo delete after deleting a fence, no questions. Save problems are shown once (notice and banner) and a locked
+file is retried about 5 s before a read-only session; any parse or repair failure counts as damage and falls back to the newest
+good backup. Settings switches for the two desktop gestures (both off: no mouse hook). Logs capped at 10 MB per file with
+the profile path as `%USERPROFILE%` (`LogPrivacy`, `PrivateLogFormatter`). `research/m33-safety-net.md`.
+
 **0.19.1 (M32, polish)**: the M31 leftovers — the widgets' bars follow an accent change at once (`ApplyWidgetBar` on every
 `ImmersiveColorSet` and DWM colour change), the sensor copy is a rented buffer taken under HWiNFO's mutex, the main GPU is sticky per source
 (`Widgets.StickyGpu`), "—" tiles without a hint have no empty line, the first-start notice waits for a game to end, the

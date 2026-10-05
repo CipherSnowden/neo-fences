@@ -1376,3 +1376,39 @@ switched on again). NeoFences never starts, closes or configures them. A later s
 least twice its video memory and 1 GB more (`Widgets.StickyGpu`), so the tiles do not flip back and forth once a GPU is chosen (a
 hybrid laptop's first choice at an idle start may still be the built-in GPU until the card uses clearly more). HWiNFO's copy is taken while holding `Global\HWiNFO_SM2_MUTEX` (at most 20 ms;
 without it as before). The copy is a rented buffer.
+
+## ADR-053 — Safe mode after a crash loop, then a "stopped" window
+**Date:** 2026-10-06 · **Status:** Accepted
+
+**Context.** Until 0.19 the watchdog restarted NeoFences after a crash at most 3 times in 10 minutes and then stayed down
+without a word: a friend whose PC trips a bug saw fences vanish and never learned why. The cause is often an extra (a
+widget's sensor, a folder panel on a slow drive, a collect rule, the mouse hook) rather than the fences themselves.
+
+**Decision.** `CrashRecovery.Decide` (Core) picks the restart: below the limit a normal restart (`--restarted`, which also
+checks for an update about 10 seconds in); at the limit **safe mode** (`--safe-mode`): fences and items only — no mouse hook,
+no widget timers, folder panels as plain folder items, no auto-collect, no wallpaper accent, no hidden desktop icons — with
+a notice, a Settings banner and tray **Leave safe mode**. Safe mode writes a `safe-mode-<pid>` marker; when safe mode
+crashes too, the watchdog starts NeoFences with `--stopped`, which shows only the "NeoFences stopped" window (**Open
+logs**, **Start from a backup**, **Close**) and starts nothing else. A session ending never shows the window. Start from a
+backup saves a snapshot of the current setup first, puts the newest daily backups in place and starts safe mode. Leave
+safe mode clears the crash count and starts normally. The main process keeps its watchdog alive (it finds it by the `watchdog-<pid>` file,
+waits for it to end and starts another) and writes the icons-hidden marker before it hides any icon.
+
+**Consequences.** A crash loop always ends visibly. Safe mode looks plainer (no widgets updating, panels as folders) — the
+banner says why. The Debug-only test crash (`NEOFENCES_TEST_CRASH=1`) makes the path testable live; Release has no switch.
+
+## ADR-054 — One-level undo for removals and fence deletions
+**Date:** 2026-10-06 · **Status:** Accepted
+
+**Context.** Removing several items asked first; deleting a fence asked first; a slip still cost the fence's layout.
+Questions interrupt, and people click Yes without reading.
+
+**Decision.** No question. `Undo` (Core) keeps one entry in memory: the last removal (items with their fence and position)
+or the last fence deletion (the fence, its places on every screen layout and its items; a deleted tab comes back as its own
+fence). Removing shows an undo bar in the fence for about 10 seconds ("Removed 3 items · Undo"); **Ctrl+Z** in a fence
+undoes too (not while a title is being edited). Deleting a fence first takes a snapshot ("Before deleting <name>"), shows a
+notice, and tray **Undo delete (<name>)** stays for 2 minutes. Undo puts back only what is missing, so later edits stay; a
+snapshot restore clears the entry. Nothing is written to disk for undo.
+
+**Consequences.** One level only (the next removal replaces it) and lost on exit — the snapshot covers a deleted fence
+after that. A multi-level history can grow from `UndoEntry` later.

@@ -74,7 +74,8 @@ when you click its title (choose in **Settings → Fences → Rolled-up fences o
 title strip), how solid the background is and the title font are in **Settings → Appearance**. **Colour fences from the
 wallpaper** picks each fence's colour from the wallpaper behind it — Wallpaper Engine included.
 
-**Delete:** fence menu → **Delete fence (your files are not touched)**. Only the fence and its links go.
+**Delete:** fence menu → **Delete fence (your files are not touched)**. Only the fence and its links go. NeoFences
+takes a snapshot first; **Ctrl+Z** in a fence, or tray → **Undo delete**, brings it back for 2 minutes.
 
 ![The fence menu](guide/fence-menu.png)
 
@@ -108,7 +109,8 @@ that is not connected just shows dimmed. Opening a missing one asks: **Locate…
 fence**, or Cancel. After a Locate…, NeoFences offers to fix the other items that moved the same way, with a snapshot
 first so it can be undone.
 
-**Remove:** **Del** or **Remove from fence**. The file is never touched.
+**Remove:** **Del** or **Remove from fence**. The file is never touched. An **Undo** bar shows for a few
+seconds; **Ctrl+Z** in the fence works too.
 
 **Order:** drag to rearrange, or fence menu → **Sort by** (**Name**, **Type**, **Date (newest first)**) to sort once. **Refresh** checks the links
 again and reloads their icons.
@@ -196,6 +198,8 @@ catches up afterwards.
   NeoFences exits — also after a crash or if it is ended in Task Manager.
 - **Quick-hide:** double-click empty desktop to hide every fence (and the desktop icons) at once; double-click again, or
   tray → **Quick-hide**, to bring them back.
+- **Gesture switches:** **Settings → General → Double-click the desktop to quick-hide** and **Right-drag on the desktop
+  to draw a fence** turn each gesture off. With both off, NeoFences does not watch mouse clicks at all.
 - **Peek:** **Ctrl+Alt+Space** lifts all fences above your open windows; press it again, **Esc**, click outside, or open
   something to send them back. Change the keys in **Settings → General → Peek hotkey**.
 - **Pause:** tray → **Pause NeoFences** gives the desktop back to Windows (fences hidden, icons shown) until you resume.
@@ -255,9 +259,18 @@ Tray or fence menu → **Settings…**:
   App Control is on.
 - **A fence is off-screen** after changing monitors: NeoFences moves fences back onto a screen by itself when the displays
   change; if one still hides, **Settings → Snapshots → Restore** an earlier layout.
+- **"NeoFences started in safe mode"**: it stopped unexpectedly several times in a row, so it started with fences
+  only (no widgets updating, folder panels as plain folders, no gestures, no auto-collect). Tray → **Leave safe mode**
+  starts it normally again. If it keeps stopping, report it with the log.
+- **"NeoFences stopped after repeated crashes"**: safe mode stopped too. **Open logs** for the report; **Start from a
+  backup** saves your current setup as a snapshot and starts safe mode with the newest daily backup; **Close** leaves it
+  off until you start it again.
+- **"Changes are not saved"**: NeoFences could not read or write its files (another program locking them, or a file from
+  a newer version). Your fences work, but changes are lost at exit; restart NeoFences, and see the log.
 - **Something went wrong:** **Settings → About and logs → Open logs folder** and look at the newest file; report problems
   on the project's [GitHub Issues page](https://github.com/CipherSnowden/neo-fences/issues) with what you did and that
   log.
+  Logs never contain your Windows user name (the profile folder is written as `%USERPROFILE%`).
 - **CPU TEMP shows "—"**: start MSI Afterburner (with "CPU temperature" ticked in its Settings → Monitoring) or HWiNFO64 (in HWiNFO, turn on "Shared Memory Support" in its
   settings; the free version turns it off again after 12 hours).
 
@@ -275,6 +288,7 @@ Tray or fence menu → **Settings…**:
 | Item | Double-click or **Enter** | Open |
 | Item | Right-click / **Shift+right-click** | NeoFences' menu / Windows' menu |
 | Item | **Del** | Remove from fence (the file stays) |
+| Fence | **Ctrl+Z** | Undo the last removal or fence deletion |
 | Item | **F2** / **Alt+Enter** | Properties |
 | Item | Drag / **Ctrl**+drag | Move / copy (to another fence too) |
 | Empty fence space | Drag | Select several |
