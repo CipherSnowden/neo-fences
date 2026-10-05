@@ -16,7 +16,7 @@ warnings. Each plan task's patch was then replayed on a fresh worktree of `main`
   "Nothing here matches this view"; `Status(selection, view)` returns `(Center, More)`.
 - **`DefaultsFor(path, busyFolders)`** takes the busy folders as a list; `KnownFolders.BusyFolders` gives Downloads and
   Screenshots (asked once per run).
-- **"Show as folder view"** places the new view 40 DIP right and down of the fence it came from (like a detached tab).
+- **"Show as folder view"** places the new view in free space like a new fence (the live check found that a fixed offset stacked views).
 - **Deleting a view fence asks nothing** (it has no items); its menu entry reads "Delete fence (the folder is not
   touched)".
 - **Refresh** on a view re-lists its folder.
@@ -56,4 +56,20 @@ thread once per run (a local call on this PC); Open folder not ending Peek (as t
 
 ## Live check
 
-(TEST-CHECKLIST AG — filled in after the run.)
+2026-10-05, test build on backed-up data (restored afterwards), scripted; screenshots sent to the user.
+
+- **Pass (19):** AG1, AG2 (Downloads: Date, newest 30, newest entry first), AG3 + AG15 (`D:\GameLibrary`, folders only,
+  6 games), AG4 (`*.png;*.jpg`; `a|b` refused, OK greyed), AG5 (add / rename / delete within 1.5 s), AG6 (folder renamed
+  and back: path and title follow), AG7 ("Folder not available", back at once when moved back), AG11 (a drag onto an
+  items fence makes an item, a drag to Explorer copies, a drop onto the view is refused and the file stays), AG12, AG13,
+  AG14, AG16 (500 + "+ 100 more — Open folder", which opens Explorer), AG17 (Type sort kept after a restart), AG18 (a view
+  as a tab lists at once), AG19 (the folder untouched by Delete fence; the restore brings the view back), AG20 (`F:\`,
+  the drive NeoFences was started on, lists its root), AG21 (Browse… on `\\nosuchhost\share`: dialog after ~1 s, every
+  fence responsive), AG22 (one "cannot watch" warning in 35 s).
+- **Skipped by the user's choice:** AG8 and AG9 (pulling the stick, Safely Remove) — automatic recovery for a stick is
+  not needed now; "Folder not available" and the fence menu's Refresh cover it. AG10 (game mode) not run.
+- **Found and fixed:** "Show as folder view" placed every new view at the same offset from its fence, so several views
+  made from one fence stacked on one spot (and menus hit the top one). New views are now placed in free space like a new
+  fence.
+- Script note: Windows' folder dialog ignores text set into its box by a message; the scripted AG1/AG2 picks landed on
+  the dialog's default folder, so AG2's defaults were checked through "Show as folder view" on a Downloads item.
