@@ -718,3 +718,25 @@ up may be pinned one column narrower; the fence look's Windows accent not refres
 **Released:** 0.19.1 on 2026-10-06 — CI and the release build passed first time (6 min); draft with the delta package
 (356 KB); install check (the installed 0.19.0 updated itself in 2 s; all four fences unchanged; the user's Free Games
 fence got its cells stored at that start — the M32 fix on real data); published; hub refreshed.
+
+## 2026-10-06 — M33 safety net (0.20.0), built and merged
+
+**Done:** the first milestone on the path to 1.0. Core test-first (700 → 715 tests): the crash decision (normal → safe mode
+→ stop and ask), safe mode and gesture switches in `RunState`, one-level `Undo`, damaged-file fallback and the locked-file
+wait in `JsonStore`, `LogPrivacy`. App: `--restarted` / `--safe-mode` / `--stopped`, the "NeoFences stopped" window, the
+watchdog keeper, marker before hide, undo bar and Ctrl+Z, no question on delete (snapshot + tray Undo delete), save
+problems as a notice and a Settings banner, the two gesture switches, logs at 10 MB with `%USERPROFILE%`. Prototype +
+replay-verified plan, native execution. Opus final review: 0 critical, 8 important, all fixed (safe mode hid icons and
+read sensors; the draw switch kept the right button; a possible second watchdog; a failed config save skipped the items;
+saves waited on a locked file; notices held by a game; an unwatched start). Live check AS1–AS11 all pass, with one bug
+found and fixed (the stopped window's Close did nothing). Merged locally.
+**Decisions:** ADR-053 (safe mode after a crash loop, then the stopped window), ADR-054 (one-level undo, no questions).
+**Rulings:** removing several items no longer asks; Start from a backup uses the newest daily backups after a snapshot;
+widgets frozen and panels as folder items in safe mode; the test crash is Debug-only; safe mode starts after the 4th
+unclean exit (existing throttle); keyboard undo is subject to ADR-015's focus rule (GUIDE says so).
+**Deferred minors:** log masking at line ends and JSON-escaped paths; size rolling vs the 7-file limit; undo does not
+re-check targets or restore "New games go to"; "Before deleting" snapshots not pruned; one banner at a time; Peek's
+click-outside needs the hook; Start from a backup edge cases; a failed folder listing keeps its watcher; PID reuse in the
+keeper; a repeating "icons not hidden" notice; a Games tile click takes no keyboard focus; the "no daily backup" message
+is cut short; a misleading watchdog log wording; the stopped window ignores `--exit`.
+**Next:** release 0.20.0 when the user says so; then M34 icons and game tiles (opt-in online covers ADR).
