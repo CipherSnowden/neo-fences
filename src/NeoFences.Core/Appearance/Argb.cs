@@ -13,6 +13,15 @@ public readonly record struct Argb(byte A, byte R, byte G, byte B)
         return new Argb(0xFF, (byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
     }
 
+    /// <summary>What people type in the picker's hex box (M35): "#E23A50", "e23a50", "#abc" (shorthand), spaces around; else null.</summary>
+    public static Argb? FromUserHex(string? text)
+    {
+        var hex = text?.Trim() ?? "";
+        if (hex.StartsWith('#')) hex = hex[1..];
+        if (hex.Length == 3) hex = string.Concat(hex.Select(digit => new string(digit, 2)));
+        return hex.Length == 6 && hex.All(Uri.IsHexDigit) ? FromHex("#" + hex) : null;
+    }
+
     public string ToHex() => $"#{R:X2}{G:X2}{B:X2}";
 
     /// <summary>This colour moved <paramref name="amount"/> (0–1) of the way to <paramref name="other"/>; alpha stays.</summary>
