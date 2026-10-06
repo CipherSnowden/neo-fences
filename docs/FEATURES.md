@@ -76,6 +76,7 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | First-run welcome: the first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is | 0.18 (M30) | done | ADR-051 |
 | Safety net: safe mode after a crash loop, a "stopped" window, one-level undo (undo bar, Ctrl+Z, Undo delete), save problems shown, gesture switches, private 10 MB logs | 0.20 (M33) | done | ADR-053, ADR-054 |
 | Modern game tiles (rounded 2:3 covers, accent ring, glow tile without art), clean sharp icons, Normal / Large covers, opt-in online covers (Steam store) and website icons, Choose cover… | 0.21 (M34) | done | ADR-055 |
+| One modern menu style with icons (fence, items, tray), a 12-line grouped fence menu, Settings in sections with switches, colour swatches and a colour picker, one message dialog | 0.22 (M35) | done | ADR-056 |
 | Auto-collect rules (the other half of dynamic collections) | later | — | replaces Rules (ADR-040) |
 | Theme packs: "Nanosuit" (Crysis HUD), "Animus" (Assassin's Creed) | v2 | — | |
 | Custom Win11-style compact context menu | v2 | — | |

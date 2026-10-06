@@ -1435,3 +1435,26 @@ else the glow tile.
 **Consequences.** Only game names (to Steam) and web-link addresses (to those sites) leave the PC, and only after a yes;
 turning the switch off keeps what was found. Games not on Steam (or under another name) keep their glow tile until the
 user chooses a cover. Steam's public endpoints can change; a change only means fewer covers, never a failure.
+
+## ADR-056 — One menu style, drawn by NeoFences, for fences, items and the tray
+**Date:** 2026-10-06 · **Status:** Accepted
+
+**Context.** NeoFences had three menu styles: WPF's old default for fence and item menus (light even in dark mode), a
+native Win32 popup for the tray, and Fluent for its windows. The fence menu had 29 entries; questions were MessageBoxes;
+custom colours used Windows' 1995 dialog. The readiness review and the owner wanted one modern look.
+
+**Decision.** One shared style (`Menus.xaml`, merged into the application) draws every `ContextMenu`, `MenuItem` and menu
+separator: rounded, a soft shadow, 30 px rows, icons from Windows' icon font (`MenuGlyph`), destructive entries in red at the
+end, light or dark like the fences (`MenuTheme`, also on a live switch). The tray menu is the same WPF menu
+(`TrayMenuView`); Windows' part is only bringing NeoFences forward first (`TrayMenu.BringForward`, in Shell) so a click
+elsewhere closes it. The fence menu is 12 lines (Add ▸, View ▸, Colour ▸, New fence ▸ …); Start with Windows lives in
+Settings, Exit in the tray. Settings is eight sections with switches; colours are swatches in the menu plus
+`ColourWindow`; `MessageDialog` replaces MessageBox.
+
+**Why not** WPF's Fluent theme for the whole app: it would restyle the fences' own item lists, scrollbars and panels (the
+M34 look) and is still experimental in .NET. **Why not** native menus made dark: an undocumented switch, no icons, and still
+two styles.
+
+**Consequences.** Every menu looks the same and follows light/dark; menus are WPF popups (UI tests find them as
+NeoFences' `HwndWrapper` popups, not `#32768`). The tray menu's position uses the first fence's DPI (mixed-DPI setups may
+place it a little off).

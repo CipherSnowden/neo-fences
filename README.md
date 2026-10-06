@@ -27,11 +27,11 @@ the update installs the next time NeoFences exits. You can turn this off in **Se
 ## Quick start
 
 1. **Sort your desktop into fences:** on the first start, the welcome fence offers **Sort my desktop…** (later: click the
-   tray icon, or right-click a fence → **Add from desktop…**). Pick the groups you want (Games, Apps, Folders and files,
+   tray icon, or right-click a fence → **Add** → **From desktop…**). Pick the groups you want (Games, Apps, Folders and files,
    Web links); each becomes a fence of links to what is on your desktop.
 2. **Add more:** drag files, folders, apps from Start, or a web address onto a fence — or right-click a fence →
-   **Add item…**.
-3. **Tidy the desktop (optional):** in **Settings → General**, tick **Hide desktop icons while NeoFences runs**. Your
+   **Add** → **Item…**.
+3. **Tidy the desktop (optional):** in **Settings → General**, switch on **Hide desktop icons while NeoFences runs**. Your
    icons come back whenever NeoFences exits — even after a crash.
 4. **Quick-hide:** double-click empty desktop to hide all fences (and the icons); double-click again to bring them back.
 5. **Peek:** press **Ctrl+Alt+Space** to bring the fences above your open windows; press it again or **Esc** to send them

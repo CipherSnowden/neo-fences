@@ -171,6 +171,14 @@ games… is open; after each scan game items follow their game's shortcut and ne
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
+**0.22.0 (M35, modern menus and dialogs)**: one menu style (ADR-056) — `Menus.xaml` merged into the application draws every
+context menu, sub-menu and separator (rounded, shadow, icons via `MenuGlyph`, red destructive entries, `MenuTheme` for
+light/dark); the fence menu regrouped to 12 lines (Add ▸, View ▸, Colour ▸ with swatches inside the menu, New fence ▸);
+item, game, panel, widget and tray menus with icons in one order (Open first, Remove last); the tray menu is
+`TrayMenuView` (Shell only brings NeoFences forward). Settings: a section list and pages, switches for on/off settings.
+`ColourWindow` (HSV field, hue bar, hex; `Hsv` and `Argb.FromUserHex` in Core) replaces `ChooseColor`; `MessageDialog`
+replaces MessageBox. `research/m35-modern-menus-and-dialogs.md`.
+
 **0.21.0 (M34, icons and game tiles)**: game tiles in Windows 11's style — rounded 2:3 covers with a soft shadow
 (two faint layers, no effect), the name below or, on fences with labels on hover, over the cover; hover lifts, selection
 rings in the accent; a glow tile for games without art (the icon shrunk to a few pixels and stretched as a backdrop, the

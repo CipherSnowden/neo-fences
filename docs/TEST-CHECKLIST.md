@@ -801,3 +801,18 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AT13 | Windows light mode | tiles, glow and accents readable |
 | AT14 | A `watchdog-<pid>` file of an ended process in the data folder, then start | the file is gone |
 | AT15 | Safe mode | no question, no lookups |
+
+## AU — 0.22.0 modern menus and dialogs (M35)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AU1 | Right-click a fence (dark mode) | 12 lines with icons: Add ▸, View ▸, Auto-collect…, Rename F2, Colour ▸, Lock position, Refresh, New fence ▸, Settings…, Delete fence (red) |
+| AU2 | Add ▸ Item… / From desktop… / Games… / Folder panel… / Widget ▸; View ▸ Icon size / Labels / Sort by / Layout; New fence ▸ Empty / Folder panel… | each acts as before |
+| AU3 | Delete fence | red, its tooltip "Your files are not touched"; then Ctrl+Z / tray Undo delete still bring it back |
+| AU4 | Menus of an item, a game, a folder panel, a widget, several items | icons; Open first; Remove last in red; the Windows' menu hint |
+| AU5 | Click or right-click the tray icon | the same menu at the pointer; a click elsewhere or Esc closes it; Restore snapshot ▸ and Exit act |
+| AU6 | Colour ▸ | a swatch sets the colour (ring follows); Use my accent colour; Custom colour…: field, hue, hex, Cancel / Esc changes nothing |
+| AU7 | Settings | eight sections; switches show On / Off and act; the banner on every page; tray Restore snapshot ▸ More in Settings… opens Snapshots |
+| AU8 | A new auto-collect rule that matches existing files; a picture that is not an image in Properties | the new dialog: "Add N items already there?" Add / Not now; "This picture cannot be used as an icon" |
+| AU9 | Windows switched to light mode while NeoFences runs | menus follow (readable text, hover, separators) |
+| AU10 | Fence menu and tray menu | Start with Windows only in Settings → General; Exit only in the tray |

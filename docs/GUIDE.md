@@ -53,11 +53,11 @@ maybe behind the **^** arrow on Windows 11.
 
 **Make a fence** in any of these ways:
 
-- Tray → **New fence**, or fence menu → **New fence**.
+- Tray → **New fence**, or fence menu → **New fence** → **Empty**.
 - **Right-drag on empty desktop**: hold the right mouse button and draw a rectangle; let go and type the fence's name.
 - Tray → **Add from desktop…** makes one fence per group of things on your desktop (see [Items](#2-items)).
 
-**Name it:** fence menu → **Rename fence** (**Rename tab** in a fence with tabs; or double-click a tab's name).
+**Name it:** fence menu → **Rename** (**Rename tab** in a fence with tabs; or double-click a tab's name).
 
 **Move and resize:** drag the title to move; drag an edge or corner to resize. Fences snap to each other and to the
 screen edges with a small gap.
@@ -70,11 +70,12 @@ when you click its title (choose in **Settings → Fences → Rolled-up fences o
 **Tabs:** drag a fence by its title onto another fence's title: both become tabs of one box. Click a tab to show it,
 **Ctrl+Tab** to switch, fence menu → **Detach tab** to take it out again.
 
-**Colour:** fence menu → **Colour** — a swatch, **Custom…**, or **None**. How the colour shows (an edge, tinted glass or a
+**Colour:** fence menu → **Colour** — click a round swatch (or **None**), **Use my accent colour**, or **Custom colour…**
+for any colour (a colour field, a hue bar and a hex box). How the colour shows (an edge, tinted glass or a
 title strip), how solid the background is and the title font are in **Settings → Appearance**. **Colour fences from the
 wallpaper** picks each fence's colour from the wallpaper behind it — Wallpaper Engine included.
 
-**Delete:** fence menu → **Delete fence (your files are not touched)**. Only the fence and its links go. NeoFences
+**Delete:** fence menu → **Delete fence**. Only the fence and its links go; your files are not touched. NeoFences
 takes a snapshot first; **Ctrl+Z** in a fence, or tray → **Undo delete**, brings it back for 2 minutes. (Keys reach a fence after
 a click on the desktop or the fence; from another app use the tray.)
 
@@ -88,12 +89,12 @@ An item is a link with its own name, icon and note. The same file can be in seve
 
 - **Drag** files, folders or shortcuts from Explorer or the desktop onto a fence, an app from the Start menu, or a web
   address from your browser. The originals stay where they are.
-- Fence menu → **Add item…**: type a path or a web address, or **Browse ▾** → **A file or program…**, **A folder…** or
+- Fence menu → **Add** → **Item…**: type a path or a web address, or **Browse ▾** → **A file or program…**, **A folder…** or
   **An app…** (any app from Start, Store apps too). You can give it a name, arguments, **Run as administrator**, an icon
   (**Change icon ▾** → from a file, from a picture, or reset) and a note (shown when you hover it).
-- Fence menu or tray → **Add from desktop…**: NeoFences reads your desktop and offers its things in groups — **Games**,
+- Fence menu → **Add** → **From desktop…** (or tray → **Add from desktop…**): NeoFences reads your desktop and offers its things in groups — **Games**,
   **Apps**, **Folders and files**, **Web links**. Tick the groups you want; each becomes a fence of links (you can also
-  tick **Hide desktop icons while NeoFences runs** there).
+  switch on **Hide desktop icons while NeoFences runs** there).
 
 **Use items:** double-click (or **Enter**) to open. Right-click for NeoFences' menu: **Open**, **Run as administrator**,
 **Open file location**, **Copy path**, **Size**, **Properties…**, **Remove from fence**, and for a folder **Show as folder
@@ -106,7 +107,7 @@ Explorer or another app and that app gets a copy of the file — the original st
 **Change one:** **Properties…** (or **F2** with its name selected, or **Alt+Enter**).
 
 **Website icons:** a web link shows the site's own icon when **Find covers and website icons online** is on (Settings →
-Game Library); otherwise a coloured letter (a red **Y** for YouTube) instead of your browser's icon.
+Games); otherwise a coloured letter (a red **Y** for YouTube) instead of your browser's icon.
 
 **Missing items:** a link whose target is gone shows dimmed with a small **!** badge; one on a drive or network share
 that is not connected just shows dimmed. Opening a missing one asks: **Locate…** (pick where it is now), **Remove from
@@ -116,7 +117,7 @@ first so it can be undone.
 **Remove:** **Del** or **Remove from fence**. The file is never touched. An **Undo** bar shows for a few
 seconds; **Ctrl+Z** in the fence works too.
 
-**Order:** drag to rearrange, or fence menu → **Sort by** (**Name**, **Type**, **Date (newest first)**) to sort once. **Refresh** checks the links
+**Order:** drag to rearrange, or fence menu → **View** → **Sort by** (**Name**, **Type**, **Date (newest first)**) to sort once. **Refresh** checks the links
 again and reloads their icons.
 
 ![An item's menu](guide/item-menu.jpg)
@@ -126,14 +127,14 @@ again and reloads their icons.
 NeoFences finds your installed games — **Steam, Epic, GOG, Ubisoft Connect, EA app, Battle.net, Xbox / Microsoft
 Store**, the **game folders** you add, and game shortcuts on your desktop — and shows them as cover tiles.
 
-- Fence menu → **Add games…** lists every game NeoFences found; tick the ones you want in that fence.
-- **Settings → Game Library**: **New games go to** (the fence where newly installed games appear), **Game folders (each
+- Fence menu → **Add** → **Games…** lists every game NeoFences found; tick the ones you want in that fence.
+- **Settings → Games**: **New games go to** (the fence where newly installed games appear), **Game folders (each
   sub-folder is a game)**, **Look for games in** (which launchers to read), **Hidden games** (games hidden in older versions; **Show again**), and
   **Refresh library now**, and **Find covers and website icons online**.
 - A game's menu: **Open**, **Show as ▸ Cover tile / Icon**, **Choose cover…**, **Size ▸ Normal / Large (twice as big)**, **Open install folder**, **Copy path**,
   **Properties…**, **Remove from fence**. A game that is no longer installed says "Not installed".
 - **Covers:** Steam games bring their cover from your disk. For the others NeoFences can **find covers online** on the
-  Steam store: it asks ("Find covers online?"; **Not now** asks again the next time NeoFences starts), and the switch is **Settings → Game Library → Find covers and website
+  Steam store: it asks ("Find covers online?"; **Not now** asks again the next time NeoFences starts), and the switch is **Settings → Games → Find covers and website
   icons online**. Only the names of games without a cover are sent, and only an exact name counts. A game without a cover
   shows its icon on a tile in its own colours.
 - **Choose cover…** (a game's menu): pick one of the Steam store's covers for its name, **From a file…** (NeoFences keeps a
@@ -145,15 +146,15 @@ Store**, the **game folders** you add, and game shortcuts on your desktop — an
 
 - **Size:** right-click an item, widget or panel → **Size** and pick from a 4 × 4 grid (1 × 1 up to 4 × 4 cells), or
   **Default size**. With several things selected, it sets them all. A game cover has two sizes: **Normal** and **Large (twice as big)**. The arrow keys and **Enter** work in the grid too.
-- **Layout:** fence menu → **Layout** → **Flow (packed)** fills the fence in order; **Free (fixed positions)** keeps each
+- **Layout:** fence menu → **View** → **Layout** → **Flow (packed)** fills the fence in order; **Free (fixed positions)** keeps each
   thing where you drop it.
-- **Icon size:** fence menu → **Icon size** (Small, Medium, Large, Extra large).
-- **Labels:** fence menu → **Labels** → **Always**, or **On hover (icons only)** for a tight grid that shows a name only
+- **Icon size:** fence menu → **View** → **Icon size** (Small, Medium, Large, Extra large).
+- **Labels:** fence menu → **View** → **Labels** → **Always**, or **On hover (icons only)** for a tight grid that shows a name only
   when you point at it. A game cover then shows its name over itself.
 
 ## 5. Widgets
 
-Fence menu → **Add widget** → **Clock**, **Date** or **System stats**. Size them like anything else.
+Fence menu → **Add** → **Widget** → **Clock**, **Date** or **System stats**. Size them like anything else.
 
 - Right-click the clock for **Show seconds** and **Show date**. It follows Windows' time format (12- or 24-hour).
 - **System stats** shows five tiles: **CPU** and **GPU** use, **CPU TEMP** and **GPU TEMP**, and **RAM** in use (e.g.
@@ -171,10 +172,11 @@ Fence menu → **Add widget** → **Clock**, **Date** or **System stats**. Size 
 
 A folder panel shows a folder inside a fence, live and read-only.
 
-- Fence menu → **Add folder panel…** adds one; **New folder panel…** (fence menu or tray) makes a new fence holding one
+- Fence menu → **Add** → **Folder panel…** adds one; fence menu → **New fence** → **Folder panel…** (or tray → **New folder
+  panel…**) makes a new fence holding one
   that fills it; a folder item's menu → **Show as folder panel** turns it into one.
-- Right-click the panel's name or empty space for its menu: **Look** (**Details**, **List**, **Icons**), **Sort by**,
-  **Panel settings…** (the folder, what it shows, file types, only the newest N), **Open folder**, **Size**, **Fill
+- Right-click the panel's name or empty space for its menu: **Open folder**, **Look** (**Details**, **List**,
+  **Icons**), **Sort by**, **Panel settings…** (the folder, what it shows, file types, only the newest N), **Size**, **Fill
   fence** (when it is the fence's only element), **Show as icon**, **Remove from fence**.
 - In Details, click a column header (**Name**, **Date modified**, **Type**, **Size**) to sort; click again to reverse.
 - Double-click a subfolder to look inside; the **Back**, **Up** and **Back to the panel's folder** buttons (or **Backspace** and **Alt+Up**) bring
@@ -239,15 +241,16 @@ updates automatically** (on or off) and **Check now**.
 
 ## 12. Settings
 
-Tray or fence menu → **Settings…**:
+Tray or fence menu → **Settings…**. A list of sections on the left opens one page at a time; on/off settings are switches
+(**On** / **Off**):
 
 - **General** — **Start with Windows**, **Hide desktop icons while NeoFences runs**, **Peek hotkey**.
 - **Fences** — **Labels for new fences** (and **Apply to all fences**), **Show shortcut arrows**, how **Rolled-up fences
   open**.
 - **Appearance** — **Colour style** (**Accent edge**, **Tinted glass**, **Title strip**), **Background strength**,
   **Colour fences from the wallpaper**, **Title font**.
-- **Game mode**, **Snapshots**, **Game Library**, **Updates** — see their sections above.
-- **About and logs** — the version, **Open logs folder**, **Open data folder**, **Help (online guide)**.
+- **Games**, **Game mode**, **Snapshots**, **Updates** — see their sections above.
+- **About** — the version, **Open logs folder**, **Open data folder**, **Help (online guide)**.
 
 ![Settings](guide/settings.png)
 
@@ -280,7 +283,7 @@ Tray or fence menu → **Settings…**:
   off until you start it again.
 - **"Changes are not saved"**: NeoFences could not read or write its files (another program locking them, or a file from
   a newer version). Your fences work, but changes are lost at exit; restart NeoFences, and see the log.
-- **Something went wrong:** **Settings → About and logs → Open logs folder** and look at the newest file; report problems
+- **Something went wrong:** **Settings → About → Open logs folder** and look at the newest file; report problems
   on the project's [GitHub Issues page](https://github.com/CipherSnowden/neo-fences/issues) with what you did and that
   log.
   Logs never contain your Windows user name (the profile folder is written as `%USERPROFILE%`).
