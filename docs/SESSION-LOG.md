@@ -842,3 +842,7 @@ a stale doc comment; two queues not three.
 **Left by hand:** AW3 (an app icon change behind a shortcut, the Recycle Bin, Refresh), AW4 with a damaged index, AW7 at
 125 / 150 % and in light mode.
 **Next:** release 0.24.0 when the owner says so; then M38 compatibility (Hyper-V, asked first).
+**Released:** 0.24.0 on 2026-10-06 — CI and the release build passed first time; draft with the delta package (391 KB);
+install check (the installed 0.23.0 downloaded the update from the draft's files; "Restart to update" clicked in NeoFences'
+own tray menu — the install-check script now reads it — and 0.24.0 ran again after 2 s; all four fences, items and the
+startup entry unchanged; running after a plain restart); published; hub refreshed.
