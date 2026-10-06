@@ -100,3 +100,23 @@ fence keeps its label mode unless the owner asks for "on hover".
 
 SteamGridDB or other art sources; alternative art types (heroes, logos as banners); an icon cache across restarts
 (M37); per-fence tile styles (M36); animated covers.
+
+## Amended during planning (2026-10-06, owner's choice and prototype findings)
+
+- **Cover sizes (owner's choice).** A game cover has two sizes: **Normal** (1×2, the default) and **Large** (2×4, about
+  twice); Size ▸ on covers offers just these. An older size maps to the nearest (one column Normal, two or more Large), so
+  the owner's two 2×2 covers become Large. In a fence that shows covers the cells are as wide as a Normal cover needs to
+  fill its two rows exactly (no row gap); §4's "a 2×2 cover is exactly twice a 1×1" reads "Large is twice Normal".
+- **Art order.** A launcher's logo (an Xbox package's) comes after a cover found online: the lookup also runs for a game
+  that has only a logo (a real cover beats a centred square logo).
+- **The switch** lives in Settings → **Game Library** (there is no "Games" section).
+- **Steam lookups** (probe with the owner's 12 games): the search term is the name with punctuation as spaces (Steam finds
+  nothing for "Clair Obscur - Expedition 33"); the cover's address comes from Steam's public asset service
+  (`IStoreBrowseService/GetItems`), because new games' covers live under a hashed folder. 9 of 12 names match strictly;
+  AC Black Flag Resynced, Blur and Minecraft Launcher keep glow tiles (Minecraft shows its own app icon, not Explorer's).
+- **The glow tile's icon** is about half the tile's width (≈ 64 px on a Normal tile); a 32 px-only icon (Blur) is then
+  shown at about twice its size.
+- **Choose cover…** shows Steam's public search results for the name as they come (look-alike titles too); the user
+  picks.
+- **Settings texts** that said NeoFences makes no network calls (Updates) or downloads nothing (Game Library) now say so
+  only for what they cover.
