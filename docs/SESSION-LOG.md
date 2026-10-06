@@ -766,3 +766,6 @@ ids / URL extensions; a failed Steam pick only logged; the guide's letter-badge 
 keeps its 2×4 cell.
 **Next:** dogfood on the owner's fences (asked first: snapshot, covers question, room for the Large covers); release
 0.21.0 when the owner says so; then M35 modern menus and dialogs.
+**Released:** 0.21.0 on 2026-10-06 — CI and the release build passed first time; draft with the delta package (533 KB);
+install check (the installed 0.20.0 updated itself in 3 s; all four fences and the startup entry unchanged; "Find covers
+online?" showed on the owner's real setup, left for the owner to answer); published; hub refreshed.
