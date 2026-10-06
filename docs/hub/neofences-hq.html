@@ -226,7 +226,7 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line);
 <header class="mast" id="status">
   <div class="label">Project hub · source of truth mirrors <code>docs/</code></div>
   <h1>Neo<span>Fences</span></h1>
-  <p class="lede">A Fences-style desktop organizer for Windows 10/11 x64. Translucent fences that hold links to your files, folders, apps and websites, each with its own name and icon, with live acrylic blur over Wallpaper Engine and zero overhead while you game. Your files never move.</p>
+  <p class="lede">A Fences-style desktop organizer for Windows 11 x64. Translucent fences that hold links to your files, folders, apps and websites, each with its own name and icon, with live acrylic blur over Wallpaper Engine and zero overhead while you game. Your files never move.</p>
   <div class="hud" id="hud"></div>
 </header>
 
@@ -785,8 +785,8 @@ flowchart TD
 <script>
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
-  updated: "2026-10-06",
-  commit: "0894ad5",
+  updated: "2026-10-07",
+  commit: "b4acfb1",
   phase: "0.24.0 — performance at scale (path to 1.0)",
   current: "0.24.0 RELEASED and installed (your 0.23.0 updated itself in 2 s): icons from a cache at start, visible icons first, nothing ticking in a game, smoother big fences · next: M38 compatibility (Hyper-V, asked first)",
   waiting: [
@@ -1208,7 +1208,7 @@ const HUB = {
     { id: "M35", name: "Modern menus and dialogs", goal: "One menu style with icons, 12-line fence menu, Settings sections and switches, swatches and a picker, one dialog — released 0.22.0", s: "done" },
     { id: "M36", name: "Fence settings and presets", goal: "Fence settings window, five presets and own ones, Export / Import setup, Reset settings — released 0.23.0", s: "done" },
     { id: "M37", name: "Performance at scale", goal: "Icon cache, visible first, idle timers, lighter items, a 500 / 50 measurement — released 0.24.0", s: "done" },
-    { id: "M38", name: "Compatibility and accessibility", goal: "Windows 10 and 11 in Hyper-V VMs, scaling, high contrast, screen readers", s: "todo" },
+    { id: "M38", name: "Compatibility and accessibility", goal: "Peek takes the keyboard; a Windows 11 test pass in a Hyper-V VM (Windows 10 dropped, ADR-059)", s: "wip" },
     { id: "M39", name: "Release readiness", goal: "Freeware licence, README, then 1.0.0-rc to friends and 1.0.0", s: "todo" }
   ],
   versions: [
@@ -1428,7 +1428,8 @@ const HUB = {
     { id: "ADR-055", t: "Opt-in online art: Steam store covers, website icons from the sites themselves", s: "Accepted", d: "Off until you say yes (asked once); after each scan the games without a cover are looked up on Steam's public search, strict names only; misses wait 30 days; web links' icons come from their sites, else a letter badge; everything in covers\\.", c: "Only game names and web addresses leave the PC, only after a yes; games not on Steam keep their glow tile until you choose a cover." },
     { id: "ADR-056", t: "One menu style, drawn by NeoFences, for fences, items and the tray", s: "Accepted", d: "A shared style draws every menu (rounded, icons, red destructive entries, light/dark); the tray menu is the same WPF menu; Settings in sections with switches; swatches and a picker; one message dialog.", c: "One look everywhere; WPF's Fluent theme stays off the fences; menus are WPF popups for tests." },
     { id: "ADR-057", t: "Per-fence looks that fall back to all fences; presets copy; the whole setup as one file", s: "Accepted", d: "A fence's own look overrides Settings → Appearance part by part (empty = Like all fences); presets are copies; Export / Import a .neofences zip; import and reset take a whole snapshot first (Settings and presets too).", c: "Per-fence fonts are back in a window (ADR-038 amended); no new dependency; schema stays 5." },
-    { id: "ADR-058", t: "Measure first; an icon and name cache; visible first; timers only while needed", s: "Accepted", d: "A 500 / 50 measurement script and timing marks; icons asked once per run, cached in cache\\icons and shown from there at start, re-checked daily; widget, hover and collect timers stop while nothing shows; labels drawn once; tiles only for covers.", c: "Icons 11 s → 3 s at 500 items; ready-to-run and virtualization not done; the start is now bound by creating the fence windows." }
+    { id: "ADR-058", t: "Measure first; an icon and name cache; visible first; timers only while needed", s: "Accepted", d: "A 500 / 50 measurement script and timing marks; icons asked once per run, cached in cache\\icons and shown from there at start, re-checked daily; widget, hover and collect timers stop while nothing shows; labels drawn once; tiles only for covers.", c: "Icons 11 s → 3 s at 500 items; ready-to-run and virtualization not done; the start is now bound by creating the fence windows." },
+    { id: "ADR-059", t: "Windows 11 is the only target", s: "Accepted", d: "NeoFences targets Windows 11 x64 only; Windows 10 is neither targeted nor tested (it may run; its fallbacks stay as harmless degradation).", c: "README, guide and project instructions say Windows 11; the never-run older desktop-layer path stays untested and is no release blocker." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1465,7 +1466,6 @@ const HUB = {
     ["Layered windows lose rounded corners", "Look and feel", "Windows 11 DWM rounded corners (M8a, checked at 8× zoom)", "done"],
     ["Power cuts mid-save or with icons hidden", "Lost layout or a blank desktop after reboot", "Temp-then-swap saves with .bak and daily backups; start with Windows restores icons and fences (ADR-019)", "done"],
     ["Launcher data formats change (Steam, Epic, Xbox)", "Games missing from the library", "Each scanner isolated and logged; a source that cannot be read keeps its games (ADR-032)", "warn"],
-    ["Windows 10 has no DWM rounded corners or acrylic", "Flatter look on Windows 10", "Square tinted fallback, logged once", "warn"],
     ["Unreachable share or unplugged drive behind an item", "A frozen fence while Windows waits", "Checks off the UI thread with a 2 s timeout (M18); since 0.10.0 also before every UI-thread shell call, once per dead share, mapped drives included", "done"],
     ["“Fences” trademark", "The repo and releases are public", "Name kept for a personal project (ADR-043); revisit before wider distribution", "warn"],
     ["Unsigned Setup.exe", "Friends see Windows' SmartScreen warning", "Signing deferred (ADR-039): free signing needs an open-source license, otherwise a paid certificate", "warn"]
