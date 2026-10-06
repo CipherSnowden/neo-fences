@@ -216,46 +216,52 @@
                      BorderBrush="{DynamicResource FenceBorder}" CaretBrush="{DynamicResource FenceText}" />
             <Border x:Name="Body" Grid.Row="2" BorderBrush="{DynamicResource FenceDivider}" BorderThickness="0,1,0,0" Background="#01000000">
                 <Border.ContextMenu>
+                    <!-- M35 (spec §1): 12 lines, grouped, with Windows 11 icons; Start with Windows lives in Settings, Exit in the tray. -->
                     <ContextMenu x:Name="BodyContextMenu">
-                        <MenuItem x:Name="AddItemItem" Header="Add item…" />
-                        <MenuItem x:Name="AddFromDesktopItem" Header="Add from desktop…" />
-                        <MenuItem x:Name="AddGamesItem" Header="Add games…" />
-                        <MenuItem x:Name="AddWidgetItem" Header="Add widget">
-                            <MenuItem x:Name="AddClockItem" Header="Clock" />
-                            <MenuItem x:Name="AddDateItem" Header="Date" />
-                            <MenuItem x:Name="AddStatsItem" Header="System stats" />
+                        <MenuItem x:Name="AddMenu" Header="Add" local:MenuGlyph.Glyph="&#xE710;">
+                            <MenuItem x:Name="AddItemItem" Header="Item…" local:MenuGlyph.Glyph="&#xE8E5;" />
+                            <MenuItem x:Name="AddFromDesktopItem" Header="From desktop…" local:MenuGlyph.Glyph="&#xE8FC;" />
+                            <MenuItem x:Name="AddGamesItem" Header="Games…" local:MenuGlyph.Glyph="&#xE7FC;" />
+                            <!-- M26: a folder inside the fence, beside its other elements. -->
+                            <MenuItem x:Name="AddFolderPanelItem" Header="Folder panel…" local:MenuGlyph.Glyph="&#xE8B7;" />
+                            <MenuItem x:Name="AddWidgetItem" Header="Widget" local:MenuGlyph.Glyph="&#xE9F9;">
+                                <MenuItem x:Name="AddClockItem" Header="Clock" />
+                                <MenuItem x:Name="AddDateItem" Header="Date" />
+                                <MenuItem x:Name="AddStatsItem" Header="System stats" />
+                            </MenuItem>
                         </MenuItem>
-                        <!-- M26: a folder inside the fence, beside its other elements. -->
-                        <MenuItem x:Name="AddFolderPanelItem" Header="Add folder panel…" />
+                        <MenuItem x:Name="ViewMenu" Header="View" local:MenuGlyph.Glyph="&#xE8B3;">
+                            <MenuItem x:Name="IconSizeItem" Header="Icon size" local:MenuGlyph.Glyph="&#xE740;" />
+                            <MenuItem x:Name="LabelsItem" Header="Labels" local:MenuGlyph.Glyph="&#xE8D2;">
+                                <MenuItem x:Name="LabelsAlwaysItem" Header="Always" IsCheckable="True" />
+                                <MenuItem x:Name="LabelsOnHoverItem" Header="On hover (icons only)" IsCheckable="True" />
+                            </MenuItem>
+                            <MenuItem x:Name="SortItem" Header="Sort by" local:MenuGlyph.Glyph="&#xE8CB;" />
+                            <MenuItem x:Name="LayoutItem" Header="Layout" local:MenuGlyph.Glyph="&#xE80A;">
+                                <MenuItem x:Name="LayoutFlowItem" Header="Flow (packed)" IsCheckable="True" />
+                                <MenuItem x:Name="LayoutFreeItem" Header="Free (fixed positions)" IsCheckable="True" />
+                            </MenuItem>
+                        </MenuItem>
                         <!-- M27: new matching files of a folder become items here. -->
-                        <MenuItem x:Name="AutoCollectItem" Header="Auto-collect…" />
-                        <MenuItem x:Name="RefreshItem" Header="Refresh" />
+                        <MenuItem x:Name="AutoCollectItem" Header="Auto-collect…" local:MenuGlyph.Glyph="&#xE895;" />
                         <Separator />
-                        <MenuItem x:Name="NewFenceItem" Header="New fence" />
-                        <!-- M22: games are items in any fence; the library fence kind stays in the code, not in the menu. -->
-                        <MenuItem x:Name="NewLibraryItem" Header="New Game Library fence" Visibility="Collapsed" />
-                        <!-- M26: a new fence holding one panel that fills it (folder views became panels). -->
-                        <MenuItem x:Name="NewFolderPanelItem" Header="New folder panel…" />
-                        <MenuItem x:Name="RenameItem" Header="Rename fence" />
-                        <MenuItem x:Name="IconSizeItem" Header="Icon size" />
-                        <MenuItem x:Name="LabelsItem" Header="Labels">
-                            <MenuItem x:Name="LabelsAlwaysItem" Header="Always" IsCheckable="True" />
-                            <MenuItem x:Name="LabelsOnHoverItem" Header="On hover (icons only)" IsCheckable="True" />
+                        <MenuItem x:Name="RenameItem" Header="Rename" InputGestureText="F2" local:MenuGlyph.Glyph="&#xE8AC;" />
+                        <!-- M35 (spec §3): swatches inside the menu, the accent, a custom colour (built in code). -->
+                        <MenuItem x:Name="TabColorItem" Header="Colour" local:MenuGlyph.Glyph="&#xE790;" />
+                        <MenuItem x:Name="LockItem" Header="Lock position" IsCheckable="True" local:MenuGlyph.Glyph="&#xE72E;" />
+                        <MenuItem x:Name="RefreshItem" Header="Refresh" local:MenuGlyph.Glyph="&#xE72C;" />
+                        <Separator />
+                        <MenuItem x:Name="NewFenceMenu" Header="New fence" local:MenuGlyph.Glyph="&#xE8A0;">
+                            <MenuItem x:Name="NewFenceItem" Header="Empty" />
+                            <!-- M26: a new fence holding one panel that fills it (folder views became panels). -->
+                            <MenuItem x:Name="NewFolderPanelItem" Header="Folder panel…" />
+                            <!-- M22: games are items in any fence; the library fence kind stays in the code, not in the menu. -->
+                            <MenuItem x:Name="NewLibraryItem" Header="Game Library fence" Visibility="Collapsed" />
                         </MenuItem>
-                        <MenuItem x:Name="SortItem" Header="Sort by" />
-                        <MenuItem x:Name="LayoutItem" Header="Layout">
-                            <MenuItem x:Name="LayoutFlowItem" Header="Flow (packed)" IsCheckable="True" />
-                            <MenuItem x:Name="LayoutFreeItem" Header="Free (fixed positions)" IsCheckable="True" />
-                        </MenuItem>
-                        <MenuItem x:Name="TabColorItem" Header="Colour" />
-                        <MenuItem x:Name="DetachTabItem" Header="Detach tab" Visibility="Collapsed" />
-                        <MenuItem x:Name="LockItem" Header="Lock position" IsCheckable="True" />
-                        <MenuItem x:Name="DeleteItem" Header="Delete fence (your files are not touched)" />
+                        <MenuItem x:Name="SettingsItem" Header="Settings…" local:MenuGlyph.Glyph="&#xE713;" />
                         <Separator />
-                        <MenuItem x:Name="StartupItem" Header="Start with Windows" IsCheckable="True" />
-                        <MenuItem x:Name="SettingsItem" Header="Settings…" />
-                        <Separator />
-                        <MenuItem x:Name="ExitItem" Header="Exit NeoFences" />
+                        <MenuItem x:Name="DetachTabItem" Header="Detach tab" Visibility="Collapsed" local:MenuGlyph.Glyph="&#xE8A7;" />
+                        <MenuItem x:Name="DeleteItem" Header="Delete fence" local:MenuGlyph.Glyph="&#xE74D;" local:MenuGlyph.Danger="True" />
                     </ContextMenu>
                 </Border.ContextMenu>
                 <Grid>

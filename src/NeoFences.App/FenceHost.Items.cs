@@ -100,17 +100,14 @@ public sealed partial class FenceHost
             return;
         }
         var menu = new ContextMenu();
-        void Command(string header, Action run)
-        {
-            var command = new MenuItem { Header = header };
-            command.Click += (_, _) => run();
-            menu.Items.Add(command);
-        }
+        // M35 (spec §1): icons; Open first, then the item's own actions, Properties…, Remove last in red.
+        void Command(string header, string glyph, Action run, bool danger = false) => menu.Items.Add(MenuGlyph.Entry(header, glyph, run, danger: danger));
         if (items.Count > 1)
         {
-            Command("Open", () => { foreach (var item in items) OpenKey(window, item.Id); }); // a widget opens its own app, never ShellExecute on its target (M25 review I2)
+            Command("Open", MenuGlyph.Open, () => { foreach (var item in items) OpenKey(window, item.Id); }); // a widget opens its own app, never ShellExecute on its target (M25 review I2)
             menu.Items.Add(items.All(GameItems.ShowsCover) ? CoverSizeMenu(items) : SizeMenu(menu, items)); // M24; M34: covers' own sizes
-            Command($"Remove {items.Count} items from fence", () => RemoveItems(window, [.. items.Select(item => item.Id)]));
+            menu.Items.Add(new Separator());
+            Command($"Remove {items.Count} items from fence", MenuGlyph.Remove, () => RemoveItems(window, [.. items.Select(item => item.Id)]), danger: true);
         }
         else if (FolderPanels.IsPanel(items[0]))
         {
@@ -134,19 +131,18 @@ public sealed partial class FenceHost
             var onDisk = item.Kind == ItemKind.Path && TargetChecks.RootOf(item.Target) is not null;
             if (check.State != TargetState.Ok)
             {
-                Command("Locate…", () => Locate(window, item.Id));
-                Command("Remove from fence", () => RemoveItems(window, [item.Id]));
+                Command("Locate…", MenuGlyph.Missing, () => Locate(window, item.Id)); // a missing item's first step
                 menu.Items.Add(new Separator());
             }
-            Command("Open", () => OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin));
-            if (onDisk && !check.IsFolder) Command("Run as administrator", () => OpenVirtualItem(window, item, runAsAdmin: true));
-            if (onDisk) Command("Open file location", () => ShowInFolder(item.Target));
-            if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder panel", () => SetPanelShown(item.Id, FolderPanels.Create(item.Target, BusyFolders).Panel)); // M26
-            Command("Copy path", () => CopyText(item.Target));
-            menu.Items.Add(new Separator());
+            Command("Open", MenuGlyph.Open, () => OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin));
+            if (onDisk && !check.IsFolder) Command("Run as administrator", MenuGlyph.Admin, () => OpenVirtualItem(window, item, runAsAdmin: true));
+            if (onDisk) Command("Open file location", MenuGlyph.OpenFolder, () => ShowInFolder(item.Target));
+            if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder panel", MenuGlyph.Folder, () => SetPanelShown(item.Id, FolderPanels.Create(item.Target, BusyFolders).Panel)); // M26
+            Command("Copy path", MenuGlyph.Copy, () => CopyText(item.Target));
             menu.Items.Add(SizeMenu(menu, [item])); // M24
-            Command("Properties…", () => ShowProperties(window, item.Id, focusName: false));
-            if (check.State == TargetState.Ok) Command("Remove from fence", () => RemoveItems(window, [item.Id]));
+            menu.Items.Add(new Separator());
+            Command("Properties…", MenuGlyph.Properties, () => ShowProperties(window, item.Id, focusName: false));
+            Command("Remove from fence", MenuGlyph.Remove, () => RemoveItems(window, [item.Id]), danger: true);
             menu.Items.Add(new Separator());
             menu.Items.Add(new MenuItem { Header = "Shift+right-click: Windows' menu", IsEnabled = false });
         }
@@ -382,7 +378,7 @@ public sealed partial class FenceHost
         catch (Exception failure) when (failure is not OutOfMemoryException)
         {
             Log.Warning(failure, "picture {Picture} could not be used as an icon", picture);
-            MessageBox.Show(owner, $"NeoFences could not use this picture as the icon:\n{picture}", "NeoFences", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageDialog.Tell(owner, "This picture cannot be used as an icon", picture); // M35
             return item;
         }
     }

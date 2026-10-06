@@ -13,8 +13,12 @@ namespace NeoFences.App;
 public sealed partial class FenceHost
 {
     /// <summary>The Size ▸ entry for these items (an items fence only).</summary>
-    private MenuItem SizeMenu(ContextMenu menu, IReadOnlyList<VirtualItem> items) =>
-        SizePicker.Create(menu, FenceGrid.CommonSize([.. items.Select(item => item.Size)]), size => SetSize([.. items.Select(item => item.Id)], size)); // M28: mixed sizes check nothing
+    private MenuItem SizeMenu(ContextMenu menu, IReadOnlyList<VirtualItem> items)
+    {
+        var size = SizePicker.Create(menu, FenceGrid.CommonSize([.. items.Select(item => item.Size)]), size => SetSize([.. items.Select(item => item.Id)], size)); // M28: mixed sizes check nothing
+        MenuGlyph.SetGlyph(size, MenuGlyph.Size); // M35
+        return size;
+    }
 
     private void SetSize(IReadOnlyList<string> itemIds, GridSpan? size)
     {

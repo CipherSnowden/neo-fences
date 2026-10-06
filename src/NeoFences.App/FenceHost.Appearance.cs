@@ -184,7 +184,7 @@ public sealed partial class FenceHost
         return new AppearanceView(Appearance, _lightTheme, accent?.ToHex(), origin);
     }
 
-    /// <summary>Fence menu → Colour → Custom… (M14): Windows' colour picker; Cancel changes nothing.</summary>
+    /// <summary>Fence menu → Colour → Custom colour… (M14, M35): the colour picker; Cancel changes nothing.</summary>
     private void PickCustomColour(FenceWindow window)
     {
         var fenceId = window.FenceId; // the dialog is modal to this fence only: the tab or the fence may change meanwhile (final review M4)
@@ -194,7 +194,7 @@ public sealed partial class FenceHost
         string? picked;
         try
         {
-            picked = ColorPicker.TryPick(window.Handle, current);
+            picked = ColourWindow.Pick(window, current); // M35: NeoFences' own picker (Windows' 1995 dialog is gone)
         }
         catch (Exception failure) when (failure is not OutOfMemoryException)
         {

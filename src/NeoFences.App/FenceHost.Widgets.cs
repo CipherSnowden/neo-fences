@@ -123,28 +123,25 @@ public sealed partial class FenceHost
     private void ShowWidgetMenu(FenceWindow window, VirtualItem item, bool fromKeyboard)
     {
         var menu = new ContextMenu();
-        void Command(string header, Action run, bool? isChecked = null)
-        {
-            var command = new MenuItem { Header = header, IsChecked = isChecked == true };
-            command.Click += (_, _) => run();
-            menu.Items.Add(command);
-        }
+        void Command(string header, string? glyph, Action run, bool? isChecked = null, bool danger = false) =>
+            menu.Items.Add(MenuGlyph.Entry(header, glyph, run, isChecked, danger)); // M35
         if (Widgets.Of(item.Target) == WidgetKind.Clock)
         {
             var options = item.Widget ?? new WidgetOptions();
-            Command("Show seconds", () => SetWidgetOptions(item.Id, options with { Seconds = !options.Seconds }), isChecked: options.Seconds);
-            Command("Show date", () => SetWidgetOptions(item.Id, options with { Date = !options.Date }), isChecked: options.Date);
+            Command("Show seconds", null, () => SetWidgetOptions(item.Id, options with { Seconds = !options.Seconds }), isChecked: options.Seconds);
+            Command("Show date", null, () => SetWidgetOptions(item.Id, options with { Date = !options.Date }), isChecked: options.Date);
             menu.Items.Add(new Separator());
         }
         if (Widgets.Of(item.Target) == WidgetKind.Stats) // M31
         {
             var options = item.Widget ?? new WidgetOptions();
-            Command("Temperature in °F", () => SetWidgetOptions(item.Id, options with { Fahrenheit = !options.Fahrenheit }), isChecked: options.Fahrenheit);
+            Command("Temperature in °F", null, () => SetWidgetOptions(item.Id, options with { Fahrenheit = !options.Fahrenheit }), isChecked: options.Fahrenheit);
             menu.Items.Add(new Separator());
         }
         menu.Items.Add(SizeMenu(menu, [item]));
-        Command("Properties…", () => ShowProperties(window, item.Id, focusName: false));
-        Command("Remove from fence", () => RemoveItems(window, [item.Id]));
+        menu.Items.Add(new Separator());
+        Command("Properties…", MenuGlyph.Properties, () => ShowProperties(window, item.Id, focusName: false));
+        Command("Remove from fence", MenuGlyph.Remove, () => RemoveItems(window, [item.Id]), danger: true);
         window.ShowItemMenu(menu, fromKeyboard);
     }
 

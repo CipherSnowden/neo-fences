@@ -62,6 +62,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        BuildSections(); // M35
         // Checked/Unchecked, not Click: UI Automation (Narrator, Toggle) changes the box without a click (M6b smoke).
         OnToggled(StartupBox, isChecked => StartWithWindowsChanged?.Invoke(isChecked));
         OnToggled(HideIconsBox, isChecked => HideDesktopIconsChanged?.Invoke(isChecked));
@@ -198,8 +199,44 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary>Tray → Restore snapshot → "More in Settings…": the Snapshots card in view (M13c).</summary>
-    public void ShowSnapshotsCard() =>
-        Dispatcher.BeginInvoke(() => SnapshotsCard.BringIntoView(), System.Windows.Threading.DispatcherPriority.Loaded);
+    public void ShowSnapshotsCard() => ShowPage("Snapshots"); // M35: its own page
+
+    /// <summary>
+    /// The section list (M35, spec §2): General, Fences, Appearance, Games, Game mode, Snapshots, Updates, About — the open one
+    /// marked, only its page shown; the arrow keys move through the list, Tab goes into the page.
+    /// </summary>
+    private (string Name, string Glyph, FrameworkElement Page)[] Sections =>
+    [
+        ("General", MenuGlyph.Settings, GeneralPage), ("Fences", MenuGlyph.NewFence, FencesPage), ("Appearance", MenuGlyph.Colour, AppearancePage),
+        ("Games", MenuGlyph.Games, GamesPage), ("Game mode", MenuGlyph.GameMode, GameModePage), ("Snapshots", MenuGlyph.Snapshot, SnapshotsPage),
+        ("Updates", MenuGlyph.Refresh, UpdatesPage), ("About", MenuGlyph.Properties, AboutPage),
+    ];
+
+    private void BuildSections()
+    {
+        foreach (var (name, glyph, _) in Sections)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            row.Children.Add(new TextBlock { Text = glyph, FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 15,
+                Width = 22, Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
+            row.Children.Add(new TextBlock { Text = name, VerticalAlignment = VerticalAlignment.Center });
+            var item = new ListBoxItem { Content = row, Tag = name, Padding = new Thickness(10, 7, 10, 7) };
+            System.Windows.Automation.AutomationProperties.SetName(item, name);
+            SectionList.Items.Add(item);
+        }
+        SectionList.SelectionChanged += (_, _) =>
+        {
+            if (SectionList.SelectedItem is not ListBoxItem { Tag: string name }) return;
+            foreach (var (section, _, page) in Sections) page.Visibility = section == name ? Visibility.Visible : Visibility.Collapsed;
+            PageTitle.Text = name;
+            PageScroller.ScrollToTop();
+        };
+        SectionList.SelectedIndex = 0;
+    }
+
+    /// <summary>Opens a section by name ("Snapshots", "Games", …).</summary>
+    public void ShowPage(string name) =>
+        SectionList.SelectedItem = SectionList.Items.OfType<ListBoxItem>().FirstOrDefault(item => Equals(item.Tag, name)) ?? SectionList.SelectedItem;
 
     /// <summary>The snapshot list, keeping the selection where the same file is still listed.</summary>
     private void ShowSnapshots(IReadOnlyList<NeoFences.Core.Config.SnapshotEntry> snapshots)

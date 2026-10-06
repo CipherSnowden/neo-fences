@@ -115,32 +115,23 @@ public sealed partial class FenceHost
     private void ShowGameItemMenu(FenceWindow window, VirtualItem item, bool fromKeyboard)
     {
         var menu = new ContextMenu();
-        void Command(ItemsControl parent, string header, Action run, bool? isChecked = null)
-        {
-            var command = new MenuItem { Header = header, IsChecked = isChecked == true };
-            command.Click += (_, _) => run();
-            parent.Items.Add(command);
-        }
+        // M35 (spec §1): icons; Open first, the game's own actions, Properties…, Remove last in red.
+        void Command(ItemsControl parent, string header, string? glyph, Action run, bool? isChecked = null, bool danger = false) =>
+            parent.Items.Add(MenuGlyph.Entry(header, glyph, run, isChecked, danger));
         var installed = CheckOf(item.Target).State == TargetState.Ok;
-        if (!installed)
-        {
-            Command(menu, "Remove from fence", () => RemoveItems(window, [item.Id]));
-            menu.Items.Add(new Separator());
-        }
-        Command(menu, "Open", () => OpenVirtualItem(window, item, runAsAdmin: false));
-        var showAs = new MenuItem { Header = "Show as" };
-        Command(showAs, "Cover tile", () => SetShowAs(item.Id, ItemShow.Cover), isChecked: GameItems.ShowsCover(item));
-        Command(showAs, "Icon", () => SetShowAs(item.Id, ItemShow.Icon), isChecked: !GameItems.ShowsCover(item));
+        Command(menu, "Open", MenuGlyph.Run, () => OpenVirtualItem(window, item, runAsAdmin: false));
+        var showAs = MenuGlyph.Entry("Show as", MenuGlyph.ShowAs);
+        Command(showAs, "Cover tile", null, () => SetShowAs(item.Id, ItemShow.Cover), isChecked: GameItems.ShowsCover(item));
+        Command(showAs, "Icon", null, () => SetShowAs(item.Id, ItemShow.Icon), isChecked: !GameItems.ShowsCover(item));
         menu.Items.Add(showAs);
-        if (GameItems.ShowsCover(item)) Command(menu, "Choose cover…", () => ChooseCover(item)); // M34
+        if (GameItems.ShowsCover(item)) Command(menu, "Choose cover…", MenuGlyph.Cover, () => ChooseCover(item)); // M34
         menu.Items.Add(GameItems.ShowsCover(item) ? CoverSizeMenu([item]) : SizeMenu(menu, [item])); // M24; M34: Normal / Large covers
-        var openFolder = new MenuItem { Header = "Open install folder", IsEnabled = installed && LibraryItemOf(item.Target)?.Game.InstallFolder is not null }; // M23
-        openFolder.Click += (_, _) => OpenInstallFolder(window, item.Target);
-        menu.Items.Add(openFolder);
-        Command(menu, "Copy path", () => CopyText(item.Target));
+        menu.Items.Add(MenuGlyph.Entry("Open install folder", MenuGlyph.OpenFolder, () => OpenInstallFolder(window, item.Target),
+            enabled: installed && LibraryItemOf(item.Target)?.Game.InstallFolder is not null)); // M23
+        Command(menu, "Copy path", MenuGlyph.Copy, () => CopyText(item.Target));
         menu.Items.Add(new Separator());
-        Command(menu, "Properties…", () => ShowProperties(window, item.Id, focusName: false));
-        if (installed) Command(menu, "Remove from fence", () => RemoveItems(window, [item.Id]));
+        Command(menu, "Properties…", MenuGlyph.Properties, () => ShowProperties(window, item.Id, focusName: false));
+        Command(menu, "Remove from fence", MenuGlyph.Remove, () => RemoveItems(window, [item.Id]), danger: true);
         menu.Items.Add(new Separator());
         menu.Items.Add(new MenuItem { Header = "Shift+right-click: Windows' menu", IsEnabled = false });
         window.ShowItemMenu(menu, fromKeyboard);

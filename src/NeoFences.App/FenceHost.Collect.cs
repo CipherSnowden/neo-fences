@@ -200,9 +200,11 @@ public sealed partial class FenceHost
         var lone = _config with { Fences = [.. _config.Fences.Where(fence => fence.Id == fenceId).Select(fence => fence with { Collect = [rule] })] };
         var plan = CollectRules.Plan(lone, _items, rule.Source, entries);
         if (plan.Count == 0) return;
-        var answer = MessageBox.Show(window, $"{plan.Count}{(plan.Count == CollectRules.MaxPerBurst ? " (the first)" : "")} item{(plan.Count == 1 ? "" : "s")} in {CollectRules.Summary(rule).Split(" · ")[0]} match this rule already.\n\nAdd these {plan.Count} too?\n\nYour files are not moved: the fence only shows them.",
-            "NeoFences — auto-collect", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-        if (answer != MessageBoxResult.Yes) return;
+        // M35: the one message dialog instead of MessageBox.
+        var first = plan.Count == CollectRules.MaxPerBurst ? " (the first)" : "";
+        if (!MessageDialog.Ask(window, $"Add {plan.Count}{first} item{(plan.Count == 1 ? "" : "s")} already there?",
+                $"{plan.Count} item{(plan.Count == 1 ? "" : "s")} in {CollectRules.Summary(rule).Split(" · ")[0]} match this rule already. Your files are not moved: the fence only shows them.",
+                primary: "Add", secondary: "Not now")) return;
         _items = ItemEdits.Add(_items, fenceId, [.. plan.Select(entry => VirtualItem.Create(entry.Path))]).Document;
         Log.Information("auto-collect: {Count} existing item(s) added to fence {FenceId} by a new rule", plan.Count, fenceId);
         ItemsChanged(checkTargets: [.. plan.Select(entry => entry.Path)]);

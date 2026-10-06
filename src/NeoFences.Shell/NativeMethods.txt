@@ -179,8 +179,6 @@ SHLoadIndirectString
 MapVirtualKey
 IDesktopWallpaper
 DesktopWallpaper
-ChooseColor
-CHOOSECOLOR_FLAGS
 PickIconDlg
 SHDefExtractIcon
 GetIconInfo

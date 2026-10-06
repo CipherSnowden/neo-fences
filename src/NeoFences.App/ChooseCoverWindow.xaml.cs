@@ -40,7 +40,7 @@ public partial class ChooseCoverWindow : Window
             Close();
         };
         if (online) Loaded += async (_, _) => await ShowResultsAsync(gameName);
-        else StatusText.Text = "Turn on \"Find covers and website icons online\" in Settings → Game Library to see covers from the Steam store.";
+        else StatusText.Text = "Turn on \"Find covers and website icons online\" in Settings → Games to see covers from the Steam store.";
     }
 
     private async Task ShowResultsAsync(string gameName)

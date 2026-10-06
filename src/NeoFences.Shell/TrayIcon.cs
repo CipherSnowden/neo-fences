@@ -133,53 +133,13 @@ public sealed record TrayMenuItem(int Id, string Text = "", bool Checked = false
     public IReadOnlyList<TrayMenuItem>? Children { get; init; }
 }
 
-/// <summary>The tray menu: Windows' own popup menu (it closes reliably when the user clicks elsewhere).</summary>
+/// <summary>
+/// The tray menu (M35, ADR-056): NeoFences draws it like its other menus; Windows' part is only the documented dance —
+/// NeoFences comes to the foreground first, so a click anywhere else closes the menu.
+/// </summary>
 public static class TrayMenu
 {
-    /// <returns>The chosen item's id, or 0 when the menu was dismissed.</returns>
-    public static unsafe int Show(nint ownerHandle, IReadOnlyList<TrayMenuItem> items, int screenX, int screenY)
-    {
-        var menu = PInvoke.CreatePopupMenu();
-        if (menu.IsNull) return 0;
-        try
-        {
-            Fill(menu, items);
-            // The documented tray-menu dance: foreground first, so a click elsewhere closes the menu; WM_NULL after.
-            PInvoke.SetForegroundWindow((HWND)ownerHandle);
-            var chosen = PInvoke.TrackPopupMenuEx(menu,
-                (uint)(TRACK_POPUP_MENU_FLAGS.TPM_RETURNCMD | TRACK_POPUP_MENU_FLAGS.TPM_RIGHTBUTTON | TRACK_POPUP_MENU_FLAGS.TPM_BOTTOMALIGN),
-                screenX, screenY, (HWND)ownerHandle, null);
-            PInvoke.PostMessage((HWND)ownerHandle, PInvoke.WM_NULL, 0, 0);
-            return chosen.Value;
-        }
-        finally
-        {
-            PInvoke.DestroyMenu(menu); // and its submenus
-        }
-    }
-
-    private static unsafe void Fill(HMENU menu, IReadOnlyList<TrayMenuItem> items)
-    {
-        foreach (var item in items)
-        {
-            if (item.Id == 0)
-            {
-                PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, (PCWSTR)null);
-                continue;
-            }
-            var flags = MENU_ITEM_FLAGS.MF_STRING | (item.Checked ? MENU_ITEM_FLAGS.MF_CHECKED : 0) | (item.Enabled ? 0 : MENU_ITEM_FLAGS.MF_GRAYED);
-            var id = (nuint)item.Id;
-            if (item.Children is { Count: > 0 } children && item.Enabled)
-            {
-                var submenu = PInvoke.CreatePopupMenu();
-                if (submenu.IsNull) continue;
-                Fill(submenu, children);
-                flags |= MENU_ITEM_FLAGS.MF_POPUP;
-                id = (nuint)(nint)submenu.Value;
-            }
-            fixed (char* text = item.Text) PInvoke.AppendMenu(menu, flags, id, text);
-        }
-    }
+    public static void BringForward(nint ownerHandle) => PInvoke.SetForegroundWindow((HWND)ownerHandle);
 }
 
 /// <summary>Session lock/unlock notices (WM_WTSSESSION_CHANGE) for a window: the mouse hook is re-installed on unlock.</summary>

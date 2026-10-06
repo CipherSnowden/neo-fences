@@ -199,34 +199,30 @@ public sealed partial class FenceHost
     {
         var panel = item.Panel!;
         var menu = new ContextMenu();
-        MenuItem Command(ItemsControl parent, string header, Action run, bool? isChecked = null, bool enabled = true)
-        {
-            var command = new MenuItem { Header = header, IsChecked = isChecked == true, IsEnabled = enabled };
-            command.Click += (_, _) => run();
-            parent.Items.Add(command);
-            return command;
-        }
+        // M35 (spec §1): icons; Open folder first, the panel's own settings, Remove last in red.
+        void Command(ItemsControl parent, string header, string? glyph, Action run, bool? isChecked = null, bool enabled = true, bool danger = false) =>
+            parent.Items.Add(MenuGlyph.Entry(header, glyph, run, isChecked, danger, enabled));
         if (CheckOf(item.Target).State != TargetState.Ok)
         {
-            Command(menu, "Locate…", () => Locate(window, item.Id));
+            Command(menu, "Locate…", MenuGlyph.Missing, () => Locate(window, item.Id));
             menu.Items.Add(new Separator());
         }
-        var look = new MenuItem { Header = "Look" };
+        Command(menu, "Open folder", MenuGlyph.OpenFolder, () => OpenItem(ShownFolder(item), ownerHandle: window.Handle));
+        var look = MenuGlyph.Entry("Look", MenuGlyph.View);
         foreach (var (choice, name) in new[] { (PanelLook.Details, "Details"), (PanelLook.List, "List"), (PanelLook.Icons, "Icons") })
-            Command(look, name, () => SetPanel(item.Id, panel with { Look = choice }), isChecked: panel.Look == choice);
+            Command(look, name, null, () => SetPanel(item.Id, panel with { Look = choice }), isChecked: panel.Look == choice);
         menu.Items.Add(look);
-        var sort = new MenuItem { Header = "Sort by" };
+        var sort = MenuGlyph.Entry("Sort by", MenuGlyph.Sort);
         foreach (var (choice, name) in new[] { (PanelSort.Name, "Name"), (PanelSort.Date, "Date modified"), (PanelSort.Type, "Type"), (PanelSort.Size, "Size") })
-            Command(sort, name, () => SetPanel(item.Id, FolderPanels.HeaderSort(panel, choice)), isChecked: panel.Sort == choice);
+            Command(sort, name, null, () => SetPanel(item.Id, FolderPanels.HeaderSort(panel, choice)), isChecked: panel.Sort == choice);
         menu.Items.Add(sort);
-        Command(menu, "Panel settings…", () => EditPanel(window, item.Id));
-        Command(menu, "Open folder", () => OpenItem(ShownFolder(item), ownerHandle: window.Handle));
-        menu.Items.Add(new Separator());
+        Command(menu, "Panel settings…", MenuGlyph.Settings, () => EditPanel(window, item.Id));
         menu.Items.Add(SizeMenu(menu, [item]));
         var alone = _items.Of(window.FenceId) is [_];
-        Command(menu, "Fill fence", () => SetFill(item.Id, !item.Fill), isChecked: item.Fill && alone, enabled: alone);
-        Command(menu, "Show as icon", () => SetPanelShown(item.Id, null));
-        Command(menu, "Remove from fence", () => RemoveItems(window, [item.Id]));
+        Command(menu, "Fill fence", MenuGlyph.Layout, () => SetFill(item.Id, !item.Fill), isChecked: item.Fill && alone, enabled: alone);
+        Command(menu, "Show as icon", MenuGlyph.ShowAs, () => SetPanelShown(item.Id, null));
+        menu.Items.Add(new Separator());
+        Command(menu, "Remove from fence", MenuGlyph.Remove, () => RemoveItems(window, [item.Id]), danger: true);
         menu.Items.Add(new Separator());
         menu.Items.Add(new MenuItem { Header = "Shift+right-click on entries: Windows' menu", IsEnabled = false });
         window.ShowItemMenu(menu, fromKeyboard);
@@ -332,18 +328,13 @@ public sealed partial class FenceHost
             return;
         }
         var menu = new ContextMenu();
-        void Command(ItemsControl parent, string header, Action run)
-        {
-            var command = new MenuItem { Header = header };
-            command.Click += (_, _) => run();
-            parent.Items.Add(command);
-        }
-        Command(menu, "Open", () => { foreach (var path in paths) OpenItem(path, ownerHandle: window.Handle); });
-        if (paths.Count == 1) Command(menu, "Open file location", () => ShowInFolder(paths[0]));
-        Command(menu, paths.Count == 1 ? "Copy path" : "Copy paths", () => CopyText(string.Join(Environment.NewLine, paths)));
+        void Command(ItemsControl parent, string header, string? glyph, Action run) => parent.Items.Add(MenuGlyph.Entry(header, glyph, run)); // M35
+        Command(menu, "Open", MenuGlyph.Open, () => { foreach (var path in paths) OpenItem(path, ownerHandle: window.Handle); });
+        if (paths.Count == 1) Command(menu, "Open file location", MenuGlyph.OpenFolder, () => ShowInFolder(paths[0]));
+        Command(menu, paths.Count == 1 ? "Copy path" : "Copy paths", MenuGlyph.Copy, () => CopyText(string.Join(Environment.NewLine, paths)));
         var itemFences = _config.Fences.Where(fence => fence.Kind == FenceKind.Items).ToList();
-        var addTo = new MenuItem { Header = "Add to fence", IsEnabled = itemFences.Count > 0 };
-        foreach (var fence in itemFences) Command(addTo, fence.Title.Length > 0 ? fence.Title : "(untitled fence)", () => AddToFence(fence.Id, paths));
+        var addTo = MenuGlyph.Entry("Add to fence", MenuGlyph.Add, enabled: itemFences.Count > 0);
+        foreach (var fence in itemFences) Command(addTo, fence.Title.Length > 0 ? fence.Title : "(untitled fence)", null, () => AddToFence(fence.Id, paths));
         menu.Items.Add(addTo);
         menu.Items.Add(new Separator());
         menu.Items.Add(new MenuItem { Header = "Shift+right-click: Windows' menu", IsEnabled = false });

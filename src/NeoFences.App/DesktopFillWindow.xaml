@@ -12,7 +12,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                   Text="Each ticked item becomes a link in the fence its group goes to. Nothing on your desktop is moved or changed. Games missing? Add your games folder in Settings → Game Library, then open this again." />
+                   Text="Each ticked item becomes a link in the fence its group goes to. Nothing on your desktop is moved or changed. Games missing? Add your games folder in Settings → Games, then open this again." />
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="GroupsPanel" />
         </ScrollViewer>

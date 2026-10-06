@@ -14,13 +14,13 @@ public sealed record HiddenGame(string Id, string Name, IReadOnlyList<string> Al
     public override string ToString() => Name;
 }
 
-/// <summary>What Settings → Game Library shows (M12; M22: the fences new games can go to, and the chosen one).</summary>
+/// <summary>What Settings → Games shows (M12; M22: the fences new games can go to, and the chosen one).</summary>
 /// <param name="HasFence">The scan runs (games are wanted somewhere).</param>
 public sealed record LibraryView(bool HasFence, IReadOnlyList<string> Folders, LibrarySources Sources, IReadOnlyList<HiddenGame> Hidden, string Status,
     IReadOnlyList<(string Id, string Title)> Fences, string? NewGamesFence, bool OnlineArt = false);
 
 /// <summary>
-/// Settings → Game Library (M12, spec §4): game folders, a checkbox per source, hidden games with "Show again", and
+/// Settings → Games (M12; M35: the Games page, spec §4): game folders, a checkbox per source, hidden games with "Show again", and
 /// "Refresh library now". Every change goes to the host, which saves, rescans and shows it back.
 /// </summary>
 public partial class SettingsWindow

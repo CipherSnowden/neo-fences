@@ -1,0 +1,107 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:NeoFences.App">
+    <!-- M35 (spec 2026-10-06-modern-menus-and-dialogs-design §1, ADR-056): one menu style for fences, items and the tray —
+         rounded, a soft shadow, 30 px rows, a soft hover, light or dark like the fences (brushes from MenuTheme). -->
+    <FontFamily x:Key="MenuIconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <ControlTemplate x:Key="MenuChrome" TargetType="ContentControl">
+        <!-- The margin leaves room for the shadow inside the transparent popup. -->
+        <Border Margin="2,2,12,14" Background="{DynamicResource MenuBackground}" BorderBrush="{DynamicResource MenuBorder}" BorderThickness="1"
+                CornerRadius="8" Padding="4">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Opacity="0.32" />
+            </Border.Effect>
+            <ContentPresenter />
+        </Border>
+    </ControlTemplate>
+
+    <Style TargetType="ContextMenu">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="Foreground" Value="{DynamicResource MenuText}" />
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="MinWidth" Value="200" />
+        <Setter Property="Grid.IsSharedSizeScope" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <ContentControl Template="{StaticResource MenuChrome}">
+                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                    </ContentControl>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Height="1" Margin="8,4" Background="{DynamicResource MenuSeparator}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="MenuItem">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Foreground" Value="{DynamicResource MenuText}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Grid>
+                        <Border x:Name="Row" MinHeight="30" CornerRadius="4" Background="Transparent" Padding="8,0,8,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="28" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuGesture" />
+                                    <ColumnDefinition Width="18" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter x:Name="IconHost" Content="{TemplateBinding Icon}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                <TextBlock x:Name="Check" Text="&#xE73E;" FontFamily="{StaticResource MenuIconFont}" FontSize="12" VerticalAlignment="Center"
+                                           Visibility="Collapsed" />
+                                <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" Margin="0,5" />
+                                <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Opacity="0.6" FontSize="12" Margin="24,0,0,0"
+                                           VerticalAlignment="Center" />
+                                <TextBlock x:Name="Arrow" Grid.Column="3" Text="&#xE76C;" FontFamily="{StaticResource MenuIconFont}" FontSize="10"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.7" Visibility="Collapsed" />
+                            </Grid>
+                        </Border>
+                        <Popup x:Name="PART_Popup" Placement="Right" HorizontalOffset="-2" VerticalOffset="-7" AllowsTransparency="True"
+                               Focusable="False" PopupAnimation="Fade" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ContentControl Template="{StaticResource MenuChrome}" Foreground="{DynamicResource MenuText}"
+                                            FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="13" MinWidth="200" Grid.IsSharedSizeScope="True">
+                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                            </ContentControl>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Role" Value="SubmenuHeader">
+                            <Setter TargetName="Arrow" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource MenuHover}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="IconHost" Property="Visibility" Value="Hidden" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                        <Trigger Property="local:MenuGlyph.Danger" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource MenuDanger}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

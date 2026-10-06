@@ -314,7 +314,7 @@ public sealed partial class FenceHost
         Folders: _config.Library.Folders,
         Sources: _config.Library.Sources,
         Hidden: HiddenGamesForSettings(),
-        Status: LibraryWanted ? _libraryStatus : "No games in any fence yet: fence menu → Add games…, or choose where new games go.",
+        Status: LibraryWanted ? _libraryStatus : "No games in any fence yet: fence menu → Add → Games…, or choose where new games go.",
         Fences: [.. _config.Fences.Where(fence => fence.Kind == FenceKind.Items).Select(fence => (fence.Id, fence.Title))],
         NewGamesFence: _config.Library.NewGamesFence,
         OnlineArt: _config.Library.OnlineArt == true); // M34

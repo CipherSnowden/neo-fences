@@ -183,7 +183,11 @@ public sealed partial class FenceHost
             .ContinueWith(download =>
             {
                 if (download.IsCompletedSuccessfully && download.Result) SetCoverChoice(game, choiceFile + ".jpg");
-                else Log.Warning("online art: the chosen cover for {Game} could not be downloaded", game.Name);
+                else
+                {
+                    Log.Warning("online art: the chosen cover for {Game} could not be downloaded", game.Name);
+                    MessageDialog.Tell(null, "The cover could not be downloaded", "The Steam store did not answer. Try again later, or choose a picture of your own."); // M35 (M34 minor M8)
+                }
             }, TaskScheduler.FromCurrentSynchronizationContext());
         window.FileChosen += picture =>
         {
@@ -240,7 +244,7 @@ public sealed partial class FenceHost
     /// <summary>Size ▸ for covers (owner's choice at planning): Normal (1×2) or Large (2×4, twice).</summary>
     private MenuItem CoverSizeMenu(IReadOnlyList<VirtualItem> items)
     {
-        var size = new MenuItem { Header = "Size" };
+        var size = MenuGlyph.Entry("Size", MenuGlyph.Size); // M35
         var spans = items.Select(FenceGrid.SpanOf).Distinct().ToList();
         foreach (var (name, span) in new[] { ("Normal", CoverSizes.Normal), ("Large (twice as big)", CoverSizes.Large) })
         {

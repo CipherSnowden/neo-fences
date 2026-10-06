@@ -58,7 +58,7 @@ public partial class AddGamesWindow : Window
             GamesPanel.Children.Add(box);
             _rows.Add((box, row.Game));
         }
-        ListStatus.Text = rows.Count > 0 ? "" : scanning ? "Looking for games…" : "No games found — add your games folder in Settings → Game Library.";
+        ListStatus.Text = rows.Count > 0 ? "" : scanning ? "Looking for games…" : "No games found — add your games folder in Settings → Games.";
         ListStatus.Visibility = rows.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
         UpdateAddButton();
     }

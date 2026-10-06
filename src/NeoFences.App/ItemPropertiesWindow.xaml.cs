@@ -188,7 +188,7 @@ public partial class ItemPropertiesWindow : Window
             {
                 Log.Warning(failure, "picture {Picture} cannot be shown", _picture);
                 _picture = null;
-                MessageBox.Show(this, "This picture cannot be used as an icon.", "NeoFences", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialog.Tell(this, "This picture cannot be used as an icon", ""); // M35
             }
             return;
         }

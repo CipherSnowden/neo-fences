@@ -11,7 +11,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                   Text="Each ticked game becomes an item in this fence. Games already here are not ticked. Missing a game? Add your games folder in Settings → Game Library." />
+                   Text="Each ticked game becomes an item in this fence. Games already here are not ticked. Missing a game? Add your games folder in Settings → Games." />
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="GamesPanel" />
         </ScrollViewer>

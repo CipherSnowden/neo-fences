@@ -45,7 +45,7 @@ public partial class FenceWindow : Window
     private bool _renaming;
     private string _title = "";
     private FenceKind _kind; // the shown tab: items, the Game Library (M12: tiles, its own menu) or a folder view (M21: read-only)
-    private const string ItemsHint = "Drop files, folders or links here — or right-click → Add item…";
+    private const string ItemsHint = "Drop files, folders or links here — or right-click → Add → Item…";
     private bool _welcome; // M30: the first fence of a fresh start (ADR-051)
     private readonly System.Windows.Threading.DispatcherTimer _undoTimer = new() { Interval = TimeSpan.FromSeconds(10) }; // M33
     private IReadOnlyDictionary<string, (string Path, bool IsPoster)> _libraryArt = new Dictionary<string, (string, bool)>();
@@ -79,6 +79,8 @@ public partial class FenceWindow : Window
     public event Action<TabColor?>? TabColorRequested;
     /// <summary>Fence menu → Colour → Custom… (M14): the host opens Windows' colour picker.</summary>
     public event Action? CustomColorRequested;
+    /// <summary>Colour ▸ Use my accent colour (M35): the fence takes Windows' current accent as its colour.</summary>
+    public event Action? AccentColorRequested;
     public event Action? DetachTabRequested;
     /// <summary>Ctrl+Tab (+1) / Ctrl+Shift+Tab (-1).</summary>
     public event Action<int>? TabCycleRequested;
@@ -124,7 +126,6 @@ public partial class FenceWindow : Window
     public event Action<FenceWindow, PixelRect>? MovedByUser;
 
     public event Action? NewFenceRequested;
-    public event Action? ExitRequested;
     /// <summary>Double-click or Enter on one item (its key).</summary>
     public event Action<string>? OpenRequested;
     /// <summary>Enter with several items selected: open each.</summary>
@@ -170,8 +171,6 @@ public partial class FenceWindow : Window
     public event Action<string, PanelCommand>? PanelCommandRequested;
     /// <summary>A drive arrived or was removed (Windows tells top-level windows): missing and unavailable items are checked again.</summary>
     public event Action? DrivesChanged;
-    /// <summary>The "Start with Windows" toggle changed (ADR-019).</summary>
-    public event Action<bool>? StartupToggled;
     /// <summary>"Settings…" in the fence menu (M6b).</summary>
     public event Action? SettingsRequested;
     /// <summary>Double-click on the title: roll up to the title bar, or back down (M5).</summary>
@@ -202,20 +201,7 @@ public partial class FenceWindow : Window
             sortItem.Click += (_, _) => SortRequested?.Invoke(sort);
             SortItem.Items.Add(sortItem);
         }
-        var noColor = new MenuItem { Header = "None", IsCheckable = true };
-        noColor.Click += (_, _) => TabColorRequested?.Invoke(null);
-        TabColorItem.Items.Add(noColor);
-        foreach (var (color, value) in TabColors)
-        {
-            var colorItem = new MenuItem
-            {
-                Header = color.ToString(), Tag = color, IsCheckable = true,
-                Icon = new Rectangle { Width = 12, Height = 12, RadiusX = 2, RadiusY = 2, Fill = new SolidColorBrush(value) },
-            };
-            colorItem.Click += (_, _) => TabColorRequested?.Invoke(color);
-            TabColorItem.Items.Add(colorItem);
-        }
-        BuildCustomColourMenu();
+        BuildColourMenu(); // M35
         DetachTabItem.Click += (_, _) => DetachTabRequested?.Invoke();
         TitleBar.SizeChanged += (_, _) => UpdateTabStripWidth();
         PreviewKeyDown += OnTabKeys;
@@ -248,8 +234,6 @@ public partial class FenceWindow : Window
         RenameItem.Click += (_, _) => BeginRename();
         LockItem.Click += (_, _) => LockToggled?.Invoke(LockItem.IsChecked);
         DeleteItem.Click += (_, _) => DeleteRequested?.Invoke();
-        ExitItem.Click += (_, _) => ExitRequested?.Invoke();
-        StartupItem.Click += (_, _) => StartupToggled?.Invoke(StartupItem.IsChecked);
         SettingsItem.Click += (_, _) => SettingsRequested?.Invoke();
         LabelsAlwaysItem.Click += (_, _) => LabelModeRequested?.Invoke(LabelMode.Always);
         LabelsOnHoverItem.Click += (_, _) => LabelModeRequested?.Invoke(LabelMode.OnHover);
@@ -309,8 +293,6 @@ public partial class FenceWindow : Window
         };
     }
 
-    public void SetStartupChecked(bool startWithWindows) => StartupItem.IsChecked = startWithWindows;
-
     /// <summary>Everything the window shows of one fence: title, menu state, icon size, labels.</summary>
     private void ApplyFence(Fence fence)
     {
@@ -336,11 +318,11 @@ public partial class FenceWindow : Window
         AutoCollectItem.Header = fence.Collect.Count switch { 0 => "Auto-collect…", 1 => "Auto-collect… (1 rule)", var count => $"Auto-collect… ({count} rules)" }; // M27
         SortItem.Visibility = _kind == FenceKind.Library ? Visibility.Collapsed : Visibility.Visible;
         foreach (var sortItem in SortItem.Items.OfType<MenuItem>()) sortItem.IsChecked = view && Equals(sortItem.Tag, fence.View!.Sort);
-        DeleteItem.Header = _kind switch
+        DeleteItem.ToolTip = _kind switch // M35: the short entry; the reassurance as its tooltip
         {
-            FenceKind.Library => "Delete fence (your games are not touched)",
-            FenceKind.View => "Delete fence (the folder is not touched)",
-            _ => "Delete fence (your files are not touched)",
+            FenceKind.Library => "Your games are not touched",
+            FenceKind.View => "The folder is not touched",
+            _ => "Your files are not touched",
         };
         UpdateEmptyHint();
         _labelMode = fence.Labels;
@@ -433,12 +415,9 @@ public partial class FenceWindow : Window
         if (many) foreach (var tab in _tabs) TabStrip.Children.Add(BuildTabHeader(tab, isActive: tab.Id == active.Id));
         ShowTitleOrTabs();
         DetachTabItem.Visibility = many ? Visibility.Visible : Visibility.Collapsed;
-        RenameItem.Header = many ? "Rename tab" : "Rename fence";
+        RenameItem.Header = many ? "Rename tab" : "Rename";
         // The bar under a single fence's title comes from its look (ApplyStyle, M14); the menu shows the fence's choice.
-        foreach (var colorItem in TabColorItem.Items.OfType<MenuItem>())
-        {
-            colorItem.IsChecked = active.CustomColor is not null ? Equals(colorItem.Tag, CustomColourTag) : Equals(colorItem.Tag, active.TabColor);
-        }
+        ShowColourChoice(active); // M35: the ring on the current swatch, the tick on Custom colour…
         if (_style is { } style) ApplyStyle(style); // headers were rebuilt: their font and the bar follow the look again
         UpdateTabStripWidth();
     }
@@ -1249,7 +1228,6 @@ public partial class FenceWindow : Window
     }
 
     private FenceStyle? _style;
-    private const string CustomColourTag = "custom";
 
     /// <summary>
     /// The fence's look (M14, spec §3): veil, outline, title ink, title strip, colour bar, title font and the title row's
@@ -1306,12 +1284,85 @@ public partial class FenceWindow : Window
     };
 
     /// <summary>Colour → Custom… (M14): Windows' colour picker.</summary>
-    private void BuildCustomColourMenu()
+    private readonly List<(TabColor? Colour, Border Ring)> _swatches = [];
+    private MenuItem? _customColourItem;
+
+    /// <summary>
+    /// Colour ▸ (M35, spec §3): round swatches inside the menu — None and the fence colours, the current one ringed — set with
+    /// one click (or Left / Right and Enter); "Use my accent colour"; "Custom colour…".
+    /// </summary>
+    private void BuildColourMenu()
     {
+        var row = new WrapPanel { Margin = new Thickness(0, 4, 0, 4), MaxWidth = 6 * 32 };
+        var keyIndex = 0;
+        void Pick(TabColor? colour)
+        {
+            BodyContextMenu.IsOpen = false;
+            TabColorRequested?.Invoke(colour);
+        }
+        void Highlight(int index)
+        {
+            for (var swatch = 0; swatch < _swatches.Count; swatch++) _swatches[swatch].Ring.Opacity = swatch == index || Equals(_swatches[swatch].Ring.Tag, true) ? 1 : 0;
+        }
+        foreach (var colour in new TabColor?[] { null }.Concat(TabColors.Keys.Select(key => (TabColor?)key)))
+        {
+            var dot = new Border
+            {
+                Width = 22, Height = 22, CornerRadius = new CornerRadius(11), BorderThickness = new Thickness(1),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(0x55, 0x80, 0x80, 0x80)),
+                Background = colour is { } swatch ? new SolidColorBrush(TabColors[swatch]) : Brushes.Transparent,
+                Child = colour is null ? new TextBlock { Text = MenuGlyph.Remove, FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 10,
+                    HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Opacity = 0.7 } : null,
+            };
+            var ring = new Border { Width = 28, Height = 28, CornerRadius = new CornerRadius(14), BorderThickness = new Thickness(2), Opacity = 0 };
+            ring.SetResourceReference(Border.BorderBrushProperty, "MenuText");
+            var cell = new Grid { Width = 30, Height = 30, Margin = new Thickness(1), Cursor = Cursors.Hand, Background = Brushes.Transparent };
+            cell.Children.Add(dot);
+            cell.Children.Add(ring);
+            System.Windows.Automation.AutomationProperties.SetName(cell, colour?.ToString() ?? "No colour");
+            cell.ToolTip = colour?.ToString() ?? "No colour";
+            var index = _swatches.Count;
+            cell.MouseEnter += (_, _) => { keyIndex = index; Highlight(index); };
+            cell.MouseLeftButtonUp += (_, click) => { click.Handled = true; Pick(colour); };
+            _swatches.Add((colour, ring));
+            row.Children.Add(cell);
+        }
+        row.MouseLeave += (_, _) => Highlight(-1);
+        var swatches = new MenuItem { Header = row, StaysOpenOnClick = true };
+        System.Windows.Automation.AutomationProperties.SetName(swatches, "Fence colour: Left and Right choose, Enter sets");
+        swatches.GotKeyboardFocus += (_, _) => Highlight(keyIndex);
+        swatches.PreviewKeyDown += (_, key) =>
+        {
+            switch (key.Key)
+            {
+                case Key.Left when keyIndex > 0: keyIndex--; break;
+                case Key.Right when keyIndex < _swatches.Count - 1: keyIndex++; break;
+                case Key.Enter:
+                    key.Handled = true;
+                    Pick(_swatches[keyIndex].Colour);
+                    return;
+                default: return;
+            }
+            key.Handled = true;
+            Highlight(keyIndex);
+        };
+        TabColorItem.Items.Add(swatches);
         TabColorItem.Items.Add(new Separator());
-        var custom = new MenuItem { Header = "Custom…", Tag = CustomColourTag, IsCheckable = true };
-        custom.Click += (_, _) => CustomColorRequested?.Invoke();
-        TabColorItem.Items.Add(custom);
+        TabColorItem.Items.Add(MenuGlyph.Entry("Use my accent colour", MenuGlyph.Colour, () => AccentColorRequested?.Invoke()));
+        _customColourItem = MenuGlyph.Entry("Custom colour…", MenuGlyph.Add, () => CustomColorRequested?.Invoke());
+        TabColorItem.Items.Add(_customColourItem);
+    }
+
+    /// <summary>The fence's colour in the menu: a ringed swatch (or None), or a tick on Custom colour… for any other colour.</summary>
+    private void ShowColourChoice(Fence fence)
+    {
+        foreach (var (colour, ring) in _swatches)
+        {
+            var current = fence.CustomColor is null && Equals(colour, fence.TabColor);
+            ring.Tag = current;
+            ring.Opacity = current ? 1 : 0;
+        }
+        if (_customColourItem is not null) _customColourItem.IsChecked = fence.CustomColor is not null;
     }
 
     /// <summary>The Recycle Bin turned full or empty, or another special icon changed (M8c).</summary>

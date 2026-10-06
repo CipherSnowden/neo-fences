@@ -84,6 +84,9 @@ public sealed class App : Application
         _exitSignal = ExitSignal();
         _exitWait = ThreadPool.RegisterWaitForSingleObject(_exitSignal, (_, _) => Dispatcher.BeginInvoke(Shutdown), null, Timeout.Infinite, executeOnlyOnce: true);
 
+        // M35 (ADR-056): one menu style for every menu, light or dark like the fences.
+        Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/NeoFences;component/menus.xaml", UriKind.Relative) });
+        MenuTheme.Apply(Resources, light: SystemTheme.AppsUseLightTheme());
         _host = new FenceHost { StartMode = _start };
         _host.ExitRequested += Shutdown;
         _host.Start();

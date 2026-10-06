@@ -290,6 +290,13 @@ public sealed partial class FenceHost
             ScheduleSave();
         };
         window.CustomColorRequested += () => PickCustomColour(window); // M14
+        window.AccentColorRequested += () => // M35: the fence takes Windows' current accent as its colour
+        {
+            var accent = System.Windows.SystemColors.AccentColor;
+            _config = FenceEdits.SetCustomColor(_config, window.FenceId, new NeoFences.Core.Appearance.Argb(0xFF, accent.R, accent.G, accent.B).ToHex());
+            RefreshTabs(window);
+            ScheduleSave();
+        };
         window.DetachTabRequested += () => DetachTab(window, window.FenceId, dropPoint: null);
         window.TabCycleRequested += step => CycleTab(window, step);
         window.SetTabs(FenceTabs.TabsOf(_config, box.Id), shown.Id);
@@ -301,7 +308,6 @@ public sealed partial class FenceHost
         window.LockToggled += locked => SetFenceLocked(window, locked);
         window.DeleteRequested += () => DeleteFence(window);
         window.NewFenceRequested += CreateFence;
-        window.ExitRequested += () => ExitRequested?.Invoke();
         window.OpenRequested += key => OpenKey(window, key);
         window.OpenManyRequested += keys =>
         {
@@ -325,11 +331,9 @@ public sealed partial class FenceHost
         window.LayoutRequested += layout => SetFenceLayout(window, layout); // M24
         window.AddWidgetRequested += kind => AddWidget(window, kind); // M25
         window.ItemsShownChanged += OnWidgetTick; // a rolled-up fence opened: its widgets show the right time at once
-        window.StartupToggled += SetStartWithWindows;
         window.SettingsRequested += OpenSettings;
         window.LabelModeRequested += labels => SetFenceLabels(window, labels);
         window.SetShortcutArrows(_config.Settings.ShowShortcutArrows);
-        window.SetStartupChecked(_config.Settings.StartWithWindows);
         window.SortRequested += sort => SortFence(window, sort);
         window.DragRequested += keys => DragItems(window, keys);
         window.RollUpToggled += () => ToggleRollUp(window);
@@ -553,9 +557,8 @@ public sealed partial class FenceHost
         var now = DateTimeOffset.Now;
         var saved = _snapshots.Save(Snapshots.Take(_config, _items, name: $"Before deleting {fence.Title} ({now:d MMM HH:mm})", now: now)) is not null;
         if (!saved) Log.Warning(_snapshots.LastFailure, "the snapshot before deleting a fence could not be saved; asking instead");
-        if (!saved && count > 0 && MessageBox.Show(window,
-                $"Delete \"{fence.Title}\" and its {count} item{(count == 1 ? "" : "s")}?\n\nYour files, folders and apps are not touched.",
-                "NeoFences", MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel) != MessageBoxResult.OK) return;
+        if (!saved && count > 0 && !MessageDialog.Ask(window, $"Delete \"{fence.Title}\" and its {count} item{(count == 1 ? "" : "s")}?", // M35
+                "The snapshot that lets you undo this could not be saved. Your files, folders and apps are not touched.", primary: "Delete", secondary: "Cancel")) return;
         _undo = Undo.ForDeletion(_config, _items, fence.Id); // M33
         _undoDeleteUntil = now.AddMinutes(2);
         _trayIcon?.ShowBalloon("Fence deleted", $"\"{fence.Title}\" is gone. Press Ctrl+Z in a fence, or tray → Undo delete, to bring it back."); // M33
@@ -584,6 +587,7 @@ public sealed partial class FenceHost
         _lightTheme = light;
         Log.Information("Windows app mode changed; light: {Light}", light);
         foreach (var window in _windows.Values) window.ApplyTheme(light);
+        MenuTheme.Apply(System.Windows.Application.Current.Resources, light); // M35: the menus follow too
         RestyleAll(); // M14: the tone's strength and ink
         RefreshSettings();
     }
@@ -734,7 +738,6 @@ public sealed partial class FenceHost
     {
         _config = _config with { Settings = _config.Settings with { StartWithWindows = startWithWindows } };
         ApplyStartup();
-        foreach (var window in _windows.Values) window.SetStartupChecked(startWithWindows);
         SaveNow();
         RefreshSettings();
     }
@@ -1298,7 +1301,9 @@ public sealed partial class FenceHost
         }
         if (restoreItems.Count > 0) restoreItems.Add(TrayMenuItem.Separator);
         restoreItems.Add(new TrayMenuItem(TraySnapshotsSettings, "More in Settings…"));
-        var chosen = TrayMenu.Show(_messages.Handle,
+        // M35 (ADR-056): NeoFences' own menu, like the fence and item menus; foreground first so a click elsewhere closes it.
+        TrayMenu.BringForward(_messages.Handle);
+        TrayMenuView.Show(
         [
             .. SafetyTrayItems(), // M33: "Leave safe mode", "Undo delete" first while they apply
             .. UpdateTrayItems(), // M17: "Restart to update to v…" first while an update waits
@@ -1316,7 +1321,10 @@ public sealed partial class FenceHost
             new TrayMenuItem(TrayPause, "Pause NeoFences", Checked: _paused),
             TrayMenuItem.Separator,
             new TrayMenuItem(TrayExit, "Exit NeoFences"),
-        ], screenX, screenY);
+        ], TrayMenuPoint(screenX, screenY), TrayGlyph, OnTrayChosen);
+
+        void OnTrayChosen(int chosen)
+        {
         switch (chosen)
         {
             case TrayNewFence:
@@ -1349,6 +1357,24 @@ public sealed partial class FenceHost
                 break;
         }
     }
+    }
+
+    /// <summary>The pointer in WPF units (M35): screen pixels over the fences' scale (one scale is enough for the tray's monitor here).</summary>
+    private Point TrayMenuPoint(int screenX, int screenY)
+    {
+        // ponytail: the first fence's DPI; a tray on a monitor with another scale lands a little off, per-monitor if it matters.
+        var scale = _windows.Values.FirstOrDefault() is { } window ? System.Windows.Media.VisualTreeHelper.GetDpi(window).DpiScaleX : 1.0;
+        return new Point(screenX / scale, screenY / scale);
+    }
+
+    private static string? TrayGlyph(int id) => id switch
+    {
+        TrayNewFence => MenuGlyph.NewFence, TrayNewFolderPanel => MenuGlyph.Folder, TrayAddFromDesktop => MenuGlyph.Desktop,
+        TrayQuickHide => MenuGlyph.Hide, TrayPeek => MenuGlyph.Peek, TrayTakeSnapshot => MenuGlyph.Snapshot, TrayRestoreMenu => MenuGlyph.Restore,
+        TrayHelp => MenuGlyph.Help, TraySettings => MenuGlyph.Settings, TrayPause => MenuGlyph.Pause, TrayExit => MenuGlyph.Exit,
+        TrayUndoDelete => MenuGlyph.Undo, TrayLeaveSafeMode => MenuGlyph.SafeMode, TrayRestartToUpdate => MenuGlyph.Refresh,
+        _ => null,
+    };
 
     private void OnDesktopGesture(DesktopGesture gesture, int screenX, int screenY)
     {

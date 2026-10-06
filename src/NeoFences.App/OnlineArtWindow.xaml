@@ -8,7 +8,7 @@
         <TextBlock Text="Find covers online?" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,8" />
         <TextBlock x:Name="CountText" TextWrapping="Wrap" Margin="0,0,0,6" />
         <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,18"
-                   Text="NeoFences sends the names of games without a cover to the Steam store, and asks your web links' sites for their icons. Nothing else leaves your PC. You can change this in Settings → Game Library." />
+                   Text="NeoFences sends the names of games without a cover to the Steam store, and asks your web links' sites for their icons. Nothing else leaves your PC. You can change this in Settings → Games." />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="YesButton" Content="Find covers" IsDefault="True" Style="{DynamicResource AccentButtonStyle}" MinWidth="100" Margin="0,0,8,0" />
             <Button x:Name="NoButton" Content="Not now" IsCancel="True" MinWidth="90" />
