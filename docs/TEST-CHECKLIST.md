@@ -781,3 +781,23 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AS9 | Settings: both desktop gestures off | log "desktop gestures: WH_MOUSE_LL removed" and no "installed" after; right-click on the desktop is Windows' own; one switch on → only that gesture works |
 | AS10 | Open the newest log | the profile folder shows as `%USERPROFILE%`, never the user name |
 | AS11 | Safe mode → tray **Leave safe mode** | NeoFences restarts normally; widgets, panels and gestures back |
+
+## AT — 0.21.0 icons and game tiles (M34)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AT1 | Apps fence at 100 % and at 150 % scaling | icons sharp; no slab; a faint rounded hover; selection a rounded box in the accent |
+| AT2 | A Games fence with Normal covers | rounded covers with a soft shadow, name below; no gap between cover rows |
+| AT3 | A cover → Size ▸ Large; an older 2×2 cover | Large is twice Normal; the 2×2 shows Large |
+| AT4 | Games without art (Blur, AC Black Flag) | the glow tile: the icon's colours as a backdrop, the icon in the middle |
+| AT5 | Select a cover; an icon; a folder panel row | an accent ring around the cover; the accent box; the row in the accent |
+| AT6 | Fence → Labels → On hover, point at a cover | its name fades in over the bottom; no pop-under name |
+| AT7 | First scan with games without a cover | "Find covers online?"; Not now → asked again at the next scan; Find covers → covers within about 15 s (log "online art: N cover(s) found") |
+| AT8 | Settings → Game Library → the switch off, then on | off keeps the found covers; on looks up the rest again |
+| AT9 | A game → Choose cover… | Steam results; a picked one shows; From a file… shows (the file unchanged); Reset to automatic |
+| AT10 | A web link with the switch on; off; a dead site | the site's icon; the letter badge; the letter badge |
+| AT11 | Minecraft Launcher (a Store app's shortcut) | its own icon, not Explorer's |
+| AT12 | A missing item | its icon at its real size, dimmed, with the "!" badge |
+| AT13 | Windows light mode | tiles, glow and accents readable |
+| AT14 | A `watchdog-<pid>` file of an ended process in the data folder, then start | the file is gone |
+| AT15 | Safe mode | no question, no lookups |

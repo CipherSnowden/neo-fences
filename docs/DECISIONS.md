@@ -1412,3 +1412,26 @@ snapshot restore clears the entry. Nothing is written to disk for undo.
 
 **Consequences.** One level only (the next removal replaces it) and lost on exit — the snapshot covers a deleted fence
 after that. A multi-level history can grow from `UndoEntry` later.
+
+## ADR-055 — Opt-in online art: Steam store covers, website icons from the sites themselves
+**Date:** 2026-10-06 · **Status:** Accepted
+
+**Context.** Only Steam keeps a 2:3 cover on disk; 7 of the owner's 12 games had none and showed a stretched program icon
+on a grey slab. Every website showed the browser's icon. Until 0.20 NeoFences made no network calls except update checks
+on GitHub; friends must be able to keep it that way.
+
+**Decision.** Online art is **off until the user says yes**: the first time a library scan leaves games without a cover,
+NeoFences asks once ("Find covers online?"); the same switch is in Settings → Game Library ("Find covers and website icons
+online"). With it on, after each scan the games still without a chosen cover or a cover on disk are looked up one at a
+time on the **Steam store's public search** (no account, no key; the name with punctuation as spaces) and only a **strict
+match** counts (names equal after ignoring case, punctuation, spacing and ™ ® ©); the cover's address comes from Steam's
+public asset service. A miss is not asked again for 30 days or until the game's name changes; a failed connection records
+nothing. A web link's icon comes **from the site itself** (its declared icon, the largest, else `/favicon.ico`), once;
+otherwise a coloured letter badge. Replies are capped (images 5 MB, pages 1 MB), must be images, and time out after 10 s.
+Everything found lives in `covers\` with `index.json`; "Choose cover…" adds the user's pick (a Steam result or a copy of a
+picture) per game in the config. Order: the user's choice, the cover on disk, a cover found online, the launcher's logo,
+else the glow tile.
+
+**Consequences.** Only game names (to Steam) and web-link addresses (to those sites) leave the PC, and only after a yes;
+turning the switch off keeps what was found. Games not on Steam (or under another name) keep their glow tile until the
+user chooses a cover. Steam's public endpoints can change; a change only means fewer covers, never a failure.

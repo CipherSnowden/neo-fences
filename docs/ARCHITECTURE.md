@@ -171,6 +171,17 @@ games… is open; after each scan game items follow their game's shortcut and ne
 Game Library fence becomes an items fence once (a "Before games became items" snapshot first). The library fence kind
 stays in the code, not in the menus (ADR-045, `research/m22-games-as-items.md`).
 
+**0.21.0 (M34, icons and game tiles)**: game tiles in Windows 11's style — rounded 2:3 covers with a soft shadow
+(two faint layers, no effect), the name below or, on fences with labels on hover, over the cover; hover lifts, selection
+rings in the accent; a glow tile for games without art (the icon shrunk to a few pixels and stretched as a backdrop, the
+icon in the middle). Icons sit on the glass with an accent selection; the fence window uses layout rounding and
+high-quality scaling; generic icons come from the system image list at their size. Covers are Normal (1×2) or Large (2×4,
+`CoverSizes`), and cover fences' cells are as wide as a Normal cover needs to fill two rows. Art order in Core
+(`GameArt.Choose`): choice, disk, online, logo, glow. Opt-in online art (ADR-055): asked once, Steam store lookups after each
+scan (`OnlineArt` in Shell, strict names, misses for 30 days, `coversindex.json`), website icons from the sites or a letter
+badge (`SiteIcons`), Choose cover…. Store-app shortcuts through Explorer show the app's icon. Stale `watchdog-<pid>` files
+go at start. `research/m34-icons-and-game-tiles.md`.
+
 **0.20.0 (M33, safety net)**: a crash loop ends visibly — normal restarts (`--restarted`, update check about 10 s in),
 then safe mode at the limit (`--safe-mode`: fences only, no hook, widget timers, panels, collect or accents; notice, banner,
 tray Leave safe mode), then the "NeoFences stopped" window when safe mode crashes too (`--stopped`; `CrashRecovery.Decide`,

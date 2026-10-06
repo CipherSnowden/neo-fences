@@ -105,6 +105,9 @@ Explorer or another app and that app gets a copy of the file — the original st
 
 **Change one:** **Properties…** (or **F2** with its name selected, or **Alt+Enter**).
 
+**Website icons:** a web link shows the site's own icon when **Find covers and website icons online** is on (Settings →
+Game Library); otherwise a coloured letter (a red **Y** for YouTube) instead of your browser's icon.
+
 **Missing items:** a link whose target is gone shows dimmed with a small **!** badge; one on a drive or network share
 that is not connected just shows dimmed. Opening a missing one asks: **Locate…** (pick where it is now), **Remove from
 fence**, or Cancel. After a Locate…, NeoFences offers to fix the other items that moved the same way, with a snapshot
@@ -126,21 +129,27 @@ Store**, the **game folders** you add, and game shortcuts on your desktop — an
 - Fence menu → **Add games…** lists every game NeoFences found; tick the ones you want in that fence.
 - **Settings → Game Library**: **New games go to** (the fence where newly installed games appear), **Game folders (each
   sub-folder is a game)**, **Look for games in** (which launchers to read), **Hidden games** (games hidden in older versions; **Show again**), and
-  **Refresh library now**.
-- A game's menu: **Open**, **Show as ▸ Cover tile / Icon**, **Size ▸**, **Open install folder**, **Copy path**,
+  **Refresh library now**, and **Find covers and website icons online**.
+- A game's menu: **Open**, **Show as ▸ Cover tile / Icon**, **Choose cover…**, **Size ▸ Normal / Large (twice as big)**, **Open install folder**, **Copy path**,
   **Properties…**, **Remove from fence**. A game that is no longer installed says "Not installed".
+- **Covers:** Steam games bring their cover from your disk. For the others NeoFences can **find covers online** on the
+  Steam store: it asks once ("Find covers online?"), and the switch is **Settings → Game Library → Find covers and website
+  icons online**. Only the names of games without a cover are sent, and only an exact name counts. A game without a cover
+  shows its icon on a tile in its own colours.
+- **Choose cover…** (a game's menu): pick one of the Steam store's covers for its name, **From a file…** (NeoFences keeps a
+  copy; your picture is not moved), or **Reset to automatic**.
 
 ![A Games fence with covers](guide/games.jpg)
 
 ## 4. Sizes and layout
 
 - **Size:** right-click an item, widget or panel → **Size** and pick from a 4 × 4 grid (1 × 1 up to 4 × 4 cells), or
-  **Default size**. With several things selected, it sets them all. The arrow keys and **Enter** work in the grid too.
+  **Default size**. With several things selected, it sets them all. A game cover has two sizes: **Normal** and **Large (twice as big)**. The arrow keys and **Enter** work in the grid too.
 - **Layout:** fence menu → **Layout** → **Flow (packed)** fills the fence in order; **Free (fixed positions)** keeps each
   thing where you drop it.
 - **Icon size:** fence menu → **Icon size** (Small, Medium, Large, Extra large).
 - **Labels:** fence menu → **Labels** → **Always**, or **On hover (icons only)** for a tight grid that shows a name only
-  when you point at it.
+  when you point at it. A game cover then shows its name over itself.
 
 ## 5. Widgets
 
@@ -248,6 +257,9 @@ Tray or fence menu → **Settings…**:
 - It never writes into a folder you show in a panel or watch with auto-collect.
 - Hidden desktop icons **always come back**: when NeoFences exits, crashes, or is ended in Task Manager (a small helper
   watches for that), and when you uninstall it.
+- With **Find covers and website icons online** on, NeoFences sends the names of games without a cover to the Steam store
+  and asks your web links' sites for their icons; nothing else leaves your PC. Updates come from GitHub. Pictures it finds
+  are kept in `%LOCALAPPDATA%\NeoFences\covers`.
 - Everything it keeps is in `%LOCALAPPDATA%\NeoFences`: settings (`config.json`), items (`items.json`), daily backups,
   snapshots and logs. If a file there is damaged, NeoFences starts from its backup.
 
