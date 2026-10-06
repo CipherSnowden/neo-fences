@@ -787,3 +787,6 @@ stored at that moment; the tray placed with the first fence's DPI; Settings 820 
 tray icon; no access-key letters; two spec test items not in Core; hex shorthand while typing; an unused style in
 Settings; the GUIDE's item-menu and Settings screenshots show the old look.
 **Next:** release 0.22.0 when the owner says so; then M36 fence settings and presets.
+**Released:** 0.22.0 on 2026-10-06 — CI and the release build passed first time; draft with the delta package (451 KB);
+install check (the installed 0.21.0 updated itself in 3 s; all four fences and the startup entry unchanged; the new tray menu
+listed after the update — the install check now reads NeoFences' own menu); published; hub refreshed.

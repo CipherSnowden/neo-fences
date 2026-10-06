@@ -31,8 +31,8 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Released 0.20.0 on 2026-10-06 (the installed 0.19.1 updated itself in 2 s; data unchanged; logs now write %USERPROFILE%)
 - [x] **M34 — Icons and game tiles** (0.21.0; released 2026-10-06): crisp icons at any scaling, rounded and theme-aware cover tiles, the no-art tile, Set cover…, opt-in online covers, 2:3 cover sizes, row spacing, accent selection, Steam art from disk, website and Xbox tiles
   - [x] Released 0.21.0 on 2026-10-06 (the installed 0.20.0 updated itself in 3 s; data unchanged; the covers question showed on the real setup)
-- [x] **M35 — Modern menus and dialogs** (0.22.0; merged 2026-10-06, release pending): Fluent fence/item menus, dark tray menu, the fence menu regrouped (~10 entries), one Fluent confirm dialog, a modern colour picker
-  - [ ] Release 0.22.0 (the user approved the release 2026-10-06)
+- [x] **M35 — Modern menus and dialogs** (0.22.0; released 2026-10-06): Fluent fence/item menus, dark tray menu, the fence menu regrouped (~10 entries), one Fluent confirm dialog, a modern colour picker
+  - [x] Released 0.22.0 on 2026-10-06 (the installed 0.21.0 updated itself in 3 s; data unchanged; the new tray menu after the update)
 - [ ] **M36 — Fence settings and presets**: per-fence settings window (transparency, title alignment/font, hide title bar, labels, spacing), look presets, export/import, Settings navigation + switches + reset
 - [ ] **M37 — Performance at scale**: icon cache, virtualized fences, cheaper label shadows, idle timers that stop, ready-to-run publish; 500 items / 50 fences test
 - [ ] **M38 — Compatibility and accessibility**: Windows 10 and Windows 11 22H2/23H2/24H2 test pass (Hyper-V), two monitors with mixed scaling; High Contrast, focus visuals, named fences, a keyboard way in
