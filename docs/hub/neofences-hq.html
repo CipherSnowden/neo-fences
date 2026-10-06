@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-07",
-  commit: "b4acfb1",
-  phase: "0.24.0 — performance at scale (path to 1.0)",
-  current: "0.24.0 RELEASED and installed (your 0.23.0 updated itself in 2 s): icons from a cache at start, visible icons first, nothing ticking in a game, smoother big fences · next: M38 compatibility (Hyper-V, asked first)",
+  commit: "53462cd",
+  phase: "0.25.0 — keyboard way in and the Windows 11 VM (path to 1.0)",
+  current: "M38 merged: Peek (Ctrl+Alt+Space) puts the keyboard in a fence with a visible ring, Tab to the next fence, Esc back to your app; a scripted Windows 11 VM pass, 12 of 12 · next: M38.1 a second VM so live checks run there, not on your PC; then release 0.25.0 when you say so",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -807,6 +807,14 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
+      { t: "You picked the keyboard through Peek and a scripted VM test pass; Windows 10 dropped — Windows 11 only (ADR-059)", s: "done" },
+      { t: "Hyper-V on; NF-Win11 built from your ISO (no Setup clicks); five runs fixed the test tooling, then 12 of 12", s: "done" },
+      { t: "Native build (837 tests); Opus review: 6 important fixed (Esc during Peek, keyboard return, rolled-up fences, VM script)", s: "done" },
+      { t: "Live check 7 of 7 on a copy of your data; VM pass on 0.25.0-rc.1 12 of 12; merged locally", s: "done" },
+      { t: "M38.1: a second VM (NF-Win11-Dev) and Invoke-VmLive.ps1 — live checks in the VM, not on your PC", s: "wip" },
+      { t: "Release 0.25.0 (asked first)", s: "todo" }
+    ] },
     { group: "M37 · Performance at scale (0.24.0)", items: [
       { t: "You picked smooth big setups, faster start, truly idle; measure, then fix", s: "done" },
       { t: "Six measured prototype rounds (500 items / 50 fences); ready-to-run dropped (7 %); virtualization after 1.0 (your call)", s: "done" },
@@ -1208,7 +1216,8 @@ const HUB = {
     { id: "M35", name: "Modern menus and dialogs", goal: "One menu style with icons, 12-line fence menu, Settings sections and switches, swatches and a picker, one dialog — released 0.22.0", s: "done" },
     { id: "M36", name: "Fence settings and presets", goal: "Fence settings window, five presets and own ones, Export / Import setup, Reset settings — released 0.23.0", s: "done" },
     { id: "M37", name: "Performance at scale", goal: "Icon cache, visible first, idle timers, lighter items, a 500 / 50 measurement — released 0.24.0", s: "done" },
-    { id: "M38", name: "Compatibility and accessibility", goal: "Peek takes the keyboard; a Windows 11 test pass in a Hyper-V VM (Windows 10 dropped, ADR-059)", s: "wip" },
+    { id: "M38", name: "Compatibility and accessibility", goal: "Peek takes the keyboard (Tab, Esc back), visible focus; a scripted Windows 11 VM pass, 12 of 12 — merged, release pending", s: "wip" },
+    { id: "M38.1", name: "Test VMs for live checks", goal: "A second VM (NF-Win11-Dev) and Invoke-VmLive.ps1: live checks and probes in a VM, not on your PC", s: "wip" },
     { id: "M39", name: "Release readiness", goal: "Freeware licence, README, then 1.0.0-rc to friends and 1.0.0", s: "todo" }
   ],
   versions: [
@@ -1236,6 +1245,7 @@ const HUB = {
     { v: "0.22.0", s: "done", scope: "Modern menus and dialogs (M35): one menu style with icons for fences, items and the tray, a 12-line fence menu, Settings in sections with switches, colour swatches and a picker, one message dialog. Released 2026-10-06; the installed 0.21.0 updated itself." },
     { v: "0.23.0", s: "done", scope: "Fence settings and presets (M36): each fence its own look (style, background, title font and alignment, title bar on hover, spacing), five look presets and your own, Export / Import setup as one .neofences file, Reset settings to defaults. Released 2026-10-06; the installed 0.22.0 updated itself." },
     { v: "0.24.0", s: "done", scope: "Performance at scale (M37): icons from a cache at start, visible icons first, nothing ticking while hidden or in a game, labels drawn once, cover tiles built only for covers, a 500-item / 50-fence measurement. Released 2026-10-06; the installed 0.23.0 updated itself." },
+    { v: "0.25.0", s: "todo", scope: "Keyboard way in and the Windows 11 VM (M38): Peek puts the keyboard in a fence (arrows, Enter, Tab to the next fence, Esc back to your app) with a visible ring; a scripted Windows 11 test pass in Hyper-V. Merged 2026-10-07; release pending." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1429,7 +1439,8 @@ const HUB = {
     { id: "ADR-056", t: "One menu style, drawn by NeoFences, for fences, items and the tray", s: "Accepted", d: "A shared style draws every menu (rounded, icons, red destructive entries, light/dark); the tray menu is the same WPF menu; Settings in sections with switches; swatches and a picker; one message dialog.", c: "One look everywhere; WPF's Fluent theme stays off the fences; menus are WPF popups for tests." },
     { id: "ADR-057", t: "Per-fence looks that fall back to all fences; presets copy; the whole setup as one file", s: "Accepted", d: "A fence's own look overrides Settings → Appearance part by part (empty = Like all fences); presets are copies; Export / Import a .neofences zip; import and reset take a whole snapshot first (Settings and presets too).", c: "Per-fence fonts are back in a window (ADR-038 amended); no new dependency; schema stays 5." },
     { id: "ADR-058", t: "Measure first; an icon and name cache; visible first; timers only while needed", s: "Accepted", d: "A 500 / 50 measurement script and timing marks; icons asked once per run, cached in cache\\icons and shown from there at start, re-checked daily; widget, hover and collect timers stop while nothing shows; labels drawn once; tiles only for covers.", c: "Icons 11 s → 3 s at 500 items; ready-to-run and virtualization not done; the start is now bound by creating the fence windows." },
-    { id: "ADR-059", t: "Windows 11 is the only target", s: "Accepted", d: "NeoFences targets Windows 11 x64 only; Windows 10 is neither targeted nor tested (it may run; its fallbacks stay as harmless degradation).", c: "README, guide and project instructions say Windows 11; the never-run older desktop-layer path stays untested and is no release blocker." }
+    { id: "ADR-059", t: "Windows 11 is the only target", s: "Accepted", d: "NeoFences targets Windows 11 x64 only; Windows 10 is neither targeted nor tested (it may run; its fallbacks stay as harmless degradation).", c: "README, guide and project instructions say Windows 11; the never-run older desktop-layer path stays untested and is no release blocker." },
+    { id: "ADR-060", t: "Peek takes the keyboard; a scripted Windows 11 test pass in a Hyper-V VM", s: "Accepted", d: "After its hotkey Peek gives the keyboard to the fence under the mouse (else the last used, else the first); Tab / Shift+Tab between fences, Esc or the hotkey gives it back; the ring shows only from the keyboard. tools/vm builds a Windows 11 VM and runs a 12-check pass for every release candidate." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1527,7 +1538,8 @@ const HUB = {
     { date: "2026-10-06", topic: "M34 icons and game tiles (merged)", done: "Two power cuts survived; mockups with your art; spec; Steam probe; you chose Normal / Large covers; prototype probe; native build (747 tests); Opus review fixes; live check AT (12 scripted passes); merged locally.", next: "Released 0.21.0; next: set up the Games fence, then M35" },
     { date: "2026-10-06", topic: "M35 modern menus and dialogs (merged)", done: "Mockups (menus with icons, Settings section list, swatches); prototype probe; native build (774 tests); Opus review fixes; live check AU incl. light mode; merged locally.", next: "Released 0.22.0; next: M36 fence settings and presets" },
     { date: "2026-10-06", topic: "M36 fence settings and presets (merged)", done: "Mockups (small settings window, five presets); two prototype probes; native build (810 tests); Opus review fixes (import collect watermarks, export temp name); live check AV; merged locally.", next: "Released 0.23.0; next: M37 performance at scale" },
-    { date: "2026-10-06", topic: "M37 performance at scale (merged)", done: "Six measured prototype rounds; native build (824 tests); Opus review fixes (widgets frozen at start, placeholder icons, shortcut re-checks, the script's restore); live check AW; merged locally.", next: "Released 0.24.0; next: M38 compatibility" }
+    { date: "2026-10-06", topic: "M37 performance at scale (merged)", done: "Six measured prototype rounds; native build (824 tests); Opus review fixes (widgets frozen at start, placeholder icons, shortcut re-checks, the script's restore); live check AW; merged locally.", next: "Released 0.24.0; next: M38 compatibility" },
+    { date: "2026-10-07", topic: "M38 keyboard way in and the Windows 11 VM (merged)", done: "Windows 11 only (ADR-059); Hyper-V and NF-Win11 built; keyboard probe; five VM runs to 12 of 12; native build (837 tests); Opus review fixes; live check 7 of 7; VM pass on 0.25.0-rc.1 12 of 12; merged locally.", next: "M38.1 test VMs for live checks (your call: tests in VMs, not on your PC); release 0.25.0 when you say so; M39." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2195,7 +2207,20 @@ const HUB = {
     ["4ec27c5", "docs: refreshed the hub for M37"],
     ["f7b29cb", "chore: bumped the version to 0.24.0"],
     ["adc8616", "docs: marked the 0.24.0 release as approved"],
-    ["0894ad5", "docs: recorded the 0.24.0 release"]
+    ["0894ad5", "docs: recorded the 0.24.0 release"],
+    ["dc3b757", "docs: refreshed the hub for the 0.24.0 release"],
+    ["6d0bf92", "docs: claimed M38 compatibility and accessibility"],
+    ["5862c3d", "docs: added the M38 keyboard and older Windows design spec"],
+    ["b4acfb1", "docs: made Windows 11 the only target in ADR-059"],
+    ["f1a3c3f", "docs: refreshed the hub for Windows 11 only"],
+    ["7ab6c41", "docs: added the M38 keyboard way in and Windows 11 VM implementation plan"],
+    ["d597a19", "feat: added the fences' keyboard reading order and the VM check report in Core"],
+    ["1185712", "feat: made Peek put the keyboard in a fence and give it back on Esc"],
+    ["e71fd90", "feat: added the Windows 11 test VM and its scripted checklist"],
+    ["b067548", "docs: described the keyboard way in and the Windows 11 VM in ADR-060, architecture, features, checklist AX and the M38 note"],
+    ["e8ef390", "fix: fixed Peek's Esc, keyboard return and rolled-up fences, and made the VM checks report unfinished passes and always stop the VM"],
+    ["d12e0d4", "docs: added the M38 live check and VM pass results"],
+    ["53462cd", "docs: recorded M38 as merged and claimed M38.1 test VMs for live checks"]
   ]
 };
 /* ===== END HUB DATA ===== */
