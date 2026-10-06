@@ -12,7 +12,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>NeoFences</AssemblyName>
     <!-- Shown in Settings → About. build\pack.ps1 -Version sets the released one (M7, ADR-023). -->
-    <Version>0.23.0</Version>
+    <Version>0.24.0</Version>
     <!-- Resource 32512: the tray icon loads it from the exe (M6a). -->
     <ApplicationIcon>NeoFences.ico</ApplicationIcon>
   </PropertyGroup>
