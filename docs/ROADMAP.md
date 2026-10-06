@@ -36,6 +36,7 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
 - [x] **M36 — Fence settings and presets** (0.23.0; released 2026-10-06): per-fence settings window (transparency, title alignment/font, hide title bar, labels, spacing), look presets, export/import, Settings navigation + switches + reset
   - [x] Released 0.23.0 on 2026-10-06 (the installed 0.22.0 updated itself; data unchanged)
 - [x] **M37 — Performance at scale** (0.24.0; merged 2026-10-06, release pending): icon cache, virtualized fences, cheaper label shadows, idle timers that stop, ready-to-run publish; 500 items / 50 fences test
+  - [ ] Release 0.24.0 (the user approved the release 2026-10-06)
 - [ ] **M38 — Compatibility and accessibility**: Windows 10 and Windows 11 22H2/23H2/24H2 test pass (Hyper-V), two monitors with mixed scaling; High Contrast, focus visuals, named fences, a keyboard way in
 - [ ] **M39 — Release readiness**: licence, PRIVACY, SECURITY, third-party notices, issue templates, checksums and attestations in CI, README/guide refresh, landing page (GitHub Pages), Core tests on Linux in CI
 - [ ] **1.0.0-rc** to friends (beta channel, 1–2 weeks), then **1.0.0**
