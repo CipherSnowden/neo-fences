@@ -75,7 +75,8 @@ title strip), how solid the background is and the title font are in **Settings �
 wallpaper** picks each fence's colour from the wallpaper behind it — Wallpaper Engine included.
 
 **Delete:** fence menu → **Delete fence (your files are not touched)**. Only the fence and its links go. NeoFences
-takes a snapshot first; **Ctrl+Z** in a fence, or tray → **Undo delete**, brings it back for 2 minutes.
+takes a snapshot first; **Ctrl+Z** in a fence, or tray → **Undo delete**, brings it back for 2 minutes. (Keys reach a fence after
+a click on the desktop or the fence; from another app use the tray.)
 
 ![The fence menu](guide/fence-menu.png)
 

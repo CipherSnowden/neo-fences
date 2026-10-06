@@ -28,3 +28,25 @@ log limit with size rolling; restored items not re-checked; "New games go to" no
 not pruned; one banner at a time; Peek's click-outside needs the mouse hook (gestures off or safe mode); Start from a
 backup edge cases (locked file wait, newer-version config, half copy); a failed folder listing keeps its watcher; PID
 reuse in the keeper; a repeating "icons not hidden" notice.
+
+## Live check (branch builds, backed-up data; Debug with `NEOFENCES_TEST_CRASH=1` for AS1–AS4)
+
+| ID | Result |
+|---|---|
+| AS1 | **Pass**: 4 unclean exits restarted ("main restarted (unclean exit)"), about 5 s apart. |
+| AS2 | **Pass**: safe mode — tray "Leave safe mode" first, the Settings banner, no `WH_MOUSE_LL installed` line. |
+| AS3 | **Pass after a fix**: the stopped window showed after the safe-mode crash, but its **Close** did nothing (`IsCancel` closes only a dialog; the window is modeless) — fixed with a click handler; after Close no NeoFences process is left. |
+| AS4 | **Pass**: "Before starting from a backup" snapshot, the newest daily backups in place, safe mode started. |
+| AS5 | **Pass**: a killed watchdog was replaced at once ("the watchdog is not running; starting another"); none left after Exit. |
+| AS6 | **Pass**: Del → "Removed 1 item" bar; Undo and Ctrl+Z each put the item back (19 → 18 → 19). |
+| AS7 | **Pass**: Delete fence asked nothing, took a snapshot; tray "Undo delete (Apps)" and Ctrl+Z each brought it back with its 19 items. |
+| AS8 | **Pass**: config.json locked at start → "read-only: true" from the backup, the banner, the file untouched at exit. |
+| AS9 | **Pass**: both switches off → "WH_MOUSE_LL removed"; draw on again → installed. |
+| AS10 | **Pass**: the test builds wrote the profile path only as `%USERPROFILE%` (0 unmasked lines). |
+| AS11 | **Pass**: Leave safe mode → a normal start with the mouse hook. |
+
+Keys reach a fence only when the desktop had focus before the click (ADR-015); from another app Del and Ctrl+Z go to
+that app, while the undo bar and tray Undo delete always work (GUIDE says so now). A click on a game tile in the Games
+fence left the desktop in front even then (pre-existing; for the M35 menus and keyboard work). Further minors: "There is
+no daily backup yet" in the stopped window is replaced by safe mode at once; the watchdog's "restart limit reached: safe
+mode" wording also shows for a safe-mode retry after Start from a backup; the stopped window does not answer `--exit`.
