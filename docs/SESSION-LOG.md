@@ -769,3 +769,21 @@ keeps its 2×4 cell.
 **Released:** 0.21.0 on 2026-10-06 — CI and the release build passed first time; draft with the delta package (533 KB);
 install check (the installed 0.20.0 updated itself in 3 s; all four fences and the startup entry unchanged; "Find covers
 online?" showed on the owner's real setup, left for the owner to answer); published; hub refreshed.
+
+## 2026-10-06 — M35 modern menus and dialogs (0.22.0), built and merged
+
+**Done:** the owner picked all four parts and, in mockups, menus A (grouped, with icons), Settings A (section list),
+colour A (swatches in the menu). Core test-first (747 → 773): `Hsv`, `Argb.FromUserHex`. App: one menu style
+(`Menus.xaml`, `MenuGlyph`, `MenuTheme`) for fence, item, game, panel, widget and tray menus; the 12-line fence menu; the tray
+menu as `TrayMenuView`; Settings in eight sections with switches; colour swatches in the menu, Use my accent colour,
+`ColourWindow` (Windows' `ChooseColor` gone); `MessageDialog` instead of MessageBox. Prototype probe on a copy of the owner's
+data (fixes: Delete's long text, Settings' selection, two old menu paths). Opus review: 1 important + 1 raised, fixed (an
+ownerless modal after a failed cover pick; "&&" and lost "_" in menu names). Live check AU (light mode with the owner's
+OK, restored): AU1–AU7, AU9, AU10 pass; Esc in the tray, swatch clicks and AU8 by hand. Merged locally.
+**Decisions:** ADR-056 (one menu style drawn by NeoFences).
+**Rulings:** Delete fence's reassurance as a tooltip; Remove last everywhere; Open folder first in panels; the accent
+stored at that moment; the tray placed with the first fence's DPI; Settings 820 × 680.
+**Deferred minors:** the tray menu's place without fences at 125/150 %; the swatch row's keyboard ring; no Exit without a
+tray icon; no access-key letters; two spec test items not in Core; hex shorthand while typing; an unused style in
+Settings; the GUIDE's item-menu and Settings screenshots show the old look.
+**Next:** release 0.22.0 when the owner says so; then M36 fence settings and presets.
