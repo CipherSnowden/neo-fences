@@ -785,10 +785,10 @@ flowchart TD
 <script>
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
-  updated: "2026-10-05",
-  commit: "4938b89",
-  phase: "0.19.1 — polish",
-  current: "0.19.1 RELEASED and installed (your 0.19.0 updated itself; your Games fence now remembers its spots) · next: pre-1.0 work or new ideas",
+  updated: "2026-10-06",
+  commit: "858752f",
+  phase: "0.20.0 — safety net (path to 1.0)",
+  current: "M33 merged: safe mode after a crash loop, the stopped window, undo bar and Ctrl+Z, no-question delete with Undo delete, save notices, gesture switches, private logs · next: release 0.20.0 when you say so, then M34 icons and game tiles",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -807,6 +807,12 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M33 · Safety net (0.20.0)", items: [
+      { t: "1.0 readiness review; you chose the path M33 → M39, safety net first", s: "done" },
+      { t: "Spec + prototype + replay-verified plan, native build; Opus review: 8 important fixed (safe mode hid icons and read sensors, draw switch kept the right button, a second watchdog, lost item saves, slow saves, held notices, unwatched start) — 715 tests", s: "done" },
+      { t: "Live check AS1–AS11 all pass; found and fixed the stopped window's Close doing nothing; merged locally", s: "done" },
+      { t: "Release 0.20.0", s: "todo" }
+    ] },
     { group: "M32 · Polish (0.19.1)", items: [
       { t: "You chose a polish release: every M31 minor and the Free-layout bug from your desktop setup", s: "done" },
       { t: "Prototype + replay-verified plan, native build; Opus review fixes (notice after a game, date line with Windows' formats, accent on DWM's message) — 700 tests", s: "done" },
@@ -1170,8 +1176,14 @@ const HUB = {
     { id: "M29", name: "A guide for friends (0.17.0)", goal: "README, docs/GUIDE.md with screenshots, Help in the tray and Settings (ADR-050) — released as 0.17.0", s: "done" },
     { id: "M30", name: "First-run welcome (0.18.0)", goal: "The first fence welcomes a fresh install; tray notice (ADR-051) — released as 0.18.0", s: "done" },
     { id: "M31", name: "Modern widgets and sensors (0.19.0)", goal: "Restyled widgets; CPU / GPU temperatures via Afterburner or HWiNFO; RAM in GB (ADR-052) — released as 0.19.0", s: "done" },
-    { id: "M32", name: "Polish (0.19.1)", goal: "The M31 minors and the Free-layout bug — merged, release pending", s: "wip" },
-    { id: "Next", name: "Next", goal: "Pre-1.0 work (code signing) or new ideas", s: "todo" }
+    { id: "M32", name: "Polish (0.19.1)", goal: "The M31 minors and the Free-layout bug — released 0.19.1", s: "done" },
+    { id: "M33", name: "Safety net (0.20.0)", goal: "Safe mode, the stopped window, undo, save notices, gesture switches, private logs — merged, release pending", s: "wip" },
+    { id: "M34", name: "Icons and game tiles", goal: "Crisp icons, modern cover tiles, Set cover…, opt-in online covers (ADR)", s: "todo" },
+    { id: "M35", name: "Modern menus and dialogs", goal: "Win11-style menus and dialogs, keyboard", s: "todo" },
+    { id: "M36", name: "Fence settings and presets", goal: "Per-fence settings instead of fence types, presets", s: "todo" },
+    { id: "M37", name: "Performance at scale", goal: "Many fences and items, start time, memory", s: "todo" },
+    { id: "M38", name: "Compatibility and accessibility", goal: "Windows 10 and 11 in Hyper-V VMs, scaling, high contrast, screen readers", s: "todo" },
+    { id: "M39", name: "Release readiness", goal: "Freeware licence, README, then 1.0.0-rc to friends and 1.0.0", s: "todo" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
@@ -1193,6 +1205,7 @@ const HUB = {
     { v: "0.18.0", s: "done", scope: "First-run welcome (M30): the first fence offers Sort my desktop…, Add item…, Guide; a tray notice says where the icon is. Released 2026-10-06; the installed 0.17.0 updated itself." },
     { v: "0.19.0", s: "done", scope: "Modern widgets and sensors (M31): tiles with accent bars; CPU, CPU TEMP, GPU, GPU TEMP, RAM in GB; Afterburner / HWiNFO. Released 2026-10-06; the installed 0.18.0 updated itself." },
     { v: "0.19.1", s: "done", scope: "Polish (M32): accent bars follow at once, sticky GPU, HWiNFO lock, CJK date line, Free spots saved at start. Released 2026-10-06; the installed 0.19.0 updated itself." },
+    { v: "0.20.0", s: "todo", scope: "Safety net (M33): safe mode after a crash loop, the stopped window, undo, save notices, gesture switches, private 10 MB logs. Merged 2026-10-06; release pending." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1379,7 +1392,9 @@ const HUB = {
     { id: "ADR-049", t: "Auto-collect rules", s: "Accepted", d: "A fence's rules watch the desktop (both folders) or any folder; new matching files (kinds by name, or patterns) become items in the first matching fence; never a file operation; removed stays removed; catch-up at start by watermark; a 2 s settle per burst.", c: "Files moved in while NeoFences was closed are not caught up; collect is written only for fences with rules." },
     { id: "ADR-050", t: "Help lives on GitHub, linked from the app", s: "Accepted", d: "The guide is docs/GUIDE.md in the repo; tray Help and Settings Help (online guide) open its GitHub page; menu, setting or gesture changes update the guide in the same commit.", c: "Always the current guide; needs a network; Help 404s until the guide is on GitHub main." },
     { id: "ADR-051", t: "The welcome lives in the first fence", s: "Accepted", d: "A fresh, writable start's first fence carries welcome: true and shows Sort my desktop…, Add item…, Guide while empty; its first item ends it; an Add from desktop that fills new fences removes it while still an untouched empty Fence; one tray notice on a fresh start.", c: "Updating copies never see it; no way to show it again; a fallback fresh start shows it, a read-only one never." },
-    { id: "ADR-052", t: "Temperatures from MSI Afterburner or HWiNFO, read-only", s: "Accepted", d: "Their shared memory read-only (MemoryMappedFile; Core parses a copy), value by value; the main GPU by video memory; otherwise PDH and D3DKMT for the GPU; CPU TEMP shows a dash with a hint.", c: "CPU temperature needs one of the two running; NeoFences never starts or configures them; a later sensor picker can use the same readings." }
+    { id: "ADR-052", t: "Temperatures from MSI Afterburner or HWiNFO, read-only", s: "Accepted", d: "Their shared memory read-only (MemoryMappedFile; Core parses a copy), value by value; the main GPU by video memory; otherwise PDH and D3DKMT for the GPU; CPU TEMP shows a dash with a hint.", c: "CPU temperature needs one of the two running; NeoFences never starts or configures them; a later sensor picker can use the same readings." },
+    { id: "ADR-053", t: "Safe mode after a crash loop, then a 'stopped' window", s: "Accepted", d: "Normal restarts below the limit, safe mode at it (fences only: no hook, widgets, panels, collect, accents, hidden icons), the stopped window when safe mode crashes too; the main process keeps its watchdog alive.", c: "A crash loop always ends visibly; safe mode looks plainer, the banner says why." },
+    { id: "ADR-054", t: "One-level undo for removals and fence deletions", s: "Accepted", d: "No questions: an undo bar and Ctrl+Z after removing items; a snapshot, a notice and tray Undo delete (2 min) after deleting a fence; undo puts back only what is missing.", c: "One level, lost on exit (the snapshot covers a deleted fence)." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1404,7 +1419,8 @@ const HUB = {
     { t: "Silent upgrades left NeoFences stopped", b: "Velopack’s silent Setup force-stops the install folder right after the install hook, so the app never came back after an upgrade. The hook now shows icons and starts NeoFences about 4 s later through cmd.exe; every release since restarted itself in about 4 s.", impact: "ADR-028, v1.1.2.", src: [] },
     { t: "M9–M10 on the real desktop: tabs and snapshots", b: "Fence tabs became boxes over ordinary fences (one window per box), so every existing feature kept working per tab. Snapshots restore against the live desktop: deleted icons drop out, newer ones stay in a surviving fence, and “Before restore” makes every restore undoable.", impact: "ADR-029, ADR-030.", src: [] },
     { t: "M11: what new desktop items really look like", b: "Chrome and Edge finish a download by renaming .crdownload to its final name; attribute changes (OneDrive, Read-only) arrive as “created”; installers write shortcuts in stages. Rules now file only items new to the Desktop, finished downloads included, 1.5 s after the last arrival.", impact: "ADR-031; review fixes in v1.4.0.", src: [] },
-    { t: "M12: where launchers keep their games", b: "Steam: libraryfolders.vdf + appmanifest_*.acf (installed = StateFlags bit 4) and cover art in appcache\\librarycache; Epic: ProgramData manifests (no art); GOG/Ubisoft: registry; Xbox: package repository + MicrosoftGame.config. On this PC: 12 games in 0.2 s; 6 of them live in D:\\GameLibrary outside any launcher.", impact: "ADR-032: one Game Library fence of generated shortcuts; a game folder of your own in M11 rules too.", src: [] }
+    { t: "M12: where launchers keep their games", b: "Steam: libraryfolders.vdf + appmanifest_*.acf (installed = StateFlags bit 4) and cover art in appcache\\librarycache; Epic: ProgramData manifests (no art); GOG/Ubisoft: registry; Xbox: package repository + MicrosoftGame.config. On this PC: 12 games in 0.2 s; 6 of them live in D:\\GameLibrary outside any launcher.", impact: "ADR-032: one Game Library fence of generated shortcuts; a game folder of your own in M11 rules too.", src: [] },
+    { t: "M33: the safety net on the real desktop", b: "A Debug build that crashes on purpose went normal restarts → safe mode → the stopped window exactly as designed; the stopped window's Close did nothing (IsCancel closes only dialogs) and was fixed. A locked config.json gives a read-only start with a banner; killing the watchdog brings a new one at once. Keys reach a fence only after a click on the desktop (ADR-015), so the undo bar and tray Undo delete are the always-working paths." }
   ],
   risks: [
     ["Accent blur is an undocumented Windows API", "Blur could break in a future Windows update", "One wrapper function; layered tint-only fallback", "warn"],
@@ -1471,7 +1487,8 @@ const HUB = {
     { date: "2026-10-05", topic: "M29 guide for friends (merged)", done: "Spec + plan; native build; 8 demo screenshots (3 as JPEG); Opus review fixes (tray overflow, download warning, wording); guide rule in CLAUDE.md; live check AO1/AO2/AO4; merged locally.", next: "Released 0.17.0; next: pre-1.0 work or new ideas" },
     { date: "2026-10-06", topic: "M30 first-run welcome (merged)", done: "Welcome in the first fence; spec + replay-verified plan; native build; Opus review fixes (read-only start, set-up welcome fence kept; 658 tests); live check AP; merged locally.", next: "Released 0.18.0; next: pre-1.0 work or new ideas" },
     { date: "2026-10-06", topic: "M31 modern widgets and sensors (merged)", done: "Visual companion mockups; spec; prototype checked against Afterburner; replay-verified plan; native build; Opus review fixes (682 tests); live check AQ; new guide shots; merged locally.", next: "Released 0.19.0; next: your desktop with every feature" },
-    { date: "2026-10-06", topic: "M32 polish (merged)", done: "Every M31 minor + the Free-layout bug; prototype; replay-verified plan; native build; Opus review fixes (700 tests); live AR1 (accent, restored) and AR2; merged locally.", next: "Released 0.19.1; next: pre-1.0 work or new ideas" }
+    { date: "2026-10-06", topic: "M32 polish (merged)", done: "Every M31 minor + the Free-layout bug; prototype; replay-verified plan; native build; Opus review fixes (700 tests); live AR1 (accent, restored) and AR2; merged locally.", next: "Released 0.19.1; next: pre-1.0 work or new ideas" },
+    { date: "2026-10-06", topic: "1.0 readiness + M33 safety net (merged)", done: "Readiness review and the path to 1.0 (your decisions); M33 spec, replay-verified plan, native build; Opus review: 8 important fixed (715 tests); live AS1–AS11 pass, one bug found and fixed; merged locally.", next: "Release 0.20.0; then M34 icons and game tiles" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2057,7 +2074,22 @@ const HUB = {
     ["2f6c191", "docs: refreshed the hub for the merged M32 polish"],
     ["6d6bd34", "chore: bumped the version to 0.19.1"],
     ["066a0c8", "docs: marked the 0.19.1 release as approved"],
-    ["4938b89", "docs: recorded the 0.19.1 release"]
+    ["4938b89", "docs: recorded the 0.19.1 release"],
+    ["86e9699", "docs: refreshed the hub for the 0.19.1 release"],
+    ["abc5a85", "docs: added the 1.0 readiness review and the path to 1.0"],
+    ["389d738", "docs: claimed M33 safety net"],
+    ["c77451c", "docs: added the M33 safety net design spec"],
+    ["8596245", "docs: added the M33 safety net plan"],
+    ["ac01f00", "feat: added safe mode rules, the crash decision, one-level undo, damaged-file fallback and log privacy in Core"],
+    ["e34e9da", "fix: added safe mode, the stopped window, undo, save notices, gesture switches, watchdog keeper and private logs"],
+    ["fa9e409", "docs: described the safety net in ADR-053, ADR-054, architecture, guide, features, checklist AS and the M33 note"],
+    ["40c8b61", "docs: named the hook log lines in checklist AS"],
+    ["168eec5", "fix: fixed safe mode hiding icons and reading sensors, the draw switch keeping the right button, a second watchdog, lost item saves, slow saves, held notices and an unwatched start"],
+    ["0d0db3f", "docs: added the M33 review results to the research note"],
+    ["a151128", "test: made the locked-file load test async"],
+    ["eacab03", "fix: fixed the stopped window's Close button doing nothing"],
+    ["80b66bd", "docs: added the M33 live check results"],
+    ["858752f", "docs: marked M33 done in the roadmap and logged the session"]
   ]
 };
 /* ===== END HUB DATA ===== */
