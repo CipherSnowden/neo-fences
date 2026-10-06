@@ -94,7 +94,8 @@ public sealed class IconDiskCache(string directory)
             encoder.Frames.Add(BitmapFrame.Create(icon));
             using (var stream = File.Create(temp)) encoder.Save(stream);
             File.Move(temp, path, overwrite: true);
-            var entry = new IconCacheEntry { File = file, Name = name, Stamp = stamp, LastUsed = DateTimeOffset.Now, Bytes = new FileInfo(path).Length };
+            var now = DateTimeOffset.Now;
+            var entry = new IconCacheEntry { File = file, Name = name, Stamp = stamp, LastUsed = now, Verified = now, Bytes = new FileInfo(path).Length };
             lock (_lock)
             {
                 _index = _index.With(key, entry);

@@ -1069,6 +1069,8 @@ public partial class FenceWindow : Window
         _expansion.Reset();
         ApplyChrome();
         AnimateHeight(rolledUp ? RolledUpHeightPx : _fullHeightPx);
+        ItemsShownChanged?.Invoke(); // M37 final review C1: widgets wake (or rest) with a roll-up by double-click or the menu
+        RaiseVisibleIcons();
         UpdateHoverTimer();
         UpdateTitleBar(PointerInside()); // M36: a rolled-up fence always shows its title bar
     }

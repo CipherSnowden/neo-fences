@@ -8,8 +8,8 @@ public class IconCacheTests
 {
     private static readonly DateTimeOffset Now = new(2026, 10, 6, 12, 0, 0, TimeSpan.Zero);
 
-    private static IconCacheEntry Entry(string key, DateTimeOffset lastUsed, long bytes = 1000, IconStamp? stamp = null, string? name = null) =>
-        new() { File = IconCache.FileNameOf(key), LastUsed = lastUsed, Bytes = bytes, Stamp = stamp, Name = name };
+    private static IconCacheEntry Entry(string key, DateTimeOffset lastUsed, long bytes = 1000, IconStamp? stamp = null, string? name = null, DateTimeOffset? verified = null) =>
+        new() { File = IconCache.FileNameOf(key), LastUsed = lastUsed, Bytes = bytes, Stamp = stamp, Name = name, Verified = verified ?? lastUsed };
 
     // ---------- the key ----------
 
@@ -40,11 +40,35 @@ public class IconCacheTests
     public void FreshLoad_RunsWithoutAnEntry_WithoutAStamp_AndWhenTheStampChanged()
     {
         var stamp = new IconStamp(LastWriteTicks: 100, Length: 5);
-        Assert.True(IconCache.NeedsFreshLoad(entry: null, current: stamp));
-        Assert.True(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: null), current: null));      // a Start app, a website: always behind
-        Assert.True(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp), current: null));     // the file is gone now
-        Assert.True(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp), current: stamp with { Length = 6 }));
-        Assert.False(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp), current: stamp));
+        Assert.True(IconCache.NeedsFreshLoad(entry: null, current: stamp, now: Now));
+        Assert.True(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: null), current: null, now: Now));      // a Start app, a website: always behind
+        Assert.True(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp), current: null, now: Now));     // the file is gone now
+        Assert.True(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp), current: stamp with { Length = 6 }, now: Now));
+        Assert.False(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp), current: stamp, now: Now));
+    }
+
+    // Final review I2: a shortcut's own stamp does not change when the app behind it gets a new icon: checked once a day.
+    [Fact]
+    public void FreshLoad_AlsoRunsOnceADay_SoAnAppUpdateBehindAShortcutIsSeen()
+    {
+        var stamp = new IconStamp(100, 5);
+        Assert.False(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp, verified: Now.AddHours(-23)), stamp, Now));
+        Assert.True(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp, verified: Now.AddHours(-25)), stamp, Now));
+        Assert.True(IconCache.NeedsFreshLoad(Entry("a", Now, stamp: stamp) with { Verified = default }, stamp, Now)); // an entry from before: checked once
+    }
+
+    // Final review I1: a placeholder (a share that is down, a missing target's generic icon) or a website's badge must not stick
+    // for the run, or a found site icon and a target that comes back would not show until the next start.
+    [Fact]
+    public void OnlyARealIconOfAReachableTarget_IsRememberedForTheRunOrKeptOnDisk()
+    {
+        Assert.True(IconCache.RememberForRun(ItemKind.Path, reachable: true, generic: false));
+        Assert.False(IconCache.RememberForRun(ItemKind.Path, reachable: false, generic: false));
+        Assert.False(IconCache.RememberForRun(ItemKind.Path, reachable: true, generic: true));
+        Assert.False(IconCache.RememberForRun(ItemKind.Website, reachable: true, generic: false));
+        Assert.True(IconCache.KeepOnDisk(reachable: true, generic: false));
+        Assert.False(IconCache.KeepOnDisk(reachable: true, generic: true));
+        Assert.False(IconCache.KeepOnDisk(reachable: false, generic: false));
     }
 
     // ---------- pruning ----------

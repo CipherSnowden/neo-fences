@@ -33,7 +33,11 @@ public sealed partial class FenceHost
             _widgetTimer = null;
             return;
         }
-        if (_widgetTimer is not null) return;
+        if (_widgetTimer is not null)
+        {
+            OnWidgetTick(); // M37 final review C1: a stopped timer starts again when a widget comes (a new one, an undo, a restore)
+            return;
+        }
         _widgetTimer = new DispatcherTimer(DispatcherPriority.Background);
         _widgetTimer.Tick += (_, _) => OnWidgetTick();
         ScheduleWidgetTick();

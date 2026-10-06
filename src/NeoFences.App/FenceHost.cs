@@ -472,6 +472,7 @@ public sealed partial class FenceHost
                 if (took > slowest.Ms) slowest = (took, window.ItemCount);
             }
             if (!_fencesShownLogged && slowest.Ms > 0) Log.Information("timing: slowest fence placed and shown in {Ms:0} ms ({Items} items)", slowest.Ms, slowest.Items); // M37
+            OnWidgetTick(); // M37 final review C1: the windows are shown now (at start the widget timer stopped while none was)
         }
         catch (ArgumentException unusableDisplay)
         {

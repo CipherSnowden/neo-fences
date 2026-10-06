@@ -131,11 +131,11 @@ public sealed class IconLoader : IDisposable
         if (!request.Fresh && _disk?.TryGet(key) is var (cachedIcon, entry))
         {
             shown = cachedIcon;
-            var stale = IconCache.NeedsFreshLoad(entry, stamp);
+            var stale = IconCache.NeedsFreshLoad(entry, stamp, DateTimeOffset.Now);
             Apply(request, entry.Name, cachedIcon, final: !stale, fromDisk: true);
             if (!stale)
             {
-                _session[key] = (cachedIcon, entry.Name, stamp);
+                if (ItemKinds.Of(request.Target) != ItemKind.Website) _session[key] = (cachedIcon, entry.Name, stamp); // final review I1
                 return;
             }
         }
@@ -147,9 +147,15 @@ public sealed class IconLoader : IDisposable
         // M37: the name is kept with the icon, so it is asked even for an item with its own (another item may want it).
         var label = kind == ItemKind.Website ? ItemKinds.WebsiteName(request.Target)
             : reachable ? ShellItems.TryGetDisplayName(request.Target) : null;
-        var icon = OwnIcon(request) ?? (reachable ? TargetIcon(request, kind) : null) ?? GenericIcon(request, kind);
-        _session[key] = (icon, label, stamp);
-        if (icon is not null && reachable) _disk?.Put(key, icon, label, stamp); // an unreachable target's generic icon is not kept
+        var own = OwnIcon(request);
+        var target = own is null && reachable ? TargetIcon(request, kind) : null;
+        var generic = own is null && target is null; // a placeholder: Windows' icon for the type, or none
+        var icon = own ?? target ?? GenericIcon(request, kind);
+        // Final review I1: a placeholder or a website's badge is not remembered, so a target that comes back (a share after a
+        // power cut, a reinstalled app) or a site icon found online shows in this run, and is not kept on disk.
+        if (IconCache.RememberForRun(kind, reachable, generic)) _session[key] = (icon, label, stamp);
+        else _session.TryRemove(key, out _);
+        if (icon is not null && IconCache.KeepOnDisk(reachable, generic)) _disk?.Put(key, icon, label, stamp);
         Apply(request, label, shown is not null && icon is not null && SamePixels(shown, icon) ? null : icon, final: true, fromDisk: false);
     }
 

@@ -21,6 +21,9 @@ public sealed record IconCacheEntry
 
     public DateTimeOffset LastUsed { get; init; }
 
+    /// <summary>When Windows was last asked for this icon (final review I2: re-asked once a day behind the cached one).</summary>
+    public DateTimeOffset Verified { get; init; }
+
     public long Bytes { get; init; }
 }
 
@@ -110,12 +113,25 @@ public static class IconCache
 
     public static string FileNameOf(string key) => key + ".png";
 
+    /// <summary>A cached icon is asked of Windows again behind it after this long (final review I2).</summary>
+    public static readonly TimeSpan ReverifyAfter = TimeSpan.FromDays(1);
+
     /// <summary>
     /// Whether the icon is loaded fresh behind the cached one: no entry; no stamp then or now (Start apps, shell items, websites,
-    /// a missing file: always, quietly); or a source that changed since.
+    /// a missing file: always, quietly); a source that changed since; or not asked for a day (a shortcut's own stamp does not
+    /// change when the app behind it gets a new icon, final review I2).
     /// </summary>
-    public static bool NeedsFreshLoad(IconCacheEntry? entry, IconStamp? current) =>
-        entry is null || entry.Stamp is null || current is null || entry.Stamp != current;
+    public static bool NeedsFreshLoad(IconCacheEntry? entry, IconStamp? current, DateTimeOffset now) =>
+        entry is null || entry.Stamp is null || current is null || entry.Stamp != current || now - entry.Verified > ReverifyAfter;
+
+    /// <summary>
+    /// Whether a loaded icon answers the same key again in this run (final review I1): not a placeholder (an unreachable target,
+    /// a generic icon) and not a website (its icon found online replaces the letter badge in the same run).
+    /// </summary>
+    public static bool RememberForRun(ItemKind kind, bool reachable, bool generic) => kind != ItemKind.Website && reachable && !generic;
+
+    /// <summary>Whether a loaded icon is kept in the cache on disk: the real icon of a reachable target only (final review I1).</summary>
+    public static bool KeepOnDisk(bool reachable, bool generic) => reachable && !generic;
 
     /// <summary>
     /// The cleanup at start: entries unused for <see cref="UnusedFor"/> go, then the oldest until the rest fits in
