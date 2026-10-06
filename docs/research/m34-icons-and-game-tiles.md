@@ -19,3 +19,14 @@ Spec: `docs/superpowers/specs/2026-10-06-icons-and-game-tiles-design.md` · Plan
   the shadow is two faint layers and the glow a shrunken icon stretched (no effects on the layered window); site icons are
   fetched on demand; the picker shows Steam's results unfiltered; generic icons above 32 px come from the system image list.
 - Replay-verified on `main` (70 build-error lines before the Core code, 747 tests after, 0 warnings).
+
+## Review (Opus, whole branch)
+
+0 critical, 4 important plus 2 re-graded up, all fixed: "Not now" saved a permanent No (now nothing is stored and the
+next start asks again); a missing or broken shortcut lost its icon (the Store-app check threw); being offline marked every
+website as a 30-day miss (a fetch now says whether the site answered); a second cover choice kept showing the first (a new
+file name per choice, the old copy removed); an odd Steam id could crash Choose cover…; the site icon fetch asked a link's
+full address, which can use up a one-time link (now only the site's root). 747 tests. Deferred minors: overlapped Free
+elements go to the first free cell; Off does not stop a running lookup; a bad icon file is never retried; each found site
+icon reloads every icon; read-only sessions still look up; file names from non-ASCII ids and URL extensions; a failed Steam
+pick is only logged; the guide's letter-badge sentence; a Large cover shown as an icon keeps its 2×4 cell.
