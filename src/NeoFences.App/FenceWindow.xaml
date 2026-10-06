@@ -31,6 +31,8 @@
         <sys:Double x:Key="GridCellHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">96</sys:Double>
         <!-- M36: the room around each element, from the fence's spacing (Compact 0, Normal 2, Roomy 8). -->
         <Thickness x:Key="CellInset">2</Thickness>
+        <!-- M38: the ring around the item under the keyboard, shown only while Peek has given the fence the keyboard. -->
+        <Visibility x:Key="ItemFocusVisibility">Collapsed</Visibility>
         <!-- Thin scrollbar (spec §6): no arrows, a rounded thumb that brightens under the mouse. -->
         <Style TargetType="ScrollBar">
             <Setter Property="Width" Value="6" />
@@ -287,6 +289,9 @@
             <Rectangle x:Name="TitleColorBar" Height="3" Width="48" Margin="12,0,0,1" RadiusX="1.5" RadiusY="1.5"
                        VerticalAlignment="Bottom" HorizontalAlignment="Left" Visibility="Collapsed" IsHitTestVisible="False" />
             <!-- Rename: replaces the title while editing. Hit-testable inside the caption area. -->
+            <!-- M38: the outline of the fence that has the keyboard (Peek). -->
+            <Border x:Name="KeyboardRing" Grid.RowSpan="3" CornerRadius="7" BorderThickness="2" BorderBrush="{DynamicResource ItemSelectedEdge}"
+                    Visibility="Collapsed" IsHitTestVisible="False" Panel.ZIndex="10" />
             <TextBox x:Name="TitleBox" Visibility="Collapsed" Margin="8,4" Padding="3,1" FontWeight="SemiBold"
                      VerticalContentAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True"
                      Foreground="{DynamicResource FenceText}" Background="{DynamicResource FenceHover}"
@@ -372,12 +377,20 @@
                                             <!-- The outer border fills the gaps between cells, so the pointer is always over some cell and the
                                                  pop-under name does not blink between neighbours (final review I2). -->
                                             <Border Background="Transparent" Padding="{DynamicResource CellInset}">
+                                                <Grid>
                                                 <!-- M34 (spec §4, "Clean"): no slab; a faint rounded hover, the accent for the selection. -->
-                                                <Border x:Name="Chrome" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Padding="1,3">
-                                                    <ContentPresenter HorizontalAlignment="Center" />
-                                                </Border>
+                                                    <Border x:Name="Chrome" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Padding="1,3">
+                                                        <ContentPresenter HorizontalAlignment="Center" />
+                                                    </Border>
+                                                    <!-- M38: the keyboard's ring (only in keyboard mode, ItemFocusVisibility). -->
+                                                    <Border x:Name="FocusRing" Margin="-1" CornerRadius="7" BorderThickness="2" BorderBrush="{DynamicResource ItemSelectedEdge}"
+                                                            Visibility="Collapsed" IsHitTestVisible="False" />
+                                                </Grid>
                                             </Border>
                                             <ControlTemplate.Triggers>
+                                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                                    <Setter TargetName="FocusRing" Property="Visibility" Value="{DynamicResource ItemFocusVisibility}" />
+                                                </Trigger>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceHover}" />
                                                 </Trigger>

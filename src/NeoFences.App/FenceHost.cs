@@ -300,6 +300,7 @@ public sealed partial class FenceHost
         };
         window.DetachTabRequested += () => DetachTab(window, window.FenceId, dropPoint: null);
         window.TabCycleRequested += step => CycleTab(window, step);
+        window.FenceCycleRequested += step => CycleKeyboard(window, step); // M38
         window.SetTabs(FenceTabs.TabsOf(_config, box.Id), shown.Id);
         ApplyStyle(window); // M14
         window.SetHoverPaused(_gameMode || !Current.FencesVisible); // M37
@@ -1486,8 +1487,17 @@ public sealed partial class FenceHost
         CheckGameMode(); // fresh: a game may have gone full screen since the last check (M6a review I1)
         // Paused: the desktop belongs to Windows. Gaming: fences must not rise over the game, and the click-outside hook is off.
         if (_paused || _gameMode) return;
-        if (hotkeyId == PeekHotkeyId) SetPeek(!_peeking);
-        else if (hotkeyId == PeekEscapeHotkeyId) SetPeek(false);
+        if (hotkeyId == PeekHotkeyId)
+        {
+            var ending = _peeking;
+            SetPeek(!_peeking);
+            if (ending) ReturnKeyboard(); // M38: the app you were in gets the keyboard back
+        }
+        else if (hotkeyId == PeekEscapeHotkeyId)
+        {
+            SetPeek(false);
+            ReturnKeyboard(); // M38
+        }
     }
 
     /// <summary>Peek (M5): every fence above all windows until the hotkey again, Esc, a click outside, or an item opens.</summary>
@@ -1510,6 +1520,8 @@ public sealed partial class FenceHost
                 Log.Warning("Esc is taken by another app; Peek ends with its hotkey or a click outside");
             foreach (var window in _windows.Values) CheckFence(window.FenceId); // the shown fences are checked again (spec §4)
         }
+        if (peeking) TakeKeyboardForPeek(); // M38: the keyboard way in
+        else ReleaseKeyboardForPeek();
         Log.Information("peek: {Peeking}", peeking);
     }
 

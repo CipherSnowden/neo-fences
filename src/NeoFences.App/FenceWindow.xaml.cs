@@ -86,6 +86,8 @@ public partial class FenceWindow : Window
     public event Action? DetachTabRequested;
     /// <summary>Ctrl+Tab (+1) / Ctrl+Shift+Tab (-1).</summary>
     public event Action<int>? TabCycleRequested;
+    /// <summary>Tab / Shift+Tab while Peek gave this fence the keyboard (M38): the next / previous fence (1 / -1).</summary>
+    public event Action<int>? FenceCycleRequested;
 
     /// <summary>The accent colours (M9), as Windows' own accent palette roughly offers them; defined in Core since M14.</summary>
     public static readonly IReadOnlyDictionary<TabColor, Color> TabColors =
@@ -593,6 +595,11 @@ public partial class FenceWindow : Window
         else if (key.Key == Key.Tab && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && _tabs.Count > 1)
         {
             TabCycleRequested?.Invoke(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1);
+            key.Handled = true;
+        }
+        else if (key.Key == Key.Tab && _keyboardMode && Keyboard.Modifiers is ModifierKeys.None or ModifierKeys.Shift) // M38
+        {
+            FenceCycleRequested?.Invoke(Keyboard.Modifiers == ModifierKeys.Shift ? -1 : 1);
             key.Handled = true;
         }
     }
@@ -1177,7 +1184,7 @@ public partial class FenceWindow : Window
         var rect = FenceWindowChrome.GetPixelRect(Handle);
         // While the height animates, judge "inside" against where the fence is going, so it does not flicker shut.
         var height = _heightAnimation.IsEnabled ? Math.Max(rect.Height, _heightTo) : rect.Height;
-        var inside = cursorX >= rect.X && cursorX < rect.X + rect.Width && cursorY >= rect.Y && cursorY < rect.Y + height;
+        var inside = cursorX >= rect.X && cursorX < rect.X + rect.Width && cursorY >= rect.Y && cursorY < rect.Y + height || _keyboardMode;
         if (!_expansion.Tick(inside)) return;
         AnimateHeight(_expansion.Expanded ? _fullHeightPx : RolledUpHeightPx);
         ItemsShownChanged?.Invoke(); // M25
@@ -1294,6 +1301,40 @@ public partial class FenceWindow : Window
                 FenceWindowChrome.SetPixelRect(Handle, FenceWindowChrome.GetPixelRect(Handle) with { Height = RolledUpHeightPx });
             }
         }
+    }
+
+    private bool _keyboardMode;
+
+    /// <summary>
+    /// M38 (ADR-060): Peek gave this fence the keyboard — its outline and the item ring show, a rolled-up fence opens, and the
+    /// item that was selected (else the first) takes the keyboard. The host has already brought the window forward.
+    /// </summary>
+    public void TakeKeyboard()
+    {
+        _keyboardMode = true;
+        KeyboardRing.Visibility = Visibility.Visible;
+        Resources["ItemFocusVisibility"] = Visibility.Visible;
+        Activate();
+        var item = ItemList.SelectedItem ?? (ItemList.Items.Count > 0 ? ItemList.Items[0] : null);
+        if (item is null)
+        {
+            ItemList.Focus();
+            return;
+        }
+        if (ItemList.SelectedItems.Count == 0) ItemList.SelectedItem = item;
+        ItemList.ScrollIntoView(item);
+        ItemList.UpdateLayout();
+        if (ItemList.ItemContainerGenerator.ContainerFromItem(item) is ListBoxItem container) container.Focus();
+        else ItemList.Focus();
+    }
+
+    /// <summary>M38: Peek ended or the keyboard went to another fence: the outline and the ring go; a rolled-up fence may close.</summary>
+    public void ReleaseKeyboard()
+    {
+        if (!_keyboardMode) return;
+        _keyboardMode = false;
+        KeyboardRing.Visibility = Visibility.Collapsed;
+        Resources["ItemFocusVisibility"] = Visibility.Collapsed;
     }
 
     /// <summary>The hover poll runs while it is needed: rolled up (M5), or a title bar shown on hover (M36).</summary>

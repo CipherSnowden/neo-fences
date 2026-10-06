@@ -230,8 +230,12 @@ catches up afterwards.
   tray → **Quick-hide**, to bring them back.
 - **Gesture switches:** **Settings → General → Double-click the desktop to quick-hide** and **Right-drag on the desktop
   to draw a fence** turn each gesture off. With both off, NeoFences does not watch mouse clicks at all.
-- **Peek:** **Ctrl+Alt+Space** lifts all fences above your open windows; press it again, **Esc**, click outside, or open
-  something to send them back. Change the keys in **Settings → General → Peek hotkey**.
+- **Peek:** **Ctrl+Alt+Space** lifts all fences above your open windows and puts the keyboard in a fence — the one under
+  the mouse, else the one you used last, else the first (left to right, top to bottom). An accent outline shows which
+  fence has the keyboard. **Arrow keys**, **Home** and **End** move between items, **Enter** opens, **Tab** /
+  **Shift+Tab** go to the next / previous fence. Press the hotkey again or **Esc** to send the fences back — the app you
+  were in gets the keyboard back; a click outside or opening something also ends Peek. Change the keys in
+  **Settings → General → Peek hotkey**.
 - **Pause:** tray → **Pause NeoFences** gives the desktop back to Windows (fences hidden, icons shown) until you resume.
 
 ## 9. Snapshots
@@ -328,7 +332,8 @@ Tray or fence menu → **Settings…**. A list of sections on the left opens one
 |---|---|---|
 | Empty desktop | Right-drag | Draw a new fence |
 | Empty desktop | Double-click | Quick-hide (again: show) |
-| Anywhere | **Ctrl+Alt+Space** (then **Esc**) | Peek: fences above windows (and back) |
+| Anywhere | **Ctrl+Alt+Space** (then **Esc**) | Peek: fences above windows, the keyboard in a fence (and back to your app) |
+| Peek | **Tab** / **Shift+Tab** | Next / previous fence |
 | Fence title | Double-click | Roll up / unroll |
 | Fence title | Drag onto another fence's title | Make tabs |
 | Fence | **Ctrl+Tab** / **Ctrl+Shift+Tab** | Next / previous tab |
