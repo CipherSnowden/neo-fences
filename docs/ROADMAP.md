@@ -37,7 +37,8 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Released 0.23.0 on 2026-10-06 (the installed 0.22.0 updated itself; data unchanged)
 - [x] **M37 — Performance at scale** (0.24.0; released 2026-10-06): icon cache, virtualized fences, cheaper label shadows, idle timers that stop, ready-to-run publish; 500 items / 50 fences test
   - [x] Released 0.24.0 on 2026-10-06 (the installed 0.23.0 updated itself in 2 s; data unchanged)
-- [~] **M38 — Compatibility and accessibility** (claimed by session 2026-10-06 compatibility; 0.25.0): a Windows 11 test pass in a Hyper-V VM (Windows 10 dropped: Windows 11 only, ADR-059), two monitors with mixed scaling; High Contrast, focus visuals, named fences, a keyboard way in
+- [x] **M38 — Compatibility and accessibility** (0.25.0; merged 2026-10-07, release pending): Peek takes the keyboard with visible focus, Tab between fences, Esc back to your app (ADR-060); a scripted Windows 11 test pass in a Hyper-V VM, 12 of 12 (`tools/vm/`; Windows 10 dropped, ADR-059). Not picked by the owner for M38: two monitors with mixed scaling, High Contrast, screen-reader names
+- [~] **M38.1 — Test VMs for live checks** (claimed by session 2026-10-07 test-vms): a second VM `NF-Win11-Dev` (a copy of `NF-Win11`) and `tools/vm/Invoke-VmLive.ps1` — live checks and probes of branch builds run in the VM (test fences, copies of some of the owner's files), not on the owner's desktop
 - [ ] **M39 — Release readiness**: licence, PRIVACY, SECURITY, third-party notices, issue templates, checksums and attestations in CI, README/guide refresh, landing page (GitHub Pages), Core tests on Linux in CI
 - [ ] **1.0.0-rc** to friends (beta channel, 1–2 weeks), then **1.0.0**
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations

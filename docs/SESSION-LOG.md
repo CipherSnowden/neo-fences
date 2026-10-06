@@ -846,3 +846,30 @@ a stale doc comment; two queues not three.
 install check (the installed 0.23.0 downloaded the update from the draft's files; "Restart to update" clicked in NeoFences'
 own tray menu — the install-check script now reads it — and 0.24.0 ran again after 2 s; all four fences, items and the
 startup entry unchanged; running after a plain restart); published; hub refreshed.
+
+## 2026-10-07 — M38 keyboard way in and the Windows 11 VM (0.25.0), built and merged
+
+**Done:** the owner dropped Windows 10 (the ISO could not be downloaded) and made Windows 11 the only target (ADR-059).
+Hyper-V turned on; `NF-Win11` (Windows 11 Pro 26300) built from the owner's ISO by `tools/vm/New-TestVm.ps1` (DISM, an
+answer file, auto-sign-in "tester", checkpoint `clean`). Prototype probe: Peek gives the keyboard with `SetForegroundWindow`
+after the hotkey (no focusable fences needed). Five VM runs fixed the tooling (lock screen after restore, two waiters,
+`Start-Process -Wait` and the process tree, timing, Store Notepad, the check order, Windows' first-hour quiet time) → 12 of
+12. Plan with replay-verified patches; Native execution: Core (824 → 834) `KeyboardOrder`, `CheckReport`; Shell
+`KeyboardFocus`; App keyboard mode (outline, item ring, Tab / Shift+Tab, Esc back); `tools/vm/`; guide and README. Opus
+review: 0 critical, 6 important, all fixed (837 tests): Esc during Peek cancels a rename / closes Properties first; the
+keyboard goes back only while NeoFences has it; Settings remembered, else the desktop; rolled-up fences open in click mode
+(`RollUpExpansion.Open`); the VM host script always stops the VM; unfinished passes fail. Live check 7 of 7 (branch build on
+a backed-up copy of the owner's data); VM pass on 0.25.0-rc.1 12 of 12. Merged locally.
+**Decisions:** ADR-059 (Windows 11 only), ADR-060 (Peek takes the keyboard; the scripted VM pass). The owner wants live
+checks and probes in VMs from now on: two VMs (`NF-Win11` for release candidates, `NF-Win11-Dev` for branch builds), copies
+of some of the owner's files allowed there; `Invoke-VmLive.ps1` next (M38.1).
+**Rulings:** reading order rows within half the shortest height; Esc/hotkey only give the keyboard back; ring only in
+keyboard mode; Tab/Enter inside fences checked by hand, not in the VM; I1–I3 fixed without unit tests (Win32 focus),
+verified live.
+**Deferred minors:** the first item stays selected in fences Peek visited; `KeyboardSpots` could use
+`FencePlacement.ContainingMonitor`; deleting the fence with the keyboard leaves Tab idle; a folder panel's list needs the
+mouse; one failed VM screenshot stops the checks (now reported unfinished); two more `KeyboardOrder` tests.
+**Left by hand:** Enter on an item, Ctrl+Tab in a tabbed fence, Peek from Settings / the tray menu, a fence deleted while
+peeking.
+**Next:** M38.1 test VMs for live checks; release 0.25.0 when the owner says so (version bump; install check — in a VM where
+possible); then M39 release readiness.
