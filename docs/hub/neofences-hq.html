@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-06",
-  commit: "fa08dd6",
-  phase: "0.23.0 — fence settings and presets (path to 1.0)",
-  current: "0.23.0 RELEASED and installed (your 0.22.0 updated itself): Fence settings with presets (Glass, Minimal, Title strip, Solid, Compact and your own), the title bar on hover, spacing, Export / Import setup, Reset settings · next: M37 performance at scale",
+  commit: "68eb8e0",
+  phase: "0.24.0 — performance at scale (path to 1.0)",
+  current: "M37 merged: icons from a cache at start (11 s → 3 s at 500 items, under 1 s on your setup), visible icons first, nothing ticking in a game, lighter items, a 500 / 50 measurement · next: release 0.24.0 when you say so, then M38 compatibility",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -807,6 +807,13 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M37 · Performance at scale (0.24.0)", items: [
+      { t: "You picked smooth big setups, faster start, truly idle; measure, then fix", s: "done" },
+      { t: "Six measured prototype rounds (500 items / 50 fences); ready-to-run dropped (7 %); virtualization after 1.0 (your call)", s: "done" },
+      { t: "Native build (824 tests); Opus review: 1 critical + 3 important, fixed (widgets frozen at start)", s: "done" },
+      { t: "Live check AW (game mode 0.02 s CPU / 45 s); merged locally", s: "done" },
+      { t: "Release 0.24.0", s: "todo" }
+    ] },
     { group: "M36 · Fence settings and presets (0.23.0)", items: [
       { t: "You picked all four parts, Replace with undo for import; mockups: a small settings window, all five presets", s: "done" },
       { t: "Two prototype probes on a copy of your data (2 fixes); native build (810 tests); Opus review: 1 + 1 raised, fixed", s: "done" },
@@ -1200,7 +1207,7 @@ const HUB = {
     { id: "M34", name: "Icons and game tiles", goal: "Sharp icons, modern tiles, glow tiles, Normal / Large covers, opt-in online covers (ADR-055), Choose cover… — released 0.21.0", s: "done" },
     { id: "M35", name: "Modern menus and dialogs", goal: "One menu style with icons, 12-line fence menu, Settings sections and switches, swatches and a picker, one dialog — released 0.22.0", s: "done" },
     { id: "M36", name: "Fence settings and presets", goal: "Fence settings window, five presets and own ones, Export / Import setup, Reset settings — released 0.23.0", s: "done" },
-    { id: "M37", name: "Performance at scale", goal: "Many fences and items, start time, memory", s: "todo" },
+    { id: "M37", name: "Performance at scale", goal: "Icon cache, visible first, idle timers, lighter items, a 500 / 50 measurement — merged, release pending", s: "wip" },
     { id: "M38", name: "Compatibility and accessibility", goal: "Windows 10 and 11 in Hyper-V VMs, scaling, high contrast, screen readers", s: "todo" },
     { id: "M39", name: "Release readiness", goal: "Freeware licence, README, then 1.0.0-rc to friends and 1.0.0", s: "todo" }
   ],
@@ -1228,6 +1235,7 @@ const HUB = {
     { v: "0.21.0", s: "done", scope: "Icons and game tiles (M34): rounded covers, glow tiles, clean sharp icons, Normal / Large covers, opt-in Steam covers and website icons, Choose cover…. Released 2026-10-06; the installed 0.20.0 updated itself." },
     { v: "0.22.0", s: "done", scope: "Modern menus and dialogs (M35): one menu style with icons for fences, items and the tray, a 12-line fence menu, Settings in sections with switches, colour swatches and a picker, one message dialog. Released 2026-10-06; the installed 0.21.0 updated itself." },
     { v: "0.23.0", s: "done", scope: "Fence settings and presets (M36): each fence its own look (style, background, title font and alignment, title bar on hover, spacing), five look presets and your own, Export / Import setup as one .neofences file, Reset settings to defaults. Released 2026-10-06; the installed 0.22.0 updated itself." },
+    { v: "0.24.0", s: "todo", scope: "Performance at scale (M37): icons from a cache at start, visible icons first, nothing ticking while hidden or in a game, labels drawn once, cover tiles built only for covers, a 500-item / 50-fence measurement. Merged 2026-10-06; release pending." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1419,7 +1427,8 @@ const HUB = {
     { id: "ADR-054", t: "One-level undo for removals and fence deletions", s: "Accepted", d: "No questions: an undo bar and Ctrl+Z after removing items; a snapshot, a notice and tray Undo delete (2 min) after deleting a fence; undo puts back only what is missing.", c: "One level, lost on exit (the snapshot covers a deleted fence)." },
     { id: "ADR-055", t: "Opt-in online art: Steam store covers, website icons from the sites themselves", s: "Accepted", d: "Off until you say yes (asked once); after each scan the games without a cover are looked up on Steam's public search, strict names only; misses wait 30 days; web links' icons come from their sites, else a letter badge; everything in covers\\.", c: "Only game names and web addresses leave the PC, only after a yes; games not on Steam keep their glow tile until you choose a cover." },
     { id: "ADR-056", t: "One menu style, drawn by NeoFences, for fences, items and the tray", s: "Accepted", d: "A shared style draws every menu (rounded, icons, red destructive entries, light/dark); the tray menu is the same WPF menu; Settings in sections with switches; swatches and a picker; one message dialog.", c: "One look everywhere; WPF's Fluent theme stays off the fences; menus are WPF popups for tests." },
-    { id: "ADR-057", t: "Per-fence looks that fall back to all fences; presets copy; the whole setup as one file", s: "Accepted", d: "A fence's own look overrides Settings → Appearance part by part (empty = Like all fences); presets are copies; Export / Import a .neofences zip; import and reset take a whole snapshot first (Settings and presets too).", c: "Per-fence fonts are back in a window (ADR-038 amended); no new dependency; schema stays 5." }
+    { id: "ADR-057", t: "Per-fence looks that fall back to all fences; presets copy; the whole setup as one file", s: "Accepted", d: "A fence's own look overrides Settings → Appearance part by part (empty = Like all fences); presets are copies; Export / Import a .neofences zip; import and reset take a whole snapshot first (Settings and presets too).", c: "Per-fence fonts are back in a window (ADR-038 amended); no new dependency; schema stays 5." },
+    { id: "ADR-058", t: "Measure first; an icon and name cache; visible first; timers only while needed", s: "Accepted", d: "A 500 / 50 measurement script and timing marks; icons asked once per run, cached in cache\\icons and shown from there at start, re-checked daily; widget, hover and collect timers stop while nothing shows; labels drawn once; tiles only for covers.", c: "Icons 11 s → 3 s at 500 items; ready-to-run and virtualization not done; the start is now bound by creating the fence windows." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1517,7 +1526,8 @@ const HUB = {
     { date: "2026-10-06", topic: "1.0 readiness + M33 safety net (merged)", done: "Readiness review and the path to 1.0 (your decisions); M33 spec, replay-verified plan, native build; Opus review: 8 important fixed (715 tests); live AS1–AS11 pass, one bug found and fixed; merged locally.", next: "Released 0.20.0; next: M34 icons and game tiles" },
     { date: "2026-10-06", topic: "M34 icons and game tiles (merged)", done: "Two power cuts survived; mockups with your art; spec; Steam probe; you chose Normal / Large covers; prototype probe; native build (747 tests); Opus review fixes; live check AT (12 scripted passes); merged locally.", next: "Released 0.21.0; next: set up the Games fence, then M35" },
     { date: "2026-10-06", topic: "M35 modern menus and dialogs (merged)", done: "Mockups (menus with icons, Settings section list, swatches); prototype probe; native build (774 tests); Opus review fixes; live check AU incl. light mode; merged locally.", next: "Released 0.22.0; next: M36 fence settings and presets" },
-    { date: "2026-10-06", topic: "M36 fence settings and presets (merged)", done: "Mockups (small settings window, five presets); two prototype probes; native build (810 tests); Opus review fixes (import collect watermarks, export temp name); live check AV; merged locally.", next: "Released 0.23.0; next: M37 performance at scale" }
+    { date: "2026-10-06", topic: "M36 fence settings and presets (merged)", done: "Mockups (small settings window, five presets); two prototype probes; native build (810 tests); Opus review fixes (import collect watermarks, export temp name); live check AV; merged locally.", next: "Released 0.23.0; next: M37 performance at scale" },
+    { date: "2026-10-06", topic: "M37 performance at scale (merged)", done: "Six measured prototype rounds; native build (824 tests); Opus review fixes (widgets frozen at start, placeholder icons, shortcut re-checks, the script's restore); live check AW; merged locally.", next: "Release 0.24.0, then M38" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2170,7 +2180,18 @@ const HUB = {
     ["572f7d4", "docs: refreshed the hub for M36"],
     ["2ecb7ee", "chore: bumped the version to 0.23.0"],
     ["c3eeda4", "docs: marked the 0.23.0 release as approved"],
-    ["fa08dd6", "docs: recorded the 0.23.0 release"]
+    ["fa08dd6", "docs: recorded the 0.23.0 release"],
+    ["0562830", "docs: refreshed the hub for the 0.23.0 release"],
+    ["f35a42b", "docs: claimed M37 performance at scale"],
+    ["386b145", "docs: added the M37 performance at scale design spec"],
+    ["a5f4f7d", "docs: added the M37 performance at scale implementation plan"],
+    ["8a16883", "feat: added the icon cache's rules and the timing marks in Core"],
+    ["1edc4c0", "perf: added the icon cache, visible-first icons, timers that stop when nothing shows, lighter items and the scale measurement"],
+    ["b55c089", "docs: described the performance work in ADR-058, architecture, features, the guide, checklist AW and the M37 note"],
+    ["34e15a0", "fix: fixed widgets frozen at start, placeholder icons kept for the run, shortcut icons never re-checked and the measurement restore"],
+    ["69c0b21", "fix: made the scale measurement put the data back safely"],
+    ["6dcbc4f", "docs: added the M37 measurement and live check results"],
+    ["68eb8e0", "docs: marked M37 merged in the roadmap and logged the session"]
   ]
 };
 /* ===== END HUB DATA ===== */
