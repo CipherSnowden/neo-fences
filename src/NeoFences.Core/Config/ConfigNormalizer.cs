@@ -85,6 +85,12 @@ public static class ConfigNormalizer
         Folders = (library?.Folders ?? []).Where(folder => !string.IsNullOrWhiteSpace(folder)).Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
         Sources = library?.Sources ?? new LibrarySources(),
         Hidden = (library?.Hidden ?? []).Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
+        OnlineArt = library?.OnlineArt, // M34
+        // M34: only a file name in NeoFences' covers folder counts (a hand-edited path never points elsewhere).
+        CoverChoices = (library?.CoverChoices ?? new Dictionary<string, string>())
+            .Where(choice => !string.IsNullOrWhiteSpace(choice.Key) && !string.IsNullOrWhiteSpace(Path.GetFileName(choice.Value ?? "")))
+            .GroupBy(choice => choice.Key, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => Path.GetFileName(group.First().Value), StringComparer.OrdinalIgnoreCase),
     };
 
     private static Dictionary<string, Layout> NormalizeLayouts(IReadOnlyDictionary<string, Layout>? loadedLayouts)

@@ -13,6 +13,12 @@ public sealed record LibrarySettings
 
     /// <summary>The fence newly installed games go to (M22), or null: nowhere.</summary>
     public string? NewGamesFence { get; init; }
+
+    /// <summary>Find covers and website icons online (M34, ADR-055): null until asked once, then the answer (Settings → Games too).</summary>
+    public bool? OnlineArt { get; init; }
+
+    /// <summary>"Choose cover…" (M34): game id → a picture in NeoFences' covers folder. Reset to automatic removes the entry.</summary>
+    public IReadOnlyDictionary<string, string> CoverChoices { get; init; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>Which sources the library reads; all on by default.</summary>
