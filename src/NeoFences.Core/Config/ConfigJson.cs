@@ -49,6 +49,13 @@ public static class ConfigJson
     public static Items.ItemsDocument DeserializeItems(string json) =>
         JsonSerializer.Deserialize<Items.ItemsDocument>(json, Options) ?? throw new JsonException("items.json contains null");
 
+    /// <summary>An export's manifest (M36): the same names as config.json.</summary>
+    public static string SerializeManifest(SetupManifest manifest) => JsonSerializer.Serialize(manifest, Options);
+
+    /// <exception cref="JsonException">The text is not a manifest.</exception>
+    public static SetupManifest DeserializeManifest(string json) =>
+        JsonSerializer.Deserialize<SetupManifest>(json, Options) ?? throw new JsonException("the manifest contains null");
+
     /// <summary>The library folder's index (M12): the same names and enums as config.json.</summary>
     public static string SerializeLibrary(Library.LibraryState state) => JsonSerializer.Serialize(state, Options);
 
