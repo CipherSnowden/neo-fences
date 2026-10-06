@@ -819,3 +819,26 @@ install check (the installed 0.22.0 downloaded the update from the draft's files
 items and the startup entry unchanged; the install-check script's tray click still read the old native menu, so it fell back
 to a plain restart — next time read the WPF tray menu for "Restart to update"); NeoFences started again and running;
 published; hub refreshed.
+
+## 2026-10-06 — M37 performance at scale (0.24.0), built and merged
+
+**Done:** the owner picked smooth big setups, faster start and true idleness (not memory), and "measure, then fix".
+`tools/perf/measure-scale.ps1` (500 items / 50 fences on a backed-up copy) and `PerfLog` timing marks; six prototype rounds.
+Core test-first (810 → 824): `IconCache` / `IconCacheIndex` (key, stamp, daily re-check, pruning, what a run remembers),
+`PerfLog`. App: icons asked once per run, kept in `cache\icons\` and shown from there at start, visible first; the widget
+timer, hover polls and auto-collect timer stop while nothing can be seen; start work after "fences shown"; labels drawn once
+(`BitmapCache`); the cover tile built only for covers. Icons at 500 items 11.1 s → 3.0 s cold, 2.76 s warm from the cache;
+the 200-item fence 242 → ~150 ms; on the owner's setup 0.86 s warm. Opus review: 1 critical + 3 important, fixed (widgets
+frozen at start — the earlier "idle 0.00 s" rounds measured that bug; placeholders and website badges kept for the run;
+shortcuts never re-checked; the script's restore). Live check AW (game mode with Edge kiosk: 0.02 s CPU over 45 s; widgets
+tick after start and after a game). Merged locally.
+**Decisions:** ADR-058. Ready-to-run dropped (7 %); virtualization after 1.0 (owner's choice; the big fence at ~150 ms).
+**Rulings:** session layer (one shell ask per key per run) except placeholders and websites; names stored with every icon;
+visible = container in the list's view; hover and collect timers pause in a game; labels as bitmaps instead of a drawn halo;
+the tile template; C1 and the script fix verified live (no test seam).
+**Deferred minors:** Refresh superseded by a non-fresh request; orphan `.tmp` / PNGs not swept; the index copied on every
+hit; stampless PNGs rewritten each start; a null file name in the index; the script's backup under %TEMP% and no -Restore;
+a stale doc comment; two queues not three.
+**Left by hand:** AW3 (an app icon change behind a shortcut, the Recycle Bin, Refresh), AW4 with a damaged index, AW7 at
+125 / 150 % and in light mode.
+**Next:** release 0.24.0 when the owner says so; then M38 compatibility (Hyper-V, asked first).
