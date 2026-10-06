@@ -930,6 +930,9 @@ public sealed partial class FenceHost
             RefreshSettings();
         };
         window.DeleteSnapshotRequested += DeleteSnapshot;
+        window.ExportSetupRequested += ExportSetup; // M36
+        window.ImportSetupRequested += ImportSetup;
+        window.ResetSettingsRequested += ResetSettings;
         WireLibrarySettings(window);
         window.OpenSnapshotsRequested += () =>
         {
@@ -1054,32 +1057,19 @@ public sealed partial class FenceHost
             return;
         }
         var now = DateTimeOffset.Now;
-        if (_snapshots.Save(Snapshots.Take(_config, _items, name: $"Before restore ({now:d MMM HH:mm})", now: now), SnapshotStore.BeforeRestoreFileName) is null)
+        // M36: before a whole snapshot (one taken before an import or a reset), "Before restore" is whole too, so it undoes the Settings.
+        var before = snapshot.Settings is null ? Snapshots.Take(_config, _items, name: $"Before restore ({now:d MMM HH:mm})", now: now)
+            : Snapshots.TakeWhole(_config, _items, name: $"Before restore ({now:d MMM HH:mm})", now: now);
+        if (_snapshots.Save(before, SnapshotStore.BeforeRestoreFileName) is null)
         {
             Log.Warning(_snapshots.LastFailure, "snapshot not restored: 'Before restore' could not be saved");
             SnapshotFailure("Snapshot not restored", "NeoFences could not save 'Before restore' first (see the log).");
             return;
         }
         Log.Information("restoring snapshot {Name} from {Path}", snapshot.Name, path);
-        (_config, _items) = Snapshots.Restore(_config, snapshot, restoredAt: DateTimeOffset.Now); // M27: rules start looking now
-        MigrateGames(_library.Items.Count > 0 ? _library : LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: a snapshot from before games became items
-        MigrateFolderViews(); // M26: a snapshot from before folder views became panels
-        SaveNow();
-        SyncBoxes();
-        // Windows that kept their fence still show its old title, icon size and labels (final review I1).
-        foreach (var window in _windows.Values)
-        {
-            if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { } shown) continue;
-            window.Refresh(shown);
-            window.SetTitle(shown.Title);
-        }
-        RefreshWindows();
-        UpdateLibrary(); // M22: the restored fences may hold game items, or none
-        ForgetGoneTargets(); // records of items the restore took away (M20)
-        CheckAllTargets(); // the restored items' targets may have changed since
+        var (config, items) = Snapshots.Restore(_config, snapshot, restoredAt: DateTimeOffset.Now); // M27: rules start looking now
+        ReplaceSetup(config, items, whole: snapshot.Settings is not null); // M36: shared with Import setup…
         _settingsWindow?.ShowSnapshotNotice($"Restored \"{snapshot.Name}\".", failed: false); // replaces an earlier failure line (final review M1)
-        RefreshSettings();
-        RefreshAllFenceSettings(); // M36: fences that are gone close their settings
     }
 
     /// <summary>The snapshot list; a damaged file or an unreadable folder is logged once, not on every tray open (final review I2).</summary>

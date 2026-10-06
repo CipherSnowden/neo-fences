@@ -245,6 +245,15 @@ A snapshot saves your fences, their places and their items.
   folder**.
 - NeoFences also takes one by itself before big changes (for example before an update reshapes your fences).
 
+**Your whole setup in one file** (for another PC, or a fresh Windows):
+
+- **Settings → Snapshots → Export setup…** saves one `.neofences` file: your fences, their items, places and looks, your
+  settings, your own presets, and the pictures you chose as item icons and covers. Not the logs, not the game list (it is
+  found again on any PC), and never your files themselves.
+- **Settings → Snapshots → Import setup…** checks the file (a NeoFences export, readable, not from a newer NeoFences),
+  asks, saves your current setup as the snapshot "Before import", then puts the file's setup in place. To undo, restore
+  "Before import". Items whose files or apps are not on this PC show as missing, as usual.
+
 ## 10. Game mode
 
 While a full-screen game is in front, NeoFences goes idle: fences stay at the bottom, the desktop mouse gestures and Peek
@@ -267,8 +276,11 @@ Tray or fence menu → **Settings…**. A list of sections on the left opens one
   open**.
 - **Appearance** — **Colour style** (**Accent edge**, **Tinted glass**, **Title strip**), **Background strength**,
   **Colour fences from the wallpaper**, **Title font**. A fence can have its own of each (fence menu → **Fence settings…**).
-- **Games**, **Game mode**, **Snapshots**, **Updates** — see their sections above.
-- **About** — the version, **Open logs folder**, **Open data folder**, **Help (online guide)**.
+- **Games**, **Game mode**, **Snapshots**, **Updates** — see their sections above. **Snapshots** also has **Export setup…** and
+  **Import setup…**.
+- **About** — the version, **Open logs folder**, **Open data folder**, **Help (online guide)**, and **Reset settings
+  to defaults…**: every page of Settings back to how NeoFences comes (asked first, a snapshot "Before reset" first). Your
+  fences, items, own presets, game folders, hidden games and chosen covers stay.
 
 ![Settings](guide/settings.png)
 

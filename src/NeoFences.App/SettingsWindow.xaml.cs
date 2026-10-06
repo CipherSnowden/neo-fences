@@ -53,6 +53,10 @@ public partial class SettingsWindow : Window
     public event Action<string, string>? RenameSnapshotRequested;
     public event Action<string>? DeleteSnapshotRequested;
     public event Action? OpenSnapshotsRequested;
+    /// <summary>M36: Settings → Snapshots → Export setup… / Import setup…; Settings → About → Reset settings to defaults….</summary>
+    public event Action? ExportSetupRequested;
+    public event Action? ImportSetupRequested;
+    public event Action? ResetSettingsRequested;
     /// <summary>The hotkey box got (true) or lost (false) the keyboard: the host releases the Peek hotkey meanwhile (M6b review).</summary>
     public event Action<bool>? HotkeyRecording;
     public event Action<LabelMode>? DefaultLabelsChanged;
@@ -100,6 +104,9 @@ public partial class SettingsWindow : Window
         HelpButton.Click += (_, _) => HelpRequested?.Invoke();
         TakeSnapshotButton.Click += (_, _) => TakeSnapshotRequested?.Invoke();
         OpenSnapshotsButton.Click += (_, _) => OpenSnapshotsRequested?.Invoke();
+        ExportSetupButton.Click += (_, _) => ExportSetupRequested?.Invoke(); // M36
+        ImportSetupButton.Click += (_, _) => ImportSetupRequested?.Invoke();
+        ResetSettingsButton.Click += (_, _) => ResetSettingsRequested?.Invoke();
         RestoreSnapshotButton.Click += (_, _) => { if (SelectedSnapshot is { } row) RestoreSnapshotRequested?.Invoke(row.Path); };
         DeleteSnapshotButton.Click += (_, _) => { if (SelectedSnapshot is { } row) DeleteSnapshotRequested?.Invoke(row.Path); };
         RenameSnapshotButton.Click += (_, _) => BeginSnapshotRename();
