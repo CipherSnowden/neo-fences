@@ -46,7 +46,7 @@ pick is only logged; the guide's letter-badge sentence; a Large cover shown as a
 | AT9 | **Pass**: Choose cover… for Blur listed Steam's results; "Ricochet Blur" picked and shown; Reset to automatic back to the glow tile. From a file… by hand. |
 | AT10 | **Pass**: github.com's own icon fetched; the dead site recorded nothing (letter badge). |
 | AT11 | **Pass**: Minecraft Launcher shows its own app icon (Apps and Games). |
-| AT12 | **Pass**: the missing test file shows its type's icon at full size with the badge (fence scrolled; by log and code). |
+| AT12 | Not seen: the test item sat below the Apps fence's scroll edge. By hand. |
 | AT13 | Light mode by hand. |
 | AT14 | **Pass**: a stale `watchdog-999999` was removed at start. |
 | AT15 | **Pass**: safe mode asked nothing and looked nothing up. |
