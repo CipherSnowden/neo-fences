@@ -37,7 +37,7 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Released 0.23.0 on 2026-10-06 (the installed 0.22.0 updated itself; data unchanged)
 - [x] **M37 — Performance at scale** (0.24.0; released 2026-10-06): icon cache, virtualized fences, cheaper label shadows, idle timers that stop, ready-to-run publish; 500 items / 50 fences test
   - [x] Released 0.24.0 on 2026-10-06 (the installed 0.23.0 updated itself in 2 s; data unchanged)
-- [ ] **M38 — Compatibility and accessibility**: Windows 10 and Windows 11 22H2/23H2/24H2 test pass (Hyper-V), two monitors with mixed scaling; High Contrast, focus visuals, named fences, a keyboard way in
+- [~] **M38 — Compatibility and accessibility** (claimed by session 2026-10-06 compatibility; 0.25.0): Windows 10 and Windows 11 22H2/23H2/24H2 test pass (Hyper-V), two monitors with mixed scaling; High Contrast, focus visuals, named fences, a keyboard way in
 - [ ] **M39 — Release readiness**: licence, PRIVACY, SECURITY, third-party notices, issue templates, checksums and attestations in CI, README/guide refresh, landing page (GitHub Pages), Core tests on Linux in CI
 - [ ] **1.0.0-rc** to friends (beta channel, 1–2 weeks), then **1.0.0**
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
