@@ -743,3 +743,26 @@ is cut short; a misleading watchdog log wording; the stopped window ignores `--e
 **Released:** 0.20.0 on 2026-10-06 — CI passed first time; release build green; draft with the delta package (444 KB);
 install check (the installed 0.19.1 updated itself in 2 s; all four fences and the startup entry unchanged; its log
 already writes `%USERPROFILE%`); published; hub refreshed.
+
+## 2026-10-06 — M34 icons and game tiles (0.21.0), built and merged
+
+**Done:** two power cuts survived (NeoFences came back by itself both times; repo intact). Visual-companion mockups with
+the owner's real covers and icons: tiles style A (name over the cover when labels are on hover), the glow tile, clean
+icons. Spec, then planning findings: Steam's search needs punctuation as spaces and the asset service for new games'
+covers (9 of 12 names match); the owner chose Normal (1×2) / Large (2×4) cover sizes. Prototype probe on a copy of the
+owner's data (5 covers in about 10 s). Core test-first (715 → 747): `GameArt`, `CoverSizes`, `CoversIndex`, `SiteIcons`,
+`WatchdogFiles`, the new library settings. App: rounded covers with a soft shadow and accent ring, glow tiles, accent
+selection, layout rounding and high-quality scaling, cover cells that fill two rows, jumbo generic icons, Store-app
+shortcut icons, the one-time question, Steam lookups after each scan, website icons and letter badges, Choose cover…,
+Settings switch, stale watchdog files removed. Opus review: 4 important + 2 raised, all fixed ("Not now" stored a no;
+broken shortcuts lost their icon; offline site icons became misses; a second cover choice did not show; a crash path; a
+link's full address was fetched). Live check AT: 12 pass scripted; AT1 at 150 %, AT12 and AT13 by hand. Merged locally.
+**Decisions:** ADR-055 (opt-in online art). Spec amended at planning (cover sizes, art order, Settings → Game Library).
+**Rulings:** logo after an online cover; glow icon about half the tile; shadow and glow without effects; site icons on
+demand; Choose cover… unfiltered; generic icons from the system image list; "Not now" asks again at the next start.
+**Deferred minors:** Free fences' overlapped elements go to the first free cell; Off does not stop a running lookup; bad
+icon files never retried; each site icon reloads every icon; read-only sessions still look up; file names from non-ASCII
+ids / URL extensions; a failed Steam pick only logged; the guide's letter-badge sentence; a Large cover shown as an icon
+keeps its 2×4 cell.
+**Next:** dogfood on the owner's fences (asked first: snapshot, covers question, room for the Large covers); release
+0.21.0 when the owner says so; then M35 modern menus and dialogs.
