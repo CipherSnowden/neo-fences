@@ -75,6 +75,22 @@ for any colour (a colour field, a hue bar and a hex box). How the colour shows (
 title strip), how solid the background is and the title font are in **Settings → Appearance**. **Colour fences from the
 wallpaper** picks each fence's colour from the wallpaper behind it — Wallpaper Engine included.
 
+**Fence settings:** fence menu → **Fence settings…** (**Tab settings…** on a tab) gives one fence a look of its own. Each
+change shows on the fence at once; close the window when you are done.
+
+- **Preset**: one click for a whole look — **Glass** (tinted glass, light background, names below), **Minimal** (title bar
+  on hover, almost no background, names on hover), **Title strip** (a coloured title bar over a dark background),
+  **Solid** (a dense background with the accent edge, roomy spacing), **Compact** (small icons, compact spacing, names on
+  hover), and your own. **Save this look as a preset…** keeps the fence's look under a name; the small **✕** next to your
+  own preset deletes it. A preset is copied onto the fence: changing the fence later does not change the preset or other
+  fences. The fence keeps its colour.
+- **Look**: **Colour style**, **Background** (one strength for light and dark mode), **Title** (font, size, weight,
+  alignment) and **Show the title bar** — off, the title bar shows only while the pointer is over the fence, so you can
+  still move, roll up and rename it.
+- **Items**: **Icon size**, **Labels**, **Layout** and **Spacing** (**Compact**, **Normal**, **Roomy**).
+- Every look setting starts at **Like all fences (…)**: what Settings → Appearance says. A setting of the fence's own is
+  marked **This fence's own**; **Like all fences again** (or the **Like all fences** preset) drops them all.
+
 **Delete:** fence menu → **Delete fence**. Only the fence and its links go; your files are not touched. NeoFences
 takes a snapshot first; **Ctrl+Z** in a fence, or tray → **Undo delete**, brings it back for 2 minutes. (Keys reach a fence after
 a click on the desktop or the fence; from another app use the tray.)
@@ -151,6 +167,8 @@ Store**, the **game folders** you add, and game shortcuts on your desktop — an
 - **Icon size:** fence menu → **View** → **Icon size** (Small, Medium, Large, Extra large).
 - **Labels:** fence menu → **View** → **Labels** → **Always**, or **On hover (icons only)** for a tight grid that shows a name only
   when you point at it. A game cover then shows its name over itself.
+- **Spacing:** fence menu → **Fence settings…** → **Spacing**: **Compact**, **Normal** or **Roomy** room between the
+  things in a fence (they keep their size).
 
 ## 5. Widgets
 
@@ -248,7 +266,7 @@ Tray or fence menu → **Settings…**. A list of sections on the left opens one
 - **Fences** — **Labels for new fences** (and **Apply to all fences**), **Show shortcut arrows**, how **Rolled-up fences
   open**.
 - **Appearance** — **Colour style** (**Accent edge**, **Tinted glass**, **Title strip**), **Background strength**,
-  **Colour fences from the wallpaper**, **Title font**.
+  **Colour fences from the wallpaper**, **Title font**. A fence can have its own of each (fence menu → **Fence settings…**).
 - **Games**, **Game mode**, **Snapshots**, **Updates** — see their sections above.
 - **About** — the version, **Open logs folder**, **Open data folder**, **Help (online guide)**.
 

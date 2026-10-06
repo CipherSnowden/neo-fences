@@ -86,6 +86,8 @@ public sealed class App : Application
 
         // M35 (ADR-056): one menu style for every menu, light or dark like the fences.
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/NeoFences;component/menus.xaml", UriKind.Relative) });
+        // M36: the Settings look, shared by Settings and Fence settings.
+        Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/NeoFences;component/settingsstyles.xaml", UriKind.Relative) });
         MenuTheme.Apply(Resources, light: SystemTheme.AppsUseLightTheme());
         _host = new FenceHost { StartMode = _start };
         _host.ExitRequested += Shutdown;

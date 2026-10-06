@@ -58,6 +58,7 @@ public sealed partial class FenceHost
         _config = _config with { Settings = _config.Settings with { Appearance = appearance } };
         if (accentTurnedOn || accentTurnedOff) UpdateAccents(); // refreshes Settings itself (the accent's source line)
         RestyleAll();
+        RefreshAllFenceSettings(); // M36: "Like all fences (…)" names the new values
         ScheduleSave();
         // No RefreshSettings here: Settings already shows what the user changed, and a full refresh re-reads every snapshot
         // file on each slider step (final review I3).

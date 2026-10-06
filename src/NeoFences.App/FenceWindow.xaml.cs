@@ -33,6 +33,8 @@ public partial class FenceWindow : Window
     private const int HitTestCaption = 2;
     private const double CornerRadiusDips = 8;
     private double _captionHeightDips = 30; // follows the title font (M14: 26 / 30 / 34 / 38)
+    private double _cellInset = FenceLook.CellInset(Spacing.Normal); // M36: the room around each element (Fence settings → Spacing)
+    private bool _titleOnHover; // M36: the title bar shows only while the pointer is over the fence
     private const double ResizeBorderDips = 6;
 
     // The menu lists ConfigNormalizer.IconSizes (one list, M2c review carry-over); these are only their names.
@@ -132,6 +134,8 @@ public partial class FenceWindow : Window
     public event Action<IReadOnlyList<string>>? OpenManyRequested;
     public event Action<string>? RenameRequested;
     public event Action<int>? IconSizeRequested;
+    /// <summary>Fence menu → Fence settings… (M36).</summary>
+    public event Action? FenceSettingsRequested;
     public event Action<bool>? LockToggled;
     public event Action? DeleteRequested;
     /// <summary>Ctrl+Z or the undo bar (M33, ADR-054): the last removal or deletion comes back.</summary>
@@ -232,6 +236,7 @@ public partial class FenceWindow : Window
         }
         NewFenceItem.Click += (_, _) => NewFenceRequested?.Invoke();
         RenameItem.Click += (_, _) => BeginRename();
+        FenceSettingsItem.Click += (_, _) => FenceSettingsRequested?.Invoke(); // M36
         LockItem.Click += (_, _) => LockToggled?.Invoke(LockItem.IsChecked);
         DeleteItem.Click += (_, _) => DeleteRequested?.Invoke();
         SettingsItem.Click += (_, _) => SettingsRequested?.Invoke();
@@ -416,6 +421,7 @@ public partial class FenceWindow : Window
         ShowTitleOrTabs();
         DetachTabItem.Visibility = many ? Visibility.Visible : Visibility.Collapsed;
         RenameItem.Header = many ? "Rename tab" : "Rename";
+        FenceSettingsItem.Header = many ? "Tab settings…" : "Fence settings…"; // M36: a tab has its own
         // The bar under a single fence's title comes from its look (ApplyStyle, M14); the menu shows the fence's choice.
         ShowColourChoice(active); // M35: the ring on the current swatch, the tick on Custom colour…
         if (_style is { } style) ApplyStyle(style); // headers were rebuilt: their font and the bar follow the look again
@@ -865,14 +871,15 @@ public partial class FenceWindow : Window
     private void ApplyCellSizes(bool requestIcons = true)
     {
         var labelHeight = IsLibrary || _labelMode == LabelMode.Always ? 36.0 : 0.0;
-        var cellWidth = (double)Resources["ItemWidth"] + 8;
-        var cellHeight = _iconSizeDips + 12 + labelHeight;
+        // M36: the spacing's inset on each side (Normal 2: the look before M36, a cell 8 wider and 12 taller than its element).
+        var cellWidth = (double)Resources["ItemWidth"] + 4 + 2 * _cellInset;
+        var cellHeight = _iconSizeDips + 8 + 2 * _cellInset + labelHeight;
         // The panel takes them through resources, so it has them from its first layout pass (final review I3).
         (Resources["GridCellWidth"], Resources["GridCellHeight"]) = (cellWidth, cellHeight);
         foreach (var view in _items)
         {
             var tileWidth = view.TileWidth;
-            if (view.ApplySize(cellWidth, cellHeight, _iconSizeDips, labelHeight) && IsLoaded && requestIcons) RequestIcon(view);
+            if (view.ApplySize(cellWidth, cellHeight, _iconSizeDips, labelHeight, _cellInset) && IsLoaded && requestIcons) RequestIcon(view);
             if (view.IsTile && Math.Abs(view.TileWidth - tileWidth) > 0.5)
             {
                 view.ArtPath = null; // a cover decoded again at the new tile width (final review I2)
@@ -885,7 +892,7 @@ public partial class FenceWindow : Window
     private void SizeView(FenceItemView view)
     {
         var labelHeight = IsLibrary || _labelMode == LabelMode.Always ? 36.0 : 0.0;
-        view.ApplySize((double)Resources["ItemWidth"] + 8, _iconSizeDips + 12 + labelHeight, _iconSizeDips, labelHeight);
+        view.ApplySize((double)Resources["ItemWidth"] + 4 + 2 * _cellInset, _iconSizeDips + 8 + 2 * _cellInset + labelHeight, _iconSizeDips, labelHeight, _cellInset);
     }
 
     /// <summary>One of <see cref="ConfigNormalizer.IconSizes"/> (DIPs). Icons are reloaded at the new size.</summary>
@@ -957,7 +964,7 @@ public partial class FenceWindow : Window
     /// <summary>A fence's columns at this window's width (M28: a hidden tab's own, for its new elements in a Free fence).</summary>
     public int ColumnsFor(Fence fence, bool covers) =>
         !ItemList.IsLoaded || ItemList.ActualWidth <= 0 ? 0 // not laid out yet: no columns to pin with (final review M4)
-            : FenceGrid.ColumnsFor(ItemList.ActualWidth - 8, ItemWidthFor(fence.IconSize, fence.Labels, covers) + 8);
+            : FenceGrid.ColumnsFor(ItemList.ActualWidth - 8, ItemWidthFor(fence.IconSize, fence.Labels, covers) + 4 + 2 * FenceLook.CellInset(fence.Look?.Spacing ?? Spacing.Normal)); // M36: its own spacing
 
     private void OnItemMouseEnter(object sender, MouseEventArgs args)
     {
@@ -1053,8 +1060,8 @@ public partial class FenceWindow : Window
         _expansion.Reset();
         ApplyChrome();
         AnimateHeight(rolledUp ? RolledUpHeightPx : _fullHeightPx);
-        if (rolledUp) _hoverTimer.Start();
-        else _hoverTimer.Stop();
+        UpdateHoverTimer();
+        UpdateTitleBar(PointerInside()); // M36: a rolled-up fence always shows its title bar
     }
 
     /// <summary>Roll-up expand mode from settings (M6b): hover or click.</summary>
@@ -1150,7 +1157,9 @@ public partial class FenceWindow : Window
     // the pointer leaves fast); in hover mode it also opens during a file drag, which is wanted.
     private void OnHoverTick()
     {
-        if (Handle == 0 || !_rolledUp) return;
+        if (Handle == 0) return;
+        if (_titleOnHover) UpdateTitleBar(PointerInside()); // M36
+        if (!_rolledUp) return;
         if (_drag is not null || BodyContextMenu.IsOpen || _itemMenu?.IsOpen == true || _renaming) return; // never close under the user
         var (cursorX, cursorY) = FenceWindowChrome.GetCursorPosition();
         var rect = FenceWindowChrome.GetPixelRect(Handle);
@@ -1248,6 +1257,18 @@ public partial class FenceWindow : Window
         TitleText.FontFamily = new FontFamily(style.Font.Family); // a font that is gone falls back to Segoe UI; the name stays
         TitleText.FontSize = style.Font.Size;
         TitleText.FontWeight = ToWeight(style.Font.Weight);
+        // M36: the fence's title alignment, title bar on hover and spacing.
+        TitleText.TextAlignment = style.Align switch { TitleAlign.Centre => TextAlignment.Center, TitleAlign.Right => TextAlignment.Right, _ => TextAlignment.Left };
+        _titleOnHover = style.TitleOnHover;
+        UpdateHoverTimer();
+        UpdateTitleBar(PointerInside());
+        var inset = FenceLook.CellInset(style.Spacing);
+        if (inset != _cellInset)
+        {
+            _cellInset = inset;
+            Resources["CellInset"] = new Thickness(inset);
+            ApplyCellSizes();
+        }
         ApplyTabLook(style);
         if (style.TitleHeight != _captionHeightDips)
         {
@@ -1260,6 +1281,35 @@ public partial class FenceWindow : Window
                 FenceWindowChrome.SetPixelRect(Handle, FenceWindowChrome.GetPixelRect(Handle) with { Height = RolledUpHeightPx });
             }
         }
+    }
+
+    /// <summary>The hover poll runs while it is needed: rolled up (M5), or a title bar shown on hover (M36).</summary>
+    private void UpdateHoverTimer()
+    {
+        if (_rolledUp || _titleOnHover) _hoverTimer.Start();
+        else _hoverTimer.Stop();
+    }
+
+    /// <summary>
+    /// M36: a title bar shown on hover is there while the pointer is over the fence, and whenever the fence is rolled up, renamed,
+    /// dragged or its menu is open; otherwise it fades out (its row keeps its place, so nothing moves under the pointer).
+    /// </summary>
+    private void UpdateTitleBar(bool pointerInside)
+    {
+        var shown = !_titleOnHover || pointerInside || _rolledUp || _renaming || _drag is not null || BodyContextMenu.IsOpen;
+        var opacity = shown ? 1.0 : 0.0;
+        if (TitleBar.Opacity == opacity) return;
+        TitleBar.Opacity = TitleStripFill.Opacity = TitleColorBar.Opacity = opacity;
+        if (shown) Body.SetResourceReference(Border.BorderBrushProperty, "FenceDivider");
+        else Body.BorderBrush = Brushes.Transparent;
+    }
+
+    private bool PointerInside()
+    {
+        if (Handle == 0) return false;
+        var (cursorX, cursorY) = FenceWindowChrome.GetCursorPosition();
+        var rect = FenceWindowChrome.GetPixelRect(Handle);
+        return cursorX >= rect.X && cursorX < rect.X + rect.Width && cursorY >= rect.Y && cursorY < rect.Y + rect.Height;
     }
 
     /// <summary>The colour bar of a single fence and the tab headers' font: they follow every header rebuild.</summary>

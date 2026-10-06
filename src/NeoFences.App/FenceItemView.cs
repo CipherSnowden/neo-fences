@@ -192,9 +192,11 @@ public sealed class FenceItemView : INotifyPropertyChanged
     /// Sizes its content for its span on cells of this size (M24, spec §1). True when the icon size changed (the icon is
     /// loaded again at the new size).
     /// </summary>
-    public bool ApplySize(double cellWidth, double cellHeight, double iconDips, double labelHeight)
+    /// <param name="inset">The spacing's room on each side of the element (M36; 2 = Normal, the look before).</param>
+    public bool ApplySize(double cellWidth, double cellHeight, double iconDips, double labelHeight, double inset = 2)
     {
-        const double CellPaddingX = 8, CellPaddingY = 12, MaxIcon = 256;
+        const double MaxIcon = 256;
+        double CellPaddingX = 4 + 2 * inset, CellPaddingY = 8 + 2 * inset; // the item template: inset, a 1-px edge, 1,3 padding
         var width = Span.Columns * cellWidth - CellPaddingX;
         var height = Span.Rows * cellHeight - CellPaddingY - labelHeight;
         var icon = Span == GridSpan.One ? iconDips : Math.Clamp(Math.Floor(Math.Min(width - 8, height)), iconDips, MaxIcon);

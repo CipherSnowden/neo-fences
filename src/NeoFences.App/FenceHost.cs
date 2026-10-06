@@ -305,6 +305,7 @@ public sealed partial class FenceHost
         window.MovedByUser += OnFenceMoved;
         window.RenameRequested += title => RenameFence(window, title);
         window.IconSizeRequested += iconSize => SetFenceIconSize(window, iconSize);
+        window.FenceSettingsRequested += () => OpenFenceSettings(window.FenceId); // M36
         window.LockToggled += locked => SetFenceLocked(window, locked);
         window.DeleteRequested += () => DeleteFence(window);
         window.NewFenceRequested += CreateFence;
@@ -567,6 +568,7 @@ public sealed partial class FenceHost
         _items = ItemEdits.RemoveFence(_items, fence.Id);
         SaveNow();
         SyncBoxes(); // closes the window when its box is gone
+        RefreshFenceSettings(fence.Id); // M36: its settings window closes too
         UpdateWatching();
         ForgetGoneTargets();
         UpdateLibrary(); // M23: no game fence left, no scan
@@ -590,6 +592,7 @@ public sealed partial class FenceHost
         MenuTheme.Apply(System.Windows.Application.Current.Resources, light); // M35: the menus follow too
         RestyleAll(); // M14: the tone's strength and ink
         RefreshSettings();
+        RefreshAllFenceSettings(); // M36: "Like all fences (…)" names the tone's strength
     }
 
     /// <summary>
@@ -1076,6 +1079,7 @@ public sealed partial class FenceHost
         CheckAllTargets(); // the restored items' targets may have changed since
         _settingsWindow?.ShowSnapshotNotice($"Restored \"{snapshot.Name}\".", failed: false); // replaces an earlier failure line (final review M1)
         RefreshSettings();
+        RefreshAllFenceSettings(); // M36: fences that are gone close their settings
     }
 
     /// <summary>The snapshot list; a damaged file or an unreadable folder is logged once, not on every tray open (final review I2).</summary>
