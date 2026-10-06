@@ -74,6 +74,36 @@ No NeoFences problem was found; every failure was in the test tooling.
   screenshots); the spec's VM step "Tab to another fence, Enter opens an item" is checked by hand (AX3).
 - A damaged or missing `results.json` reads as one failed row, "no results (the test pass did not finish)".
 
+## Final review fixes
+
+The whole-branch review (fresh reviewer) found 0 Critical, 6 Important, 7 Minor. Fixed: Esc during Peek now cancels a
+rename or closes the Properties dialog first (the global Esc is registered only while another app is in front; a fence
+with the keyboard handles Esc itself); the keyboard goes back only while NeoFences still has it (an app switched to
+meanwhile keeps it); Settings is remembered as the window to return to, and with nothing to return to the desktop gets
+the keyboard; a rolled-up fence opens for the keyboard in click mode too (`RollUpExpansion.Open`); the VM host script
+always turns the VM off and prints a report; a pass without `"finished": true` is a failed report. Deferred minors: the
+first item stays selected in fences Peek visited; `KeyboardSpots` could use `FencePlacement.ContainingMonitor`; deleting
+the fence with the keyboard leaves Tab idle until the next Peek; a folder panel's list needs the mouse; one failed
+screenshot stops the VM checks; two more `KeyboardOrder` cases.
+
 ## Live check
 
-Filled by the plan's Task 6.
+2026-10-07, the branch's Release build on a backed-up copy of the owner's data (four fences: Desk, Games, Apps,
+Downloads; restored afterwards, the installed copy started again):
+
+| check | result |
+|---|---|
+| AX2 Peek from Notepad, pointer on the taskbar | PASS — the keyboard in Desk (outline and item ring shown), arrows move; Esc back to Notepad |
+| AX2 pointer over Desk | PASS — the keyboard in Desk |
+| AX3 Tab through every fence | PASS — Desk > Games > Apps > Downloads > Desk; Shift+Tab back to Downloads |
+| I1 F2 Properties during Peek, Esc, Esc | PASS — the first Esc closed the dialog (still peeking), the second ended Peek, Notepad had the keyboard |
+| I2 switched to Paint during Peek, Esc | PASS — Peek ended, Paint kept the keyboard |
+| I4 Apps rolled up, click mode, Peek over it | PASS — opened (32 → 432 px) with the keyboard, closed after Esc |
+| AX4 full-screen Edge during Peek | PASS — game mode on, Peek ended |
+
+**VM pass (AX1)**, the same day: the branch packed as 0.25.0-rc.1 (`e8ef390`, with the review fixes) in `NF-Win11` —
+**12 of 12** (install 0.24.0, welcome, behind windows, Win+D, icons after exit / kill / Explorer restart, game mode "busy",
+update to 0.25.0-rc.1, Peek and the keyboard, uninstall); the guest marked its results finished.
+
+Not scripted (by hand later): Enter opening an item (it would open the owner's real items), Ctrl+Tab in a tabbed fence,
+Peek from Settings or the tray menu, a fence deleted while peeking.
