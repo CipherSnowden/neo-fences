@@ -211,6 +211,9 @@ public sealed class FenceItemView : INotifyPropertyChanged
     /// <summary>Counts icon requests (UI thread): a slower, older load (another size or target) never wins (final review I4).</summary>
     public int IconRequest { get; set; }
 
+    /// <summary>M37: an icon request waits (raised to the front when the item scrolls into view).</summary>
+    public bool IconPending { get; set; }
+
     public ImageSource? Icon
     {
         get;

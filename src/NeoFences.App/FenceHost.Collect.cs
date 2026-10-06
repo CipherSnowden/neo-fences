@@ -81,6 +81,7 @@ public sealed partial class FenceHost
     private void SetCollectPaused()
     {
         foreach (var (_, lister) in _collectListers.Values) lister.SetPaused(_gameMode || _paused);
+        if (!_gameMode && !_paused && _collectPending.Count > 0) _collectTimer?.Start(); // M37: arrivals that waited for the game
     }
 
     private bool ReleaseCollectForRemoval(nint handle) => _collectListers.Values.Aggregate(false, (released, entry) => entry.Lister.ReleaseForRemoval(handle) | released);
@@ -114,7 +115,11 @@ public sealed partial class FenceHost
     /// </summary>
     private void OnCollectTick()
     {
-        if (_gameMode || _paused) return;
+        if (_gameMode || _paused)
+        {
+            _collectTimer?.Stop(); // M37 (truly idle): no 500 ms ticks during a game; SetCollectPaused starts it again
+            return;
+        }
         var collected = new List<string>();
         foreach (var (source, pending) in _collectPending.Where(entry => Clock.Elapsed - entry.Value.LastAt >= CollectSettle).ToList())
         {

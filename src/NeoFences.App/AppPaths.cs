@@ -20,4 +20,7 @@ public static class AppPaths
     public static string CoversDirectory { get; } = Path.Combine(DataDirectory, "covers");
 
     public static string SiteIconsDirectory { get; } = Path.Combine(CoversDirectory, "sites");
+
+    /// <summary>The icon and name cache (M37, ADR-058): NeoFences' own PNGs and their index; safe to delete (it fills again).</summary>
+    public static string IconCacheDirectory { get; } = Path.Combine(DataDirectory, "cache", "icons");
 }

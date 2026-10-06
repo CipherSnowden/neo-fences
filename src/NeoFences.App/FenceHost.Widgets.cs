@@ -57,7 +57,14 @@ public sealed partial class FenceHost
     {
         ScheduleWidgetTick();
         var windows = WidgetWindows();
-        if (windows.Count == 0) return; // nobody can see a widget: no work at all
+        if (windows.Count == 0)
+        {
+            // M37 (truly idle): nobody can see a widget — the timer stops until one shows again. Every way a widget comes into
+            // view calls OnWidgetTick (game mode ending, unpause, quick-hide off, a roll-up opening, a tab switch, a time change).
+            _widgetTimer?.Stop();
+            return;
+        }
+        if (_widgetTimer is { IsEnabled: false } stopped) stopped.Start();
         var now = DateTime.Now;
         foreach (var window in windows) window.UpdateWidgets(now, _lastStats);
         var elapsed = Clock.Elapsed;

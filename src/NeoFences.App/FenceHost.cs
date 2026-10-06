@@ -41,7 +41,7 @@ public sealed partial class FenceHost
     private readonly SystemMessageWindow _messages = new();
     private readonly Dictionary<string, FenceWindow> _windows = new(StringComparer.Ordinal);
     private readonly DispatcherTimer _saveTimer;
-    private readonly IconLoader _iconLoader = new(Dispatcher.CurrentDispatcher);
+    private readonly IconLoader _iconLoader = new(Dispatcher.CurrentDispatcher, new IconDiskCache(AppPaths.IconCacheDirectory)); // M37: the icon cache
     private readonly ShellWorker _shellWorker = new(); // recycling snapshots: off the UI thread, on STA (M3a review)
     private SpecialIconNotifications? _specialIcons;
     private bool _specialIconsDeferred;
@@ -158,10 +158,12 @@ public sealed partial class FenceHost
 
         RefreshMonitors();
         foreach (var box in FenceTabs.Boxes(_config)) OpenWindow(box); // one window per box (M9)
-        EnsureLibraryLister();
+        StepMark("windows opened"); // M37
         RefreshWindows(); // M26: panels list their folders from here
+        StepMark("items set"); // M37
         StartSpecialIconNotifications();
         ApplyLayout();
+        StepMark("layout applied"); // M37
         if (Current.IconsHidden) SetIconsHidden(true); // not in safe mode (M33 review I1)
         else if (_watchdog.IsIconsHiddenMarked)
         {
@@ -190,10 +192,9 @@ public sealed partial class FenceHost
         // M30: a fresh start says where NeoFences lives; Windows 11 may tuck a new tray icon behind the ^ arrow.
         _firstStartNotice = loaded.Source == ConfigLoadSource.Fresh && !loaded.IsReadOnly; // not for an older build on a newer config (final review I1); held while a game runs (M32 review I1)
         ShowFirstStartNotice(); // M31: or once a retried tray icon shows
-        StartWatching(); // M18: states fill in as the checks finish (spec §4)
         StartUpdates(); // M17: the first check a minute after start
-        if (Appearance.WallpaperAccent) UpdateAccents(); // M14: the accent is read once at start, then on wallpaper changes
         ScheduleSave();
+        MarkFencesShown(); // M37: the timing marks
     }
 
     /// <summary>
@@ -301,6 +302,7 @@ public sealed partial class FenceHost
         window.TabCycleRequested += step => CycleTab(window, step);
         window.SetTabs(FenceTabs.TabsOf(_config, box.Id), shown.Id);
         ApplyStyle(window); // M14
+        window.SetHoverPaused(_gameMode || !Current.FencesVisible); // M37
         window.SnapRect = (rect, edges) => SnapFence(window, rect, edges);
         window.MovedByUser += OnFenceMoved;
         window.RenameRequested += title => RenameFence(window, title);
@@ -448,9 +450,11 @@ public sealed partial class FenceHost
         {
             var (resolved, layout) = LayoutEngine.Resolve(_config, _monitors.Select(monitor => monitor.ToDisplayMonitor()).ToList());
             _config = resolved;
+            var slowest = (Ms: 0.0, Items: 0); // M37: the start's slowest fence to place and show
             foreach (var (fenceId, rect) in layout.Fences)
             {
                 if (!_windows.TryGetValue(fenceId, out var window)) continue;
+                var started = System.Diagnostics.Stopwatch.GetTimestamp();
                 var monitor = _monitors.First(candidate => candidate.DeviceId == rect.Monitor);
                 window.Place(FencePlacement.ToPixels(rect, monitor));
                 if (!window.IsVisible && Current.FencesVisible)
@@ -464,7 +468,10 @@ public sealed partial class FenceHost
                     }
                     else FenceWindowChrome.SendToBack(window.Handle); // Show puts it above every app; fences live just above the desktop
                 }
+                var took = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+                if (took > slowest.Ms) slowest = (took, window.ItemCount);
             }
+            if (!_fencesShownLogged && slowest.Ms > 0) Log.Information("timing: slowest fence placed and shown in {Ms:0} ms ({Items} items)", slowest.Ms, slowest.Items); // M37
         }
         catch (ArgumentException unusableDisplay)
         {
@@ -674,6 +681,7 @@ public sealed partial class FenceHost
         if (tab.IsLibrary) _libraryLister?.Refresh();
         else CheckFence(fenceId); // a fence becoming visible is checked again (spec §4)
         RefreshWindow(window);
+        OnWidgetTick(); // M37: a tab with widgets may have come to the front (the widget timer may be stopped)
         ScheduleSave();
     }
 
@@ -1199,6 +1207,12 @@ public sealed partial class FenceHost
         }
     }
 
+    /// <summary>M37 (truly idle): the fences' hover polls (roll-up, title bar on hover) stop in a game and while hidden or paused.</summary>
+    private void UpdateHoverPolls()
+    {
+        foreach (var window in _windows.Values) window.SetHoverPaused(_gameMode || !Current.FencesVisible);
+    }
+
     private void CheckGameMode()
     {
         var gameMode = GameModePolicy.IsGameActive(enabled: _config.Settings.GameMode, foreground: GameDetection.TakeSnapshot());
@@ -1214,6 +1228,7 @@ public sealed partial class FenceHost
         _libraryLister?.SetPaused(gameMode);
         SetPanelsPaused(gameMode); // M21, M26
         SetCollectPaused(); // M27
+        UpdateHoverPolls(); // M37
         if (!gameMode)
         {
             ApplyDeferredShellWork();
@@ -1273,6 +1288,7 @@ public sealed partial class FenceHost
         UpdatePeekHotkey();
         RefreshSettings(); // a hotkey that cannot be registered on resume shows in an open Settings (final review I5)
         _trayIcon?.SetTooltip(TrayTooltip());
+        UpdateHoverPolls(); // M37
         Log.Information("paused: {Paused}", paused);
         if (!paused) OnWidgetTick(); // M28: widgets right at once
     }
@@ -1413,6 +1429,7 @@ public sealed partial class FenceHost
         }
         if (Current.IconsHidden != iconsWereHidden) SetIconsHidden(Current.IconsHidden); // RunState decides, user-hidden icons included
         if (!hidden) _iconsHiddenByUser = false;
+        UpdateHoverPolls(); // M37
         Log.Information("quick-hide: {Hidden}", hidden);
         if (!hidden) OnWidgetTick(); // M28: widgets right at once
     }

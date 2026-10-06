@@ -260,7 +260,7 @@ public sealed partial class FenceHost
             if (_panelListers.TryGetValue(panel.Id, out var panelLister)) panelLister.Refresh(); // its panels list again (M21, M26)
         }
         CheckFence(window.FenceId);
-        window.ReloadIcons();
+        window.ReloadIcons(fresh: true); // M37: Refresh asks Windows again, past the icon cache
     }
 
     private void CheckFence(string fenceId) =>

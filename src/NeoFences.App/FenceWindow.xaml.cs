@@ -244,6 +244,10 @@ public partial class FenceWindow : Window
         LabelsOnHoverItem.Click += (_, _) => LabelModeRequested?.Invoke(LabelMode.OnHover);
         TitleBox.MaxLength = FenceEdits.MaxTitleLength; // the cut in FenceEdits.Rename never surprises the user (M2c review)
         ItemList.SelectionChanged += (_, _) => UpdateHoverLabel();
+        ItemList.AddHandler(System.Windows.Controls.ScrollViewer.ScrollChangedEvent, new System.Windows.Controls.ScrollChangedEventHandler((_, scrolled) =>
+        {
+            if (scrolled.VerticalChange != 0 || scrolled.ViewportHeightChange != 0) RaiseVisibleIcons(); // M37
+        }));
         ItemList.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => UpdateHoverLabel()));
         HoverLabel.SizeChanged += (_, _) => PlaceHoverLabel(); // the bound name arrived or changed (final review I3)
         Loaded += (_, _) => ReloadIcons(); // placed on its monitor: one load at the right size (mixed DPI, M2b review)
@@ -271,7 +275,7 @@ public partial class FenceWindow : Window
         // Rolled up, the fence opens on hover or click (setting) and closes again shortly after the pointer leaves.
         _hoverTimer = new System.Windows.Threading.DispatcherTimer { Interval = HoverTick };
         _hoverTimer.Tick += (_, _) => OnHoverTick();
-        if (_rolledUp) _hoverTimer.Start();
+        UpdateHoverTimer();
         _heightAnimation = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(15) };
         _heightAnimation.Tick += (_, _) => StepHeight();
         Closed += (_, _) =>
@@ -334,6 +338,9 @@ public partial class FenceWindow : Window
         SetIconSize(fence.IconSize);
         SetLabelMode(fence.Labels);
     }
+
+    /// <summary>Elements shown now (M37: the start's timing).</summary>
+    public int ItemCount => _items.Count;
 
     /// <summary>The shown tab is the Game Library (M12).</summary>
     public bool IsLibrary => _kind == FenceKind.Library;
@@ -755,9 +762,11 @@ public partial class FenceWindow : Window
     private int IconSizePx => (int)Math.Round(_iconSizeDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
 
     /// <summary>An item's icon at its own size; a widget draws itself (M25), a panel shows its entries' icons (M26).</summary>
-    private void RequestIcon(FenceItemView view)
+    /// <param name="fresh">Past the icon cache (Refresh, special icons that change, M37).</param>
+    private void RequestIcon(FenceItemView view, bool fresh = false)
     {
-        if (!view.IsWidget && !view.IsPanel && ItemKinds.Of(view.Target) != ItemKind.Widget) _iconLoader.Request(view, PxOf(view)); // M28: an unknown widget kind has no icon to ask Windows for
+        // M37 (spec §4): what can be seen now goes first; the rest after, raised when it scrolls into view.
+        if (!view.IsWidget && !view.IsPanel && ItemKinds.Of(view.Target) != ItemKind.Widget) _iconLoader.Request(view, PxOf(view), urgent: InView(view), fresh: fresh); // M28: an unknown widget kind has no icon to ask Windows for
     }
 
     /// <summary>A panel's requests go to the host; its rows ask for icons as they come into view (M26).</summary>
@@ -1119,6 +1128,7 @@ public partial class FenceWindow : Window
         if (!_rolledUp || !_expansion.Click()) return false;
         AnimateHeight(_fullHeightPx);
         ItemsShownChanged?.Invoke(); // M25: widgets update at once
+        RaiseVisibleIcons(); // M37
         return true;
     }
 
@@ -1169,6 +1179,7 @@ public partial class FenceWindow : Window
         if (!_expansion.Tick(inside)) return;
         AnimateHeight(_expansion.Expanded ? _fullHeightPx : RolledUpHeightPx);
         ItemsShownChanged?.Invoke(); // M25
+        RaiseVisibleIcons(); // M37
     }
 
     /// <summary>Colours for Windows' light or dark app mode (M2c: fences follow Windows).</summary>
@@ -1286,8 +1297,18 @@ public partial class FenceWindow : Window
     /// <summary>The hover poll runs while it is needed: rolled up (M5), or a title bar shown on hover (M36).</summary>
     private void UpdateHoverTimer()
     {
-        if (_rolledUp || _titleOnHover) _hoverTimer.Start();
+        if (!_hoverPaused && (_rolledUp || _titleOnHover)) _hoverTimer.Start();
         else _hoverTimer.Stop();
+    }
+
+    private bool _hoverPaused;
+
+    /// <summary>M37 (truly idle): no hover poll in game mode or while the fences are hidden or paused.</summary>
+    public void SetHoverPaused(bool paused)
+    {
+        if (paused == _hoverPaused) return;
+        _hoverPaused = paused;
+        UpdateHoverTimer();
     }
 
     /// <summary>
@@ -1418,13 +1439,40 @@ public partial class FenceWindow : Window
     /// <summary>The Recycle Bin turned full or empty, or another special icon changed (M8c).</summary>
     public void ReloadSpecialIcons()
     {
-        foreach (var view in _items.Where(view => view.Target.StartsWith("::", StringComparison.Ordinal))) RequestIcon(view);
+        foreach (var view in _items.Where(view => view.Target.StartsWith("::", StringComparison.Ordinal))) RequestIcon(view, fresh: true); // M37: past the icon cache
     }
 
     /// <summary>New size or DPI, or "Refresh": every icon and name is requested again in place; selection stays (M2c review carry-over).</summary>
-    public void ReloadIcons()
+    public void ReloadIcons(bool fresh = false)
     {
-        foreach (var view in _items) RequestIcon(view);
+        foreach (var view in _items) RequestIcon(view, fresh);
+    }
+
+    /// <summary>
+    /// M37: whether an item can be seen now — the fence shown and open, the item inside the list's view. Before the first layout,
+    /// the first ones count as seen.
+    /// </summary>
+    private bool InView(FenceItemView view)
+    {
+        if (!IsVisible || (_rolledUp && !_expansion.Expanded)) return false;
+        if (ItemList.ItemContainerGenerator.ContainerFromItem(view) is not FrameworkElement container || container.ActualHeight <= 0 || ItemList.ActualHeight <= 0)
+            return _items.IndexOf(view) < 48; // ponytail: not laid out yet, the first rows by index
+        var top = container.TranslatePoint(new Point(0, 0), ItemList).Y;
+        return top + container.ActualHeight >= 0 && top <= ItemList.ActualHeight;
+    }
+
+    private bool _raiseQueued;
+
+    /// <summary>M37: items that came into view (a scroll, an unroll) whose icons still wait go to the front of the queue.</summary>
+    private void RaiseVisibleIcons()
+    {
+        if (_raiseQueued) return;
+        _raiseQueued = true;
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () =>
+        {
+            _raiseQueued = false;
+            foreach (var view in _items.Where(view => view.IconPending && InView(view))) _iconLoader.Request(view, PxOf(view), urgent: true);
+        });
     }
 
     /// <summary>Starts renaming the fence title (menu, or a freshly drawn fence).</summary>
