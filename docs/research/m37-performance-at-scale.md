@@ -56,4 +56,20 @@ covering window" (0.00–1.16 s). Game mode is checked in the live check with a 
 
 ## Live check
 
-(Filled in by the measurement and live check.)
+**Live check** (branch Release build, a backed-up copy of the owner's data; owner's OK; restored after):
+
+- **AW2 / AW4**: cache deleted, cold start: fences shown 0.90 s, icons settled 1.05 s (52 requests); warm start: fences and
+  icons 0.86 s, all 38 icons from the cache.
+- **AW5**: Edge in full-screen kiosk mode engaged game mode; NeoFences used 0.02 s CPU over 45 s; game mode ended when it
+  closed; the Desk clock and stats ticked before and after (22:14 → 22:15, CPU and GPU values changed) — the final review's
+  C1 fix (widgets frozen at start) holds.
+- **AW6 / AW7**: cover tiles and labels look as in 0.23.0 at 100 % (screenshots sent). Not run: 125 / 150 % scaling,
+  light mode, the Recycle Bin icon, a damaged index, Refresh.
+
+**Final measurement** (branch build, 500 items / 50 fences): cold fences shown 3.03 s, icons settled 3.20 s; warm 2.76 s
+(339 of 503 from the cache); the 200-item fence 150 ms; scroll 4 of 275 frames over 33 ms (worst 48 ms); drag / resize
+worst 229 ms. Idle 0.75 s CPU over 60 s: the clock and stats widgets now tick while they can be seen (the earlier 0.00 s
+rounds had them frozen by the C1 bug); in a real game mode 0.02 s over 45 s.
+
+Left to check by hand: AW3 (an app icon change behind a shortcut, the Recycle Bin, Refresh), AW4 with a damaged index,
+AW7 at 125 / 150 % and in light mode.
