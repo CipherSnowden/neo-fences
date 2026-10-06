@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-06",
-  commit: "e9c0cac",
+  commit: "f81716b",
   phase: "0.21.0 — icons and game tiles (path to 1.0)",
-  current: "M34 merged: modern game tiles, glow tiles, sharp clean icons, Normal / Large covers, opt-in Steam covers and website icons, Choose cover… · next: set it up on your fences (asked first), then release 0.21.0 when you say so",
+  current: "0.21.0 RELEASED and installed (your 0.20.0 updated itself in 3 s): modern game tiles, glow tiles, sharp clean icons, Normal / Large covers, opt-in Steam covers, Choose cover… · next: answer \"Find covers online?\", set up the Games fence, then M35 menus and dialogs",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -812,7 +812,7 @@ const HUB = {
       { t: "Spec; Steam probe (9 of 12 names match); you chose Normal / Large cover sizes; prototype probe on a copy of your data", s: "done" },
       { t: "Native build (747 tests); Opus review: 4 important + 2 raised, all fixed; live check AT 12 scripted passes; merged locally", s: "done" },
       { t: "Set it up on your fences (snapshot first; the covers question; room for the Large covers)", s: "todo" },
-      { t: "Release 0.21.0", s: "todo" }
+      { t: "Released 0.21.0: CI green, delta 533 KB, your 0.20.0 updated itself in 3 s, published", s: "done" }
     ] },
     { group: "M33 · Safety net (0.20.0)", items: [
       { t: "1.0 readiness review; you chose the path M33 → M39, safety net first", s: "done" },
@@ -1185,7 +1185,7 @@ const HUB = {
     { id: "M31", name: "Modern widgets and sensors (0.19.0)", goal: "Restyled widgets; CPU / GPU temperatures via Afterburner or HWiNFO; RAM in GB (ADR-052) — released as 0.19.0", s: "done" },
     { id: "M32", name: "Polish (0.19.1)", goal: "The M31 minors and the Free-layout bug — released 0.19.1", s: "done" },
     { id: "M33", name: "Safety net (0.20.0)", goal: "Safe mode, the stopped window, undo, save notices, gesture switches, private logs — released 0.20.0", s: "done" },
-    { id: "M34", name: "Icons and game tiles", goal: "Sharp icons, modern tiles, glow tiles, Normal / Large covers, opt-in online covers (ADR-055), Choose cover… — merged, release pending", s: "wip" },
+    { id: "M34", name: "Icons and game tiles", goal: "Sharp icons, modern tiles, glow tiles, Normal / Large covers, opt-in online covers (ADR-055), Choose cover… — released 0.21.0", s: "done" },
     { id: "M35", name: "Modern menus and dialogs", goal: "Win11-style menus and dialogs, keyboard", s: "todo" },
     { id: "M36", name: "Fence settings and presets", goal: "Per-fence settings instead of fence types, presets", s: "todo" },
     { id: "M37", name: "Performance at scale", goal: "Many fences and items, start time, memory", s: "todo" },
@@ -1213,7 +1213,7 @@ const HUB = {
     { v: "0.19.0", s: "done", scope: "Modern widgets and sensors (M31): tiles with accent bars; CPU, CPU TEMP, GPU, GPU TEMP, RAM in GB; Afterburner / HWiNFO. Released 2026-10-06; the installed 0.18.0 updated itself." },
     { v: "0.19.1", s: "done", scope: "Polish (M32): accent bars follow at once, sticky GPU, HWiNFO lock, CJK date line, Free spots saved at start. Released 2026-10-06; the installed 0.19.0 updated itself." },
     { v: "0.20.0", s: "done", scope: "Safety net (M33): safe mode after a crash loop, the stopped window, undo, save notices, gesture switches, private 10 MB logs. Released 2026-10-06; the installed 0.19.1 updated itself." },
-    { v: "0.21.0", s: "todo", scope: "Icons and game tiles (M34): rounded covers, glow tiles, clean sharp icons, Normal / Large covers, opt-in Steam covers and website icons, Choose cover…. Merged 2026-10-06; release pending." },
+    { v: "0.21.0", s: "done", scope: "Icons and game tiles (M34): rounded covers, glow tiles, clean sharp icons, Normal / Large covers, opt-in Steam covers and website icons, Choose cover…. Released 2026-10-06; the installed 0.20.0 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1499,7 +1499,7 @@ const HUB = {
     { date: "2026-10-06", topic: "M31 modern widgets and sensors (merged)", done: "Visual companion mockups; spec; prototype checked against Afterburner; replay-verified plan; native build; Opus review fixes (682 tests); live check AQ; new guide shots; merged locally.", next: "Released 0.19.0; next: your desktop with every feature" },
     { date: "2026-10-06", topic: "M32 polish (merged)", done: "Every M31 minor + the Free-layout bug; prototype; replay-verified plan; native build; Opus review fixes (700 tests); live AR1 (accent, restored) and AR2; merged locally.", next: "Released 0.19.1; next: pre-1.0 work or new ideas" },
     { date: "2026-10-06", topic: "1.0 readiness + M33 safety net (merged)", done: "Readiness review and the path to 1.0 (your decisions); M33 spec, replay-verified plan, native build; Opus review: 8 important fixed (715 tests); live AS1–AS11 pass, one bug found and fixed; merged locally.", next: "Released 0.20.0; next: M34 icons and game tiles" },
-    { date: "2026-10-06", topic: "M34 icons and game tiles (merged)", done: "Two power cuts survived; mockups with your art; spec; Steam probe; you chose Normal / Large covers; prototype probe; native build (747 tests); Opus review fixes; live check AT (12 scripted passes); merged locally.", next: "Set it up on your fences, then release 0.21.0" }
+    { date: "2026-10-06", topic: "M34 icons and game tiles (merged)", done: "Two power cuts survived; mockups with your art; spec; Steam probe; you chose Normal / Large covers; prototype probe; native build (747 tests); Opus review fixes; live check AT (12 scripted passes); merged locally.", next: "Released 0.21.0; next: set up the Games fence, then M35" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2117,7 +2117,11 @@ const HUB = {
     ["4a3903b", "docs: added the M34 review results to the research note"],
     ["d584bd7", "docs: added the M34 live check results"],
     ["6080b10", "docs: corrected the M34 live check entry for AT12"],
-    ["e9c0cac", "docs: marked M34 merged in the roadmap and logged the session"]
+    ["e9c0cac", "docs: marked M34 merged in the roadmap and logged the session"],
+    ["aa51c82", "docs: refreshed the hub for M34"],
+    ["827c14c", "chore: bumped the version to 0.21.0"],
+    ["6cc35db", "docs: marked the 0.21.0 release as approved"],
+    ["f81716b", "docs: recorded the 0.21.0 release"]
   ]
 };
 /* ===== END HUB DATA ===== */
