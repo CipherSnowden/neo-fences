@@ -17,3 +17,14 @@ Spec: `docs/superpowers/specs/2026-10-06-modern-menus-and-dialogs-design.md` · 
   colours; the tray menu placed with the first fence's DPI; the delete-without-snapshot question says why; Settings 820 ×
   680; Game mode's lightning icon; an unused `using` in `PathPicker` went with `ChooseColor`.
 - Replay-verified on `main` (8 build-error lines before the Core code, 773 tests after, 0 warnings).
+
+## Review (Opus, whole branch)
+
+0 critical, 1 important plus 1 raised, both fixed: a failed Steam pick in Choose cover… opened a modal dialog with no owner
+and no taskbar button, which could hide behind another app and block every fence (now a tray notice); snapshot names with
+"&" showed "&&" and names with "_" lost it in the WPF menus (the Win32 doubling went; menu entries escape their own access
+keys; test `MenuLabel_IsOneSafeLine`). 774 tests. Deferred minors: the tray menu's place at 125/150 % when no fence exists;
+the swatch row's keyboard ring starts at None and can linger; no Exit when the tray icon is unavailable (Task Manager only);
+no access-key letters in menus; two spec test items (current swatch, accent) not in Core; the hex box applies "#e23" as
+shorthand while typing and OK with invalid hex keeps the last colour; an unused style and name in Settings; the GUIDE's
+item-menu and Settings screenshots show the old look.

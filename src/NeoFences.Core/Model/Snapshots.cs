@@ -38,7 +38,7 @@ public static class Snapshots
         // Never between the halves of a surrogate pair (an emoji): one character less instead (M16).
         var cut = clean.Length > MenuLabelLength && char.IsHighSurrogate(clean[MenuLabelLength - 1]) ? MenuLabelLength - 1 : MenuLabelLength;
         if (clean.Length > MenuLabelLength) clean = clean[..cut] + "…";
-        return clean.Replace("&", "&&");
+        return clean; // M35: shown by a WPF menu, which escapes its own access keys (no Win32 "&&")
     }
 
     public static Snapshot Take(NeoFencesConfig config, ItemsDocument items, string name, DateTimeOffset now) => new()

@@ -45,7 +45,8 @@ public static class MenuGlyph
     /// <summary>A menu entry built in code: its icon, its click, checked or not, red when destructive.</summary>
     public static MenuItem Entry(string header, string? glyph, Action? click = null, bool? isChecked = null, bool danger = false, bool enabled = true)
     {
-        var entry = new MenuItem { Header = header, IsChecked = isChecked == true, IsEnabled = enabled };
+        // M35 review: a name with "_" (a fence, a snapshot) keeps it; WPF would take it as an access key.
+        var entry = new MenuItem { Header = header.Replace("_", "__"), IsChecked = isChecked == true, IsEnabled = enabled };
         if (glyph is not null) entry.Icon = Icon(glyph);
         if (danger) SetDanger(entry, true);
         if (click is not null) entry.Click += (_, _) => click();

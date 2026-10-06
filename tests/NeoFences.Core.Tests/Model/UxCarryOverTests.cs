@@ -13,7 +13,8 @@ public class UxCarryOverTests
 
     [Theory]
     [InlineData("Before the stream", "Before the stream")]
-    [InlineData("Games & Work", "Games && Work")]                 // & is a menu accelerator
+    [InlineData("Games & Work", "Games & Work")]                  // M35 review: the WPF menu shows & as it is (no Win32 doubling)
+    [InlineData("Work_stuff", "Work_stuff")]                      // the menu escapes its own access keys
     [InlineData("Line one\nline two", "Line one line two")]        // a hand-edited newline
     [InlineData("Name\twith tab", "Name with tab")]                 // a tab would right-align the rest
     [InlineData("   ", "Snapshot 4 Oct 22:45")]                   // blank: the date and time

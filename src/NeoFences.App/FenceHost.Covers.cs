@@ -186,7 +186,8 @@ public sealed partial class FenceHost
                 else
                 {
                     Log.Warning("online art: the chosen cover for {Game} could not be downloaded", game.Name);
-                    MessageDialog.Tell(null, "The cover could not be downloaded", "The Steam store did not answer. Try again later, or choose a picture of your own."); // M35 (M34 minor M8)
+                    // M35 review I1: a notice, not a modal dialog without an owner (it could hide behind another app and block the fences).
+                    Notify("The cover could not be downloaded", "The Steam store did not answer. Try again later, or choose a picture of your own.");
                 }
             }, TaskScheduler.FromCurrentSynchronizationContext());
         window.FileChosen += picture =>
