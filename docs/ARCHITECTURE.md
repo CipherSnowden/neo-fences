@@ -188,6 +188,13 @@ built-ins, own ones in `NeoFencesConfig.Presets`). The whole setup: `SetupFile` 
 setting through its own path), whole snapshots before an import or a reset. Settings' card and switch styles live in
 `SettingsStyles.xaml`. `research/m36-fence-settings-and-presets.md`.
 
+**0.24.0 (M37, performance at scale)**: measure first (ADR-058) — `PerfLog` (Core) writes and reads the timing marks;
+`tools/perf/measure-scale.ps1` builds a 500 / 50 setup on a backed-up copy and measures. `IconLoader` answers each key once
+per run, then from `IconDiskCache` (`cache\icons\`, `IconCache` / `IconCacheIndex` in Core: key, stamp, pruning), then
+from the shell, with urgent (visible) and later queues; Refresh and special icons are fresh. The widget timer, hover polls
+and auto-collect timer stop while nothing can be seen; library, watching and the wallpaper read start after "fences shown".
+Labels are cached as bitmaps; the cover tile is its own template. `research/m37-performance-at-scale.md`.
+
 **0.21.0 (M34, icons and game tiles)**: game tiles in Windows 11's style — rounded 2:3 covers with a soft shadow
 (two faint layers, no effect), the name below or, on fences with labels on hover, over the cover; hover lifts, selection
 rings in the accent; a glow tile for games without art (the icon shrunk to a few pixels and stretched as a backdrop, the

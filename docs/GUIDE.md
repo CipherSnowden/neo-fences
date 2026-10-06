@@ -305,6 +305,8 @@ Tray or fence menu → **Settings…**. A list of sections on the left opens one
   App Control is on.
 - **A fence is off-screen** after changing monitors: NeoFences moves fences back onto a screen by itself when the displays
   change; if one still hides, **Settings → Snapshots → Restore** an earlier layout.
+- **An icon looks out of date** (an app updated its icon): fence menu → **Refresh** asks Windows again. NeoFences keeps
+  icons in `%LOCALAPPDATA%\NeoFences\cache` to start faster; deleting that folder is safe (it fills again).
 - **"NeoFences started in safe mode"**: it stopped unexpectedly several times in a row, so it started with fences
   only (no widgets updating, folder panels as plain folders, no gestures, no auto-collect). Tray → **Leave safe mode**
   starts it normally again. If it keeps stopping, report it with the log.

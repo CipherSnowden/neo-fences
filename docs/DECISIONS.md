@@ -1487,3 +1487,25 @@ copies match how the owner uses them. **Why not** per-fence settings in the fenc
 
 **Consequences.** Per-fence title fonts are back, in a window rather than the menu. `System.IO.Compression` (BCL) only; no
 new dependency. The config schema stays 5: an older NeoFences ignores the new fields (and drops them if it saves).
+
+## ADR-058 — Measure first; an icon and name cache; visible first; timers only while needed
+**Date:** 2026-10-06 · **Status:** Accepted
+
+**Context.** The readiness review found no icon cache, every fence item built, a shadow effect per label, a widget timer
+that never stopped, and nothing tested beyond the owner's ~40 items. The owner picked smooth big setups, a faster start
+and true idleness (not memory) and asked to measure first.
+
+**Decision.**
+- **Measure**: `tools/perf/measure-scale.ps1` builds a 500-item / 50-fence setup on a backed-up copy of the data and reads
+  NeoFences' timing marks (`PerfLog`: fences shown, icons settled, frame statistics with `NEOFENCES_PERF=1`, start steps).
+- **Icons**: each icon is asked of Windows once per run, kept in `cache\icons\` (PNG, display name, the source's stamp) and
+  shown from there at the next start; a changed stamp or a target without one is loaded fresh behind it; Refresh and special
+  icons go past the cache. What can be seen is loaded first.
+- **Idle**: the widget timer, the hover polls and the auto-collect timer stop while nothing can be seen (game mode, hidden,
+  paused, rolled up, a background tab); slower start work waits until the fences are shown.
+- **Lighter items**: labels keep their shadow and are drawn once into a bitmap; a cover tile is built only for covers.
+- **Not done**: ready-to-run (7 % faster start, below the 20 % asked for); virtualization (the 200-item fence came down to
+  130–160 ms; the owner chose to leave it until after 1.0).
+
+**Consequences.** Icons at 500 items: 11 s → 3 s cold, at once from the cache warm; the cache is NeoFences' own, under
+64 MB, safe to delete. The start is now bound by creating and showing the fence windows (~50 ms each).

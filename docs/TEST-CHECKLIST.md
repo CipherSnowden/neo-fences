@@ -831,3 +831,15 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AV8 | Change a few things, then Import setup… that file → Replace | "Before import" snapshot; fences reload where they are with their looks; Settings and presets as exported; restore "Before import" undoes all of it |
 | AV9 | Import a file with Hide desktop icons and a Peek hotkey different from now; then About → Reset settings to defaults… | icons hide / come back, the hotkey changes (or the old one stays if taken), Start with Windows entry follows; reset keeps fences, items, presets, game folders, hidden games, chosen covers; "Before reset" undoes it |
 | AV10 | Import a text file renamed .neofences, a zip without manifest, an export from a newer version | "This file is not a NeoFences setup." / "… newer NeoFences … Update NeoFences first."; nothing changes |
+
+## AW — 0.24.0 performance at scale (M37)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AW1 | `tools/perf/measure-scale.ps1` on the branch build | the report: cold icons settled ≈ 3 s, warm ≈ fences shown with icons from the cache; data, startup entry and NeoFences put back |
+| AW2 | Restart NeoFences on your own setup | fences and icons appear at once (from the cache); nothing looks different from 0.23.0 |
+| AW3 | Change a shortcut's icon or target; empty / fill the Recycle Bin; fence menu → Refresh | the new icon shows (after a moment, or at once with Refresh) |
+| AW4 | Delete `%LOCALAPPDATA%\NeoFences\cache`, or make its index unreadable; start | icons load fresh, the cache fills again, no error shown |
+| AW5 | A full-screen video or game for a minute, then back; quick-hide and back; a tab with a clock; a rolled-up fence | NeoFences ~0 % CPU meanwhile (Task Manager); clocks tick at once after; rolled-up fences open on hover; hidden title bars show on hover |
+| AW6 | Cover tiles: hover, select, a missing game, Large covers, labels on hover | exactly as in 0.23.0 |
+| AW7 | Labels at 125 % / 150 % scaling, light mode, a rename, a light/dark switch | sharp, the same shadow |
