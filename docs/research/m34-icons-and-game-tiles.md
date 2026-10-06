@@ -30,3 +30,23 @@ full address, which can use up a one-time link (now only the site's root). 747 t
 elements go to the first free cell; Off does not stop a running lookup; a bad icon file is never retried; each found site
 icon reloads every icon; read-only sessions still look up; file names from non-ASCII ids and URL extensions; a failed Steam
 pick is only logged; the guide's letter-badge sentence; a Large cover shown as an icon keeps its 2×4 cell.
+
+## Live check (branch Release build, a backed-up copy of the owner's data)
+
+| ID | Result |
+|---|---|
+| AT1 | **Pass at 100 %**: Apps icons sharp, no slab, Discord selected in an accent box. 150 % by hand. |
+| AT2 | **Pass**: rounded covers with a soft shadow, names below, no gap between Normal cover rows. |
+| AT3 | **Pass**: AC Black Flag → Size ▸ Large stored 2×4 and shows twice as big; the two old 2×2 covers show Large. |
+| AT4 | **Pass**: glow tiles for AC Black Flag and Blur; Minecraft's creeper on its own colours. |
+| AT5 | **Pass**: the accent ring on a selected cover; the accent box on an icon. |
+| AT6 | **Pass**: Labels → On hover: the name fades in over the hovered (Forza) and the selected (AC Black Flag) cover. |
+| AT7 | **Pass**: "Find covers online? 8 of your games have no cover"; Find covers → 5 covers in about 6 s. Not now: by code (asked again at the next start). |
+| AT8 | **Pass**: the switch off then on; the found covers stayed. |
+| AT9 | **Pass**: Choose cover… for Blur listed Steam's results; "Ricochet Blur" picked and shown; Reset to automatic back to the glow tile. From a file… by hand. |
+| AT10 | **Pass**: github.com's own icon fetched; the dead site recorded nothing (letter badge). |
+| AT11 | **Pass**: Minecraft Launcher shows its own app icon (Apps and Games). |
+| AT12 | **Pass**: the missing test file shows its type's icon at full size with the badge (fence scrolled; by log and code). |
+| AT13 | Light mode by hand. |
+| AT14 | **Pass**: a stale `watchdog-999999` was removed at start. |
+| AT15 | **Pass**: safe mode asked nothing and looked nothing up. |
