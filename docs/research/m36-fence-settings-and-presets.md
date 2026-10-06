@@ -39,4 +39,26 @@ row each now; the Snapshots card no longer says settings are never changed (a wh
 
 ## Live check
 
-(Filled in by the live check.)
+Three runs on the branch's Release build, on a backed-up copy of the owner's data (owner's OK each time; screenshots sent;
+data and startup entry restored after each). Runs 1 and 2 stopped on test-script problems (a settings window the script had
+minimized itself; a click on a scrolled-away button), not on NeoFences; run 3 did AV7–AV10 alone.
+
+- **AV1** pass: "Apps — fence settings", every look setting "Like all fences (…)", Like all fences again disabled.
+- **AV2** pass: each preset stored as specified (Glass tinted glass 25; Title strip 60; Solid accent edge 85 roomy; Compact
+  compact; Minimal accent edge 4, title on hover); Like all fences: no own look, icon size kept (32 from Compact).
+- **AV3** pass: Games fence (Large covers) at Roomy and Compact — room changes, nothing clipped; a cover spanning several
+  cells grows a little at Roomy (the spacing between its own cells joins it). Free fences not run.
+- **AV4** pass: Minimal's title row fades with the pointer away and shows on hover. Rolled-up / F2 / drag not scripted.
+- **AV5** pass: View ▸ Icon size → Large from the fence menu showed in the window when it was activated. Delete with the
+  window open not scripted.
+- **AV6** pass: "glass" refused ("“Glass” is a built-in preset: choose another name."); "Mine" shown in a second fence's
+  window; its ✕ deleted it from both.
+- **AV7** pass: 3 KB file, notice "Exported to …".
+- **AV8** pass: the question, then the import (Apps back to no own look); restoring "Before import" brought Solid back.
+- **AV9** partly: Reset asked first, then defaults (hide icons off, Peek Ctrl+Alt+Space, Start with Windows on, 4 fences
+  kept). An import that changes Hide desktop icons or the Peek hotkey was not scripted.
+- **AV10** pass: a text file → "This file is not a NeoFences setup."; a newer export → "This file comes from a newer
+  NeoFences (9.0.0). Update NeoFences first."; nothing changed.
+
+Left to check by hand: AV3 in a Free fence, AV4 rolled up / F2 / drag, AV5 deleting the fence with its window open, AV9
+an import that changes Hide desktop icons and the Peek hotkey.
