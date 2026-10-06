@@ -816,3 +816,18 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AU8 | A new auto-collect rule that matches existing files; a picture that is not an image in Properties | the new dialog: "Add N items already there?" Add / Not now; "This picture cannot be used as an icon" |
 | AU9 | Windows switched to light mode while NeoFences runs | menus follow (readable text, hover, separators) |
 | AU10 | Fence menu and tray menu | Start with Windows only in Settings → General; Exit only in the tray |
+
+## AV — 0.23.0 fence settings and presets (M36)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AV1 | Fence menu → Fence settings… (a tab: Tab settings…) | "<title> — fence settings"; every look setting "Like all fences (…)"; Like all fences again disabled |
+| AV2 | Click each preset: Glass, Minimal, Title strip, Solid, Compact; then Like all fences | the fence changes at once, keeps its colour; the chip lights; Like all fences: back to the Settings look, icon size and labels stay |
+| AV3 | Spacing Compact / Normal / Roomy on a fence with icons, a cover, a widget and a panel; then in a Free fence | room between elements changes, nothing clipped, covers and panels keep their size; Free elements stay in their cells |
+| AV4 | Show the title bar off | the title row fades when the pointer leaves, shows on hover; while rolled up, F2-renaming, dragging or with the menu open it shows; the fence can still be moved |
+| AV5 | With the window open: change View ▸ Icon size from the menu, switch the box's tab, delete the fence | the window shows the change when clicked again; edits go to the right fence; the window closes with the fence |
+| AV6 | Save this look as a preset… "Mine"; a second fence's window; ✕ on "Mine"; a name "glass" | "Mine" in both windows; deleted from both, fences keep their look; "glass" refused with the message |
+| AV7 | Settings → Snapshots → Export setup… | a .neofences file; nothing else changes; a notice "Exported to …" |
+| AV8 | Change a few things, then Import setup… that file → Replace | "Before import" snapshot; fences reload where they are with their looks; Settings and presets as exported; restore "Before import" undoes all of it |
+| AV9 | Import a file with Hide desktop icons and a Peek hotkey different from now; then About → Reset settings to defaults… | icons hide / come back, the hotkey changes (or the old one stays if taken), Start with Windows entry follows; reset keeps fences, items, presets, game folders, hidden games, chosen covers; "Before reset" undoes it |
+| AV10 | Import a text file renamed .neofences, a zip without manifest, an export from a newer version | "This file is not a NeoFences setup." / "… newer NeoFences … Update NeoFences first."; nothing changes |

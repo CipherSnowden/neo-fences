@@ -1067,7 +1067,7 @@ Accent edge style. Snapshots carry each fence's colour (and, until v1.7.1, its f
 Windows' Nth wallpaper monitor.
 
 ## ADR-038 — One title font for all fences; v1.7.1 polish (M16, v1.7.1)
-**Date:** 2026-10-04 · **Status:** Accepted · **Amends:** ADR-036 (per-fence title fonts)
+**Date:** 2026-10-04 · **Status:** Accepted; its "one title font" amended by ADR-057 (per-fence fonts in Fence settings…) · **Amends:** ADR-036 (per-fence title fonts)
 
 **Context.** Testing the polish batch, the user found the fence menu's Title font (Font ▸ / Size ▸ / Weight ▸, ~300
 fonts) too deep and per-fence fonts too much in practice: customizations that apply to all fences belong in Settings.
@@ -1458,3 +1458,32 @@ two styles.
 **Consequences.** Every menu looks the same and follows light/dark; menus are WPF popups (UI tests find them as
 NeoFences' `HwndWrapper` popups, not `#32768`). The tray menu's position uses the first fence's DPI (mixed-DPI setups may
 place it a little off).
+
+## ADR-057 — Per-fence looks that fall back to "all fences"; presets copy; the whole setup as one file
+**Date:** 2026-10-06 · **Status:** Accepted · **Amends:** ADR-038 (per-fence title fonts, now in Fence settings…), ADR-030 (whole snapshots)
+
+**Context.** The readiness review (`research/v1-readiness.md`) found no per-fence settings beyond icon size, labels, colour
+and layout, no look presets and no export / import. The owner's "one kind of fence" idea asks for per-fence settings
+instead of fence types. ADR-038 had removed per-fence fonts because the fence menu's Font ▸ / Size ▸ / Weight ▸ was too deep.
+
+**Decision.**
+- **Fence settings…** (fence menu, "Tab settings…" on a tab) opens a small window in the Settings style. A fence's own look
+  (`Fence.Look`: colour style, one background strength for both modes, title font / size / weight / alignment, the title bar
+  on hover, spacing) overrides Settings → Appearance part by part; each part left empty is "Like all fences", so a fence
+  follows later Settings changes in everything it did not set. Existing setups have no own look.
+- **Presets are copies**: five built-ins (Glass, Minimal, Title strip, Solid, Compact) and the owner's own, stored in
+  `config.json`. Applying one replaces the fence's own look (and sets icon size and labels where the preset has them); the
+  colour stays the fence's. Changing a fence later never changes a preset or other fences.
+- **The title bar on hover** keeps its row and fades: nothing moves under the pointer; it always shows while the fence is
+  rolled up, renamed, dragged or its menu is open. **Spacing** is the room around each element (the elements keep their size).
+- **The whole setup in one file**: Export setup… writes a `.neofences` zip (manifest, config, items, the item icon
+  pictures and chosen covers they use); Import setup… checks it (a NeoFences export, readable, not newer), asks, saves a
+  **whole snapshot** first ("Before import": Settings, the Games settings and own presets ride along, so a restore undoes
+  everything), then replaces the setup in place. Reset settings to defaults… works the same way ("Before reset") and keeps
+  fences, items, presets and the games' data. Ordinary snapshots still hold no Settings (ADR-030).
+
+**Why not** linked presets (a fence following a preset): one more thing to explain and to break when a preset is deleted;
+copies match how the owner uses them. **Why not** per-fence settings in the fence menu: ADR-038's lesson — too deep.
+
+**Consequences.** Per-fence title fonts are back, in a window rather than the menu. `System.IO.Compression` (BCL) only; no
+new dependency. The config schema stays 5: an older NeoFences ignores the new fields (and drops them if it saves).

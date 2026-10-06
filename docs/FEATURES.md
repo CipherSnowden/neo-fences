@@ -53,7 +53,7 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Desktop pages | 3+ | — | — | — | |
 | Snapshots (save/restore layouts) | 2+ | v1.3 | M10 | done | tray + Settings; fences, places and items (0.9); can be undone (ADR-030) |
 | Desktop icon color tint | 6 | — | — | — | |
-| Per-fence colors / custom title fonts | 3+ | v1.7 | M14 | done | 8 swatches + Custom…; 3 colour styles; one title font for all fences (ADR-038) |
+| Per-fence colors / custom title fonts | 3+ | v1.7 | M14 | done | 8 swatches + Custom…; 3 colour styles; a title font for all fences, and per fence in Fence settings… (ADR-057) |
 
 ## NeoFences extras
 
@@ -77,6 +77,7 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Safety net: safe mode after a crash loop, a "stopped" window, one-level undo (undo bar, Ctrl+Z, Undo delete), save problems shown, gesture switches, private 10 MB logs | 0.20 (M33) | done | ADR-053, ADR-054 |
 | Modern game tiles (rounded 2:3 covers, accent ring, glow tile without art), clean sharp icons, Normal / Large covers, opt-in online covers (Steam store) and website icons, Choose cover… | 0.21 (M34) | done | ADR-055 |
 | One modern menu style with icons (fence, items, tray), a 12-line grouped fence menu, Settings in sections with switches, colour swatches and a colour picker, one message dialog | 0.22 (M35) | done | ADR-056 |
+| Fence settings (a look of its own per fence: style, background, title, title bar on hover, spacing), five look presets and own ones, Export / Import setup as one file, Reset settings | 0.23 (M36) | done | ADR-057 |
 | Auto-collect rules (the other half of dynamic collections) | later | — | replaces Rules (ADR-040) |
 | Theme packs: "Nanosuit" (Crysis HUD), "Animus" (Assassin's Creed) | v2 | — | |
 | Custom Win11-style compact context menu | v2 | — | |

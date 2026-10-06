@@ -179,6 +179,15 @@ item, game, panel, widget and tray menus with icons in one order (Open first, Re
 `ColourWindow` (HSV field, hue bar, hex; `Hsv` and `Argb.FromUserHex` in Core) replaces `ChooseColor`; `MessageDialog`
 replaces MessageBox. `research/m35-modern-menus-and-dialogs.md`.
 
+**0.23.0 (M36, fence settings and presets)**: a fence's own look (ADR-057) — `Fence.Look` (`OwnLook`, each part null =
+like all fences) resolved by `FenceLook.Resolve` over Settings → Appearance, with title alignment, the title bar on hover
+(the row fades; the hover poll runs for such fences) and spacing (`FenceLook.CellInset`, the `CellInset` resource around
+each element). `FenceSettingsWindow` (one per fence, live; `FenceHost.FenceSettings.cs`), presets in `LookPresets` (five
+built-ins, own ones in `NeoFencesConfig.Presets`). The whole setup: `SetupFile` (a `.neofences` zip; checks in Core),
+`FenceHost.Setup.cs` (Export / Import / Reset; `ReplaceSetup` shared with snapshot restores, `ApplySettings` applies each
+setting through its own path), whole snapshots before an import or a reset. Settings' card and switch styles live in
+`SettingsStyles.xaml`. `research/m36-fence-settings-and-presets.md`.
+
 **0.21.0 (M34, icons and game tiles)**: game tiles in Windows 11's style — rounded 2:3 covers with a soft shadow
 (two faint layers, no effect), the name below or, on fences with labels on hover, over the cover; hover lifts, selection
 rings in the accent; a glow tile for games without art (the icon shrunk to a few pixels and stretched as a backdrop, the
