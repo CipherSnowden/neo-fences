@@ -53,7 +53,7 @@ public sealed partial class FenceHost
         SetupRead read;
         try
         {
-            read = SetupFile.Read(dialog.FileName);
+            read = SetupFile.Read(dialog.FileName, importedAt: DateTimeOffset.Now); // its auto-collect rules start looking now (final review I1)
         }
         catch (SetupFileException problem)
         {

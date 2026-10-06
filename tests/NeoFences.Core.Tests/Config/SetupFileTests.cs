@@ -49,7 +49,7 @@ public class SetupFileTests
         using var zip = ZipFile.OpenRead(path);
         Assert.Equal(["config.json", "covers/choice-steam-1.jpg", "icons/pic.png", "items.json", "manifest.json"],
             zip.Entries.Select(entry => entry.FullName).Order(StringComparer.Ordinal));
-        Assert.False(File.Exists(path + ".tmp"));
+        Assert.Empty(Directory.GetFiles(data.Path, "my.neofences.*tmp"));
     }
 
     [Fact]
@@ -163,6 +163,34 @@ public class SetupFileTests
         var fence = Fence.Create("Apps");
         var items = new ItemsDocument().With(fence.Id, [VirtualItem.Create("C:\\a.exe") with { Icon = new ItemIcon { Image = "..\\..\\Windows\\evil.png" } }]);
         Assert.Equal([new SetupPicture("icons", "evil.png")], SetupFile.PicturesOf(new NeoFencesConfig { Fences = [fence] }, items));
+    }
+
+    // Final review I1: an import starts its auto-collect rules looking now, as a restore does (M27 I4): files already on
+    // this PC are not collected as new.
+    [Fact]
+    public void Read_StartsTheImportedRulesLookingAtTheImportTime()
+    {
+        using var data = new TempDirectory();
+        var fence = Fence.Create("Apps") with { Collect = [new CollectRule { Kinds = CollectKinds.Apps, Watermark = Now.AddYears(-1) }] };
+        var path = data.File("rules.neofences");
+        SetupFile.Write(path, new NeoFencesConfig { Fences = [fence] }, new ItemsDocument(), data.Path, appVersion: "0.23.0", now: Now);
+        var importedAt = Now.AddDays(3);
+        Assert.Equal(importedAt, SetupFile.Read(path, importedAt).Config.Fences[0].Collect.Single().Watermark);
+    }
+
+    // Final review (re-graded): a .tmp of the same name, left by a power cut or not ours at all, is never deleted, and the
+    // export still succeeds.
+    [Fact]
+    public void Write_NeverTouchesAnOldTempFileOfTheSameName()
+    {
+        using var data = new TempDirectory();
+        var (config, items) = Setup(data);
+        var path = data.File("my.neofences");
+        File.WriteAllText(path + ".tmp", "someone else's");
+        SetupFile.Write(path, config, items, data.Path, appVersion: "0.23.0", now: Now);
+        Assert.Equal("someone else's", File.ReadAllText(path + ".tmp"));
+        Assert.Equal("0.23.0", SetupFile.Read(path).Manifest.AppVersion);
+        Assert.Empty(Directory.GetFiles(data.Path, "my.neofences.*.tmp"));
     }
 
     private static void Zip(string path, params (string Name, string Text)[] entries)

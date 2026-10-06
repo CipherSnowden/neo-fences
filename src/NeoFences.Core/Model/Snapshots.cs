@@ -72,6 +72,13 @@ public static class Snapshots
     /// fences the snapshot does not have are dropped (a damaged or hand-edited file). Auto-collect rules start looking at
     /// <paramref name="restoredAt"/> (M27 final review I4): files from the snapshot's time on are not collected again.
     /// </summary>
+    /// <summary>
+    /// Every auto-collect rule starts looking at <paramref name="now"/> (M27 final review I4; M36 final review I1 for an import):
+    /// files already there are not collected as new.
+    /// </summary>
+    public static NeoFencesConfig StartCollectingAt(NeoFencesConfig config, DateTimeOffset now) =>
+        config with { Fences = [.. config.Fences.Select(fence => fence.Collect.Count == 0 ? fence : fence with { Collect = [.. fence.Collect.Select(rule => rule with { Watermark = now })] })] };
+
     public static (NeoFencesConfig Config, ItemsDocument Items) Restore(NeoFencesConfig current, Snapshot snapshot, DateTimeOffset? restoredAt = null)
     {
         // The snapshot file may be damaged or hand-edited: the normalizer gives it unique ids and sane tabs.
@@ -83,8 +90,7 @@ public static class Snapshots
             Fences = saved.Fences, Layouts = layouts,
             Settings = snapshot.Settings ?? current.Settings, Library = snapshot.Library ?? current.Library, Presets = snapshot.Presets ?? current.Presets,
         });
-        if (restoredAt is { } now)
-            config = config with { Fences = [.. config.Fences.Select(fence => fence.Collect.Count == 0 ? fence : fence with { Collect = [.. fence.Collect.Select(rule => rule with { Watermark = now })] })] };
+        if (restoredAt is { } now) config = StartCollectingAt(config, now);
         var items = ItemEdits.Repair(new ItemsDocument { Fences = snapshot.Items ?? new Dictionary<string, IReadOnlyList<VirtualItem>>() });
         return (config, ItemEdits.Prune(items, config.Fences.Select(fence => fence.Id).ToHashSet(StringComparer.Ordinal)));
     }

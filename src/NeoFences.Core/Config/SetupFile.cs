@@ -68,7 +68,8 @@ public static class SetupFile
     public static IReadOnlyList<SetupPicture> Write(string path, NeoFencesConfig config, ItemsDocument items, string dataDirectory, string appVersion, DateTimeOffset now)
     {
         var missing = new List<SetupPicture>();
-        var temp = path + ".tmp";
+        // A name of its own (final review): a .tmp left by a power cut, or one that is not ours, is never opened or deleted.
+        var temp = $"{path}.{Guid.NewGuid():N}.tmp";
         try
         {
             using (var zip = ZipFile.Open(temp, ZipArchiveMode.Create))
@@ -99,8 +100,10 @@ public static class SetupFile
     }
 
     /// <summary>Reads and checks an export: a NeoFences export, readable, not from a newer NeoFences.</summary>
+    /// <param name="importedAt">When given, its auto-collect rules start looking then (final review I1): what is already on
+    /// this PC is not collected as new.</param>
     /// <exception cref="SetupFileException">It cannot be imported; the message says why.</exception>
-    public static SetupRead Read(string path)
+    public static SetupRead Read(string path, DateTimeOffset? importedAt = null)
     {
         try
         {
@@ -115,6 +118,7 @@ public static class SetupFile
             if (config.SchemaVersion > NeoFencesConfig.CurrentSchemaVersion) throw Newer(manifest.AppVersion);
             if (config.SchemaVersion < ConfigStore.FirstVirtualItemsSchema) throw new SetupFileException(Damaged);
             config = ConfigNormalizer.Normalize(config);
+            if (importedAt is { } now) config = Snapshots.StartCollectingAt(config, now);
             var items = ConfigJson.DeserializeItems(Text(zip, "items.json") ?? throw new SetupFileException(Damaged));
             if (items.Schema > ItemsDocument.CurrentSchemaVersion) throw Newer(manifest.AppVersion);
             items = ItemEdits.Prune(ItemEdits.Repair(items), config.Fences.Select(fence => fence.Id).ToHashSet(StringComparer.Ordinal));
