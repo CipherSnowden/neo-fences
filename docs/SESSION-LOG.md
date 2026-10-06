@@ -790,3 +790,27 @@ Settings; the GUIDE's item-menu and Settings screenshots show the old look.
 **Released:** 0.22.0 on 2026-10-06 — CI and the release build passed first time; draft with the delta package (451 KB);
 install check (the installed 0.21.0 updated itself in 3 s; all four fences and the startup entry unchanged; the new tray menu
 listed after the update — the install check now reads NeoFences' own menu); published; hub refreshed.
+
+## 2026-10-06 — M36 fence settings and presets (0.23.0), built and merged
+
+**Done:** the owner picked all four parts, Replace-with-undo for import, and in mockups a small settings window (A) and all
+five presets. Core test-first (774 → 810): `OwnLook` on `Fence` resolved over Settings → Appearance (alignment, title bar on
+hover, spacing in `FenceStyle`), `LookPresets` (Glass, Minimal, Title strip, Solid, Compact, own ones), `SettingsReset`,
+whole snapshots, `SetupFile` (the `.neofences` zip and its checks). App: `FenceSettingsWindow` (fence menu → Fence
+settings…, live), the fence's title alignment / title bar on hover / spacing, Export setup… / Import setup… on Snapshots,
+Reset settings to defaults… on About (`ReplaceSetup`, `ApplySettings`). Two prototype probes on a copy of the owner's data
+(fixes: the title rows, the Snapshots card text). Opus review: 1 important + 1 raised, fixed (imported auto-collect rules
+kept the other PC's watermarks; the export's temp name could hit another file). Live check AV (three runs, two stopped on the
+test script): AV1–AV8, AV10 pass, AV9 partly; Free spacing, rolled-up / F2 hover title, delete with the window open and an
+import changing hide-icons / hotkey by hand. Merged locally.
+**Decisions:** ADR-057 (per-fence looks that fall back to all fences; presets copy; the setup as one file; whole snapshots);
+ADR-038's one-font rule amended.
+**Rulings:** per-fence fonts back in the window; spacing is a look value; Like all = Left / Normal for alignment and
+spacing; preset values (Glass 25, Minimal 4, Title strip 60, Solid 85 roomy, Compact 32 px); saved presets keep icon size
+and labels, an own name replaces silently; whole snapshots only before import / reset; schema stays 5; the hover title
+fades in its row; spacing is an inset (0 / 2 / 8); one window per fence, refreshed on activation; reset also resets the
+Games switches; import replaces places; export on the UI thread.
+**Deferred minors:** no catch-all for unexpected import errors (none found); "newer" by schema only; the colour bar stays
+left with a centred title; every change rebuilds the window's lists (font list too); the window is stale until activated
+after a menu change; multi-cell covers grow a little at Roomy.
+**Next:** release 0.23.0 when the owner says so; dogfood a look on the owner's fences (asked first); then M37 performance.
