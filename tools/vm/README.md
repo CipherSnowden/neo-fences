@@ -45,10 +45,35 @@ To watch, untick **View → Enhanced session** in the VM window: enhanced sessio
 password box over the tester's already signed-in desktop. Do not sign in there — it takes the desktop away from the
 running checks.
 
-## Removing it
+## Live checks of a branch build (M38.1, no admin)
+
+Live checks and probes run in a second VM, `NF-Win11-Dev`, so the PC stays free. Make it once as a copy of `NF-Win11`
+(about a minute, ~25 GB more on `D:`; the copy keeps the `clean` checkpoint):
 
 ```powershell
-Remove-VM NF-Win11 -Force; Remove-Item D:\NeoFences-VMs -Recurse -Force
+Export-VM -Name NF-Win11 -Path D:\NeoFences-VMs\export
+Import-VM -Path (Get-Item 'D:\NeoFences-VMs\export\NF-Win11\Virtual Machines\*.vmcx').FullName -Copy -GenerateNewId `
+  -VirtualMachinePath D:\NeoFences-VMs\NF-Win11-Dev -VhdDestinationPath 'D:\NeoFences-VMs\NF-Win11-Dev\Virtual Hard Disks' `
+  -SnapshotFilePath D:\NeoFences-VMs\NF-Win11-Dev | Rename-VM -NewName NF-Win11-Dev
+Remove-Item D:\NeoFences-VMs\export -Recurse -Force
+```
+
+Then, from the checkout under test:
+
+```powershell
+pwsh -File tools\vm\Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live [-Data <a copy of a NeoFences data folder>] [-Files <folder>, ...]
+```
+
+It publishes the checkout self-contained (the VM has no .NET; or pass `-Build <publish folder>`), starts it on a copy of
+`-Data` (else a fresh start) with the `-Files` folders on the tester's Desktop, and runs `guest\live-checks.ps1`: Peek
+and the keyboard, the fence under the mouse, Tab through every fence, Esc in Properties (with data), Esc after switching
+apps, a full-screen app ending Peek, a rolled-up fence opening for the keyboard. Same report as above. Only copies go into
+the VM; the originals are never changed.
+
+## Removing them
+
+```powershell
+Remove-VM NF-Win11, NF-Win11-Dev -Force; Remove-Item D:\NeoFences-VMs -Recurse -Force
 ```
 
 The tester account's password (`NeoFences-Test-1`) is in `guest\unattend.xml`: a throwaway VM on the PC's own NAT network

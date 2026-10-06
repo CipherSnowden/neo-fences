@@ -67,6 +67,13 @@ function Notepad { if (-not (NotepadWindow)) { Start-Process notepad; [void](Wai
 function Notifications { $state = 0; [void][NfVm.W]::SHQueryUserNotificationState([ref]$state)
   @{ 1 = 'not present'; 2 = 'busy'; 3 = 'D3D full screen'; 4 = 'presentation'; 5 = 'accepts notifications'; 6 = 'quiet time (the first hour after the account first signed in)'; 7 = 'app' }[$state] }
 
+function Finish {
+  Copy-Item -LiteralPath (Join-Path $data 'logs') -Destination (Join-Path $out 'logs') -Recurse -Force -ErrorAction SilentlyContinue
+  Save $true # the host counts a file without it as a pass that did not finish
+  Set-Content -LiteralPath (Join-Path $out 'finished.txt') -Value (Get-Date -Format s) }
+# A live check of a branch build (Invoke-VmChecks.ps1 -Live, M38.1): its own checks with the helpers above.
+if ($settings.script) { . (Join-Path $root $settings.script); Finish; return }
+
 $os = Get-CimInstance Win32_OperatingSystem
 "machine: $($os.Caption) $($os.Version)"
 Check 'install' {
@@ -129,6 +136,4 @@ Check 'uninstall' {
   StopNeoFences; (Start-Process (Join-Path $appDir 'Update.exe') -ArgumentList '--uninstall' -PassThru).WaitForExit(); Start-Sleep -Seconds 5
   $gone = -not (Test-Path -LiteralPath $exe); "app removed: $gone; icons hidden: $(IconsHidden)"; $gone -and -not (IconsHidden)
 }
-Copy-Item -LiteralPath (Join-Path $data 'logs') -Destination (Join-Path $out 'logs') -Recurse -Force -ErrorAction SilentlyContinue
-Save $true # the host counts a file without it as a pass that did not finish
-Set-Content -LiteralPath (Join-Path $out 'finished.txt') -Value (Get-Date -Format s)
+Finish

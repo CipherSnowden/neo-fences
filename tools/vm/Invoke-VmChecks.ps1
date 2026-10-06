@@ -1,12 +1,21 @@
-# Runs the NeoFences checklist in a test VM (M38, ADR-060): back to the 'clean' checkpoint (the tester's desktop), the
-# previous release's Setup.exe and the release candidate's update files in, then the guest script runs on the desktop and
-# its results and screenshots come back out. No admin needed (a member of "Hyper-V Administrators"). ASCII only.
-#   tools\vm\Invoke-VmChecks.ps1 -Name NF-Win11 -PreviousSetup <Setup.exe of the last release> -Feed <folder with the candidate's releases.win.json and .nupkg> -Candidate 0.25.0
+# Runs NeoFences' checks in a test VM (M38, ADR-060): back to the 'clean' checkpoint (the tester's desktop), the run copied
+# in, the guest script works on the desktop, and its results and screenshots come back out. No admin needed (a member of
+# "Hyper-V Administrators"). ASCII only. Two kinds of run:
+#   Release candidate (NF-Win11): install the last release, update to the candidate, the 12-check pass:
+#     tools\vm\Invoke-VmChecks.ps1 -Name NF-Win11 -PreviousSetup <Setup.exe of the last release> -Feed <folder with the candidate's releases.win.json and .nupkg> -Candidate 0.25.0
+#   Live check of this checkout (NF-Win11-Dev, M38.1): a self-contained publish runs guest\live-checks.ps1, on a copy of
+#   -Data (a NeoFences data folder) or a fresh start; -Files folders are copied to the tester's Desktop:
+#     tools\vm\Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live [-Data <copy of a NeoFences data folder>] [-Files <folder>, ...]
+[CmdletBinding(DefaultParameterSetName = 'Candidate')]
 param(
   [Parameter(Mandatory)][string]$Name,
-  [Parameter(Mandatory)][string]$PreviousSetup,
-  [Parameter(Mandatory)][string]$Feed,
-  [Parameter(Mandatory)][string]$Candidate,
+  [Parameter(Mandatory, ParameterSetName = 'Candidate')][string]$PreviousSetup,
+  [Parameter(Mandatory, ParameterSetName = 'Candidate')][string]$Feed,
+  [Parameter(Mandatory, ParameterSetName = 'Candidate')][string]$Candidate,
+  [Parameter(Mandatory, ParameterSetName = 'Live')][switch]$Live,
+  [Parameter(ParameterSetName = 'Live')][string]$Build, # a self-contained publish folder; default: this checkout, published now
+  [Parameter(ParameterSetName = 'Live')][string]$Data,
+  [Parameter(ParameterSetName = 'Live')][string[]]$Files = @(),
   [string]$Out = (Join-Path ([IO.Path]::GetTempPath()) "neofences-vm-$Name"),
   [string]$CoreDll = (Join-Path $PSScriptRoot '..\..\src\NeoFences.Core\bin\Debug\net10.0\NeoFences.Core.dll')
 )
@@ -14,6 +23,14 @@ $ErrorActionPreference = 'Stop'
 $credential = New-Object PSCredential('tester', (ConvertTo-SecureString 'NeoFences-Test-1' -AsPlainText -Force))
 if (Test-Path -LiteralPath $Out) { Remove-Item -LiteralPath $Out -Recurse -Force }
 New-Item -ItemType Directory -Force $Out | Out-Null
+if ($Live -and -not $Build) {
+  # The VM has no .NET runtime: a self-contained publish, as the installer has.
+  $Build = Join-Path ([IO.Path]::GetTempPath()) "neofences-vm-build-$Name"
+  "publishing this checkout to $Build"
+  dotnet publish (Join-Path $PSScriptRoot '..\..\src\NeoFences.App') -c Release -r win-x64 --self-contained -o $Build -v quiet | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
+}
+if ($Live -and -not (Test-Path -LiteralPath (Join-Path $Build 'NeoFences.exe'))) { throw "no NeoFences.exe in $Build" }
 
 "${Name}: back to the clean checkpoint"
 Stop-VM -Name $Name -TurnOff -Force -ErrorAction SilentlyContinue
@@ -33,10 +50,17 @@ try {
   $machine = Invoke-Command -Session $session -ScriptBlock { $os = Get-CimInstance Win32_OperatingSystem; "$($os.Caption) ($($os.BuildNumber))" }
   "${Name}: $machine; copying the run in"
   Invoke-Command -Session $session -ScriptBlock { Remove-Item 'C:\NeoFencesTest\run' -Recurse -Force -ErrorAction SilentlyContinue; New-Item -ItemType Directory 'C:\NeoFencesTest\run\feed' -Force | Out-Null }
-  Copy-Item -ToSession $session -LiteralPath $PreviousSetup -Destination 'C:\NeoFencesTest\run\previous-Setup.exe'
-  Copy-Item -ToSession $session -Path (Join-Path $Feed '*') -Destination 'C:\NeoFencesTest\run\feed' -Recurse
+  if ($Live) {
+    Copy-Item -ToSession $session -Path $Build -Destination 'C:\NeoFencesTest\run\build' -Recurse
+    if ($Data) { Copy-Item -ToSession $session -Path $Data -Destination 'C:\NeoFencesTest\run\data' -Recurse }
+    foreach ($folder in $Files) { Copy-Item -ToSession $session -Path $folder -Destination "C:\Users\tester\Desktop\$(Split-Path $folder -Leaf)" -Recurse }
+    $runJson = [ordered]@{ machine = $machine; candidate = 'this checkout'; script = 'live-checks.ps1' } | ConvertTo-Json
+  } else {
+    Copy-Item -ToSession $session -LiteralPath $PreviousSetup -Destination 'C:\NeoFencesTest\run\previous-Setup.exe'
+    Copy-Item -ToSession $session -Path (Join-Path $Feed '*') -Destination 'C:\NeoFencesTest\run\feed' -Recurse
+    $runJson = [ordered]@{ machine = $machine; candidate = $Candidate } | ConvertTo-Json
+  }
   Copy-Item -ToSession $session -Path (Join-Path $PSScriptRoot 'guest\*.ps1') -Destination 'C:\NeoFencesTest' # the newest checks
-  $runJson = [ordered]@{ machine = $machine; candidate = $Candidate } | ConvertTo-Json
   Invoke-Command -Session $session -ScriptBlock { param($json) Set-Content 'C:\NeoFencesTest\run\run.json' $json; Set-Content 'C:\NeoFencesTest\go.txt' 'go' } -ArgumentList $runJson
 
   "${Name}: the checks run on the VM's desktop (up to 25 minutes)"
