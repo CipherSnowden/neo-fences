@@ -44,6 +44,16 @@ public sealed class RollUpExpansion(RollupExpand mode)
         return true;
     }
 
+    /// <summary>Peek gave the fence the keyboard (M38): open in either mode; it closes as usual once the pointer stays away.</summary>
+    /// <returns>True when it opened the fence.</returns>
+    public bool Open()
+    {
+        if (Expanded) return false;
+        Expanded = true;
+        _ticks = 0;
+        return true;
+    }
+
     /// <summary>Rolled up or unrolled by a double-click: start closed.</summary>
     public void Reset()
     {

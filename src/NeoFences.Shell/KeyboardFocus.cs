@@ -30,9 +30,13 @@ public static class KeyboardFocus
         return PInvoke.GetForegroundWindow() == (HWND)handle;
     }
 
-    /// <summary>The app that had the keyboard before Peek gets it back (when it still exists).</summary>
+    /// <summary>
+    /// The window that had the keyboard before Peek gets it back while it is still shown; else the desktop does (M38 review
+    /// I3), so the keyboard never stays in a fence that went back behind the windows.
+    /// </summary>
     public static void GiveBack(nint handle)
     {
-        if (handle != 0 && PInvoke.IsWindow((HWND)handle)) PInvoke.SetForegroundWindow((HWND)handle);
+        var target = handle != 0 && PInvoke.IsWindow((HWND)handle) && PInvoke.IsWindowVisible((HWND)handle) ? (HWND)handle : PInvoke.GetShellWindow();
+        if (!target.IsNull) PInvoke.SetForegroundWindow(target);
     }
 }

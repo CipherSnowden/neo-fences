@@ -78,4 +78,17 @@ public class RollUpExpansionTests
         var expansion = new RollUpExpansion(RollupExpand.Hover) { Mode = RollupExpand.Click };
         Assert.Equal(-1, TicksUntilChange(expansion, pointerInside: true));
     }
+
+    [Theory] // M38 review I4: Peek's keyboard opens a rolled-up fence in either mode; it closes as usual afterwards
+    [InlineData(RollupExpand.Hover)]
+    [InlineData(RollupExpand.Click)]
+    public void Open_OpensInEitherMode_AndClosesOnceThePointerStaysAway(RollupExpand mode)
+    {
+        var expansion = new RollUpExpansion(mode);
+        Assert.True(expansion.Open());
+        Assert.True(expansion.Expanded);
+        Assert.False(expansion.Open()); // already open
+        Assert.Equal(RollUpExpansion.CloseTicks, TicksUntilChange(expansion, pointerInside: false));
+        Assert.False(expansion.Expanded);
+    }
 }

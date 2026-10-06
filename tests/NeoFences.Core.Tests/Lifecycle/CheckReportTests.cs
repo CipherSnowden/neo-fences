@@ -9,7 +9,7 @@ public class CheckReportTests
     public void Read_ListsEveryCheckAndCountsTheFailures()
     {
         var report = CheckReport.Read("""
-            { "machine": "Windows 10 22H2 (19045)", "version": "0.25.0",
+            { "machine": "Windows 10 22H2 (19045)", "version": "0.25.0", "finished": true,
               "checks": [
                 { "id": "install", "ok": true, "note": "welcome shown" },
                 { "id": "icons-after-kill", "ok": false, "note": "icons stayed hidden" },
@@ -21,6 +21,14 @@ public class CheckReportTests
         Assert.Equal("icons stayed hidden", report.Checks[1].Note);
         Assert.Equal("", report.Checks[2].Note);
         Assert.Equal("Windows 10 22H2 (19045), 0.25.0: 2 of 3 passed; failed: icons-after-kill (icons stayed hidden)", report.Summary);
+    }
+
+    [Fact] // M38 review I6: a pass that hung or timed out has rows, but no "finished"
+    public void Read_APassThatStoppedEarly_IsAFailedReport()
+    {
+        var report = CheckReport.Read("""{ "machine": "m", "version": "v", "checks": [ { "id": "install", "ok": true } ] }""");
+        Assert.Equal(1, report.Failed);
+        Assert.Equal("m, v: 1 of 1 passed; the test pass did not finish (stopped after install)", report.Summary);
     }
 
     [Theory]

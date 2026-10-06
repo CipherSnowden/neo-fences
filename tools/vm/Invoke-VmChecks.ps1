@@ -23,12 +23,13 @@ Restore-VMSnapshot -VMName $Name -Name 'clean' -Confirm:$false
 Remove-VMSavedState -VMName $Name -ErrorAction SilentlyContinue
 Start-VM -Name $Name
 $session = $null
-$deadline = (Get-Date).AddMinutes(5)
-while (-not $session -and (Get-Date) -lt $deadline) {
-  try { $session = New-PSSession -VMName $Name -Credential $credential -ErrorAction Stop } catch { Start-Sleep -Seconds 5 }
-}
-if (-not $session) { throw "$Name does not answer PowerShell Direct" }
+# Whatever goes wrong below, the VM is turned off and the report still printed ("no results" when nothing came out).
 try {
+  $deadline = (Get-Date).AddMinutes(10)
+  while (-not $session -and (Get-Date) -lt $deadline) {
+    try { $session = New-PSSession -VMName $Name -Credential $credential -ErrorAction Stop } catch { Start-Sleep -Seconds 5 }
+  }
+  if (-not $session) { throw "$Name does not answer PowerShell Direct" }
   $machine = Invoke-Command -Session $session -ScriptBlock { $os = Get-CimInstance Win32_OperatingSystem; "$($os.Caption) ($($os.BuildNumber))" }
   "${Name}: $machine; copying the run in"
   Invoke-Command -Session $session -ScriptBlock { Remove-Item 'C:\NeoFencesTest\run' -Recurse -Force -ErrorAction SilentlyContinue; New-Item -ItemType Directory 'C:\NeoFencesTest\run\feed' -Force | Out-Null }
@@ -40,11 +41,15 @@ try {
 
   "${Name}: the checks run on the VM's desktop (up to 25 minutes)"
   $deadline = (Get-Date).AddMinutes(25)
-  while ((Get-Date) -lt $deadline -and -not (Invoke-Command -Session $session -ScriptBlock { Test-Path 'C:\NeoFencesTest\out\finished.txt' })) { Start-Sleep -Seconds 15 }
+  try {
+    while ((Get-Date) -lt $deadline -and -not (Invoke-Command -Session $session -ScriptBlock { Test-Path 'C:\NeoFencesTest\out\finished.txt' })) { Start-Sleep -Seconds 15 }
+  } catch { "${Name}: lost the VM while waiting: $($_.Exception.Message)" }
   Copy-Item -FromSession $session -Path 'C:\NeoFencesTest\out\*' -Destination $Out -Recurse -ErrorAction SilentlyContinue
   Copy-Item -FromSession $session -Path 'C:\NeoFencesTest\*.log' -Destination $Out -ErrorAction SilentlyContinue
+} catch {
+  "${Name}: $($_.Exception.Message)"
 } finally {
-  Remove-PSSession $session
+  if ($session) { Remove-PSSession $session }
   Stop-VM -Name $Name -TurnOff -Force -ErrorAction SilentlyContinue
 }
 if (-not ('NeoFences.Core.Lifecycle.CheckReport' -as [type])) { Add-Type -Path $CoreDll }
@@ -53,3 +58,4 @@ $report = [NeoFences.Core.Lifecycle.CheckReport]::Read($(if (Test-Path -LiteralP
 foreach ($check in $report.Checks) { '  {0} {1} {2}' -f $(if ($check.Ok) { 'PASS' } else { 'FAIL' }), $check.Id, $check.Note }
 $report.Summary
 "screenshots and logs: $Out"
+exit $(if ($report.Failed -gt 0) { 1 } else { 0 })

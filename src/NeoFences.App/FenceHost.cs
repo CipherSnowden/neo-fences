@@ -301,6 +301,7 @@ public sealed partial class FenceHost
         window.DetachTabRequested += () => DetachTab(window, window.FenceId, dropPoint: null);
         window.TabCycleRequested += step => CycleTab(window, step);
         window.FenceCycleRequested += step => CycleKeyboard(window, step); // M38
+        window.PeekEndRequested += EndPeekFromKeyboard; // M38 review I1
         window.SetTabs(FenceTabs.TabsOf(_config, box.Id), shown.Id);
         ApplyStyle(window); // M14
         window.SetHoverPaused(_gameMode || !Current.FencesVisible); // M37
@@ -1196,6 +1197,7 @@ public sealed partial class FenceHost
     private void OnForegroundChanged()
     {
         CheckGameMode();
+        UpdatePeekEscape(); // M38 review I1
         foreach (var delay in GameModePolicy.RecheckDelays)
         {
             // ponytail: one short-lived timer per foreground change and delay; a coalescing timer if switching storms ever show up in a profile.
@@ -1493,11 +1495,7 @@ public sealed partial class FenceHost
             SetPeek(!_peeking);
             if (ending) ReturnKeyboard(); // M38: the app you were in gets the keyboard back
         }
-        else if (hotkeyId == PeekEscapeHotkeyId)
-        {
-            SetPeek(false);
-            ReturnKeyboard(); // M38
-        }
+        else if (hotkeyId == PeekEscapeHotkeyId) EndPeekFromKeyboard(); // M38: and the keyboard back
     }
 
     /// <summary>Peek (M5): every fence above all windows until the hotkey again, Esc, a click outside, or an item opens.</summary>
@@ -1511,17 +1509,11 @@ public sealed partial class FenceHost
         // itself at the bottom would drop back (M5 smoke: only one fence rose).
         foreach (var window in _windows.Values) window.Peeking = peeking;
         foreach (var window in _windows.Values) FenceWindowChrome.SetTopmost(window.Handle, peeking);
-        _peekEscapeHotkey?.Dispose();
-        _peekEscapeHotkey = null;
         if (peeking)
-        {
-            _peekEscapeHotkey = new GlobalHotkey(_messages.Handle, PeekEscapeHotkeyId);
-            if (!_peekEscapeHotkey.TryRegister(new Hotkey(Ctrl: false, Alt: false, Shift: false, Win: false, Key: "Escape"), virtualKey: 0x1B))
-                Log.Warning("Esc is taken by another app; Peek ends with its hotkey or a click outside");
             foreach (var window in _windows.Values) CheckFence(window.FenceId); // the shown fences are checked again (spec §4)
-        }
         if (peeking) TakeKeyboardForPeek(); // M38: the keyboard way in
         else ReleaseKeyboardForPeek();
+        UpdatePeekEscape(); // M38 review I1: the global Esc only while another app is in front
         Log.Information("peek: {Peeking}", peeking);
     }
 

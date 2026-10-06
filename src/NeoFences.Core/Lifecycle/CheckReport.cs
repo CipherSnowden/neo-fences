@@ -35,7 +35,10 @@ public sealed record CheckReport(string Machine, string Version, IReadOnlyList<C
             var summary = $"{machine}, {version}: {rows.Count - failed.Count} of {rows.Count} passed";
             if (failed.Count > 0)
                 summary += "; failed: " + string.Join(", ", failed.Select(row => row.Note.Length > 0 ? $"{row.Id} ({row.Note})" : row.Id));
-            return new CheckReport(machine, version, rows, failed.Count, summary);
+            // The guest writes the file after every check and marks it finished at the end: rows alone may be a pass that hung.
+            var finished = root.TryGetProperty("finished", out var finishedValue) && finishedValue.ValueKind == JsonValueKind.True;
+            if (!finished) summary += $"; the test pass did not finish (stopped after {rows[^1].Id})";
+            return new CheckReport(machine, version, rows, failed.Count + (finished ? 0 : 1), summary);
         }
         catch (JsonException)
         {

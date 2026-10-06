@@ -32,7 +32,7 @@ public static string Title(IntPtr h) { var t = new System.Text.StringBuilder(256
 '@
 
 $checks = New-Object System.Collections.ArrayList
-function Save { [ordered]@{ machine = $settings.machine; version = $settings.candidate; checks = $checks } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'results.json') -Encoding UTF8 }
+function Save([bool]$finished = $false) { [ordered]@{ machine = $settings.machine; version = $settings.candidate; finished = $finished; checks = $checks } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'results.json') -Encoding UTF8 }
 function Check([string]$id, [scriptblock]$test) {
   $note = ''
   try { $result = & $test; $ok = [bool]($result | Select-Object -Last 1); $note = [string](($result | Select-Object -SkipLast 1) -join '; ') }
@@ -130,4 +130,5 @@ Check 'uninstall' {
   $gone = -not (Test-Path -LiteralPath $exe); "app removed: $gone; icons hidden: $(IconsHidden)"; $gone -and -not (IconsHidden)
 }
 Copy-Item -LiteralPath (Join-Path $data 'logs') -Destination (Join-Path $out 'logs') -Recurse -Force -ErrorAction SilentlyContinue
+Save $true # the host counts a file without it as a pass that did not finish
 Set-Content -LiteralPath (Join-Path $out 'finished.txt') -Value (Get-Date -Format s)

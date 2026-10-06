@@ -171,6 +171,8 @@ UnregisterDeviceNotification
 DEV_BROADCAST_HANDLE
 DEV_BROADCAST_HDR
 IsWindow
+IsWindowVisible
+GetShellWindow
 GetAsyncKeyState
 IPersistFile
 IShellLinkW

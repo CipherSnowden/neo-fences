@@ -1,3 +1,4 @@
+using NeoFences.Core.Input;
 using NeoFences.Core.Layouts;
 using NeoFences.Shell;
 using Serilog;
@@ -19,7 +20,8 @@ public sealed partial class FenceHost
     private void TakeKeyboardForPeek()
     {
         var foreground = KeyboardFocus.Foreground();
-        _peekReturnWindow = KeyboardFocus.IsOwn(foreground) ? 0 : foreground; // the tray menu or Settings: nothing to give back
+        // Settings is remembered too (review I3); a fence is not, and a tray menu gone by then gives the keyboard to the desktop.
+        _peekReturnWindow = _windows.Values.Any(fence => fence.Handle == foreground) ? 0 : foreground;
         var spots = KeyboardSpots();
         var (cursorX, cursorY) = FenceWindowChrome.GetCursorPosition();
         var underMouse = spots.FirstOrDefault(spot => cursorX >= spot.X && cursorX < spot.X + spot.W && cursorY >= spot.Y && cursorY < spot.Y + spot.H)?.Id;
@@ -51,11 +53,38 @@ public sealed partial class FenceHost
         _keyboardWindow = null;
     }
 
-    /// <summary>Peek ended by Esc or its hotkey: the app that had the keyboard gets it back (not after a click elsewhere or an open).</summary>
+    /// <summary>
+    /// Peek ended by Esc or its hotkey: the app that had the keyboard gets it back (not after a click elsewhere or an open) —
+    /// only while NeoFences still has it: an app the user switched to meanwhile keeps it (review I2).
+    /// </summary>
     private void ReturnKeyboard()
     {
-        KeyboardFocus.GiveBack(_peekReturnWindow);
+        if (KeyboardFocus.IsOwn(KeyboardFocus.Foreground())) KeyboardFocus.GiveBack(_peekReturnWindow);
         _peekReturnWindow = 0;
+    }
+
+    /// <summary>Esc in the fence that has the keyboard (review I1): Peek ends as with the global Esc.</summary>
+    private void EndPeekFromKeyboard()
+    {
+        if (!_peeking) return;
+        SetPeek(false);
+        ReturnKeyboard();
+    }
+
+    /// <summary>
+    /// While peeking, Esc is a global hotkey only while another app is in front (review I1): with a NeoFences window in front
+    /// Esc stays its own — a rename or the Properties dialog cancels, and a fence with the keyboard ends Peek itself.
+    /// </summary>
+    private void UpdatePeekEscape()
+    {
+        var wanted = _peeking && !KeyboardFocus.IsOwn(KeyboardFocus.Foreground());
+        if (wanted == (_peekEscapeHotkey is not null)) return;
+        _peekEscapeHotkey?.Dispose();
+        _peekEscapeHotkey = null;
+        if (!wanted) return;
+        _peekEscapeHotkey = new GlobalHotkey(_messages.Handle, PeekEscapeHotkeyId);
+        if (!_peekEscapeHotkey.TryRegister(new Hotkey(Ctrl: false, Alt: false, Shift: false, Win: false, Key: "Escape"), virtualKey: 0x1B))
+            Log.Warning("Esc is taken by another app; Peek ends with its hotkey or a click outside");
     }
 
     /// <summary>Every shown fence (a box once) with its rect and monitor, for the reading order.</summary>

@@ -88,6 +88,8 @@ public partial class FenceWindow : Window
     public event Action<int>? TabCycleRequested;
     /// <summary>Tab / Shift+Tab while Peek gave this fence the keyboard (M38): the next / previous fence (1 / -1).</summary>
     public event Action<int>? FenceCycleRequested;
+    /// <summary>Esc in this fence while it has Peek's keyboard (M38 review I1): Peek ends.</summary>
+    public event Action? PeekEndRequested;
 
     /// <summary>The accent colours (M9), as Windows' own accent palette roughly offers them; defined in Core since M14.</summary>
     public static readonly IReadOnlyDictionary<TabColor, Color> TabColors =
@@ -597,12 +599,21 @@ public partial class FenceWindow : Window
             TabCycleRequested?.Invoke(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1);
             key.Handled = true;
         }
-        else if (key.Key == Key.Tab && _keyboardMode && Keyboard.Modifiers is ModifierKeys.None or ModifierKeys.Shift) // M38
+        else if (key.Key == Key.Tab && _keyboardMode && Keyboard.Modifiers is ModifierKeys.None or ModifierKeys.Shift && FromFenceItself(key)) // M38
         {
             FenceCycleRequested?.Invoke(Keyboard.Modifiers == ModifierKeys.Shift ? -1 : 1);
             key.Handled = true;
         }
+        else if (key.Key == Key.Escape && _keyboardMode && Keyboard.Modifiers == ModifierKeys.None && FromFenceItself(key)) // M38 review I1
+        {
+            PeekEndRequested?.Invoke();
+            key.Handled = true;
+        }
     }
+
+    /// <summary>A key from the fence's own content: not a rename's text box, not an open menu (its popup routes here too).</summary>
+    private bool FromFenceItself(KeyEventArgs key) =>
+        key.OriginalSource is not TextBox && key.OriginalSource is Visual source && PresentationSource.FromVisual(source)?.RootVisual == this;
 
     private void EndTabGesture()
     {
@@ -1314,6 +1325,12 @@ public partial class FenceWindow : Window
         _keyboardMode = true;
         KeyboardRing.Visibility = Visibility.Visible;
         Resources["ItemFocusVisibility"] = Visibility.Visible;
+        if (_rolledUp && _expansion.Open()) // review I4: in click mode too; it closes as usual once released
+        {
+            AnimateHeight(_fullHeightPx);
+            ItemsShownChanged?.Invoke();
+            RaiseVisibleIcons();
+        }
         Activate();
         var item = ItemList.SelectedItem ?? (ItemList.Items.Count > 0 ? ItemList.Items[0] : null);
         if (item is null)
