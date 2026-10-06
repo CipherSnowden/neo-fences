@@ -814,3 +814,8 @@ Games switches; import replaces places; export on the UI thread.
 left with a centred title; every change rebuilds the window's lists (font list too); the window is stale until activated
 after a menu change; multi-cell covers grow a little at Roomy.
 **Next:** release 0.23.0 when the owner says so; dogfood a look on the owner's fences (asked first); then M37 performance.
+**Released:** 0.23.0 on 2026-10-06 — CI and the release build passed first time; draft with the delta package (381 KB);
+install check (the installed 0.22.0 downloaded the update from the draft's files and installed it on exit; all four fences,
+items and the startup entry unchanged; the install-check script's tray click still read the old native menu, so it fell back
+to a plain restart — next time read the WPF tray menu for "Restart to update"); NeoFences started again and running;
+published; hub refreshed.
