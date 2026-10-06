@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-06",
-  commit: "4421412",
+  commit: "ad2d9e9",
   phase: "0.22.0 — modern menus and dialogs (path to 1.0)",
-  current: "M35 merged: one modern menu style with icons (fence, items, tray), a 12-line fence menu, Settings in sections with switches, colour swatches and a picker, one message dialog · next: release 0.22.0 when you say so, then M36 fence settings and presets",
+  current: "0.22.0 RELEASED and installed (your 0.21.0 updated itself in 3 s): one modern menu style with icons, a 12-line fence menu, Settings in sections with switches, colour swatches and a picker · next: M36 fence settings and presets",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -811,7 +811,7 @@ const HUB = {
       { t: "You picked all four parts; mockups: menus with icons, Settings section list, swatches in the menu", s: "done" },
       { t: "Prototype probe on a copy of your data (3 fixes); native build (774 tests); Opus review: 1 + 1 raised, fixed", s: "done" },
       { t: "Live check AU incl. light mode (restored); merged locally", s: "done" },
-      { t: "Release 0.22.0", s: "todo" }
+      { t: "Released 0.22.0: CI green, delta 451 KB, your 0.21.0 updated itself in 3 s, published", s: "done" }
     ] },
     { group: "M34 · Icons and game tiles (0.21.0)", items: [
       { t: "Mockups with your real covers and icons: tiles A (name over the cover on hover fences), glow tile, clean icons", s: "done" },
@@ -1192,7 +1192,7 @@ const HUB = {
     { id: "M32", name: "Polish (0.19.1)", goal: "The M31 minors and the Free-layout bug — released 0.19.1", s: "done" },
     { id: "M33", name: "Safety net (0.20.0)", goal: "Safe mode, the stopped window, undo, save notices, gesture switches, private logs — released 0.20.0", s: "done" },
     { id: "M34", name: "Icons and game tiles", goal: "Sharp icons, modern tiles, glow tiles, Normal / Large covers, opt-in online covers (ADR-055), Choose cover… — released 0.21.0", s: "done" },
-    { id: "M35", name: "Modern menus and dialogs", goal: "One menu style with icons, 12-line fence menu, Settings sections and switches, swatches and a picker, one dialog — merged, release pending", s: "wip" },
+    { id: "M35", name: "Modern menus and dialogs", goal: "One menu style with icons, 12-line fence menu, Settings sections and switches, swatches and a picker, one dialog — released 0.22.0", s: "done" },
     { id: "M36", name: "Fence settings and presets", goal: "Per-fence settings instead of fence types, presets", s: "todo" },
     { id: "M37", name: "Performance at scale", goal: "Many fences and items, start time, memory", s: "todo" },
     { id: "M38", name: "Compatibility and accessibility", goal: "Windows 10 and 11 in Hyper-V VMs, scaling, high contrast, screen readers", s: "todo" },
@@ -1220,7 +1220,7 @@ const HUB = {
     { v: "0.19.1", s: "done", scope: "Polish (M32): accent bars follow at once, sticky GPU, HWiNFO lock, CJK date line, Free spots saved at start. Released 2026-10-06; the installed 0.19.0 updated itself." },
     { v: "0.20.0", s: "done", scope: "Safety net (M33): safe mode after a crash loop, the stopped window, undo, save notices, gesture switches, private 10 MB logs. Released 2026-10-06; the installed 0.19.1 updated itself." },
     { v: "0.21.0", s: "done", scope: "Icons and game tiles (M34): rounded covers, glow tiles, clean sharp icons, Normal / Large covers, opt-in Steam covers and website icons, Choose cover…. Released 2026-10-06; the installed 0.20.0 updated itself." },
-    { v: "0.22.0", s: "todo", scope: "Modern menus and dialogs (M35): one menu style with icons for fences, items and the tray, a 12-line fence menu, Settings in sections with switches, colour swatches and a picker, one message dialog. Merged 2026-10-06; release pending." },
+    { v: "0.22.0", s: "done", scope: "Modern menus and dialogs (M35): one menu style with icons for fences, items and the tray, a 12-line fence menu, Settings in sections with switches, colour swatches and a picker, one message dialog. Released 2026-10-06; the installed 0.21.0 updated itself." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1508,7 +1508,7 @@ const HUB = {
     { date: "2026-10-06", topic: "M32 polish (merged)", done: "Every M31 minor + the Free-layout bug; prototype; replay-verified plan; native build; Opus review fixes (700 tests); live AR1 (accent, restored) and AR2; merged locally.", next: "Released 0.19.1; next: pre-1.0 work or new ideas" },
     { date: "2026-10-06", topic: "1.0 readiness + M33 safety net (merged)", done: "Readiness review and the path to 1.0 (your decisions); M33 spec, replay-verified plan, native build; Opus review: 8 important fixed (715 tests); live AS1–AS11 pass, one bug found and fixed; merged locally.", next: "Released 0.20.0; next: M34 icons and game tiles" },
     { date: "2026-10-06", topic: "M34 icons and game tiles (merged)", done: "Two power cuts survived; mockups with your art; spec; Steam probe; you chose Normal / Large covers; prototype probe; native build (747 tests); Opus review fixes; live check AT (12 scripted passes); merged locally.", next: "Released 0.21.0; next: set up the Games fence, then M35" },
-    { date: "2026-10-06", topic: "M35 modern menus and dialogs (merged)", done: "Mockups (menus with icons, Settings section list, swatches); prototype probe; native build (774 tests); Opus review fixes; live check AU incl. light mode; merged locally.", next: "Release 0.22.0, then M36" }
+    { date: "2026-10-06", topic: "M35 modern menus and dialogs (merged)", done: "Mockups (menus with icons, Settings section list, swatches); prototype probe; native build (774 tests); Opus review fixes; live check AU incl. light mode; merged locally.", next: "Released 0.22.0; next: M36 fence settings and presets" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2140,7 +2140,12 @@ const HUB = {
     ["3b8f6d7", "docs: described modern menus and dialogs in ADR-056, the guide's menu paths, architecture, features, checklist AU and the M35 note"],
     ["227c8b6", "fix: fixed a hidden modal after a failed cover pick and doubled ampersands and lost underscores in menu names"],
     ["7b400de", "docs: added the M35 live check results"],
-    ["4421412", "docs: marked M35 merged in the roadmap and logged the session"]
+    ["4421412", "docs: marked M35 merged in the roadmap and logged the session"],
+    ["6ce355e", "docs: refreshed the hub for M35"],
+    ["4e797a6", "docs: fixed the hub's current-status line"],
+    ["afb7b62", "chore: bumped the version to 0.22.0"],
+    ["ae6c5e2", "docs: marked the 0.22.0 release as approved"],
+    ["ad2d9e9", "docs: recorded the 0.22.0 release"]
   ]
 };
 /* ===== END HUB DATA ===== */
