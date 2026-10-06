@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-07",
-  commit: "53462cd",
+  commit: "4321f1c",
   phase: "0.25.0 — keyboard way in and the Windows 11 VM (path to 1.0)",
-  current: "M38 merged: Peek (Ctrl+Alt+Space) puts the keyboard in a fence with a visible ring, Tab to the next fence, Esc back to your app; a scripted Windows 11 VM pass, 12 of 12 · next: M38.1 a second VM so live checks run there, not on your PC; then release 0.25.0 when you say so",
+  current: "M38 merged: Peek (Ctrl+Alt+Space) puts the keyboard in a fence with a visible ring, Tab to the next fence, Esc back to your app; a scripted Windows 11 VM pass, 12 of 12 · M38.1 done: live checks now run in a second VM (NF-Win11-Dev, 8 of 8), not on your PC · next: release 0.25.0 when you say so",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -812,7 +812,7 @@ const HUB = {
       { t: "Hyper-V on; NF-Win11 built from your ISO (no Setup clicks); five runs fixed the test tooling, then 12 of 12", s: "done" },
       { t: "Native build (837 tests); Opus review: 6 important fixed (Esc during Peek, keyboard return, rolled-up fences, VM script)", s: "done" },
       { t: "Live check 7 of 7 on a copy of your data; VM pass on 0.25.0-rc.1 12 of 12; merged locally", s: "done" },
-      { t: "M38.1: a second VM (NF-Win11-Dev) and Invoke-VmLive.ps1 — live checks in the VM, not on your PC", s: "wip" },
+      { t: "M38.1: a second VM (NF-Win11-Dev) and Invoke-VmChecks.ps1 -Live — 8 of 8 in the VM; RC pass still 12 of 12 — live checks in the VM, not on your PC", s: "done" },
       { t: "Release 0.25.0 (asked first)", s: "todo" }
     ] },
     { group: "M37 · Performance at scale (0.24.0)", items: [
@@ -1217,7 +1217,7 @@ const HUB = {
     { id: "M36", name: "Fence settings and presets", goal: "Fence settings window, five presets and own ones, Export / Import setup, Reset settings — released 0.23.0", s: "done" },
     { id: "M37", name: "Performance at scale", goal: "Icon cache, visible first, idle timers, lighter items, a 500 / 50 measurement — released 0.24.0", s: "done" },
     { id: "M38", name: "Compatibility and accessibility", goal: "Peek takes the keyboard (Tab, Esc back), visible focus; a scripted Windows 11 VM pass, 12 of 12 — merged, release pending", s: "wip" },
-    { id: "M38.1", name: "Test VMs for live checks", goal: "A second VM (NF-Win11-Dev) and Invoke-VmLive.ps1: live checks and probes in a VM, not on your PC", s: "wip" },
+    { id: "M38.1", name: "Test VMs for live checks", goal: "A second VM (NF-Win11-Dev) and Invoke-VmChecks.ps1 -Live: live checks of branch builds in a VM, not on your PC — merged", s: "done" },
     { id: "M39", name: "Release readiness", goal: "Freeware licence, README, then 1.0.0-rc to friends and 1.0.0", s: "todo" }
   ],
   versions: [
@@ -2220,7 +2220,10 @@ const HUB = {
     ["b067548", "docs: described the keyboard way in and the Windows 11 VM in ADR-060, architecture, features, checklist AX and the M38 note"],
     ["e8ef390", "fix: fixed Peek's Esc, keyboard return and rolled-up fences, and made the VM checks report unfinished passes and always stop the VM"],
     ["d12e0d4", "docs: added the M38 live check and VM pass results"],
-    ["53462cd", "docs: recorded M38 as merged and claimed M38.1 test VMs for live checks"]
+    ["53462cd", "docs: recorded M38 as merged and claimed M38.1 test VMs for live checks"],
+    ["e169a6e", "docs: refreshed the hub for M38"],
+    ["e4ae09f", "feat: added live checks of a branch build in a second test VM"],
+    ["4321f1c", "docs: recorded M38.1 test VMs for live checks as merged"]
   ]
 };
 /* ===== END HUB DATA ===== */
