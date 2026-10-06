@@ -14,7 +14,7 @@
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="OpenLogsButton" Content="Open logs" MinWidth="90" Margin="0,0,8,0" />
             <Button x:Name="BackupButton" Content="Start from a backup" IsDefault="True" Style="{DynamicResource AccentButtonStyle}" MinWidth="90" Margin="0,0,8,0" />
-            <Button Content="Close" IsCancel="True" MinWidth="90" />
+            <Button x:Name="CloseButton" Content="Close" IsCancel="True" MinWidth="90" />
         </StackPanel>
     </StackPanel>
 </Window>

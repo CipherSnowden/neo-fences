@@ -20,6 +20,7 @@ public partial class StoppedWindow : Window
         InitializeComponent();
         OpenLogsButton.Click += (_, _) => OpenLogs();
         BackupButton.Click += (_, _) => StartFromBackup();
+        CloseButton.Click += (_, _) => Close(); // IsCancel closes only a dialog (ShowDialog); this window is shown modeless
     }
 
     private static void OpenLogs()
