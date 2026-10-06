@@ -843,3 +843,13 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AW5 | A full-screen video or game for a minute, then back; quick-hide and back; a tab with a clock; a rolled-up fence | NeoFences ~0 % CPU meanwhile (Task Manager); clocks tick at once after; rolled-up fences open on hover; hidden title bars show on hover |
 | AW6 | Cover tiles: hover, select, a missing game, Large covers, labels on hover | exactly as in 0.23.0 |
 | AW7 | Labels at 125 % / 150 % scaling, light mode, a rename, a light/dark switch | sharp, the same shadow |
+
+## AX — 0.25.0 keyboard way in and the Windows 11 VM (M38)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AX1 | `tools/vm/Invoke-VmChecks.ps1` for the candidate (VM built over an hour ago; View → Enhanced session off to watch) | 12 of 12 PASS; screenshots in the output folder |
+| AX2 | In Firefox, Ctrl+Alt+Space with the mouse over a fence; then with the mouse over no fence | the fence under the mouse (else the last used, else the first) shows an accent outline and its item a ring; after Esc no ring or outline stays, Firefox has the keyboard; mouse clicks later look as in 0.24.0 |
+| AX3 | While peeking: arrows, Home, End, Enter; Tab / Shift+Tab across fences and screens; Ctrl+Tab in a tabbed fence; F2, Del, Ctrl+Z, the menu key, type-ahead; a folder panel's Backspace | each works; Tab wraps; a rolled-up fence opens while it has the keyboard and closes after |
+| AX4 | Peek, then close the app you came from; Peek from the tray menu / Settings; Peek with an elevated window in front; start a full-screen game while peeking | no crash, nothing wrong comes forward, Peek ends (game mode) |
+| AX5 | While peeking: delete a fence, roll one up, switch / detach a tab, pause NeoFences | Tab still lands on a shown fence; no stale outline |

@@ -1526,3 +1526,28 @@ supported, and its problems are not release blockers. The README, the guide and 
 **Consequences.** The readiness review's blocker 2 shrinks to "a fresh Windows 11 PC" (the M38 VM). Code paths for older
 desktop layers stay as they are (no removal work) and are untested. A Windows 10 user who reports a problem gets a
 friendly "Windows 11 only" answer, not a fix promise.
+
+## ADR-060 — Peek takes the keyboard; a scripted Windows 11 test pass in a Hyper-V VM
+**Date:** 2026-10-07 · **Status:** Accepted · **Supersedes:** ADR-015's "keyboard focus from an app is a ROADMAP follow-up"
+
+**Context.** The readiness review found no keyboard way into the fences (a `WS_EX_NOACTIVATE` fence cannot take the
+keyboard while another app is in front, ADR-015), no visible keyboard focus, and NeoFences never run on any PC but the
+owner's. The owner chose the keyboard through Peek (no second hotkey) and a scripted test pass; Windows 10 was dropped
+(ADR-059).
+
+**Decision.**
+- **Peek takes the keyboard**: after its hotkey NeoFences may bring a window forward, so Peek gives the keyboard
+  (`SetForegroundWindow`) to the fence under the mouse, else the last used, else the first in reading order (`KeyboardOrder`:
+  the main screen first, rows left to right, top to bottom). Tab / Shift+Tab go to the next / previous fence, wrapping. Esc
+  or the hotkey ends Peek and gives the keyboard back to the app that had it. Fences stay non-activating otherwise.
+- **Visible focus only from the keyboard**: an accent outline on the fence and a ring on the item, shown only while Peek
+  gave the fence the keyboard; a rolled-up fence opens meanwhile.
+- **A Windows 11 VM checks every release candidate**: `tools/vm/New-TestVm.ps1` builds a Hyper-V VM from Microsoft's ISO
+  (DISM and an answer file, an auto-signed-in "tester", a `clean` checkpoint); `Invoke-VmChecks.ps1` boots it fresh, copies
+  in the previous release and the candidate's update files, and a guest script works through install, welcome, behind
+  windows, Win+D, desktop icons after exit / kill / Explorer restart, game mode, update, Peek and the keyboard, uninstall;
+  `CheckReport` reads its results.
+
+**Consequences.** The keyboard reaches every fence from any app without a new hotkey or a hook. The first pass on Windows 11
+26300 found no NeoFences problem (12 of 12); it found Windows' first-hour "quiet time", which hides full-screen apps from
+game mode on a brand-new account. Tab and Enter inside the fences are checked by hand (AX), not in the VM.

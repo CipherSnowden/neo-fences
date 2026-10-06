@@ -195,6 +195,13 @@ from the shell, with urgent (visible) and later queues; Refresh and special icon
 and auto-collect timer stop while nothing can be seen; library, watching and the wallpaper read start after "fences shown".
 Labels are cached as bitmaps; the cover tile is its own template. `research/m37-performance-at-scale.md`.
 
+**0.25.0 (M38, keyboard way in and the Windows 11 VM)**: Peek takes the keyboard (ADR-060) — `KeyboardOrder` (Core) gives
+the fences' reading order, the start fence and Tab wrapping; `KeyboardFocus` (Shell) reads, gives and gives back the
+foreground; `FenceHost.Keyboard.cs` remembers the app, gives the keyboard to a fence and back on Esc / the hotkey;
+`FenceWindow` has a keyboard mode (`KeyboardRing`, the `FocusRing` shown through `ItemFocusVisibility`, Tab raises
+`FenceCycleRequested`). `tools/vm/` builds a Windows 11 Hyper-V VM and runs the checklist in it; `CheckReport` (Core)
+reads the results. `research/m38-keyboard-and-windows-11-vm.md`.
+
 **0.21.0 (M34, icons and game tiles)**: game tiles in Windows 11's style — rounded 2:3 covers with a soft shadow
 (two faint layers, no effect), the name below or, on fences with labels on hover, over the cover; hover lifts, selection
 rings in the accent; a glow tile for games without art (the icon shrunk to a few pixels and stretched as a backdrop, the
