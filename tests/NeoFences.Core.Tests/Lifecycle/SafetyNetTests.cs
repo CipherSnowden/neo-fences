@@ -167,7 +167,7 @@ public class SafetyNetTests
     }
 
     [Fact]
-    public void Load_PrimaryLockedForAMoment_IsWaitedFor_AndReadNormally()
+    public async Task Load_PrimaryLockedForAMoment_IsWaitedFor_AndReadNormally()
     {
         using var directory = new TempDirectory();
         var store = new ConfigStore(directory.Path, readRetryDelay: TimeSpan.FromMilliseconds(200));
@@ -176,7 +176,7 @@ public class SafetyNetTests
         var unlock = Task.Delay(300).ContinueWith(_ => locked.Dispose());
 
         var result = store.Load();
-        unlock.Wait();
+        await unlock;
 
         Assert.Equal(ConfigLoadSource.Primary, result.Source);
         Assert.False(result.IsReadOnly);
