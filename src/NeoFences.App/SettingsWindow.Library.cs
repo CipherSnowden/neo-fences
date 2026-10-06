@@ -17,7 +17,7 @@ public sealed record HiddenGame(string Id, string Name, IReadOnlyList<string> Al
 /// <summary>What Settings → Game Library shows (M12; M22: the fences new games can go to, and the chosen one).</summary>
 /// <param name="HasFence">The scan runs (games are wanted somewhere).</param>
 public sealed record LibraryView(bool HasFence, IReadOnlyList<string> Folders, LibrarySources Sources, IReadOnlyList<HiddenGame> Hidden, string Status,
-    IReadOnlyList<(string Id, string Title)> Fences, string? NewGamesFence);
+    IReadOnlyList<(string Id, string Title)> Fences, string? NewGamesFence, bool OnlineArt = false);
 
 /// <summary>
 /// Settings → Game Library (M12, spec §4): game folders, a checkbox per source, hidden games with "Show again", and
@@ -31,6 +31,8 @@ public partial class SettingsWindow
     public event Action? RefreshLibraryRequested;
     /// <summary>"New games go to" (M22): a fence id, or null for nowhere.</summary>
     public event Action<string?>? NewGamesFenceChanged;
+    /// <summary>"Find covers and website icons online" (M34, ADR-055).</summary>
+    public event Action<bool>? OnlineArtChanged;
 
     private IReadOnlyList<string> _libraryFolders = [];
     private IReadOnlyList<(string Id, string Title)> _newGamesChoices = [(Id: "", Title: "\u0000")]; // never equal to a real list: the first show builds it
@@ -62,6 +64,7 @@ public partial class SettingsWindow
         HiddenGameList.SelectionChanged += (_, _) => ShowGameAgainButton.IsEnabled = HiddenGameList.SelectedItem is not null;
         ShowGameAgainButton.Click += (_, _) => { if (HiddenGameList.SelectedItem is HiddenGame game) ShowGameAgainRequested?.Invoke(game.Id); };
         RefreshLibraryButton.Click += (_, _) => RefreshLibraryRequested?.Invoke();
+        OnToggled(OnlineArtBox, isChecked => OnlineArtChanged?.Invoke(isChecked)); // M34
         NewGamesBox.SelectionChanged += (_, _) =>
         {
             if (_updating || NewGamesBox.SelectedItem is not ComboBoxItem chosen) return;
@@ -105,5 +108,6 @@ public partial class SettingsWindow
         }
         NewGamesBox.SelectedItem = NewGamesBox.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag as string == view.NewGamesFence) ?? NewGamesBox.Items[0];
         RefreshLibraryButton.IsEnabled = view.HasFence;
+        OnlineArtBox.IsChecked = view.OnlineArt; // M34
     }
 }

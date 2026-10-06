@@ -4,7 +4,9 @@
         xmlns:local="clr-namespace:NeoFences.App"
         Title="NeoFences fence" Width="320" Height="220"
         WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="True"
-        Background="#01000000" ShowInTaskbar="False" ShowActivated="False">
+        Background="#01000000" ShowInTaskbar="False" ShowActivated="False"
+        UseLayoutRounding="True" RenderOptions.BitmapScalingMode="HighQuality">
+    <!-- M34: edges on whole pixels and high-quality scaling, so icons and covers stay sharp at 125/150 %. -->
     <!-- Layered window (AllowsTransparency) + accent blur, owned by Progman: ADR-011.
          The 1/255-alpha background keeps the empty area hit-testable (fully transparent pixels click through).
          Colours are DynamicResources set by ApplyTheme (light/dark follows Windows, M2c). -->
@@ -17,6 +19,8 @@
         <sys:Double x:Key="ItemWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">76</sys:Double>
         <!-- Icon-only fences (M8b): labels collapse, the name pops under the hovered or selected icon instead. -->
         <Visibility x:Key="LabelVisibility">Visible</Visibility>
+        <!-- M34: a cover's name over its bottom, on fences with labels on hover. -->
+        <Visibility x:Key="TileNameVisibility">Collapsed</Visibility>
         <sys:Boolean x:Key="ItemToolTips" xmlns:sys="clr-namespace:System;assembly=System.Runtime">True</sys:Boolean>
         <Visibility x:Key="ShortcutArrowVisibility">Collapsed</Visibility>
         <sys:Double x:Key="TileWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">72</sys:Double>
@@ -283,7 +287,8 @@
                                             <!-- The outer border fills the gaps between cells, so the pointer is always over some cell and the
                                                  pop-under name does not blink between neighbours (final review I2). -->
                                             <Border Background="Transparent" Padding="2">
-                                                <Border x:Name="Chrome" Background="Transparent" CornerRadius="4" Padding="2,4">
+                                                <!-- M34 (spec §4, "Clean"): no slab; a faint rounded hover, the accent for the selection. -->
+                                                <Border x:Name="Chrome" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Padding="1,3">
                                                     <ContentPresenter HorizontalAlignment="Center" />
                                                 </Border>
                                             </Border>
@@ -292,11 +297,18 @@
                                                     <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceHover}" />
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceSelected}" />
+                                                    <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource ItemSelectedFill}" />
+                                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource ItemSelectedEdge}" />
                                                 </Trigger>
+                                                <!-- M34: a cover tile lifts and rings itself (style A); the cell around it stays clear. -->
+                                                <DataTrigger Binding="{Binding IsTile}" Value="True">
+                                                    <Setter TargetName="Chrome" Property="Background" Value="Transparent" />
+                                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="Transparent" />
+                                                </DataTrigger>
                                                 <!-- M26: a panel's rows show hover and selection themselves; the whole panel never tints (last: it wins). -->
                                                 <DataTrigger Binding="{Binding IsPanel}" Value="True">
                                                     <Setter TargetName="Chrome" Property="Background" Value="Transparent" />
+                                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="Transparent" />
                                                 </DataTrigger>
                                                 <!-- A selected panel (by its name row or menu) shows a thin outline instead (final review M12). -->
                                                 <MultiDataTrigger>
@@ -340,22 +352,53 @@
                                             </Canvas>
                                         </Viewbox>
                                     </Grid>
-                                    <!-- Game Library tile (M12): poster, logo, or the icon centred on a dark 2:3 tile. -->
-                                    <Border x:Name="Tile" Visibility="Collapsed" HorizontalAlignment="Center" CornerRadius="4" Background="#66000000"
-                                            Width="{Binding TileWidth}" Height="{Binding TileHeight}" ClipToBounds="True">
-                                        <Grid>
-                                            <Image x:Name="TileIcon" Source="{Binding Icon}" Width="{Binding IconDips}" Height="{Binding IconDips}" />
-                                            <Image x:Name="TileLogo" Source="{Binding Art}" Margin="10" Stretch="Uniform" Visibility="Collapsed" />
-                                            <Image x:Name="TilePoster" Source="{Binding Art}" Stretch="UniformToFill" Visibility="Collapsed" />
-                                            <!-- A not-installed game shown as its cover (M22, final review I1): the same badge as on icons. -->
-                                            <Border x:Name="TileBadge" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="4"
-                                                    Width="16" Height="16" CornerRadius="8" Background="#FFE8A33D" BorderBrush="#FF3A2A10" BorderThickness="1"
-                                                    IsHitTestVisible="False">
-                                                <TextBlock Text="!" Foreground="#FF3A2A10" FontWeight="Bold" FontSize="11"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                            </Border>
-                                        </Grid>
-                                    </Border>
+                                    <!-- Game tile (M12, M34 style A): a rounded 2:3 cover with a soft shadow; without art, the glow tile (the icon's
+                                         colours as a backdrop, the icon in the middle). Hover lifts it, selection rings it in the accent; on a fence
+                                         with labels on hover the name fades in over the bottom (style B's overlay). -->
+                                    <Grid x:Name="Tile" Visibility="Collapsed" HorizontalAlignment="Center" Width="{Binding TileWidth}" Height="{Binding TileHeight}">
+                                        <Border Margin="-2,1,-2,-3" CornerRadius="11" Background="{DynamicResource TileShadowFar}" IsHitTestVisible="False" />
+                                        <Border Margin="-1,1,-1,-1" CornerRadius="9" Background="{DynamicResource TileShadowNear}" IsHitTestVisible="False" />
+                                        <Border x:Name="TileGlow" CornerRadius="8">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="{Binding Glow}" Stretch="UniformToFill" />
+                                            </Border.Background>
+                                        </Border>
+                                        <Border x:Name="TileShade" CornerRadius="8">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#33000000" Offset="0" />
+                                                    <GradientStop Color="#8C000000" Offset="1" />
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                        </Border>
+                                        <Image x:Name="TileIcon" Source="{Binding Icon}" Width="{Binding IconDips}" Height="{Binding IconDips}" Margin="0,0,0,10" />
+                                        <Image x:Name="TileLogo" Source="{Binding Art}" Margin="14" Stretch="Uniform" Visibility="Collapsed" />
+                                        <Border x:Name="TilePoster" CornerRadius="8" Visibility="Collapsed">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="{Binding Art}" Stretch="UniformToFill" />
+                                            </Border.Background>
+                                        </Border>
+                                        <Border x:Name="TileName" VerticalAlignment="Bottom" CornerRadius="0,0,8,8" Padding="6,22,6,7" Opacity="0"
+                                                Visibility="{DynamicResource TileNameVisibility}" IsHitTestVisible="False">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#00000000" Offset="0" />
+                                                    <GradientStop Color="#D9000000" Offset="1" />
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="{Binding Label}" Foreground="White" FontSize="12" FontWeight="SemiBold" TextAlignment="Center"
+                                                       TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="32" />
+                                        </Border>
+                                        <Border x:Name="TileRing" Margin="-3" CornerRadius="10" BorderThickness="2" BorderBrush="{DynamicResource ItemSelectedEdge}"
+                                                Visibility="Collapsed" IsHitTestVisible="False" />
+                                        <!-- A not-installed game shown as its cover (M22, final review I1): the same badge as on icons. -->
+                                        <Border x:Name="TileBadge" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="4"
+                                                Width="16" Height="16" CornerRadius="8" Background="#FFE8A33D" BorderBrush="#FF3A2A10" BorderThickness="1"
+                                                IsHitTestVisible="False">
+                                            <TextBlock Text="!" Foreground="#FF3A2A10" FontWeight="Bold" FontSize="11"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                    </Grid>
                                     <!-- M25 widgets, M26 panels: their own templates, built only for those elements (M28: lighter items). -->
                                     <!-- Collapsed for plain items: without a template it would print the item's type name. -->
                                     <ContentControl x:Name="Extra" Content="{Binding}" Focusable="False" IsTabStop="False" HorizontalAlignment="Center" Visibility="Collapsed" />
@@ -386,6 +429,17 @@
                                     <DataTrigger Binding="{Binding ArtKind}" Value="Poster">
                                         <Setter TargetName="TilePoster" Property="Visibility" Value="Visible" />
                                         <Setter TargetName="TileIcon" Property="Visibility" Value="Collapsed" />
+                                        <Setter TargetName="TileGlow" Property="Visibility" Value="Collapsed" />
+                                        <Setter TargetName="TileShade" Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                    <!-- M34: hover lifts the tile a little and shows the name over it (labels on hover); selection rings it. -->
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter TargetName="Tile" Property="Margin" Value="0,-2,0,2" />
+                                        <Setter TargetName="TileName" Property="Opacity" Value="1" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter TargetName="TileRing" Property="Visibility" Value="Visible" />
+                                        <Setter TargetName="TileName" Property="Opacity" Value="1" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding ArtKind}" Value="Logo">
                                         <Setter TargetName="TileLogo" Property="Visibility" Value="Visible" />

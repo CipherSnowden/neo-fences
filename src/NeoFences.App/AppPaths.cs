@@ -15,4 +15,9 @@ public static class AppPaths
 
     /// <summary>Pictures chosen as item icons (M18), copied in so they survive the original being moved: NeoFences' own files.</summary>
     public static string IconsDirectory { get; } = Path.Combine(DataDirectory, "icons");
+
+    /// <summary>Covers and website icons (M34, ADR-055): chosen ones, found ones and <c>index.json</c>; NeoFences' own files.</summary>
+    public static string CoversDirectory { get; } = Path.Combine(DataDirectory, "covers");
+
+    public static string SiteIconsDirectory { get; } = Path.Combine(CoversDirectory, "sites");
 }

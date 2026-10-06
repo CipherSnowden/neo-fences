@@ -937,6 +937,7 @@ public partial class FenceWindow : Window
     {
         _labelMode = labelMode;
         Resources["LabelVisibility"] = labelMode == LabelMode.Always ? Visibility.Visible : Visibility.Collapsed;
+        Resources["TileNameVisibility"] = labelMode == LabelMode.Always ? Visibility.Collapsed : Visibility.Visible; // M34: a cover shows its name over itself
         Resources["ItemToolTips"] = labelMode == LabelMode.Always; // the pop-under name replaces the tooltip
         LabelsAlwaysItem.IsChecked = labelMode == LabelMode.Always;
         LabelsOnHoverItem.IsChecked = labelMode == LabelMode.OnHover;
@@ -963,8 +964,16 @@ public partial class FenceWindow : Window
     /// An element's width in a fence: with labels, room for two short words under small icons; icons only, a tight grid —
     /// as wide as a 2:3 cover when the fence shows covers (M28: covers keep their size).
     /// </summary>
-    private static double ItemWidthFor(int iconSize, LabelMode labels, bool covers) =>
-        labels == LabelMode.Always ? Math.Max(76.0, iconSize + 28.0) : covers ? Math.Round(iconSize * 1.5) + 12.0 : iconSize + 12.0;
+    private static double ItemWidthFor(int iconSize, LabelMode labels, bool covers)
+    {
+        var plain = labels == LabelMode.Always ? Math.Max(76.0, iconSize + 28.0) : iconSize + 12.0;
+        if (!covers) return plain;
+        // M34 (spec §4): a Normal cover (1×2) fills its two rows exactly: (cell width − 12) × 1.5 = 2 × cell height − 12 − label,
+        // so no gap opens between cover rows and a Large cover (2×4) is about twice as big.
+        var label = labels == LabelMode.Always ? 36.0 : 0.0;
+        var cellHeight = iconSize + 12 + label;
+        return Math.Max(plain, Math.Floor((2 * cellHeight - 12 - label) / 1.5 + 12) - 8);
+    }
 
     /// <summary>A fence's columns at this window's width (M28: a hidden tab's own, for its new elements in a Free fence).</summary>
     public int ColumnsFor(Fence fence, bool covers) =>
@@ -992,7 +1001,7 @@ public partial class FenceWindow : Window
     {
         var container = _labelMode != LabelMode.OnHover ? null
             : _hoveredContainer ?? (ItemList.SelectedItems.Count == 1 ? ItemList.ItemContainerGenerator.ContainerFromItem(ItemList.SelectedItem) as ListBoxItem : null);
-        if (container is not { DataContext: FenceItemView { IsPanel: false } view, IsVisible: true }) // M28: never over a panel
+        if (container is not { DataContext: FenceItemView { IsPanel: false, IsTile: false } view, IsVisible: true }) // M28: never over a panel; M34: a cover shows its name itself
         {
             HoverLabel.Visibility = Visibility.Collapsed;
             return;
@@ -1179,9 +1188,10 @@ public partial class FenceWindow : Window
     {
         _lightTheme = light;
         var ink = light ? Colors.Black : Colors.White;
-        SolidColorBrush Ink(byte alpha)
+        SolidColorBrush Ink(byte alpha, Color? colour = null)
         {
-            var brush = new SolidColorBrush(Color.FromArgb(alpha, ink.R, ink.G, ink.B));
+            var tone = colour ?? ink;
+            var brush = new SolidColorBrush(Color.FromArgb(alpha, tone.R, tone.G, tone.B));
             brush.Freeze();
             return brush;
         }
@@ -1217,6 +1227,9 @@ public partial class FenceWindow : Window
         var widgetShadow = new DropShadowEffect { Color = light ? Colors.White : Colors.Black, ShadowDepth = light ? 0 : 1, BlurRadius = 8, Opacity = 0.45 };
         widgetShadow.Freeze();
         Resources["WidgetShadow"] = widgetShadow;
+        // M34: a cover's soft shadow, drawn as two faint rounded layers (an effect per tile would render in software here).
+        Resources["TileShadowFar"] = Ink(light ? (byte)0x10 : (byte)0x18, Colors.Black);
+        Resources["TileShadowNear"] = Ink(light ? (byte)0x1C : (byte)0x30, Colors.Black);
         ApplyWidgetBar(light);
     }
 
@@ -1226,6 +1239,13 @@ public partial class FenceWindow : Window
         var bar = light ? new LinearGradientBrush(SystemColors.AccentColorDark1, SystemColors.AccentColor, 0) : new LinearGradientBrush(SystemColors.AccentColorLight2, SystemColors.AccentColorLight1, 0);
         bar.Freeze();
         Resources["WidgetBar"] = bar;
+        // M34 (spec §4): items and tiles select in the accent too: a tinted rounded box with an accent edge, a ring around a cover.
+        var accent = light ? SystemColors.AccentColorDark1 : SystemColors.AccentColorLight1;
+        var fill = new SolidColorBrush(Color.FromArgb(light ? (byte)0x30 : (byte)0x40, accent.R, accent.G, accent.B));
+        var edge = new SolidColorBrush(Color.FromArgb(0xD9, accent.R, accent.G, accent.B));
+        fill.Freeze();
+        edge.Freeze();
+        (Resources["ItemSelectedFill"], Resources["ItemSelectedEdge"]) = (fill, edge);
     }
 
     private FenceStyle? _style;

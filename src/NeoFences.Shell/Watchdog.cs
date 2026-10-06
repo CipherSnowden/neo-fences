@@ -212,6 +212,33 @@ public sealed class Watchdog(string dataDirectory, Action<string> log)
         }
     }
 
+    /// <summary>At start (M34): the <c>watchdog-&lt;pid&gt;</c> files of processes that ended without cleaning up (a power cut) go.</summary>
+    public void RemoveStaleFiles()
+    {
+        try
+        {
+            var names = Directory.Exists(dataDirectory) ? Directory.EnumerateFiles(dataDirectory, "watchdog-*").Select(Path.GetFileName).OfType<string>().ToList() : [];
+            foreach (var stale in WatchdogFiles.Stale(names, isRunning: IsRunning)) TryDelete(Path.Combine(dataDirectory, stale));
+        }
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
+        {
+            log($"could not list the data folder: {failure.Message}");
+        }
+    }
+
+    private static bool IsRunning(int processId)
+    {
+        try
+        {
+            using var process = Process.GetProcessById(processId);
+            return !process.HasExited;
+        }
+        catch (Exception failure) when (failure is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+    }
+
     private void TryDelete(string path)
     {
         try

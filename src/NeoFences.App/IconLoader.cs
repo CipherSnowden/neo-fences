@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using NeoFences.Core.Items;
+using NeoFences.Core.Library;
 using NeoFences.Shell;
 using Serilog;
 
@@ -11,8 +12,8 @@ namespace NeoFences.App;
 
 /// <summary>
 /// Loads display names and icons on two background STA threads (shell extensions expect STA; thumbnails of big
-/// files are slow) and hands them to the UI thread. An item's own name and icon win (M18); a website shows the default
-/// browser's icon. A failed load leaves the placeholder, never throws.
+/// files are slow) and hands them to the UI thread. An item's own name and icon win (M18); a website shows its own icon
+/// when NeoFences found one, else a letter badge (M34). A failed load leaves the placeholder, never throws.
 /// </summary>
 public sealed class IconLoader : IDisposable
 {
@@ -93,10 +94,68 @@ public sealed class IconLoader : IDisposable
         }
     }
 
-    private static BitmapSource? TargetIcon(LoadRequest request, ItemKind kind) =>
-        kind == ItemKind.Website
-            ? ShellItems.DefaultBrowserPath() is { } browser ? Frozen(ShellItems.TryGetImage(browser, request.SizePx)) : null
-            : Frozen(ShellItems.TryGetImage(request.Target, request.SizePx));
+    /// <summary>
+    /// Website icons found online (M34, ADR-055): host → icon file, kept by the host (set on the UI thread, read here). A website
+    /// without one asks the host once per load (<see cref="SiteIconWanted"/>, on the UI thread) and shows its letter badge.
+    /// </summary>
+    public volatile IReadOnlyDictionary<string, string> SiteIconFiles = new Dictionary<string, string>();
+
+    public event Action<string>? SiteIconWanted;
+
+    private BitmapSource? TargetIcon(LoadRequest request, ItemKind kind)
+    {
+        if (kind == ItemKind.Website) return SiteIcon(request);
+        // M34: a shortcut that starts a Store app through Explorer (Minecraft Launcher's) shows the app's icon, not Explorer's.
+        if (ShellLinks.AppsFolderOf(request.Target) is { } app && Frozen(ShellItems.TryGetImage(app, request.SizePx)) is { } appIcon) return appIcon;
+        return Frozen(ShellItems.TryGetImage(request.Target, request.SizePx));
+    }
+
+    /// <summary>The site's own icon when NeoFences found one, else its letter badge (never the browser's icon, M34).</summary>
+    private BitmapSource SiteIcon(LoadRequest request)
+    {
+        var host = Uri.TryCreate(request.Target, UriKind.Absolute, out var url) ? url.Host : "";
+        if (host.Length > 0 && SiteIconFiles.TryGetValue(host, out var file))
+        {
+            try
+            {
+                var decoder = BitmapDecoder.Create(new Uri(file), BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                // An .ico holds several sizes: the largest frame, scaled to the item.
+                var frame = decoder.Frames.OrderByDescending(candidate => candidate.PixelWidth).First();
+                var scale = (double)request.SizePx / Math.Max(frame.PixelWidth, frame.PixelHeight);
+                BitmapSource sized = Math.Abs(scale - 1) < 0.01 ? frame : new TransformedBitmap(frame, new ScaleTransform(scale, scale));
+                sized.Freeze();
+                return sized;
+            }
+            catch (Exception failure) when (failure is not OutOfMemoryException)
+            {
+                Log.Warning(failure, "website icon {File} could not be read; its letter shows", file);
+            }
+        }
+        else if (host.Length > 0) _uiDispatcher.BeginInvoke(() => SiteIconWanted?.Invoke(request.Target));
+        return Badge(request.Target, request.SizePx);
+    }
+
+    /// <summary>The letter badge (M34): the site's first letter in white on its colour, a rounded square like an app icon.</summary>
+    private static BitmapSource Badge(string url, int sizePx)
+    {
+        var (letter, argb) = SiteIcons.Badge(url);
+        var visual = new DrawingVisual();
+        using (var drawing = visual.RenderOpen())
+        {
+            var fill = new SolidColorBrush(Color.FromArgb((byte)(argb >> 24), (byte)(argb >> 16), (byte)(argb >> 8), (byte)argb));
+            fill.Freeze();
+            var corner = sizePx * 0.22;
+            drawing.DrawRoundedRectangle(fill, null, new System.Windows.Rect(0, 0, sizePx, sizePx), corner, corner);
+            var text = new FormattedText(letter.ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Windows.FlowDirection.LeftToRight,
+                new Typeface(new FontFamily("Segoe UI Variable Display, Segoe UI"), System.Windows.FontStyles.Normal, System.Windows.FontWeights.SemiBold,
+                    System.Windows.FontStretches.Normal), sizePx * 0.52, Brushes.White, 1.0);
+            drawing.DrawText(text, new System.Windows.Point((sizePx - text.Width) / 2, (sizePx - text.Height) / 2));
+        }
+        var bitmap = new RenderTargetBitmap(sizePx, sizePx, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        bitmap.Freeze();
+        return bitmap;
+    }
 
     private static bool _websiteIconFailureLogged;
 
@@ -114,7 +173,7 @@ public sealed class IconLoader : IDisposable
         }
         if (kind != ItemKind.Path && !ItemKinds.IsApp(request.Target)) return null; // a special item without an icon stays as it is
         var looksLikeFolder = kind == ItemKind.Path && !Path.HasExtension(request.Target.TrimEnd('\\')); // ponytail: by its name; the check knows better
-        return Frozen(ShellItems.TryGetGenericImage(request.Target, looksLikeFolder));
+        return Frozen(ShellItems.TryGetGenericImage(request.Target, looksLikeFolder, request.SizePx)); // M34: at its real size, not 32 px stretched
     }
 
     private static BitmapSource? Frozen(ShellImage? image)

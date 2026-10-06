@@ -20,7 +20,7 @@
                                 <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceHover}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceSelected}" />
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource ItemSelectedFill}" /> <!-- M34: the accent -->
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -39,7 +39,7 @@
                                 <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceHover}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceSelected}" />
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource ItemSelectedFill}" /> <!-- M34: the accent -->
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -60,7 +60,7 @@
                                 <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceHover}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource FenceSelected}" />
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource ItemSelectedFill}" /> <!-- M34: the accent -->
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

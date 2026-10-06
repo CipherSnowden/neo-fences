@@ -134,6 +134,7 @@ public sealed partial class FenceHost
 
     public void Start()
     {
+        _watchdog.RemoveStaleFiles(); // M34: files a power cut left behind
         // M33 review I8: the watchdog first, so a crash while loading or migrating the data is caught too.
         _watchdog.LaunchDetached(Environment.ProcessId);
         if (SafeMode) TryMarker(() => _watchdog.MarkSafeMode(Environment.ProcessId), what: "safe-mode marker"); // M33: a crash now stops and asks
@@ -148,6 +149,7 @@ public sealed partial class FenceHost
             loadedItems.Source, loadedItems.IsReadOnly, loadedItems.CorruptCopyPath, loadedItems.Document.Fences.Values.Sum(items => items.Count));
         _items = loadedItems.Document;
         _itemsReadOnly = loadedItems.IsReadOnly;
+        LoadCovers(); // M34
         LoadNotices(configSource: loaded.Source, configReadOnly: loaded.IsReadOnly, itemsSource: loadedItems.Source, itemsReadOnly: loadedItems.IsReadOnly); // M33
         MigrateGames(LibraryWriter.ReadIndex(AppPaths.LibraryDirectory)); // M22: an old Game Library fence becomes game items (a snapshot first)
         MigrateFolderViews(); // M26: an old folder view becomes a fence holding one panel (a snapshot first)
@@ -1220,6 +1222,7 @@ public sealed partial class FenceHost
             ApplyDeferredShellWork();
             OnWidgetTick(); // M28: widgets right at once
             ShowFirstStartNotice(); // M32: a notice held back by a game
+            if (_onlineArtAskPending) MaybeAskOnlineArt(); // M34: the covers question held back by a game
             FlushNotices(); // M33 review I7: safe mode or save notices held back by a game
         }
         UpdatePeekHotkey();

@@ -267,7 +267,15 @@
             <Border x:Name="LibraryCard" Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock x:Name="LibraryDescription" Style="{StaticResource Description}" Margin="0,0,0,8"
-                               Text="Finds the games installed on this PC. Put them in any fence with fence menu → Add games…; newly installed games go to the fence chosen below. Launcher games start through their launcher. Nothing is downloaded, and your games and files are never changed." />
+                               Text="Finds the games installed on this PC. Put them in any fence with fence menu → Add games…; newly installed games go to the fence chosen below. Launcher games start through their launcher. Nothing is downloaded unless you turn on finding covers below, and your games and files are never changed." />
+                    <!-- M34 (ADR-055): online art, off until the owner says yes (asked once). -->
+                    <DockPanel Margin="0,4,0,10">
+                        <CheckBox x:Name="OnlineArtBox" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Find covers and website icons online" />
+                        <StackPanel>
+                            <TextBlock Text="Find covers and website icons online" TextWrapping="Wrap" />
+                            <TextBlock Style="{StaticResource Description}" Text="Sends the names of games without a cover to the Steam store, and asks your web links' sites for their icons. Nothing else leaves your PC. Off: covers already found stay." />
+                        </StackPanel>
+                    </DockPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
                         <TextBlock Text="New games go to" VerticalAlignment="Center" Margin="0,0,10,0" />
                         <ComboBox x:Name="NewGamesBox" MinWidth="200" AutomationProperties.Name="New games go to" />
@@ -308,7 +316,7 @@
                         <CheckBox x:Name="AutoUpdateBox" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Download updates automatically" />
                         <StackPanel>
                             <TextBlock Text="Download updates automatically" TextWrapping="Wrap" />
-                            <TextBlock Style="{StaticResource Description}" Text="Checks GitHub at start and once a day, never during a game. Off: NeoFences makes no network calls." />
+                            <TextBlock Style="{StaticResource Description}" Text="Checks GitHub at start and once a day, never during a game. Off: no update checks." />
                         </StackPanel>
                     </DockPanel>
                     <TextBlock x:Name="UpdateStatus" Style="{StaticResource Description}" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite" />

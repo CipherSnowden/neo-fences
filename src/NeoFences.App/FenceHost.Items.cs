@@ -109,7 +109,7 @@ public sealed partial class FenceHost
         if (items.Count > 1)
         {
             Command("Open", () => { foreach (var item in items) OpenKey(window, item.Id); }); // a widget opens its own app, never ShellExecute on its target (M25 review I2)
-            menu.Items.Add(SizeMenu(menu, items)); // M24
+            menu.Items.Add(items.All(GameItems.ShowsCover) ? CoverSizeMenu(items) : SizeMenu(menu, items)); // M24; M34: covers' own sizes
             Command($"Remove {items.Count} items from fence", () => RemoveItems(window, [.. items.Select(item => item.Id)]));
         }
         else if (FolderPanels.IsPanel(items[0]))

@@ -215,21 +215,22 @@ public static class ShellItems
     /// Windows' icon for this kind of item, by its name only (M19 R8): a folder icon, or the icon of its file type ("a .txt
     /// file"). Never touches the disk, so a missing or unreachable target still gets one. Null when Windows has none.
     /// </summary>
-    public static unsafe ShellImage? TryGetGenericImage(string target, bool isFolder)
+    /// <param name="sizePx">M34: above 32 px the system image list's extra-large (48) or jumbo (256) icon, not the 32 px one stretched.</param>
+    public static unsafe ShellImage? TryGetGenericImage(string target, bool isFolder, int sizePx = 32)
     {
         var info = new SHFILEINFOW();
         ICONINFO iconInfo = default;
         try
         {
-            // ponytail: the 32 px "large" icon, scaled by WPF for bigger sizes; the system image list's jumbo icons if it looks soft.
             var attributes = isFolder ? FILE_FLAGS_AND_ATTRIBUTES.FILE_ATTRIBUTE_DIRECTORY : FILE_FLAGS_AND_ATTRIBUTES.FILE_ATTRIBUTE_NORMAL;
-            var flags = SHGFI_FLAGS.SHGFI_ICON | SHGFI_FLAGS.SHGFI_LARGEICON | SHGFI_FLAGS.SHGFI_USEFILEATTRIBUTES;
+            var flags = SHGFI_FLAGS.SHGFI_ICON | SHGFI_FLAGS.SHGFI_LARGEICON | SHGFI_FLAGS.SHGFI_USEFILEATTRIBUTES | SHGFI_FLAGS.SHGFI_SYSICONINDEX;
             nuint found;
             fixed (char* name = target)
             {
                 found = PInvoke.SHGetFileInfo(name, attributes, &info, (uint)sizeof(SHFILEINFOW), flags);
             }
             if (found == 0 || info.hIcon.IsNull) return null;
+            if (sizePx > 32 && TryGetSystemImage(info.iIcon, sizePx) is { } large) return large;
             if (!PInvoke.GetIconInfo(info.hIcon, &iconInfo)) return null;
             return ReadPixels(iconInfo.hbmColor, premultiply: true);
         }
@@ -242,6 +243,36 @@ public static class ShellItems
             if (!iconInfo.hbmColor.IsNull) PInvoke.DeleteObject(iconInfo.hbmColor);
             if (!iconInfo.hbmMask.IsNull) PInvoke.DeleteObject(iconInfo.hbmMask);
             if (!info.hIcon.IsNull) PInvoke.DestroyIcon(info.hIcon);
+        }
+    }
+
+    /// <summary>The system image list's icon at index <paramref name="iconIndex"/>: extra-large (48 px) up to 48, else jumbo (256 px).</summary>
+    private static unsafe ShellImage? TryGetSystemImage(int iconIndex, int sizePx)
+    {
+        const int ExtraLarge = 2, Jumbo = 4; // SHIL_EXTRALARGE, SHIL_JUMBO (#defines CsWin32 does not carry)
+        ICONINFO iconInfo = default;
+        HICON icon = default;
+        try
+        {
+            var listId = typeof(Windows.Win32.UI.Controls.IImageList).GUID;
+            PInvoke.SHGetImageList(sizePx <= 48 ? ExtraLarge : Jumbo, &listId, out var listPointer).ThrowOnFailure();
+            var list = (Windows.Win32.UI.Controls.IImageList)Marshal.GetObjectForIUnknown((nint)listPointer);
+            Marshal.Release((nint)listPointer);
+            HICON listed;
+            list.GetIcon(iconIndex, 1 /* ILD_TRANSPARENT */, &listed);
+            icon = listed;
+            if (icon.IsNull || !PInvoke.GetIconInfo(icon, &iconInfo)) return null;
+            return ReadPixels(iconInfo.hbmColor, premultiply: true);
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            return null; // the 32 px icon instead
+        }
+        finally
+        {
+            if (!iconInfo.hbmColor.IsNull) PInvoke.DeleteObject(iconInfo.hbmColor);
+            if (!iconInfo.hbmMask.IsNull) PInvoke.DeleteObject(iconInfo.hbmMask);
+            if (!icon.IsNull) PInvoke.DestroyIcon(icon);
         }
     }
 

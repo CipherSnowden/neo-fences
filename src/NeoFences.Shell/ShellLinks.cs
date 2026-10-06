@@ -78,6 +78,17 @@ public static class ShellLinks
     }
 
     /// <summary>
+    /// A shortcut that starts a Store app through Explorer (<c>explorer.exe shell:AppsFolder&lt;id&gt;</c>, like Minecraft
+    /// Launcher's, M34): the app's <c>shell:AppsFolder&lt;id&gt;</c>, whose icon is the app's own (the shortcut shows Explorer's).
+    /// Null for any other file. STA thread.
+    /// </summary>
+    public static string? AppsFolderOf(string path) =>
+        Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase) && Read(path) is { } launch
+        && Path.GetFileName(launch.Target).Equals("explorer.exe", StringComparison.OrdinalIgnoreCase)
+        && launch.Arguments?.Trim() is { } arguments && arguments.StartsWith(@"shell:AppsFolder\", StringComparison.OrdinalIgnoreCase)
+            ? arguments : null;
+
+    /// <summary>
     /// A .url file's URL= line, reading at most the first 64 KB (a huge or binary file named .url never fills memory,
     /// also without line breaks; M13c). Null when there is none.
     /// </summary>

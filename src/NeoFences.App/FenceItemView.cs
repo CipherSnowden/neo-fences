@@ -199,6 +199,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
         var height = Span.Rows * cellHeight - CellPaddingY - labelHeight;
         var icon = Span == GridSpan.One ? iconDips : Math.Clamp(Math.Floor(Math.Min(width - 8, height)), iconDips, MaxIcon);
         var tileHeight = Math.Max(16, Math.Floor(Math.Min(height, (width - 4) * 1.5)));
+        if (Tile) icon = Math.Clamp(Math.Round(tileHeight / 1.5 * 0.55), 24, 96); // M34: the glow tile's icon, about half the tile (Blur's 32 px icon at about twice)
         (WidgetWidth, WidgetHeight) = (width, Span.Rows * cellHeight - CellPaddingY); // M25: no label under a widget (M26: a panel's area too)
         var changed = Math.Abs(icon - IconDips) > 0.5;
         (ContentWidth, IconDips, TileWidth, TileHeight) = (width, icon, Math.Floor(tileHeight / 1.5), tileHeight);
@@ -211,7 +212,26 @@ public sealed class FenceItemView : INotifyPropertyChanged
     public ImageSource? Icon
     {
         get;
-        set { field = value; Changed(); }
+        set { field = value; Changed(); Glow = Tile ? GlowOf(value) : null; } // only a tile has a glow
+    }
+
+    /// <summary>
+    /// The glow tile's backdrop (M34, spec §4): the icon shrunk to a few pixels; stretched over the 2:3 tile it becomes a soft
+    /// field of the icon's colours (no blur effect: effects render in software on a layered window).
+    /// </summary>
+    public ImageSource? Glow
+    {
+        get;
+        private set { field = value; Changed(); }
+    }
+
+    private static ImageSource? GlowOf(ImageSource? icon)
+    {
+        if (icon is not System.Windows.Media.Imaging.BitmapSource { PixelWidth: > 0, PixelHeight: > 0 } bitmap) return null;
+        var scale = 6.0 / Math.Max(bitmap.PixelWidth, bitmap.PixelHeight);
+        var glow = new System.Windows.Media.Imaging.TransformedBitmap(bitmap, new ScaleTransform(scale, scale));
+        glow.Freeze();
+        return glow;
     }
 
     /// <summary>The host wants a tile for this item (M22: a game item's cover), and its art; the window decides <see cref="IsTile"/>.</summary>

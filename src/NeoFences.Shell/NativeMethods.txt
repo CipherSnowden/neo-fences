@@ -222,3 +222,5 @@ PdhCloseQuery
 PDH_FMT
 PDH_MORE_DATA
 GetPhysicallyInstalledSystemMemory
+SHGetImageList
+Windows.Win32.UI.Controls.IImageList

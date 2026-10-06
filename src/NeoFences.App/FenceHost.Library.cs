@@ -149,6 +149,11 @@ public sealed partial class FenceHost
         else ReplaceLibraryWatchers(watch);
         _libraryLister?.Refresh(); // new art, order
         if (state is not null) ApplyGames(previous, state); // M22: game items follow the scan; new games go to their fence
+        if (state is not null)
+        {
+            MaybeAskOnlineArt(); // M34 (ADR-055): asked once
+            LookUpCovers(); // only after a yes
+        }
         RefreshSettings();
         if (!_libraryScanAgain) return;
         _libraryScanAgain = false;
@@ -240,8 +245,7 @@ public sealed partial class FenceHost
         foreach (var item in _library.Items)
         {
             var itemRef = Path.Combine(AppPaths.LibraryDirectory, item.FileName);
-            if (item.Game.Poster is { } poster) art[itemRef] = (poster, true);
-            else if (item.Game.IconPath is { } logo && Path.GetExtension(logo).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg") art[itemRef] = (logo, false);
+            if (ArtOf(item.Game) is { } chosen) art[itemRef] = (chosen.Path, chosen.IsPoster); // M34: choice, disk, online, logo
         }
         return art;
     }
@@ -312,7 +316,8 @@ public sealed partial class FenceHost
         Hidden: HiddenGamesForSettings(),
         Status: LibraryWanted ? _libraryStatus : "No games in any fence yet: fence menu → Add games…, or choose where new games go.",
         Fences: [.. _config.Fences.Where(fence => fence.Kind == FenceKind.Items).Select(fence => (fence.Id, fence.Title))],
-        NewGamesFence: _config.Library.NewGamesFence);
+        NewGamesFence: _config.Library.NewGamesFence,
+        OnlineArt: _config.Library.OnlineArt == true); // M34
 
     private void WireLibrarySettings(SettingsWindow window)
     {
@@ -332,6 +337,7 @@ public sealed partial class FenceHost
             Change(library => library with { Hidden = [.. library.Hidden.Where(hiddenId => !ids.Contains(hiddenId))] }, "show again");
         };
         window.RefreshLibraryRequested += () => ScanLibrary(full: true);
+        window.OnlineArtChanged += SetOnlineArt; // M34 (ADR-055)
         window.NewGamesFenceChanged += fenceId =>
         {
             Change(library => library with { NewGamesFence = fenceId }, "new games go to");
