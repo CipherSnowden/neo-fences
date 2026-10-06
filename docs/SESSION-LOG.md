@@ -740,3 +740,6 @@ click-outside needs the hook; Start from a backup edge cases; a failed folder li
 keeper; a repeating "icons not hidden" notice; a Games tile click takes no keyboard focus; the "no daily backup" message
 is cut short; a misleading watchdog log wording; the stopped window ignores `--exit`.
 **Next:** release 0.20.0 when the user says so; then M34 icons and game tiles (opt-in online covers ADR).
+**Released:** 0.20.0 on 2026-10-06 — CI passed first time; release build green; draft with the delta package (444 KB);
+install check (the installed 0.19.1 updated itself in 2 s; all four fences and the startup entry unchanged; its log
+already writes `%USERPROFILE%`); published; hub refreshed.
