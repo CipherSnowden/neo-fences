@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-06",
-  commit: "f81716b",
-  phase: "0.21.0 — icons and game tiles (path to 1.0)",
-  current: "0.21.0 RELEASED and installed (your 0.20.0 updated itself in 3 s): modern game tiles, glow tiles, sharp clean icons, Normal / Large covers, opt-in Steam covers, Choose cover… · next: answer \"Find covers online?\", set up the Games fence, then M35 menus and dialogs",
+  commit: "4421412",
+  phase: "0.22.0 — modern menus and dialogs (path to 1.0)",
+  current: "M35 merged: one modern menu style with icons (fence, items, tray), a 12-line fence menu, Settings in sections with switches, colour swatches and a picker, one message dialog · next: release 0.22.0 when you say so, then M36 fence settings and presets"Find covers online?\", set up the Games fence, then M35 menus and dialogs",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -807,6 +807,12 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M35 · Modern menus and dialogs (0.22.0)", items: [
+      { t: "You picked all four parts; mockups: menus with icons, Settings section list, swatches in the menu", s: "done" },
+      { t: "Prototype probe on a copy of your data (3 fixes); native build (774 tests); Opus review: 1 + 1 raised, fixed", s: "done" },
+      { t: "Live check AU incl. light mode (restored); merged locally", s: "done" },
+      { t: "Release 0.22.0", s: "todo" }
+    ] },
     { group: "M34 · Icons and game tiles (0.21.0)", items: [
       { t: "Mockups with your real covers and icons: tiles A (name over the cover on hover fences), glow tile, clean icons", s: "done" },
       { t: "Spec; Steam probe (9 of 12 names match); you chose Normal / Large cover sizes; prototype probe on a copy of your data", s: "done" },
@@ -1186,7 +1192,7 @@ const HUB = {
     { id: "M32", name: "Polish (0.19.1)", goal: "The M31 minors and the Free-layout bug — released 0.19.1", s: "done" },
     { id: "M33", name: "Safety net (0.20.0)", goal: "Safe mode, the stopped window, undo, save notices, gesture switches, private logs — released 0.20.0", s: "done" },
     { id: "M34", name: "Icons and game tiles", goal: "Sharp icons, modern tiles, glow tiles, Normal / Large covers, opt-in online covers (ADR-055), Choose cover… — released 0.21.0", s: "done" },
-    { id: "M35", name: "Modern menus and dialogs", goal: "Win11-style menus and dialogs, keyboard", s: "todo" },
+    { id: "M35", name: "Modern menus and dialogs", goal: "One menu style with icons, 12-line fence menu, Settings sections and switches, swatches and a picker, one dialog — merged, release pending", s: "wip" },
     { id: "M36", name: "Fence settings and presets", goal: "Per-fence settings instead of fence types, presets", s: "todo" },
     { id: "M37", name: "Performance at scale", goal: "Many fences and items, start time, memory", s: "todo" },
     { id: "M38", name: "Compatibility and accessibility", goal: "Windows 10 and 11 in Hyper-V VMs, scaling, high contrast, screen readers", s: "todo" },
@@ -1214,6 +1220,7 @@ const HUB = {
     { v: "0.19.1", s: "done", scope: "Polish (M32): accent bars follow at once, sticky GPU, HWiNFO lock, CJK date line, Free spots saved at start. Released 2026-10-06; the installed 0.19.0 updated itself." },
     { v: "0.20.0", s: "done", scope: "Safety net (M33): safe mode after a crash loop, the stopped window, undo, save notices, gesture switches, private 10 MB logs. Released 2026-10-06; the installed 0.19.1 updated itself." },
     { v: "0.21.0", s: "done", scope: "Icons and game tiles (M34): rounded covers, glow tiles, clean sharp icons, Normal / Large covers, opt-in Steam covers and website icons, Choose cover…. Released 2026-10-06; the installed 0.20.0 updated itself." },
+    { v: "0.22.0", s: "todo", scope: "Modern menus and dialogs (M35): one menu style with icons for fences, items and the tray, a 12-line fence menu, Settings in sections with switches, colour swatches and a picker, one message dialog. Merged 2026-10-06; release pending." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1403,7 +1410,8 @@ const HUB = {
     { id: "ADR-052", t: "Temperatures from MSI Afterburner or HWiNFO, read-only", s: "Accepted", d: "Their shared memory read-only (MemoryMappedFile; Core parses a copy), value by value; the main GPU by video memory; otherwise PDH and D3DKMT for the GPU; CPU TEMP shows a dash with a hint.", c: "CPU temperature needs one of the two running; NeoFences never starts or configures them; a later sensor picker can use the same readings." },
     { id: "ADR-053", t: "Safe mode after a crash loop, then a 'stopped' window", s: "Accepted", d: "Normal restarts below the limit, safe mode at it (fences only: no hook, widgets, panels, collect, accents, hidden icons), the stopped window when safe mode crashes too; the main process keeps its watchdog alive.", c: "A crash loop always ends visibly; safe mode looks plainer, the banner says why." },
     { id: "ADR-054", t: "One-level undo for removals and fence deletions", s: "Accepted", d: "No questions: an undo bar and Ctrl+Z after removing items; a snapshot, a notice and tray Undo delete (2 min) after deleting a fence; undo puts back only what is missing.", c: "One level, lost on exit (the snapshot covers a deleted fence)." },
-    { id: "ADR-055", t: "Opt-in online art: Steam store covers, website icons from the sites themselves", s: "Accepted", d: "Off until you say yes (asked once); after each scan the games without a cover are looked up on Steam's public search, strict names only; misses wait 30 days; web links' icons come from their sites, else a letter badge; everything in covers\\.", c: "Only game names and web addresses leave the PC, only after a yes; games not on Steam keep their glow tile until you choose a cover." }
+    { id: "ADR-055", t: "Opt-in online art: Steam store covers, website icons from the sites themselves", s: "Accepted", d: "Off until you say yes (asked once); after each scan the games without a cover are looked up on Steam's public search, strict names only; misses wait 30 days; web links' icons come from their sites, else a letter badge; everything in covers\\.", c: "Only game names and web addresses leave the PC, only after a yes; games not on Steam keep their glow tile until you choose a cover." },
+    { id: "ADR-056", t: "One menu style, drawn by NeoFences, for fences, items and the tray", s: "Accepted", d: "A shared style draws every menu (rounded, icons, red destructive entries, light/dark); the tray menu is the same WPF menu; Settings in sections with switches; swatches and a picker; one message dialog.", c: "One look everywhere; WPF's Fluent theme stays off the fences; menus are WPF popups for tests." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1499,7 +1507,8 @@ const HUB = {
     { date: "2026-10-06", topic: "M31 modern widgets and sensors (merged)", done: "Visual companion mockups; spec; prototype checked against Afterburner; replay-verified plan; native build; Opus review fixes (682 tests); live check AQ; new guide shots; merged locally.", next: "Released 0.19.0; next: your desktop with every feature" },
     { date: "2026-10-06", topic: "M32 polish (merged)", done: "Every M31 minor + the Free-layout bug; prototype; replay-verified plan; native build; Opus review fixes (700 tests); live AR1 (accent, restored) and AR2; merged locally.", next: "Released 0.19.1; next: pre-1.0 work or new ideas" },
     { date: "2026-10-06", topic: "1.0 readiness + M33 safety net (merged)", done: "Readiness review and the path to 1.0 (your decisions); M33 spec, replay-verified plan, native build; Opus review: 8 important fixed (715 tests); live AS1–AS11 pass, one bug found and fixed; merged locally.", next: "Released 0.20.0; next: M34 icons and game tiles" },
-    { date: "2026-10-06", topic: "M34 icons and game tiles (merged)", done: "Two power cuts survived; mockups with your art; spec; Steam probe; you chose Normal / Large covers; prototype probe; native build (747 tests); Opus review fixes; live check AT (12 scripted passes); merged locally.", next: "Released 0.21.0; next: set up the Games fence, then M35" }
+    { date: "2026-10-06", topic: "M34 icons and game tiles (merged)", done: "Two power cuts survived; mockups with your art; spec; Steam probe; you chose Normal / Large covers; prototype probe; native build (747 tests); Opus review fixes; live check AT (12 scripted passes); merged locally.", next: "Released 0.21.0; next: set up the Games fence, then M35" },
+    { date: "2026-10-06", topic: "M35 modern menus and dialogs (merged)", done: "Mockups (menus with icons, Settings section list, swatches); prototype probe; native build (774 tests); Opus review fixes; live check AU incl. light mode; merged locally.", next: "Release 0.22.0, then M36" }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2121,7 +2130,17 @@ const HUB = {
     ["aa51c82", "docs: refreshed the hub for M34"],
     ["827c14c", "chore: bumped the version to 0.21.0"],
     ["6cc35db", "docs: marked the 0.21.0 release as approved"],
-    ["f81716b", "docs: recorded the 0.21.0 release"]
+    ["f81716b", "docs: recorded the 0.21.0 release"],
+    ["ebf188b", "docs: refreshed the hub for the 0.21.0 release"],
+    ["e367cf7", "docs: claimed M35 modern menus and dialogs"],
+    ["98776e6", "docs: added the M35 modern menus and dialogs design spec"],
+    ["5135da0", "docs: added the M35 modern menus and dialogs plan"],
+    ["fb55b65", "feat: added the colour picker's HSV maths and typed hex colours in Core"],
+    ["74032ab", "feat: added one modern menu style with icons, the grouped fence menu, the tray menu, Settings sections with switches, colour swatches, the colour picker and the message dialog"],
+    ["3b8f6d7", "docs: described modern menus and dialogs in ADR-056, the guide's menu paths, architecture, features, checklist AU and the M35 note"],
+    ["227c8b6", "fix: fixed a hidden modal after a failed cover pick and doubled ampersands and lost underscores in menu names"],
+    ["7b400de", "docs: added the M35 live check results"],
+    ["4421412", "docs: marked M35 merged in the roadmap and logged the session"]
   ]
 };
 /* ===== END HUB DATA ===== */
