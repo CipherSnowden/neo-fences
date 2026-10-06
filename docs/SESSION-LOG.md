@@ -873,3 +873,15 @@ mouse; one failed VM screenshot stops the checks (now reported unfinished); two 
 peeking.
 **Next:** M38.1 test VMs for live checks; release 0.25.0 when the owner says so (version bump; install check — in a VM where
 possible); then M39 release readiness.
+
+## 2026-10-07 — M38.1 test VMs for live checks, built and merged
+
+**Done:** the owner wants live checks in VMs, not on their PC. `NF-Win11-Dev` made as a copy of `NF-Win11` (export /
+import with a new id, ~1 min, keeps `clean`). `Invoke-VmChecks.ps1 -Live` publishes the checkout self-contained (the VM has
+no .NET), copies it with an optional copy of a NeoFences data folder (`-Data`) and Desktop folders (`-Files`), and runs
+`guest/live-checks.ps1` (dot-sourced by `guest-checks.ps1`, same helpers and report): 8 of 8 on a copy of the owner's data.
+The release-candidate pass re-run after the change: 12 of 12. Checklist AX6; README.
+**Rulings:** one host script with a `-Live` mode instead of a separate `Invoke-VmLive.ps1` (they would have been ~90 %
+the same); the guest's live checks reuse `guest-checks.ps1`'s helpers by dot-sourcing.
+**Next:** release 0.25.0 when the owner says so; then M39 release readiness. Live checks and probes go to `NF-Win11-Dev`
+from now on; the owner's PC only for what a VM cannot show (asked first).
