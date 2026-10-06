@@ -9,8 +9,12 @@ public sealed record ResolvedTitleFont(string Family, int Size, TitleWeight Weig
 /// <param name="Colour">The fence's colour after the order of spec §3.1, or null (neutral).</param>
 /// <param name="TitleStrip">The title bar's background (Title strip style), or null.</param>
 /// <param name="Bar">The short bar under a single fence's title (Accent edge style), or null.</param>
+/// <param name="Align">Where the title sits (M36).</param>
+/// <param name="TitleOnHover">The title bar shows only while the pointer is over the fence (M36).</param>
+/// <param name="Spacing">Room between the cells (M36).</param>
 public sealed record FenceStyle(
-    Argb? Colour, Argb Veil, Argb Border, Argb TitleText, Argb? TitleStrip, Argb? Bar, ResolvedTitleFont Font, double TitleHeight);
+    Argb? Colour, Argb Veil, Argb Border, Argb TitleText, Argb? TitleStrip, Argb? Bar, ResolvedTitleFont Font, double TitleHeight,
+    TitleAlign Align = TitleAlign.Left, bool TitleOnHover = false, Spacing Spacing = Spacing.Normal);
 
 /// <summary>Decides how a fence looks (M14, spec 2026-10-04-appearance-design §3). Pure.</summary>
 public static class FenceLook
@@ -37,18 +41,19 @@ public static class FenceLook
     /// <param name="wallpaperAccent">The colour of the wallpaper behind this fence, when known.</param>
     public static FenceStyle Resolve(AppearanceSettings appearance, Fence fence, bool light, Argb? wallpaperAccent)
     {
+        var own = fence.Look ?? new OwnLook(); // M36: the fence's own values over Settings' (ADR-057)
         var colour = Argb.FromHex(fence.CustomColor)
                      ?? (fence.TabColor is { } swatch && Swatches.TryGetValue(swatch, out var swatchColour) ? swatchColour : (Argb?)null)
                      ?? (appearance.WallpaperAccent ? wallpaperAccent : null);
         var ink = light ? LightInk : DarkInk;
-        var veil = ink with { A = Alpha(light ? appearance.StrengthLight : appearance.StrengthDark) };
+        var veil = ink with { A = Alpha(own.Strength ?? (light ? appearance.StrengthLight : appearance.StrengthDark)) };
         var border = light ? new Argb(0x33, 0, 0, 0) : new Argb(0x40, 0xFF, 0xFF, 0xFF);
         var titleText = light ? DarkTitle : White;
         Argb? strip = null, bar = null;
 
         if (colour is { } fill)
         {
-            switch (appearance.ColourStyle)
+            switch (own.ColourStyle ?? appearance.ColourStyle)
             {
                 case ColourStyle.TintedGlass:
                     veil = fill.Mix(ink, 0.25) with { A = Math.Max(veil.A, MinimumGlassAlpha) };
@@ -71,10 +76,12 @@ public static class FenceLook
             }
         }
 
-        // One title font for every fence (v1.7.1, ADR-038: per-fence fonts were too much in practice).
+        // Settings' title font, part by part under the fence's own (M36, ADR-057: back in Fence settings…, not the menu).
         var global = appearance.TitleFont;
-        var font = new ResolvedTitleFont(global.Family ?? "Segoe UI", global.Size ?? 14, global.Weight ?? TitleWeight.SemiBold);
-        return new FenceStyle(colour, veil, border, titleText, strip, bar, font, TitleHeightFor(font.Size));
+        var mine = own.TitleFont;
+        var font = new ResolvedTitleFont(mine?.Family ?? global.Family ?? "Segoe UI", mine?.Size ?? global.Size ?? 14, mine?.Weight ?? global.Weight ?? TitleWeight.SemiBold);
+        return new FenceStyle(colour, veil, border, titleText, strip, bar, font, TitleHeightFor(font.Size),
+            own.TitleAlign ?? TitleAlign.Left, own.TitleOnHover == true, own.Spacing ?? Spacing.Normal);
     }
 
     /// <summary>
@@ -83,6 +90,12 @@ public static class FenceLook
     /// Final review I4: a 0.5 threshold gave white at ~2.3:1 on green, teal and many wallpaper accents.
     /// </summary>
     private static Argb ReadableOn(Argb background) => background.Luminance > 0.22 ? DarkTitle : White;
+
+    /// <summary>
+    /// The padding around each cell's element (M36): the room between elements; the elements keep their size. Normal is the
+    /// look before M36.
+    /// </summary>
+    public static double CellInset(Spacing spacing) => spacing switch { Spacing.Compact => 0, Spacing.Roomy => 8, _ => 2 };
 
     /// <summary>The title row grows with the font so bigger titles are never clipped: 26 / 30 / 34 / 38 DIP.</summary>
     public static double TitleHeightFor(int size) => size switch { <= 12 => 26, <= 14 => 30, <= 17 => 34, _ => 38 };

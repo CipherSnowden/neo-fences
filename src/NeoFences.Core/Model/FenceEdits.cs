@@ -54,6 +54,10 @@ public static class FenceEdits
     public static NeoFencesConfig SetLabels(NeoFencesConfig config, string fenceId, LabelMode labels) =>
         config.WithFence(Require(config, fenceId) with { Labels = labels });
 
+    /// <summary>Fence settings… (M36): the fence's own look, replaced as a whole; a look with nothing set is none (like all fences).</summary>
+    public static NeoFencesConfig SetLook(NeoFencesConfig config, string fenceId, OwnLook? look) =>
+        config.WithFence(Require(config, fenceId) with { Look = ConfigNormalizer.NormalizeLook(look) });
+
     /// <summary>Settings → "Apply to all fences": every fence, and the default for new ones.</summary>
     public static NeoFencesConfig SetLabelsEverywhere(NeoFencesConfig config, LabelMode labels) =>
         config with

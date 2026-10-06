@@ -18,6 +18,16 @@ public sealed record Snapshot
 
     /// <summary>Every fence's items (M18), as in items.json.</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<VirtualItem>> Items { get; init; } = new Dictionary<string, IReadOnlyList<VirtualItem>>();
+
+    /// <summary>
+    /// The whole setup (M36): Settings, the Games page's settings and the own presets, only in the snapshot taken before an
+    /// import or a reset (<see cref="Snapshots.TakeWhole"/>), so restoring it undoes them. Null in every other snapshot.
+    /// </summary>
+    public Settings? Settings { get; init; }
+
+    public LibrarySettings? Library { get; init; }
+
+    public IReadOnlyList<LookPreset>? Presets { get; init; }
 }
 
 /// <summary>Taking and restoring snapshots (M10). Pure: the App saves the result.</summary>
@@ -51,9 +61,14 @@ public static class Snapshots
         Items = items.Fences,
     };
 
+    /// <summary>A snapshot that also holds Settings, the Games settings and the own presets (M36: before an import or a reset).</summary>
+    public static Snapshot TakeWhole(NeoFencesConfig config, ItemsDocument items, string name, DateTimeOffset now) =>
+        Take(config, items, name, now) with { Settings = config.Settings, Library = config.Library, Presets = config.Presets };
+
     /// <summary>
     /// The arrangement of <paramref name="snapshot"/> applied to <paramref name="current"/> (spec §3; M18: items as saved):
-    /// the snapshot's fences, places and items; Settings and setups the snapshot never saw stay as they are. Items of
+    /// the snapshot's fences, places and items; Settings and setups the snapshot never saw stay as they are (a whole snapshot,
+    /// M36, brings its Settings, Games settings and presets back too). Items of
     /// fences the snapshot does not have are dropped (a damaged or hand-edited file). Auto-collect rules start looking at
     /// <paramref name="restoredAt"/> (M27 final review I4): files from the snapshot's time on are not collected again.
     /// </summary>
@@ -63,7 +78,11 @@ public static class Snapshots
         var saved = ConfigNormalizer.Normalize(new NeoFencesConfig { Fences = snapshot.Fences, Layouts = snapshot.Layouts });
         var layouts = new Dictionary<string, Layout>(current.Layouts);
         foreach (var (fingerprint, layout) in saved.Layouts) layouts[fingerprint] = layout;
-        var config = ConfigNormalizer.Normalize(current with { Fences = saved.Fences, Layouts = layouts });
+        var config = ConfigNormalizer.Normalize(current with
+        {
+            Fences = saved.Fences, Layouts = layouts,
+            Settings = snapshot.Settings ?? current.Settings, Library = snapshot.Library ?? current.Library, Presets = snapshot.Presets ?? current.Presets,
+        });
         if (restoredAt is { } now)
             config = config with { Fences = [.. config.Fences.Select(fence => fence.Collect.Count == 0 ? fence : fence with { Collect = [.. fence.Collect.Select(rule => rule with { Watermark = now })] })] };
         var items = ItemEdits.Repair(new ItemsDocument { Fences = snapshot.Items ?? new Dictionary<string, IReadOnlyList<VirtualItem>>() });

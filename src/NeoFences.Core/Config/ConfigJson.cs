@@ -27,6 +27,8 @@ public static class ConfigJson
             new LenientEnumConverter<ViewShow>(), new LenientEnumConverter<FenceSort>(),
             new LenientEnumConverter<Items.ItemShow>(), new LenientEnumConverter<Items.FenceLayout>(), // M24 // M22: a typo in items.json shows the usual look, never fails the file
             new LenientEnumConverter<Items.PanelLook>(), new LenientEnumConverter<Items.PanelSort>(), // M26
+            // M36: a fence's own look and the presets; a typo is "like all fences", never a lost file.
+            new LenientEnumConverter<TitleAlign>(), new LenientEnumConverter<Spacing>(), new LenientEnumConverter<LabelMode>(),
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
         },
     };

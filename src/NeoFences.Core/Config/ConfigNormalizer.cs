@@ -41,6 +41,7 @@ public static class ConfigNormalizer
                 CustomColor = Appearance.Argb.FromHex(loadedFence.CustomColor)?.ToHex(), // M14: a broken colour is none
                 Layout = Enum.IsDefined(loadedFence.Layout) ? loadedFence.Layout : Items.FenceLayout.Flow, // M24: a typo is Flow
                 Collect = Items.CollectRules.Normalize(loadedFence.Collect), // M27
+                Look = NormalizeLook(loadedFence.Look), // M36
             };
             fence = fence with { View = fence.IsLibrary ? null : Items.FolderViews.Normalize(loadedFence.View) }; // M21: never on the Library
             seenFenceIds.Add(fence.Id);
@@ -54,6 +55,7 @@ public static class ConfigNormalizer
             Settings = settings,
             Fences = FenceTabs.Repair(fences), // M9: one consistent box per tab
             Layouts = NormalizeLayouts(config.Layouts),
+            Presets = NormalizePresets(config.Presets), // M36
             Library = NormalizeLibrary(config.Library) with
             {
                 // M22: only a fence that holds items (not a folder view, not gone)
@@ -78,6 +80,52 @@ public static class ConfigNormalizer
                 font?.Size is { } size && TitleFont.Sizes.Contains(size) ? size : defaults.TitleFont.Size,
                 font?.Weight is { } weight && Enum.IsDefined(weight) ? weight : defaults.TitleFont.Weight),
         };
+    }
+
+    /// <summary>
+    /// M36: a fence's own look with odd parts dropped (they become "like all fences"); strength in range; a look with nothing
+    /// left is none (null).
+    /// </summary>
+    public static OwnLook? NormalizeLook(OwnLook? look)
+    {
+        if (look is null) return null;
+        var font = look.TitleFont is { } own
+            ? new TitleFont(
+                string.IsNullOrWhiteSpace(own.Family) ? null : own.Family.Trim(),
+                own.Size is { } size && TitleFont.Sizes.Contains(size) ? size : null,
+                own.Weight is { } weight && Enum.IsDefined(weight) ? weight : null)
+            : null;
+        var clean = new OwnLook
+        {
+            ColourStyle = look.ColourStyle is { } style && Enum.IsDefined(style) ? style : null,
+            Strength = look.Strength is { } strength ? Math.Clamp(strength, 0, AppearanceSettings.MaxStrength) : null,
+            TitleFont = font == new TitleFont(null, null, null) ? null : font,
+            TitleAlign = look.TitleAlign is { } align && Enum.IsDefined(align) ? align : null,
+            TitleOnHover = look.TitleOnHover == true ? true : null, // false is the same as like all fences: one way to say it
+            Spacing = look.Spacing is { } spacing && Enum.IsDefined(spacing) ? spacing : null,
+        };
+        return clean == new OwnLook() ? null : clean;
+    }
+
+    /// <summary>M36: own presets with a usable name (tidied, not blank, not a built-in's, the first of the same name); odd values dropped.</summary>
+    private static List<LookPreset> NormalizePresets(IReadOnlyList<LookPreset>? presets)
+    {
+        var names = new HashSet<string>(LookPresets.BuiltIn.Select(preset => preset.Name), StringComparer.OrdinalIgnoreCase);
+        var kept = new List<LookPreset>();
+        foreach (var preset in presets ?? [])
+        {
+            if (preset is null) continue;
+            var name = LookPresets.Clean(preset.Name);
+            if (name.Length == 0 || !names.Add(name)) continue;
+            kept.Add(new LookPreset
+            {
+                Name = name,
+                Look = NormalizeLook(preset.Look) ?? new OwnLook(),
+                IconSize = preset.IconSize is { } iconSize && IconSizes.Contains(iconSize) ? iconSize : null,
+                Labels = preset.Labels is { } labels && Enum.IsDefined(labels) ? labels : null,
+            });
+        }
+        return kept;
     }
 
     private static LibrarySettings NormalizeLibrary(LibrarySettings? library) => new()
