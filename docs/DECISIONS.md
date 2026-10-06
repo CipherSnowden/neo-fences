@@ -1509,3 +1509,20 @@ and true idleness (not memory) and asked to measure first.
 
 **Consequences.** Icons at 500 items: 11 s → 3 s cold, at once from the cache warm; the cache is NeoFences' own, under
 64 MB, safe to delete. The start is now bound by creating and showing the fence windows (~50 ms each).
+
+## ADR-059 — Windows 11 is the only target
+**Date:** 2026-10-07 · **Status:** Accepted · **Amends:** ADR-012's "Windows 10 1809+ minimum" (the `net10.0-windows` target note)
+
+**Context.** NeoFences was described as "for Windows 10/11", but it has only ever run on the owner's Windows 11 (25H2), and
+the 1.0 readiness review counted the never-run older desktop-layer path (Windows 10, Windows 11 before 24H2) as a
+blocker. M38 planned a Windows 10 22H2 VM to test it; the Windows 10 ISO could not be downloaded, and the owner decided
+to target Windows 11 only.
+
+**Decision.** NeoFences targets **Windows 11 x64** — current versions, tested on the owner's PC and in the M38 Windows 11
+VM. Windows 10 is neither targeted nor tested: it may well run (nothing checks the version, and the Windows 10 fallbacks
+already in the code — square blur corners when DWM refuses rounded ones — stay as harmless degradation), but it is not
+supported, and its problems are not release blockers. The README, the guide and the project instructions say "Windows 11".
+
+**Consequences.** The readiness review's blocker 2 shrinks to "a fresh Windows 11 PC" (the M38 VM). Code paths for older
+desktop layers stay as they are (no removal work) and are untested. A Windows 10 user who reports a problem gets a
+friendly "Windows 11 only" answer, not a fix promise.

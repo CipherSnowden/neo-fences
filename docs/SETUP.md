@@ -1,6 +1,6 @@
 # Setup
 
-Target machine: Windows 10/11 x64. Development happens on Windows 11 (24H2+).
+Target machine: Windows 11 x64 (the only target, ADR-059). Development happens on Windows 11 (24H2+).
 
 ## Required
 

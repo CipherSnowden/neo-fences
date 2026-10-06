@@ -37,7 +37,7 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Released 0.23.0 on 2026-10-06 (the installed 0.22.0 updated itself; data unchanged)
 - [x] **M37 — Performance at scale** (0.24.0; released 2026-10-06): icon cache, virtualized fences, cheaper label shadows, idle timers that stop, ready-to-run publish; 500 items / 50 fences test
   - [x] Released 0.24.0 on 2026-10-06 (the installed 0.23.0 updated itself in 2 s; data unchanged)
-- [~] **M38 — Compatibility and accessibility** (claimed by session 2026-10-06 compatibility; 0.25.0): Windows 10 and Windows 11 22H2/23H2/24H2 test pass (Hyper-V), two monitors with mixed scaling; High Contrast, focus visuals, named fences, a keyboard way in
+- [~] **M38 — Compatibility and accessibility** (claimed by session 2026-10-06 compatibility; 0.25.0): a Windows 11 test pass in a Hyper-V VM (Windows 10 dropped: Windows 11 only, ADR-059), two monitors with mixed scaling; High Contrast, focus visuals, named fences, a keyboard way in
 - [ ] **M39 — Release readiness**: licence, PRIVACY, SECURITY, third-party notices, issue templates, checksums and attestations in CI, README/guide refresh, landing page (GitHub Pages), Core tests on Linux in CI
 - [ ] **1.0.0-rc** to friends (beta channel, 1–2 weeks), then **1.0.0**
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
@@ -296,7 +296,7 @@ Carry-overs from the M8a review (minors):
 - [x] Reconcile: consume the memories it applies; insert several memories for one fence by index — M8c (ADR-026)
 - [x] Coalesce watcher Overflowed (one re-arm + reconcile per burst; back off a watcher that errors at once) — M8c (ADR-026)
 - [x] Log a refused DWM corner preference; drop the stale CornerRadius="0" in XAML — M8b
-- [ ] Check the WindowChrome region radius on Windows 10
+- [x] Check the WindowChrome region radius on Windows 10 — dropped: Windows 11 only (ADR-059)
 - [x] UniqueDeviceIds: number duplicates in a stable order (GDI name / bounds) — M8c (ADR-026)
 - [x] Polish: stacked summaries above FenceHost.Current, dead second tray dispose, backup-prune message, pack.ps1 leading zeros — M8b
 - [x] M8b implementation plan

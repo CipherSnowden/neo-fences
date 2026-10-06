@@ -5,7 +5,7 @@ When a decision here changes, update this file **in the same commit** as the cod
 
 ## What NeoFences is
 
-A desktop organizer for Windows 10/11 x64 in the spirit of Stardock Fences and Rainmeter: translucent
+A desktop organizer for Windows 11 x64 (the only target, ADR-059) in the spirit of Stardock Fences and Rainmeter: translucent
 "fences" on the desktop that hold **virtual items** (links to files, folders, apps, websites — never the files
 themselves; ADR-040). Native desktop icons stay visible unless the user hides them. Built for one power
 user first (gamer, Wallpaper Engine). Priorities: **robust and reliable** > modern UI/UX >

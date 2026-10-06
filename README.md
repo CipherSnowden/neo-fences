@@ -1,6 +1,6 @@
 # NeoFences
 
-A desktop organizer for Windows 10 and 11 (64-bit), in the spirit of Stardock Fences. Translucent **fences** on your
+A desktop organizer for Windows 11 (64-bit), in the spirit of Stardock Fences. Translucent **fences** on your
 desktop hold **links** to your apps, games, files, folders and websites — never the files themselves — along with
 widgets (a clock, the date, system stats) and live folder panels. Built for a gaming PC first: it goes quiet while you
 play, and it never moves, renames or deletes anything of yours.
@@ -71,7 +71,7 @@ Free to download and use. The source is published for transparency; **all rights
 
 ## Building
 
-Requirements: Windows 10/11 x64 and the .NET 10 SDK.
+Requirements: Windows 11 x64 and the .NET 10 SDK.
 
 ```
 dotnet build
