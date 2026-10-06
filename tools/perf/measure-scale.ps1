@@ -178,13 +178,30 @@ try {
 } finally {
   try { StopNeoFences } catch { Running | Where-Object { $_.Path -eq $Exe } | Stop-Process -Force; Start-Sleep -Seconds 2 } # the data goes back whatever happened
   Copy-Item -LiteralPath (Join-Path $data 'logs') -Destination (Join-Path $Out 'logs') -Recurse -Force -ErrorAction SilentlyContinue # the run's logs, before the data goes back
-  if ($data -ne (Join-Path $env:LOCALAPPDATA 'NeoFences')) { throw 'unexpected data path' }
-  Remove-Item -LiteralPath $data -Recurse -Force
-  Copy-Item -LiteralPath $backup -Destination $data -Recurse
-  if ($runValue) { Set-ItemProperty $runKey -Name NeoFences -Value $runValue }
-  Remove-Item -LiteralPath $backup -Recurse -Force
-  if (Test-Path -LiteralPath $installed) { Start-Process $installed }
+  # The test setup is moved aside first (all or nothing: a locked file stops it before anything is lost), then the backup
+  # is copied back; the backup is removed only once that worked. On any failure it stays and the way back is printed.
+  $restored = $false
+  try {
+    if ($data -ne (Join-Path $env:LOCALAPPDATA 'NeoFences')) { throw 'unexpected data path' }
+    $aside = "$data.perf-test"
+    if (Test-Path -LiteralPath $aside) { Remove-Item -LiteralPath $aside -Recurse -Force } # a test setup left by an earlier failed run
+    Move-Item -LiteralPath $data -Destination $aside
+    Copy-Item -LiteralPath $backup -Destination $data -Recurse
+    Remove-Item -LiteralPath $aside -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $backup -Recurse -Force
+    $restored = $true
+  } catch {
+    "RESTORE FAILED: $($_.Exception.Message)"
+    "Your real data is safe in $backup. Close NeoFences and anything open in $data, then run:"
+    "  Remove-Item -LiteralPath '$data' -Recurse -Force; Copy-Item -LiteralPath '$backup' -Destination '$data' -Recurse"
+  }
+  try {
+    if ($runValue) { Set-ItemProperty $runKey -Name NeoFences -Value $runValue }
+    else { Remove-ItemProperty $runKey -Name NeoFences -ErrorAction SilentlyContinue } # there was none before: none after
+  } catch { "STARTUP ENTRY NOT PUT BACK: $($_.Exception.Message) (it was: $runValue)" }
+  if ($restored -and (Test-Path -LiteralPath $installed)) { Start-Process $installed }
   $report | Set-Content -LiteralPath (Join-Path $Out 'report.txt')
   $report
-  "===== done: data and startup entry put back, NeoFences started again; the mouse is yours ====="
+  if ($restored) { "===== done: data and startup entry put back, NeoFences started again; the mouse is yours =====" }
+  else { "===== stopped: the data was NOT put back (see above); the mouse is yours =====" }
 }
