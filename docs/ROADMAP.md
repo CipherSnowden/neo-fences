@@ -29,7 +29,7 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
 
 - [x] **M33 — Safety net** (0.20.0; released 2026-10-06): crash-loop message and safe mode, save-failure notices, undo for remove item / delete fence, gesture switches (quick-hide, right-drag; off = no mouse hook), marker-before-hide, watchdog kept alive, damaged-file fallback, log size and privacy, update after a crash
   - [x] Released 0.20.0 on 2026-10-06 (the installed 0.19.1 updated itself in 2 s; data unchanged; logs now write %USERPROFILE%)
-- [ ] **M34 — Icons and game tiles**: crisp icons at any scaling, rounded and theme-aware cover tiles, the no-art tile, Set cover…, opt-in online covers, 2:3 cover sizes, row spacing, accent selection, Steam art from disk, website and Xbox tiles
+- [~] **M34 — Icons and game tiles** (claimed by session 2026-10-06 tiles; 0.21.0): crisp icons at any scaling, rounded and theme-aware cover tiles, the no-art tile, Set cover…, opt-in online covers, 2:3 cover sizes, row spacing, accent selection, Steam art from disk, website and Xbox tiles
 - [ ] **M35 — Modern menus and dialogs**: Fluent fence/item menus, dark tray menu, the fence menu regrouped (~10 entries), one Fluent confirm dialog, a modern colour picker
 - [ ] **M36 — Fence settings and presets**: per-fence settings window (transparency, title alignment/font, hide title bar, labels, spacing), look presets, export/import, Settings navigation + switches + reset
 - [ ] **M37 — Performance at scale**: icon cache, virtualized fences, cheaper label shadows, idle timers that stop, ready-to-run publish; 500 items / 50 fences test
