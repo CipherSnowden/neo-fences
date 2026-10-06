@@ -82,11 +82,20 @@ public static class ShellLinks
     /// Launcher's, M34): the app's <c>shell:AppsFolder&lt;id&gt;</c>, whose icon is the app's own (the shortcut shows Explorer's).
     /// Null for any other file. STA thread.
     /// </summary>
-    public static string? AppsFolderOf(string path) =>
-        Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase) && Read(path) is { } launch
-        && Path.GetFileName(launch.Target).Equals("explorer.exe", StringComparison.OrdinalIgnoreCase)
-        && launch.Arguments?.Trim() is { } arguments && arguments.StartsWith(@"shell:AppsFolder\", StringComparison.OrdinalIgnoreCase)
-            ? arguments : null;
+    public static string? AppsFolderOf(string path)
+    {
+        if (!Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase) || !File.Exists(path)) return null;
+        try
+        {
+            return Read(path) is { } launch && Path.GetFileName(launch.Target).Equals("explorer.exe", StringComparison.OrdinalIgnoreCase)
+                   && launch.Arguments?.Trim() is { } arguments && arguments.StartsWith(@"shell:AppsFolder\", StringComparison.OrdinalIgnoreCase)
+                ? arguments : null;
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            return null; // M34 review I2: a broken shortcut keeps its own (or the generic) icon
+        }
+    }
 
     /// <summary>
     /// A .url file's URL= line, reading at most the first 64 KB (a huge or binary file named .url never fills memory,

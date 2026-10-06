@@ -133,7 +133,7 @@ Store**, the **game folders** you add, and game shortcuts on your desktop — an
 - A game's menu: **Open**, **Show as ▸ Cover tile / Icon**, **Choose cover…**, **Size ▸ Normal / Large (twice as big)**, **Open install folder**, **Copy path**,
   **Properties…**, **Remove from fence**. A game that is no longer installed says "Not installed".
 - **Covers:** Steam games bring their cover from your disk. For the others NeoFences can **find covers online** on the
-  Steam store: it asks once ("Find covers online?"), and the switch is **Settings → Game Library → Find covers and website
+  Steam store: it asks ("Find covers online?"; **Not now** asks again the next time NeoFences starts), and the switch is **Settings → Game Library → Find covers and website
   icons online**. Only the names of games without a cover are sent, and only an exact name counts. A game without a cover
   shows its icon on a tile in its own colours.
 - **Choose cover…** (a game's menu): pick one of the Steam store's covers for its name, **From a file…** (NeoFences keeps a

@@ -40,7 +40,7 @@ public static class OnlineArt
                 .Where(item => item.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.Number && item.TryGetProperty("name", out _))
                 .Select(item => new StoreGame(item.GetProperty("id").GetInt32(), item.GetProperty("name").GetString() ?? ""))];
         }
-        catch (Exception failure) when (failure is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException)
+        catch (Exception failure) when (failure is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException or FormatException)
         {
             return null; // offline or Steam unreachable: nothing recorded, tried again at the next scan
         }
@@ -83,20 +83,23 @@ public static class OnlineArt
     }
 
     /// <summary>An image's bytes (≤ 5 MB, an image content type); null on any failure.</summary>
-    public static async Task<byte[]?> GetImageAsync(Uri url, CancellationToken cancel = default)
+    public static async Task<byte[]?> GetImageAsync(Uri url, CancellationToken cancel = default) => (await FetchImageAsync(url, cancel)).Bytes;
+
+    /// <summary>An image's bytes, and whether the server answered at all (M34 review I3: offline is no miss).</summary>
+    private static async Task<(byte[]? Bytes, bool Reached)> FetchImageAsync(Uri url, CancellationToken cancel)
     {
         try
         {
             using var reply = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);
-            if (!reply.IsSuccessStatusCode || reply.Content.Headers.ContentLength > MaxImageBytes) return null;
+            if (!reply.IsSuccessStatusCode || reply.Content.Headers.ContentLength > MaxImageBytes) return (null, true);
             var type = reply.Content.Headers.ContentType?.MediaType ?? "";
-            if (!type.StartsWith("image/", StringComparison.OrdinalIgnoreCase) && !type.Equals("application/octet-stream", StringComparison.OrdinalIgnoreCase)) return null;
+            if (!type.StartsWith("image/", StringComparison.OrdinalIgnoreCase) && !type.Equals("application/octet-stream", StringComparison.OrdinalIgnoreCase)) return (null, true);
             var bytes = await reply.Content.ReadAsByteArrayAsync(cancel);
-            return bytes.Length == 0 || bytes.Length > MaxImageBytes ? null : bytes;
+            return (bytes.Length == 0 || bytes.Length > MaxImageBytes ? null : bytes, true);
         }
         catch (Exception failure) when (failure is HttpRequestException or TaskCanceledException or IOException or InvalidOperationException)
         {
-            return null;
+            return (null, false);
         }
     }
 
@@ -118,16 +121,22 @@ public static class OnlineArt
         }
     }
 
+    /// <summary>A site icon fetch: the file found, and whether the site answered at all (no answer: nothing is recorded).</summary>
+    public sealed record SiteIconFetch(string? File, bool Reached);
+
     /// <summary>
-    /// A website's own icon into <paramref name="folder"/>: the page's declared icon (the largest), else <c>/favicon.ico</c>.
-    /// The file name, or null when the site gave none.
+    /// A website's own icon into <paramref name="folder"/>: the site's home page's declared icon (the largest), else
+    /// <c>/favicon.ico</c>. Only the site's root is asked (M34 review: a link's own address may be a one-time link).
     /// </summary>
-    public static async Task<string?> FetchSiteIconAsync(Uri page, string folder, CancellationToken cancel = default)
+    public static async Task<SiteIconFetch> FetchSiteIconAsync(Uri link, string folder, CancellationToken cancel = default)
     {
+        var page = new Uri(link.GetLeftPart(UriPartial.Authority) + "/");
         Uri? declared = null;
+        var reached = false;
         try
         {
             using var reply = await Http.GetAsync(page, HttpCompletionOption.ResponseHeadersRead, cancel);
+            reached = true;
             if (reply.IsSuccessStatusCode && (reply.Content.Headers.ContentType?.MediaType ?? "").Contains("html", StringComparison.OrdinalIgnoreCase))
             {
                 await using var stream = await reply.Content.ReadAsStreamAsync(cancel);
@@ -147,8 +156,20 @@ public static class OnlineArt
             if (icon.Scheme is not ("http" or "https")) continue;
             var extension = Path.GetExtension(icon.AbsolutePath).ToLowerInvariant() is { Length: > 1 and <= 5 } known && known != ".svg" ? known : ".png";
             var file = $"{page.Host.ToLowerInvariant()}{extension}";
-            if (await DownloadImageAsync(icon, Path.Combine(folder, file), cancel)) return file;
+            var (bytes, answered) = await FetchImageAsync(icon, cancel);
+            reached |= answered;
+            if (bytes is null) continue;
+            try
+            {
+                Directory.CreateDirectory(folder);
+                await File.WriteAllBytesAsync(Path.Combine(folder, file), bytes, cancel);
+                return new SiteIconFetch(file, Reached: true);
+            }
+            catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
+            {
+                return new SiteIconFetch(null, Reached: false); // not the site's fault: tried again later
+            }
         }
-        return null;
+        return new SiteIconFetch(null, reached);
     }
 }

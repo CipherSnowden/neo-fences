@@ -792,7 +792,7 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AT4 | Games without art (Blur, AC Black Flag) | the glow tile: the icon's colours as a backdrop, the icon in the middle |
 | AT5 | Select a cover; an icon; a folder panel row | an accent ring around the cover; the accent box; the row in the accent |
 | AT6 | Fence → Labels → On hover, point at a cover | its name fades in over the bottom; no pop-under name |
-| AT7 | First scan with games without a cover | "Find covers online?"; Not now → asked again at the next scan; Find covers → covers within about 15 s (log "online art: N cover(s) found") |
+| AT7 | First scan with games without a cover | "Find covers online?"; Not now → asked again at the next start (not at every scan); Find covers → covers within about 15 s (log "online art: N cover(s) found") |
 | AT8 | Settings → Game Library → the switch off, then on | off keeps the found covers; on looks up the rest again |
 | AT9 | A game → Choose cover… | Steam results; a picked one shows; From a file… shows (the file unchanged); Reset to automatic |
 | AT10 | A web link with the switch on; off; a dead site | the site's icon; the letter badge; the letter badge |

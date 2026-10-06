@@ -17,6 +17,7 @@ public sealed partial class FenceHost
 {
     private CoversIndex _coversIndex = CoversIndex.Empty;
     private bool _coverLookupRunning, _onlineArtAskPending;
+    private bool _onlineArtAsked; // M34 review I1: once per run; "Not now" stores nothing, so the next start asks again
     private OnlineArtWindow? _onlineArtWindow;
     private readonly HashSet<string> _siteIconsFetching = new(StringComparer.OrdinalIgnoreCase);
 
@@ -49,7 +50,7 @@ public sealed partial class FenceHost
     /// </summary>
     private void MaybeAskOnlineArt()
     {
-        if (_config.Library.OnlineArt is not null || SafeMode || _configReadOnly || _onlineArtWindow is not null) return;
+        if (_config.Library.OnlineArt is not null || SafeMode || _configReadOnly || _onlineArtAsked) return;
         var without = GamesWithoutCover();
         if (without.Count == 0) return;
         if (_gameMode)
@@ -58,6 +59,7 @@ public sealed partial class FenceHost
             return;
         }
         _onlineArtAskPending = false;
+        _onlineArtAsked = true;
         _onlineArtWindow = new OnlineArtWindow(without.Count);
         _onlineArtWindow.Answered += SetOnlineArt;
         _onlineArtWindow.Closed += (_, _) => _onlineArtWindow = null;
@@ -159,7 +161,8 @@ public sealed partial class FenceHost
         Task.Run(() => OnlineArt.FetchSiteIconAsync(page, AppPaths.SiteIconsDirectory)).ContinueWith(fetch =>
         {
             _siteIconsFetching.Remove(page.Host);
-            var file = fetch.IsCompletedSuccessfully ? fetch.Result : null;
+            if (!fetch.IsCompletedSuccessfully || !fetch.Result.Reached) return; // offline or failed: nothing recorded, tried again on a later load (review I3)
+            var file = fetch.Result.File;
             _coversIndex = _coversIndex.WithSite(page.Host, new SiteRecord(DateTimeOffset.Now, file));
             SaveCoversIndex();
             Log.Information("online art: website icon for {Host}: {Result}", page.Host, file ?? "none");
@@ -175,7 +178,7 @@ public sealed partial class FenceHost
         if (LibraryItemOf(item.Target)?.Game is not { } game) return;
         var window = new ChooseCoverWindow(game.Name, online: _config.Library.OnlineArt == true && Current.ExtrasWanted,
             hasChoice: _config.Library.CoverChoices.ContainsKey(game.Id));
-        var choiceFile = $"choice-{FileNameOf(game.Id)}";
+        var choiceFile = $"choice-{FileNameOf(game.Id)}-{DateTime.UtcNow.Ticks:x}"; // review I4: a new name per choice, never a stale picture
         window.StoreCoverChosen += cover => Task.Run(() => OnlineArt.DownloadImageAsync(cover, Path.Combine(AppPaths.CoversDirectory, choiceFile + ".jpg")))
             .ContinueWith(download =>
             {
@@ -207,7 +210,11 @@ public sealed partial class FenceHost
         {
             if (choices.Remove(game.Id, out var old)) TryDeleteCover(old);
         }
-        else choices[game.Id] = file;
+        else
+        {
+            if (choices.TryGetValue(game.Id, out var previous) && !string.Equals(previous, file, StringComparison.OrdinalIgnoreCase)) TryDeleteCover(previous);
+            choices[game.Id] = file;
+        }
         _config = _config with { Library = _config.Library with { CoverChoices = choices } };
         Log.Information("cover of {Game}: {Choice}", game.Name, file ?? "automatic");
         SaveNow();
