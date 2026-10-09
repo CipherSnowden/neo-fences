@@ -56,11 +56,17 @@ headless Edge at 1280 px and inside a 390 px frame (headless Edge enforces a min
 ## VM runs
 
 The prototype (0.26.0-proto.1): release-candidate pass in `NF-Win11` from 0.25.0 — 13 of 13 (`trust-files` included);
-live checks in `NF-Win11-Dev` on a copy of the owner's data — 8 of 8. The branch: filled by Task 7.
+live checks in `NF-Win11-Dev` on a copy of the owner's data — 8 of 8. The branch after the final review's fix pass
+(packed as 0.26.0-rc.1): the release-candidate pass from 0.25.0 — **13 of 13**; the live checks — **8 of 8**.
 
 ## Screenshots
 
-Filled by Task 7.
+Taken 2026-10-10 on the owner's PC (owner's OK) with the branch build on a backed-up copy of the owner's data, restored
+afterwards: `desktop.jpg`, `panel.png`, `fence-menu.png`, `item-menu.jpg`, `settings.png` (About, with Licence and
+notices) and the new `peek.jpg`. No personal data in public pictures: the Downloads panel pointed at a demo folder of
+empty files for the shots, and the data folder's path (it holds the Windows user name) was painted over in Settings. A
+first run skipped the Peek shot (the script's wait for Notepad returned at once; the key helper then refused to type with
+Terminal in front, by design); a Peek-only rerun took it.
 
 ## Release 0.26.0
 
