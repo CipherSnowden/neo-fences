@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-10",
-  commit: "398225f",
-  phase: "0.26.0 — release readiness (path to 1.0)",
-  current: "0.26.0 RELEASED: freeware licence, privacy and security notes, checked downloads (SHA256SUMS + attestations), issue forms, Core tested on Linux; the website is live at ciphersnowden.github.io/neo-fences · next: 1.0.0-rc for friends (a small design first)",
+  commit: "feca51d",
+  phase: "1.0.0-rc — release candidate with friends (path to 1.0)",
+  current: "1.0.0-rc.1 RELEASED to friends as a GitHub pre-release (your 0.26.0 and every stable copy ignore it; an RC install follows rc.2 and 1.0.0) · next: friends' feedback for about a week, fixes in rc.2, then 1.0.0 and the outreach",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -813,7 +813,8 @@ const HUB = {
       { t: "Native build; Opus review: 1 critical fixed (a setup file could write outside the data folder), privacy wording corrected; 882 tests", s: "done" },
       { t: "VM passes on 0.26.0-rc.1: 13 of 13 and 8 of 8; screenshots from your setup (demo Downloads, data path hidden); merged locally", s: "done" },
       { t: "Released 0.26.0: Pages and private reporting on, CI green on Windows and Linux, attestations verified, VM install check 13 of 13", s: "done" },
-      { t: "1.0.0-rc for friends (its own small design)", s: "todo" }
+      { t: "1.0.0-rc.1 released as a pre-release: RC tags build, RC installs follow RCs, stable copies never see them (ADR-062); VM 13 of 13; a fresh 0.26.0 ignored it", s: "done" },
+      { t: "Friends try rc.1 for about a week; blockers fixed in rc.2…; then 1.0.0 and the 1.0 outreach", s: "wip" }
     ] },
     { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
       { t: "You picked the keyboard through Peek and a scripted VM test pass; Windows 10 dropped — Windows 11 only (ADR-059)", s: "done" },
@@ -1255,6 +1256,7 @@ const HUB = {
     { v: "0.24.0", s: "done", scope: "Performance at scale (M37): icons from a cache at start, visible icons first, nothing ticking while hidden or in a game, labels drawn once, cover tiles built only for covers, a 500-item / 50-fence measurement. Released 2026-10-06; the installed 0.23.0 updated itself." },
     { v: "0.25.0", s: "done", scope: "Keyboard way in and the Windows 11 VM (M38): Peek puts the keyboard in a fence (arrows, Enter, Tab to the next fence, Esc back to your app) with a visible ring; a scripted Windows 11 test pass in Hyper-V. Released 2026-10-10; install check in the Windows 11 VM." },
     { v: "0.26.0", s: "done", scope: "Release readiness (M39): a freeware licence, privacy and security notes and third-party notices (in the app: Settings → About → Licence and notices), SHA-256 checksums and build attestations on every release, issue forms, a landing page, install help for SmartScreen and Smart App Control, new guide pictures. Released 2026-10-10; install check in the Windows 11 VM." },
+    { v: "1.0.0-rc.1", s: "done", scope: "Release candidate for friends: a GitHub pre-release that stable copies never see; it updates itself to later release candidates and to 1.0.0. Released 2026-10-10." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1450,7 +1452,8 @@ const HUB = {
     { id: "ADR-058", t: "Measure first; an icon and name cache; visible first; timers only while needed", s: "Accepted", d: "A 500 / 50 measurement script and timing marks; icons asked once per run, cached in cache\\icons and shown from there at start, re-checked daily; widget, hover and collect timers stop while nothing shows; labels drawn once; tiles only for covers.", c: "Icons 11 s → 3 s at 500 items; ready-to-run and virtualization not done; the start is now bound by creating the fence windows." },
     { id: "ADR-059", t: "Windows 11 is the only target", s: "Accepted", d: "NeoFences targets Windows 11 x64 only; Windows 10 is neither targeted nor tested (it may run; its fallbacks stay as harmless degradation).", c: "README, guide and project instructions say Windows 11; the never-run older desktop-layer path stays untested and is no release blocker." },
     { id: "ADR-060", t: "Peek takes the keyboard; a scripted Windows 11 test pass in a Hyper-V VM", s: "Accepted", d: "After its hotkey Peek gives the keyboard to the fence under the mouse (else the last used, else the first); Tab / Shift+Tab between fences, Esc or the hotkey gives it back; the ring shows only from the keyboard. tools/vm builds a Windows 11 VM and runs a 12-check pass for every release candidate." },
-    { id: "ADR-061", t: "A freeware licence, trust files, checked downloads, Core on Linux, one landing page", s: "Accepted", d: "Free at home and at work, share unchanged, no selling or modified versions; PRIVACY, SECURITY and third-party notices ship with the app; releases carry SHA256SUMS and attestations; WindowsPath keeps Core identical on Linux, tested in CI; a GitHub Pages landing page; outreach at 1.0." }
+    { id: "ADR-061", t: "A freeware licence, trust files, checked downloads, Core on Linux, one landing page", s: "Accepted", d: "Free at home and at work, share unchanged, no selling or modified versions; PRIVACY, SECURITY and third-party notices ship with the app; releases carry SHA256SUMS and attestations; WindowsPath keeps Core identical on Linux, tested in CI; a GitHub Pages landing page; outreach at 1.0." },
+    { id: "ADR-062", t: "Release candidates are GitHub pre-releases that only release candidates follow", s: "Accepted", d: "vX.Y.Z-rc.N tags build like releases and upload as pre-releases; an installed copy takes pre-releases only when it is one, so stable copies never see an RC; about a week after the last RC with no blocker, 1.0.0 is its code version-bumped." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1550,7 +1553,8 @@ const HUB = {
     { date: "2026-10-06", topic: "M36 fence settings and presets (merged)", done: "Mockups (small settings window, five presets); two prototype probes; native build (810 tests); Opus review fixes (import collect watermarks, export temp name); live check AV; merged locally.", next: "Released 0.23.0; next: M37 performance at scale" },
     { date: "2026-10-06", topic: "M37 performance at scale (merged)", done: "Six measured prototype rounds; native build (824 tests); Opus review fixes (widgets frozen at start, placeholder icons, shortcut re-checks, the script's restore); live check AW; merged locally.", next: "Released 0.24.0; next: M38 compatibility" },
     { date: "2026-10-07", topic: "M38 keyboard way in and the Windows 11 VM (merged)", done: "Windows 11 only (ADR-059); Hyper-V and NF-Win11 built; keyboard probe; five VM runs to 12 of 12; native build (837 tests); Opus review fixes; live check 7 of 7; VM pass on 0.25.0-rc.1 12 of 12; merged locally.", next: "M38.1 test VMs for live checks (your call: tests in VMs, not on your PC); release 0.25.0 when you say so; M39." },
-    { date: "2026-10-10", topic: "M39 release readiness (merged)", done: "0.25.0 released (VM install check); M38.1 second VM; M39: Core on Linux (WindowsPath), trust files, checked downloads, landing page, screenshots; Opus review C1 fixed; VM passes 13/13 and 8/8; merged locally.", next: "Release 0.26.0 (asked), then 1.0.0-rc for friends." }
+    { date: "2026-10-10", topic: "M39 release readiness (merged)", done: "0.25.0 released (VM install check); M38.1 second VM; M39: Core on Linux (WindowsPath), trust files, checked downloads, landing page, screenshots; Opus review C1 fixed; VM passes 13/13 and 8/8; merged locally.", next: "Release 0.26.0 (asked), then 1.0.0-rc for friends." },
+    { date: "2026-10-10", topic: "0.26.0 and 1.0.0-rc.1 released", done: "0.26.0: website live, Pages and private reporting on, checksums fixed to the downloadable files, VM 13 of 13. RC: pre-release channel (ADR-062), rc.1 published, VM 13 of 13, a fresh 0.26.0 ignored it.", next: "Friends' feedback for about a week; rc.2 for any blocker; then 1.0.0 and the outreach." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2259,7 +2263,13 @@ const HUB = {
     ["5f631b2", "docs: marked the 0.26.0 release as approved"],
     ["edc98c8", "ci: checksummed only the files people download, not the feed index that the upload rewrites"],
     ["4c29ec3", "docs: showed the whole folder-panel picture on the landing page"],
-    ["398225f", "docs: recorded the 0.26.0 release"]
+    ["398225f", "docs: recorded the 0.26.0 release"],
+    ["1ad0e72", "docs: claimed the 1.0.0-rc release candidate"],
+    ["d321929", "feat: made release candidates follow pre-release updates while stable copies never see them"],
+    ["0716046", "ci: published release candidates as GitHub pre-releases, with the RC steps in the release checklist, the guide and ADR-062"],
+    ["3d83797", "chore: bumped the version to 1.0.0-rc.1"],
+    ["02b2460", "docs: marked the 1.0.0-rc.1 release as approved"],
+    ["feca51d", "docs: recorded the 1.0.0-rc.1 release"]
   ]
 };
 /* ===== END HUB DATA ===== */
