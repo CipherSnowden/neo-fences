@@ -885,3 +885,8 @@ The release-candidate pass re-run after the change: 12 of 12. Checklist AX6; REA
 the same); the guest's live checks reuse `guest-checks.ps1`'s helpers by dot-sourcing.
 **Next:** release 0.25.0 when the owner says so; then M39 release readiness. Live checks and probes go to `NF-Win11-Dev`
 from now on; the owner's PC only for what a VM cannot show (asked first).
+**Released:** 0.25.0 on 2026-10-10 — CI failed once on an M33 timing test (`Load_PrimaryLockedForAMoment…`: the unlock ran
+on a thread-pool timer that a busy runner delayed past the retries; it now unlocks on its own thread with a longer retry);
+then CI and the release build passed; draft with the delta package (386 KB); install check in the `NF-Win11` VM, not on the
+owner's PC (0.24.0 installed, updated to 0.25.0 from the draft's own files, 12 of 12); published. The owner's installed
+copy updates itself the usual way.
