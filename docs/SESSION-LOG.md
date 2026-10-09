@@ -890,3 +890,30 @@ on a thread-pool timer that a busy runner delayed past the retries; it now unloc
 then CI and the release build passed; draft with the delta package (386 KB); install check in the `NF-Win11` VM, not on the
 owner's PC (0.24.0 installed, updated to 0.25.0 from the draft's own files, 12 of 12); published. The owner's installed
 copy updates itself the usual way.
+
+## 2026-10-10 — M39 release readiness (0.26.0), built and merged
+
+**Done:** the owner picked all four groups (trust files, checked downloads, install help and a landing page, Linux CI
+and outreach), a short custom freeware licence (work use allowed; the owner approved the wording), one landing page, and
+outreach prepared now, submitted at 1.0. Core's tests in the owner's WSL Ubuntu (.NET 10 installed there, `libicu78` as
+root): 45 of 837 failed — `System.IO.Path` follows the OS, so Linux read stored Windows paths wrongly; fixed with
+`WindowsPath` (Core) at 26 call sites, tests made OS-neutral, two Windows-only tests return early → 878 pass on both.
+Prototype, replay-verified patches, Native execution: Core; the licence, PRIVACY, SECURITY, THIRD-PARTY-NOTICES (with the
+.NET runtime's and WPF's notices) shipped next to the exe and opened from Settings → About; issue forms; CI `core-linux`;
+`SHA256SUMS.txt` and build attestations in the Release workflow; `site/` + `pages.yml`; README and guide install sections
+(SmartScreen, Smart App Control, checking a download); `docs/RELEASING.md`; ADR-061. Opus review: 1 critical — a
+drive-relative picture name (`D:evil.png`) in a setup file escaped the data folder on import (Windows' `GetFileName` had
+cut the drive) — fixed test-first; the privacy note's website-icon wording corrected; 882 tests on Windows and Linux.
+VM passes on 0.26.0-rc.1: release candidate 13 of 13 (new `trust-files` check), live checks 8 of 8. Screenshots retaken
+on the owner's PC (owner's OK): a demo Downloads folder and the data path painted over, so no personal data in public
+pictures; Peek added to the guide and the page. Merged locally.
+**Decisions:** ADR-061.
+**Rulings:** stored paths by Windows' rules on every OS, own files by the OS's; Licence and notices opens LICENSE.txt
+(not the ~400-file folder); default issue labels; the site reuses the guide's pictures and shows no version; Pages and
+private vulnerability reporting are turned on before the release push (so the first Pages run and the Security link
+work).
+**Deferred minors:** `WindowsPath.Extension("file.")` is "."; `DirectoryName` keeps "/"; `\?\` folders not fully
+qualified; the checksum upload lacks `--clobber`; the page's cards overflow below ~332 px; an invisible U+202F literal in
+a test; `trust-files` checked after the update only.
+**Next:** release 0.26.0 (asked: push, tag, publish, turning on Pages and private reporting); then 1.0.0-rc for friends
+(its own design: the Release workflow ignores pre-release tags).
