@@ -917,3 +917,11 @@ qualified; the checksum upload lacks `--clobber`; the page's cards overflow belo
 a test; `trust-files` checked after the update only.
 **Next:** release 0.26.0 (asked: push, tag, publish, turning on Pages and private reporting); then 1.0.0-rc for friends
 (its own design: the Release workflow ignores pre-release tags).
+**Released:** 0.26.0 on 2026-10-10 — GitHub Pages (built by Actions) and private vulnerability reporting turned on
+before the push; CI green on Windows and, for the first time, `core-linux`; the Pages workflow published the landing
+page; the Release workflow drafted every asset with `SHA256SUMS.txt` and build attestations (`gh attestation verify`
+passes for Setup.exe, the portable zip and both packages). `SHA256SUMS.txt` first listed `releases.win.json` and
+`RELEASES` too, which `vpk upload` rewrites after hashing, so their lines did not match: the draft's file was replaced
+with the four downloadable files' lines and the workflow now lists only those (with `--clobber`). Install check in
+`NF-Win11` (0.25.0 updated itself to 0.26.0 from the draft's own files): 13 of 13. Published; the landing page's
+folder-panel picture now shows whole.

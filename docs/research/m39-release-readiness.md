@@ -70,4 +70,7 @@ Terminal in front, by design); a Peek-only rerun took it.
 
 ## Release 0.26.0
 
-Filled by Task 8.
+2026-10-10: Pages and private vulnerability reporting turned on before the push; CI green (Windows and `core-linux`);
+the landing page live; the draft with `SHA256SUMS.txt` and attestations for Setup.exe, the portable zip and both packages
+(verified with `gh attestation verify` and `sha256sum`). The feed index files (`releases.win.json`, `RELEASES`) are
+rewritten by `vpk upload` after hashing, so they are no longer listed. Install check in `NF-Win11`: 13 of 13. Published.
