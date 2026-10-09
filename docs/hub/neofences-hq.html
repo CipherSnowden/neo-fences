@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-10",
-  commit: "a0b9293",
+  commit: "398225f",
   phase: "0.26.0 — release readiness (path to 1.0)",
-  current: "M39 merged: freeware licence, privacy and security notes, third-party notices (Settings → About → Licence and notices), checked downloads (checksums and attestations), issue forms, a landing page, new screenshots, Core tests on Linux · next: release 0.26.0 (asked), then 1.0.0-rc for friends",
+  current: "0.26.0 RELEASED: freeware licence, privacy and security notes, checked downloads (SHA256SUMS + attestations), issue forms, Core tested on Linux; the website is live at ciphersnowden.github.io/neo-fences · next: 1.0.0-rc for friends (a small design first)",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -812,7 +812,7 @@ const HUB = {
       { t: "Core on Linux: 45 tests failed in WSL (Windows paths read by Linux rules); WindowsPath → 878 pass on both", s: "done" },
       { t: "Native build; Opus review: 1 critical fixed (a setup file could write outside the data folder), privacy wording corrected; 882 tests", s: "done" },
       { t: "VM passes on 0.26.0-rc.1: 13 of 13 and 8 of 8; screenshots from your setup (demo Downloads, data path hidden); merged locally", s: "done" },
-      { t: "Release 0.26.0; turn on Pages and private vulnerability reporting (asked first)", s: "todo" },
+      { t: "Released 0.26.0: Pages and private reporting on, CI green on Windows and Linux, attestations verified, VM install check 13 of 13", s: "done" },
       { t: "1.0.0-rc for friends (its own small design)", s: "todo" }
     ] },
     { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
@@ -1226,7 +1226,7 @@ const HUB = {
     { id: "M37", name: "Performance at scale", goal: "Icon cache, visible first, idle timers, lighter items, a 500 / 50 measurement — released 0.24.0", s: "done" },
     { id: "M38", name: "Compatibility and accessibility", goal: "Peek takes the keyboard (Tab, Esc back), visible focus; a scripted Windows 11 VM pass, 12 of 12 — released 0.25.0", s: "done" },
     { id: "M38.1", name: "Test VMs for live checks", goal: "A second VM (NF-Win11-Dev) and Invoke-VmChecks.ps1 -Live: live checks of branch builds in a VM, not on your PC — merged", s: "done" },
-    { id: "M39", name: "Release readiness", goal: "Freeware licence, privacy, security, notices, checked downloads, issue forms, landing page, Core on Linux — merged, release pending", s: "wip" }
+    { id: "M39", name: "Release readiness", goal: "Freeware licence, privacy, security, notices, checked downloads, issue forms, landing page, Core on Linux — released 0.26.0", s: "done" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
@@ -1254,7 +1254,7 @@ const HUB = {
     { v: "0.23.0", s: "done", scope: "Fence settings and presets (M36): each fence its own look (style, background, title font and alignment, title bar on hover, spacing), five look presets and your own, Export / Import setup as one .neofences file, Reset settings to defaults. Released 2026-10-06; the installed 0.22.0 updated itself." },
     { v: "0.24.0", s: "done", scope: "Performance at scale (M37): icons from a cache at start, visible icons first, nothing ticking while hidden or in a game, labels drawn once, cover tiles built only for covers, a 500-item / 50-fence measurement. Released 2026-10-06; the installed 0.23.0 updated itself." },
     { v: "0.25.0", s: "done", scope: "Keyboard way in and the Windows 11 VM (M38): Peek puts the keyboard in a fence (arrows, Enter, Tab to the next fence, Esc back to your app) with a visible ring; a scripted Windows 11 test pass in Hyper-V. Released 2026-10-10; install check in the Windows 11 VM." },
-    { v: "0.26.0", s: "todo", scope: "Release readiness (M39): a freeware licence, privacy and security notes and third-party notices (in the app: Settings → About → Licence and notices), SHA-256 checksums and build attestations on every release, issue forms, a landing page, install help for SmartScreen and Smart App Control, new guide pictures. Merged 2026-10-10; release pending." },
+    { v: "0.26.0", s: "done", scope: "Release readiness (M39): a freeware licence, privacy and security notes and third-party notices (in the app: Settings → About → Licence and notices), SHA-256 checksums and build attestations on every release, issue forms, a landing page, install help for SmartScreen and Smart App Control, new guide pictures. Released 2026-10-10; install check in the Windows 11 VM." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -2253,7 +2253,13 @@ const HUB = {
     ["84ecfe6", "fix: kept drive-relative names from leaving NeoFences' folder and corrected what the privacy note says about website icons"],
     ["b8a84b5", "docs: refreshed the guide's screenshots and added Peek with the keyboard"],
     ["cda7c2a", "docs: added the M39 VM passes and screenshots to the research note"],
-    ["a0b9293", "docs: recorded M39 as merged in the roadmap and session log"]
+    ["a0b9293", "docs: recorded M39 as merged in the roadmap and session log"],
+    ["c861f72", "docs: refreshed the hub for M39"],
+    ["e927fa7", "chore: bumped the version to 0.26.0"],
+    ["5f631b2", "docs: marked the 0.26.0 release as approved"],
+    ["edc98c8", "ci: checksummed only the files people download, not the feed index that the upload rewrites"],
+    ["4c29ec3", "docs: showed the whole folder-panel picture on the landing page"],
+    ["398225f", "docs: recorded the 0.26.0 release"]
   ]
 };
 /* ===== END HUB DATA ===== */
