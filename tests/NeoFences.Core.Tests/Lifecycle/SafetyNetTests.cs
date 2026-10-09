@@ -167,16 +167,18 @@ public class SafetyNetTests
     }
 
     [Fact]
-    public async Task Load_PrimaryLockedForAMoment_IsWaitedFor_AndReadNormally()
+    public void Load_PrimaryLockedForAMoment_IsWaitedFor_AndReadNormally()
     {
         using var directory = new TempDirectory();
-        var store = new ConfigStore(directory.Path, readRetryDelay: TimeSpan.FromMilliseconds(200));
+        var store = new ConfigStore(directory.Path, readRetryDelay: TimeSpan.FromMilliseconds(500));
         store.Save(NeoFencesConfig.CreateDefault());
         var locked = new FileStream(store.ConfigPath, FileMode.Open, FileAccess.Read, FileShare.None);
-        var unlock = Task.Delay(300).ContinueWith(_ => locked.Dispose());
+        // Its own thread, not a thread-pool timer: parallel tests on a busy CI runner delayed the unlock past the retries.
+        var unlock = new Thread(() => { Thread.Sleep(300); locked.Dispose(); });
+        unlock.Start();
 
         var result = store.Load();
-        await unlock;
+        unlock.Join();
 
         Assert.Equal(ConfigLoadSource.Primary, result.Source);
         Assert.False(result.IsReadOnly);
