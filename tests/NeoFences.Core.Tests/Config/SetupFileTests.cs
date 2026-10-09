@@ -157,11 +157,14 @@ public class SetupFileTests
             Directory.GetFiles(elsewhere.File("data"), "*", SearchOption.AllDirectories).Select(Path.GetFileName).Order(StringComparer.Ordinal));
     }
 
-    [Fact]
-    public void PicturesOf_UsesOnlyFileNames()
+    [Theory]
+    [InlineData("..\\..\\Windows\\evil.png")]
+    [InlineData("D:evil.png")] // M39 review C1: on Windows a drive-relative name would land outside the data folder
+    [InlineData("D:..\\evil.png")]
+    public void PicturesOf_UsesOnlyFileNames(string image)
     {
         var fence = Fence.Create("Apps");
-        var items = new ItemsDocument().With(fence.Id, [VirtualItem.Create("C:\\a.exe") with { Icon = new ItemIcon { Image = "..\\..\\Windows\\evil.png" } }]);
+        var items = new ItemsDocument().With(fence.Id, [VirtualItem.Create("C:\\a.exe") with { Icon = new ItemIcon { Image = image } }]);
         Assert.Equal([new SetupPicture("icons", "evil.png")], SetupFile.PicturesOf(new NeoFencesConfig { Fences = [fence] }, items));
     }
 

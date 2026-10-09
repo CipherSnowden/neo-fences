@@ -11,8 +11,16 @@ public static class WindowsPath
     private static readonly char[] Separators = ['\\', '/'];
     private static readonly char[] Reserved = ['<', '>', ':', '"', '|', '?', '*'];
 
-    /// <summary>What follows the last separator ("" for a path that ends in one).</summary>
-    public static string FileName(string path) => path[(path.LastIndexOfAny(Separators) + 1)..];
+    /// <summary>
+    /// What follows the last separator ("" for a path that ends in one), and never a drive: "D:evil.png" is "evil.png", as
+    /// on Windows — kept, it would name a file at D:'s current folder (M39 review C1).
+    /// </summary>
+    public static string FileName(string path)
+    {
+        var start = path.LastIndexOfAny(Separators) + 1;
+        if (start == 0 && path.Length >= 2 && char.IsAsciiLetter(path[0]) && path[1] == ':') start = 2;
+        return path[start..];
+    }
 
     /// <summary>The file name's last ".xyz", with its dot ("" without one).</summary>
     public static string Extension(string path)

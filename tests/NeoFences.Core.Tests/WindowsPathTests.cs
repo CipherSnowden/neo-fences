@@ -2,7 +2,8 @@ namespace NeoFences.Core.Tests;
 
 /// <summary>
 /// M39 (ADR-061): Core reads the Windows paths it stores (items, folders, game shortcuts, picture names) by Windows' rules on
-/// every OS, so its tests pass on Linux too. The answers match System.IO.Path on Windows.
+/// every OS, so its tests pass on Linux too. For the paths Core stores the answers match System.IO.Path on Windows; the
+/// known differences reach no caller (an extension of "file." is ".", "/" is kept, "\\?\" prefixes are not fully qualified).
 /// </summary>
 public class WindowsPathTests
 {
@@ -13,6 +14,8 @@ public class WindowsPathTests
     [InlineData("plain.jpg", "plain.jpg")]
     [InlineData(@"D:\Music\", "")]
     [InlineData("", "")]
+    [InlineData("C:evil.png", "evil.png")] // M39 review C1: a drive-relative name never keeps its drive
+    [InlineData("D:", "")]
     public void FileName_IsWhatFollowsTheLastSeparator(string path, string expected) =>
         Assert.Equal(expected, WindowsPath.FileName(path));
 

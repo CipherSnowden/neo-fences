@@ -54,7 +54,7 @@ public static class SetupFile
         items.Fences.Values.SelectMany(list => list).Select(item => item.Icon?.Image).Select(name => (Folder: IconsFolder, Name: name))
             .Concat(config.Library.CoverChoices.Values.Select(name => (Folder: CoversFolder, Name: (string?)name)))
             .Select(picture => (picture.Folder, Name: WindowsPath.FileName(picture.Name ?? "")))
-            .Where(picture => picture.Name.Length > 0)
+            .Where(picture => WindowsPath.IsPlainFileName(picture.Name)) // and nothing Windows would read as more than a name
             .Select(picture => new SetupPicture(picture.Folder, picture.Name))
             .Distinct()
             .ToList();

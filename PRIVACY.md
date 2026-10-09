@@ -5,11 +5,13 @@ NeoFences has **no telemetry, no accounts and no ads**. It does not collect, sen
 ## What goes over the network
 
 - **Updates** — NeoFences asks GitHub whether a newer version exists and, if so, downloads it from this project's
-  release page (`github.com/CipherSnowden/neo-fences/releases`). GitHub sees the request like any download.
+  release page (`github.com/CipherSnowden/neo-fences/releases`). GitHub sees the request like any download. You can
+  turn the update check off in Settings → Updates.
 - **Covers and website icons — only if you turn them on.** The switch **Find covers and website icons online** (asked
   once; also in Settings → Game Library) is off by default. When it is on:
   - the names of your games are sent to Steam's store search, and their cover pictures are downloaded from Steam;
-  - for a website item, its icon is read from that website itself.
+  - for a website item, its home page is read, and its icon is downloaded from where that page says it is (usually the
+    website itself, sometimes a service it uses for pictures).
 
 Nothing else. Opening an item you put in a fence (a website, a program) is you opening it, as from the desktop.
 
