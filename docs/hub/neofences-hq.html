@@ -785,10 +785,10 @@ flowchart TD
 <script>
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
-  updated: "2026-10-07",
-  commit: "4321f1c",
+  updated: "2026-10-10",
+  commit: "f1b9738",
   phase: "0.25.0 — keyboard way in and the Windows 11 VM (path to 1.0)",
-  current: "M38 merged: Peek (Ctrl+Alt+Space) puts the keyboard in a fence with a visible ring, Tab to the next fence, Esc back to your app; a scripted Windows 11 VM pass, 12 of 12 · M38.1 done: live checks now run in a second VM (NF-Win11-Dev, 8 of 8), not on your PC · next: release 0.25.0 when you say so",
+  current: "0.25.0 RELEASED: Peek (Ctrl+Alt+Space) puts the keyboard in a fence with a visible ring, Tab to the next fence, Esc back to your app; checked in a fresh Windows 11 VM (12 of 12); your installed copy updates itself · next: M39 release readiness",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -813,7 +813,7 @@ const HUB = {
       { t: "Native build (837 tests); Opus review: 6 important fixed (Esc during Peek, keyboard return, rolled-up fences, VM script)", s: "done" },
       { t: "Live check 7 of 7 on a copy of your data; VM pass on 0.25.0-rc.1 12 of 12; merged locally", s: "done" },
       { t: "M38.1: a second VM (NF-Win11-Dev) and Invoke-VmChecks.ps1 -Live — 8 of 8 in the VM; RC pass still 12 of 12 — live checks in the VM, not on your PC", s: "done" },
-      { t: "Release 0.25.0 (asked first)", s: "todo" }
+      { t: "Released 0.25.0: CI green after a flaky M33 test fix, delta 386 KB, VM install check 12 of 12, published", s: "done" }
     ] },
     { group: "M37 · Performance at scale (0.24.0)", items: [
       { t: "You picked smooth big setups, faster start, truly idle; measure, then fix", s: "done" },
@@ -1216,7 +1216,7 @@ const HUB = {
     { id: "M35", name: "Modern menus and dialogs", goal: "One menu style with icons, 12-line fence menu, Settings sections and switches, swatches and a picker, one dialog — released 0.22.0", s: "done" },
     { id: "M36", name: "Fence settings and presets", goal: "Fence settings window, five presets and own ones, Export / Import setup, Reset settings — released 0.23.0", s: "done" },
     { id: "M37", name: "Performance at scale", goal: "Icon cache, visible first, idle timers, lighter items, a 500 / 50 measurement — released 0.24.0", s: "done" },
-    { id: "M38", name: "Compatibility and accessibility", goal: "Peek takes the keyboard (Tab, Esc back), visible focus; a scripted Windows 11 VM pass, 12 of 12 — merged, release pending", s: "wip" },
+    { id: "M38", name: "Compatibility and accessibility", goal: "Peek takes the keyboard (Tab, Esc back), visible focus; a scripted Windows 11 VM pass, 12 of 12 — released 0.25.0", s: "done" },
     { id: "M38.1", name: "Test VMs for live checks", goal: "A second VM (NF-Win11-Dev) and Invoke-VmChecks.ps1 -Live: live checks of branch builds in a VM, not on your PC — merged", s: "done" },
     { id: "M39", name: "Release readiness", goal: "Freeware licence, README, then 1.0.0-rc to friends and 1.0.0", s: "todo" }
   ],
@@ -1245,7 +1245,7 @@ const HUB = {
     { v: "0.22.0", s: "done", scope: "Modern menus and dialogs (M35): one menu style with icons for fences, items and the tray, a 12-line fence menu, Settings in sections with switches, colour swatches and a picker, one message dialog. Released 2026-10-06; the installed 0.21.0 updated itself." },
     { v: "0.23.0", s: "done", scope: "Fence settings and presets (M36): each fence its own look (style, background, title font and alignment, title bar on hover, spacing), five look presets and your own, Export / Import setup as one .neofences file, Reset settings to defaults. Released 2026-10-06; the installed 0.22.0 updated itself." },
     { v: "0.24.0", s: "done", scope: "Performance at scale (M37): icons from a cache at start, visible icons first, nothing ticking while hidden or in a game, labels drawn once, cover tiles built only for covers, a 500-item / 50-fence measurement. Released 2026-10-06; the installed 0.23.0 updated itself." },
-    { v: "0.25.0", s: "todo", scope: "Keyboard way in and the Windows 11 VM (M38): Peek puts the keyboard in a fence (arrows, Enter, Tab to the next fence, Esc back to your app) with a visible ring; a scripted Windows 11 test pass in Hyper-V. Merged 2026-10-07; release pending." },
+    { v: "0.25.0", s: "done", scope: "Keyboard way in and the Windows 11 VM (M38): Peek puts the keyboard in a fence (arrows, Enter, Tab to the next fence, Esc back to your app) with a visible ring; a scripted Windows 11 test pass in Hyper-V. Released 2026-10-10; install check in the Windows 11 VM." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -2223,7 +2223,12 @@ const HUB = {
     ["53462cd", "docs: recorded M38 as merged and claimed M38.1 test VMs for live checks"],
     ["e169a6e", "docs: refreshed the hub for M38"],
     ["e4ae09f", "feat: added live checks of a branch build in a second test VM"],
-    ["4321f1c", "docs: recorded M38.1 test VMs for live checks as merged"]
+    ["4321f1c", "docs: recorded M38.1 test VMs for live checks as merged"],
+    ["b950c22", "docs: refreshed the hub for M38.1"],
+    ["9007222", "chore: bumped the version to 0.25.0"],
+    ["22e1359", "docs: marked the 0.25.0 release as approved"],
+    ["019fa47", "test: made the locked-config test unlock on its own thread so a busy CI runner cannot outlast the retries"],
+    ["f1b9738", "docs: recorded the 0.25.0 release"]
   ]
 };
 /* ===== END HUB DATA ===== */
