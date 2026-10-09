@@ -48,6 +48,8 @@ public partial class SettingsWindow : Window
     public event Action? OpenDataRequested;
     /// <summary>"Help (online guide)" (M29): the guide on GitHub.</summary>
     public event Action? HelpRequested;
+    /// <summary>"Licence and notices" (M39): LICENSE.txt next to NeoFences.exe.</summary>
+    public event Action? LicenceRequested;
     public event Action? TakeSnapshotRequested;
     public event Action<string>? RestoreSnapshotRequested;
     public event Action<string, string>? RenameSnapshotRequested;
@@ -102,6 +104,7 @@ public partial class SettingsWindow : Window
         OpenLogsButton.Click += (_, _) => OpenLogsRequested?.Invoke();
         OpenDataButton.Click += (_, _) => OpenDataRequested?.Invoke();
         HelpButton.Click += (_, _) => HelpRequested?.Invoke();
+        LicenceButton.Click += (_, _) => LicenceRequested?.Invoke();
         TakeSnapshotButton.Click += (_, _) => TakeSnapshotRequested?.Invoke();
         OpenSnapshotsButton.Click += (_, _) => OpenSnapshotsRequested?.Invoke();
         ExportSetupButton.Click += (_, _) => ExportSetupRequested?.Invoke(); // M36

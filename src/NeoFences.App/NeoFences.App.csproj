@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- M39 (ADR-061): the licence, the third-party notices and the privacy note next to NeoFences.exe in every install. -->
+    <None Include="..\..\LICENSE.txt;..\..\THIRD-PARTY-NOTICES.txt;..\..\PRIVACY.md" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NeoFences.Core\NeoFences.Core.csproj" />
     <ProjectReference Include="..\NeoFences.Shell\NeoFences.Shell.csproj" />
   </ItemGroup>

@@ -992,6 +992,7 @@ public sealed partial class FenceHost
         window.KeyboardLayoutChanged += RefreshSettings; // M16: key caps follow the new layout
         window.OpenLogsRequested += () => OpenItem(AppPaths.LogsDirectory, ownerHandle: 0);
         window.HelpRequested += () => OpenItem(GuideUrl, ownerHandle: 0); // M29
+        window.LicenceRequested += () => OpenItem(Path.Combine(AppContext.BaseDirectory, "LICENSE.txt"), ownerHandle: 0); // M39
         window.OpenDataRequested += () => OpenItem(AppPaths.DataDirectory, ownerHandle: 0);
         window.Closed += (_, _) =>
         {

@@ -1,0 +1,52 @@
+name: Bug
+description: Something in NeoFences does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! Security problems go privately through the Security tab instead (see SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: NeoFences version
+      description: Settings → About shows it.
+      placeholder: "0.26.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Press Win+R, type winver, press Enter.
+      placeholder: "Windows 11 25H2 (26200)"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The steps, one per line, so someone else can do the same.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      description: Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log (optional)
+      description: >-
+        Settings → About → Open logs folder; paste the lines from around the problem in the newest file. Logs never contain
+        your Windows user name, but they do name the folders and files your fences point at — everything here is public,
+        so look through it first.
+      render: text

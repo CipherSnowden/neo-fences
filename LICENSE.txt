@@ -1,0 +1,21 @@
+NeoFences Freeware Licence
+Copyright © 2026 CipherSnowden. All rights reserved.
+
+1. You may download, install and use NeoFences free of charge, at home or at work, on any number of computers.
+
+2. You may share the unmodified installer or portable zip from the official release page, free of charge, together
+   with this licence.
+
+3. You may not sell NeoFences, charge for it, bundle it with paid products, or distribute modified versions.
+
+4. The source code is published so anyone can see what NeoFences does. You may read it and build it for your own use;
+   you may not distribute it, or work based on it, without written permission.
+
+5. NeoFences is provided "as is", without warranty of any kind. The author is not liable for any damage arising from
+   its use.
+
+6. Third-party components keep their own licences (see THIRD-PARTY-NOTICES.txt).
+
+7. All rights not expressly granted stay with the author.
+
+Official release page: https://github.com/CipherSnowden/neo-fences/releases

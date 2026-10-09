@@ -369,7 +369,9 @@
                         <Button x:Name="OpenLogsButton" Content="Open logs folder" Margin="0,0,8,0" />
                         <Button x:Name="OpenDataButton" Content="Open data folder" Margin="0,0,8,0" />
                         <!-- M29: the guide on GitHub (ADR-050). -->
-                        <Button x:Name="HelpButton" Content="Help (online guide)" />
+                        <Button x:Name="HelpButton" Content="Help (online guide)" Margin="0,0,8,0" />
+                        <!-- M39 (ADR-061): LICENSE.txt next to NeoFences.exe; it names the notices and the privacy note beside it. -->
+                        <Button x:Name="LicenceButton" Content="Licence and notices" />
                     </StackPanel>
                 </StackPanel>
             </Border>

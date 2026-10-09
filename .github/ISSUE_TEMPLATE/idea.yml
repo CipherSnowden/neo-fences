@@ -1,0 +1,16 @@
+name: Idea
+description: Suggest something new or better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why — what would it help you do?
+    validations:
+      required: true

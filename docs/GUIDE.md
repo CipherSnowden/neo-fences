@@ -11,7 +11,7 @@ Almost everything starts from two places:
 
 ![A desktop with NeoFences: Games, Apps, Downloads and a Desk fence with widgets](guide/desktop.jpg)
 
-New here? Start with [First start](#first-start).
+New here? Start with [Install](#install) and [First start](#first-start).
 
 ## Contents
 
@@ -30,6 +30,25 @@ New here? Start with [First start](#first-start).
 13. [Your files are safe](#13-your-files-are-safe)
 14. [Troubleshooting](#14-troubleshooting)
 15. [Cheat-sheet](#15-cheat-sheet)
+
+## Install
+
+NeoFences runs on **Windows 11** (64-bit) and is free (see the [licence](../LICENSE.txt)).
+
+1. Download **NeoFences.App-win-Setup.exe** from the
+   [latest release](https://github.com/CipherSnowden/neo-fences/releases/latest).
+2. Run it. Windows SmartScreen may say **"Windows protected your PC"**: NeoFences is not code-signed (a certificate costs
+   money every year), and Windows warns about new unsigned apps until enough people have run them. Click **More info**,
+   then **Run anyway**. NeoFences installs for your account only (no administrator rights), starts, and from then on
+   keeps itself up to date.
+3. If Windows says **Smart App Control** blocked NeoFences: that Windows 11 feature lets only signed or well-known apps
+   run, and it has no "Run anyway". Turning it off is your decision — read
+   [Microsoft's Smart App Control FAQ](https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions)
+   first.
+
+Want to be sure the file is the real one? See "Check your download" in the
+[README](https://github.com/CipherSnowden/neo-fences#check-your-download). To uninstall: Windows Settings → Apps →
+Installed apps → NeoFences → Uninstall (your desktop icons come back; your files are never touched).
 
 ## First start
 
@@ -282,7 +301,8 @@ Tray or fence menu → **Settings…**. A list of sections on the left opens one
   **Colour fences from the wallpaper**, **Title font**. A fence can have its own of each (fence menu → **Fence settings…**).
 - **Games**, **Game mode**, **Snapshots**, **Updates** — see their sections above. **Snapshots** also has **Export setup…** and
   **Import setup…**.
-- **About** — the version, **Open logs folder**, **Open data folder**, **Help (online guide)**, and **Reset settings
+- **About** — the version, **Open logs folder**, **Open data folder**, **Help (online guide)**, **Licence and notices**
+  (the licence; the third-party notices and the privacy note are next to it), and **Reset settings
   to defaults…**: every page of Settings back to how NeoFences comes (asked first, a snapshot "Before reset" first). Your
   fences, items, own presets, game folders, hidden games and chosen covers stay.
 
@@ -320,9 +340,11 @@ Tray or fence menu → **Settings…**. A list of sections on the left opens one
 - **"Changes are not saved"**: NeoFences could not read or write its files (another program locking them, or a file from
   a newer version). Your fences work, but changes are lost at exit; restart NeoFences, and see the log.
 - **Something went wrong:** **Settings → About → Open logs folder** and look at the newest file; report problems
-  on the project's [GitHub Issues page](https://github.com/CipherSnowden/neo-fences/issues) with what you did and that
-  log.
-  Logs never contain your Windows user name (the profile folder is written as `%USERPROFILE%`).
+  with the **Bug** form on the project's [GitHub Issues page](https://github.com/CipherSnowden/neo-fences/issues/new/choose):
+  what you did, what happened, and that log if you like.
+  Logs never contain your Windows user name (the profile folder is written as `%USERPROFILE%`), but they name the
+  folders and files your fences point at — look through a log before you attach it. Security problems: privately, see
+  [SECURITY.md](../SECURITY.md).
 - **CPU TEMP shows "—"**: start MSI Afterburner (with "CPU temperature" ticked in its Settings → Monitoring) or HWiNFO64 (in HWiNFO, turn on "Shared Memory Support" in its
   settings; the free version turns it off again after 12 hours).
 

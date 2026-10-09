@@ -125,6 +125,11 @@ Check 'update' {
   $version = (Get-Item -LiteralPath $exe).VersionInfo.ProductVersion
   "downloaded: $downloaded; version now: $version; icons hidden: $(IconsHidden)"; $version -like "$($settings.candidate)*" -and (IconsHidden)
 }
+# M39 (ADR-061): the licence, the third-party notices and the privacy note are installed next to NeoFences.exe.
+Check 'trust-files' {
+  $missing = @('LICENSE.txt', 'THIRD-PARTY-NOTICES.txt', 'PRIVACY.md' | Where-Object { -not (Test-Path -LiteralPath (Join-Path $appDir "current\$_")) })
+  "missing: $(if ($missing.Count) { $missing -join ', ' } else { 'none' })"; $missing.Count -eq 0
+}
 # After the update: the keyboard way in is new in the candidate.
 Check 'peek-keyboard' {
   $notepad = Notepad; Keys @(0x11, 0x12, 0x20); Start-Sleep -Seconds 1
