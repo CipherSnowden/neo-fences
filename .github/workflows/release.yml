@@ -41,12 +41,13 @@ jobs:
         run: ./build/pack.ps1 -Version "${{ steps.version.outputs.version }}" -ReleaseNotes artifacts/release-notes.md
       # Stage 2 (ADR-039): code signing goes here (vpk pack --signParams / --azureTrustedSignFile) once a certificate exists.
       # M39 (ADR-061): unsigned, so every download can be checked instead — its SHA-256 and GitHub's build attestation.
-      # Only this version's files (artifacts/releases also holds the previous release, downloaded for the delta).
+      # Only this version's files (artifacts/releases also holds the previous release, downloaded for the delta), and not
+      # releases.win.json / RELEASES: vpk upload rewrites those with the earlier releases, so their hashes would not match.
       - name: Checksums
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          $names = @("NeoFences.App-$version-full.nupkg", "NeoFences.App-$version-delta.nupkg", 'NeoFences.App-win-Setup.exe', 'NeoFences.App-win-Portable.zip', 'releases.win.json', 'RELEASES')
+          $names = @("NeoFences.App-$version-full.nupkg", "NeoFences.App-$version-delta.nupkg", 'NeoFences.App-win-Setup.exe', 'NeoFences.App-win-Portable.zip')
           $lines = foreach ($name in $names) {
             $path = Join-Path artifacts/releases $name
             if (Test-Path -LiteralPath $path) { "$((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant())  $name" }
@@ -67,4 +68,4 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.ref_name }}" artifacts/SHA256SUMS.txt --repo "${{ github.repository }}"
+        run: gh release upload "${{ github.ref_name }}" artifacts/SHA256SUMS.txt --clobber --repo "${{ github.repository }}"
