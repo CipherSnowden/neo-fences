@@ -136,9 +136,9 @@ public static class ConfigNormalizer
         OnlineArt = library?.OnlineArt, // M34
         // M34: only a file name in NeoFences' covers folder counts (a hand-edited path never points elsewhere).
         CoverChoices = (library?.CoverChoices ?? new Dictionary<string, string>())
-            .Where(choice => !string.IsNullOrWhiteSpace(choice.Key) && !string.IsNullOrWhiteSpace(Path.GetFileName(choice.Value ?? "")))
+            .Where(choice => !string.IsNullOrWhiteSpace(choice.Key) && !string.IsNullOrWhiteSpace(WindowsPath.FileName(choice.Value ?? "")))
             .GroupBy(choice => choice.Key, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(group => group.Key, group => Path.GetFileName(group.First().Value), StringComparer.OrdinalIgnoreCase),
+            .ToDictionary(group => group.Key, group => WindowsPath.FileName(group.First().Value), StringComparer.OrdinalIgnoreCase),
     };
 
     private static Dictionary<string, Layout> NormalizeLayouts(IReadOnlyDictionary<string, Layout>? loadedLayouts)

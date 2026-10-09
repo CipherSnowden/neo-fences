@@ -18,7 +18,7 @@ public class ItemSortingTests
         Folder("archive", 2),
     ];
 
-    private static IReadOnlyList<string> Names(IReadOnlyList<string> refs) => refs.Select(Path.GetFileName).ToList()!;
+    private static IReadOnlyList<string> Names(IReadOnlyList<string> refs) => refs.Select(WindowsPath.FileName).ToList()!;
 
     [Fact]
     public void ByName_FoldersFirst_NumbersInNaturalOrder() =>

@@ -182,7 +182,7 @@ public static partial class ProgramPicker
             .Where(program =>
             {
                 var parts = program.RelativePath.Split('\\', '/');
-                return !parts[..^1].Any(SkippedFolder().IsMatch) && !SkippedProgram().IsMatch(Path.GetFileNameWithoutExtension(parts[^1]));
+                return !parts[..^1].Any(SkippedFolder().IsMatch) && !SkippedProgram().IsMatch(WindowsPath.FileNameWithoutExtension(parts[^1]));
             })
             .OrderByDescending(program => program.Size).ThenBy(program => program.RelativePath, StringComparer.OrdinalIgnoreCase)
             .Select(program => program.RelativePath)

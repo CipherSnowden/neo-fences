@@ -46,7 +46,7 @@ public sealed record PanelPlace(string Current, IReadOnlyList<string> History)
     public PanelPlace Back() => History.Count == 0 ? this : new(History[^1], [.. History.Take(History.Count - 1)]);
 
     public PanelPlace Up(string home) =>
-        CanGoUp(home) && Path.GetDirectoryName(FolderViews.ListedFolder(Current)) is { } parent ? Into(parent) : this;
+        CanGoUp(home) && WindowsPath.DirectoryName(FolderViews.ListedFolder(Current)) is { } parent ? Into(parent) : this;
 
     public PanelPlace Home(string home) => FolderViews.SameFolder(Current, home) ? this : Into(home);
 
@@ -164,7 +164,7 @@ public static class FolderPanels
     {
         var name = ownName ?? FolderViews.NameOf(home);
         if (!PanelPlace.IsBelow(shown, home)) return name;
-        var below = Path.GetRelativePath(FolderViews.ListedFolder(home), FolderViews.ListedFolder(shown));
+        var below = WindowsPath.RelativePath(FolderViews.ListedFolder(home), FolderViews.ListedFolder(shown));
         return string.Join(" › ", [name, .. below.Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries)]);
     }
 

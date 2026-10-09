@@ -14,7 +14,7 @@ public class FolderViewsTests
 
     private static ItemInfo Folder(string name, int minutesAgo = 0) => new($@"D:\View\{name}", name, IsFolder: true, TypeName: "", Day.AddMinutes(-minutesAgo));
 
-    private static IReadOnlyList<string> Names(FolderViews.Selection selection) => [.. selection.Shown.Select(Path.GetFileName)!];
+    private static IReadOnlyList<string> Names(FolderViews.Selection selection) => [.. selection.Shown.Select(WindowsPath.FileName)!];
 
     private static readonly IReadOnlyList<ItemInfo> Mixed =
     [

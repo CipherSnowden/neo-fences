@@ -198,9 +198,9 @@ public class SnapshotsTests
     }
 
     [Fact]
-    [System.Runtime.Versioning.SupportedOSPlatform("windows")] // folder ACLs
     public void Store_AFolderThatCannotBeListed_IsAProblemNotACrash()
     {
+        if (!OperatingSystem.IsWindows()) return; // folder ACLs are Windows' (M39: Core tests run on Linux too)
         using var folder = new TempDirectory();
         var denied = new System.Security.AccessControl.FileSystemAccessRule(
             System.Security.Principal.WindowsIdentity.GetCurrent().User!, System.Security.AccessControl.FileSystemRights.ListDirectory,

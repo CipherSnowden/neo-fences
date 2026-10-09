@@ -44,7 +44,7 @@ public static class DesktopSorting
         if (knownGames?.Contains(entry.ItemRef) == true) return DesktopGroup.Games;
         if (entry.LinkTarget is not { } target)
         {
-            var isShortcut = Path.GetExtension(entry.ItemRef).ToLowerInvariant() is ".lnk" or ".url";
+            var isShortcut = WindowsPath.Extension(entry.ItemRef).ToLowerInvariant() is ".lnk" or ".url";
             return !isShortcut && IsProgram(entry.ItemRef) ? DesktopGroup.Apps : DesktopGroup.FoldersAndFiles;
         }
         if (GameLaunchers.LauncherOf($"{target} {entry.LinkArguments}".Trim()) is not null
@@ -58,5 +58,5 @@ public static class DesktopSorting
         return DesktopGroup.FoldersAndFiles;
     }
 
-    private static bool IsProgram(string path) => ProgramExtensions.Contains(Path.GetExtension(path).ToLowerInvariant());
+    private static bool IsProgram(string path) => ProgramExtensions.Contains(WindowsPath.Extension(path).ToLowerInvariant());
 }

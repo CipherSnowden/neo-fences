@@ -8,6 +8,8 @@ namespace NeoFences.Core.Tests.Model;
 public class UxCarryOverTests
 {
     private static readonly DateTimeOffset Taken = new(2026, 10, 4, 22, 45, 0, TimeSpan.FromHours(5.5));
+    // Made here, not looked up: Windows names its zones differently from Linux (M39, Core tests on both).
+    private static readonly TimeZoneInfo India = TimeZoneInfo.CreateCustomTimeZone("India Standard Time", TimeSpan.FromHours(5.5), "India Standard Time", "India Standard Time");
 
     // ---------- tray snapshot labels (M10 carry-over) ----------
 
@@ -19,7 +21,7 @@ public class UxCarryOverTests
     [InlineData("Name\twith tab", "Name with tab")]                 // a tab would right-align the rest
     [InlineData("   ", "Snapshot 4 Oct 22:45")]                   // blank: the date and time
     public void MenuLabel_IsOneSafeLine(string name, string expected) =>
-        Assert.Equal(expected, Snapshots.MenuLabel(new SnapshotEntry(@"C:\s\a.json", name, Taken), TimeZoneInfo.FindSystemTimeZoneById("India Standard Time")));
+        Assert.Equal(expected, Snapshots.MenuLabel(new SnapshotEntry(@"C:\s\a.json", name, Taken), India));
 
     [Fact]
     public void MenuLabel_LongNamesAreCut()

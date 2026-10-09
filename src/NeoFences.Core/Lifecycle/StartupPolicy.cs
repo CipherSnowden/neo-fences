@@ -34,10 +34,10 @@ public static class StartupPolicy
     /// </summary>
     public static bool IsInstalledExe(string exePath, Func<string, bool> fileExists)
     {
-        var folder = Path.GetDirectoryName(exePath);
-        if (folder is null || !string.Equals(Path.GetFileName(folder), "current", StringComparison.OrdinalIgnoreCase)) return false;
-        var root = Path.GetDirectoryName(folder);
-        return root is not null && fileExists(Path.Combine(root, "Update.exe"));
+        var folder = WindowsPath.DirectoryName(exePath);
+        if (folder is null || !string.Equals(WindowsPath.FileName(folder), "current", StringComparison.OrdinalIgnoreCase)) return false;
+        var root = WindowsPath.DirectoryName(folder);
+        return root is not null && fileExists(WindowsPath.Combine(root, "Update.exe"));
     }
 
     /// <summary>The command line stored for sign-in: the quoted exe path.</summary>

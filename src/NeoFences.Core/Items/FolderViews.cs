@@ -72,7 +72,7 @@ public static class FolderViews
     /// The path a view lists and watches: a trailing separator goes, except on a drive root — "C:" alone means the current
     /// folder on drive C, not its root (final review I2).
     /// </summary>
-    public static string ListedFolder(string path) => Path.TrimEndingDirectorySeparator(path);
+    public static string ListedFolder(string path) => WindowsPath.TrimEndingSeparator(path);
 
     /// <summary>
     /// The folder typed in Folder view settings (M23): variables expanded (%USERPROFILE%), and only a full path — a relative
@@ -81,7 +81,7 @@ public static class FolderViews
     public static string? FolderPath(string text)
     {
         var expanded = Environment.ExpandEnvironmentVariables(text.Trim());
-        return expanded.Length > 0 && !expanded.Contains('%') && Path.IsPathFullyQualified(expanded) ? expanded : null;
+        return expanded.Length > 0 && !expanded.Contains('%') && WindowsPath.IsFullyQualified(expanded) ? expanded : null;
     }
 
     public static bool SameFolder(string left, string right) =>

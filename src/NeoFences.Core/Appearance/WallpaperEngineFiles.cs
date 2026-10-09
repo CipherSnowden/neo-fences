@@ -67,7 +67,7 @@ public static class WallpaperEngineFiles
             if (document.RootElement.ValueKind != JsonValueKind.Object
                 || !document.RootElement.TryGetProperty("preview", out var preview) || preview.ValueKind != JsonValueKind.String) return null;
             var name = preview.GetString();
-            return name is { Length: > 0 } && Path.GetFileName(name) == name && name != ".." && name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0 ? name : null;
+            return name is { Length: > 0 } && WindowsPath.IsPlainFileName(name) ? name : null;
         }
         catch (JsonException)
         {

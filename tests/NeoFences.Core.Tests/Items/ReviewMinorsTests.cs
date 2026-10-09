@@ -16,6 +16,7 @@ public class ReviewMinorsTests
     [Fact]
     public void FolderPath_ExpandsVariables()
     {
+        if (!OperatingSystem.IsWindows()) return; // %USERPROFILE% is Windows' (M39: Core tests run on Linux too)
         var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         Assert.Equal(Path.Combine(profile, "Downloads"), FolderViews.FolderPath(@"%USERPROFILE%\Downloads"));
     }

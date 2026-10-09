@@ -16,7 +16,7 @@ public static class GameItems
     public static bool ShowsCover(VirtualItem item) => IsGame(item) && item.ShowAs != ItemShow.Icon;
 
     public static VirtualItem Create(LibraryItem game, string libraryFolder) =>
-        VirtualItem.Create(Path.Combine(libraryFolder, game.FileName)) with { GameId = game.Game.Id };
+        VirtualItem.Create(WindowsPath.Combine(libraryFolder, game.FileName)) with { GameId = game.Game.Id };
 
     /// <param name="MigratedFenceIds">Fences that were Game Library fences and now hold game items.</param>
     public sealed record Migration(NeoFencesConfig Config, ItemsDocument Items, IReadOnlyList<string> MigratedFenceIds);
@@ -78,7 +78,7 @@ public static class GameItems
         var files = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var game in library.Items)
         {
-            foreach (var id in GameCatalog.IdsOf(game.Game)) files.TryAdd(id, Path.Combine(libraryFolder, game.FileName));
+            foreach (var id in GameCatalog.IdsOf(game.Game)) files.TryAdd(id, WindowsPath.Combine(libraryFolder, game.FileName));
         }
         var changed = false;
         var fences = new Dictionary<string, IReadOnlyList<VirtualItem>>();

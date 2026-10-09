@@ -29,10 +29,10 @@ public class SetupFileTests
         ]);
         Directory.CreateDirectory(data.File("icons"));
         Directory.CreateDirectory(data.File("covers"));
-        File.WriteAllBytes(data.File("icons\\pic.png"), [1, 2, 3]);
-        File.WriteAllBytes(data.File("icons\\unused.png"), [9]);
-        File.WriteAllBytes(data.File("covers\\choice-steam-1.jpg"), [4, 5]);
-        File.WriteAllText(data.File("covers\\index.json"), "{}");
+        File.WriteAllBytes(data.File("icons/pic.png"), [1, 2, 3]);
+        File.WriteAllBytes(data.File("icons/unused.png"), [9]);
+        File.WriteAllBytes(data.File("covers/choice-steam-1.jpg"), [4, 5]);
+        File.WriteAllText(data.File("covers/index.json"), "{}");
         return (config, items);
     }
 
@@ -73,8 +73,8 @@ public class SetupFileTests
 
         using var elsewhere = new TempDirectory();
         Assert.Empty(SetupFile.PlacePictures(read, elsewhere.Path));
-        Assert.Equal([1, 2, 3], File.ReadAllBytes(elsewhere.File("icons\\pic.png")));
-        Assert.Equal([4, 5], File.ReadAllBytes(elsewhere.File("covers\\choice-steam-1.jpg")));
+        Assert.Equal([1, 2, 3], File.ReadAllBytes(elsewhere.File("icons/pic.png")));
+        Assert.Equal([4, 5], File.ReadAllBytes(elsewhere.File("covers/choice-steam-1.jpg")));
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class SetupFileTests
     {
         using var data = new TempDirectory();
         var (config, items) = Setup(data);
-        File.Delete(data.File("icons\\pic.png"));
+        File.Delete(data.File("icons/pic.png"));
         var missing = SetupFile.Write(data.File("my.neofences"), config, items, data.Path, appVersion: "0.23.0", now: Now);
         Assert.Equal([new SetupPicture("icons", "pic.png")], missing);
         Assert.DoesNotContain(SetupFile.Read(data.File("my.neofences")).Pictures, picture => picture.Picture.Folder == "icons");

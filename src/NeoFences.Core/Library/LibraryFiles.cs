@@ -34,7 +34,7 @@ public static class LibraryFiles
         // First keep the names of files that still fit their game, so a new game never takes them over.
         foreach (var game in games)
         {
-            if (previousById.TryGetValue(game.Id, out var old) && Fits(old.FileName, game) && takenBases.Add(Path.GetFileNameWithoutExtension(old.FileName)))
+            if (previousById.TryGetValue(game.Id, out var old) && Fits(old.FileName, game) && takenBases.Add(WindowsPath.FileNameWithoutExtension(old.FileName)))
                 fileNames[game.Id] = old.FileName;
         }
         foreach (var game in games.Where(game => !fileNames.ContainsKey(game.Id)))
@@ -83,7 +83,7 @@ public static class LibraryFiles
         var fileNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var items = (state.Items ?? [])
             .Where(item => item?.Game is { Id.Length: > 0, Name: not null, ScanKey: not null, Launch.Target.Length: > 0 }
-                           && item.FileName is { Length: > 0 } fileName && fileName == Path.GetFileName(fileName)
+                           && item.FileName is { Length: > 0 } fileName && fileName == WindowsPath.FileName(fileName)
                            && fileName is not ("." or "..") && fileName.IndexOfAny(['/', '\\', ':']) < 0
                            && fileNames.Add(fileName))
             .Select(item => item with { Signature = item.Signature ?? "", Game = item.Game with { OtherIds = item.Game.OtherIds ?? [] } })
@@ -107,8 +107,8 @@ public static class LibraryFiles
     /// <summary>The old file still names this game: "Blur.lnk", or "Blur (2).url" after a clash.</summary>
     private static bool Fits(string fileName, GameEntry game)
     {
-        if (!Path.GetExtension(fileName).Equals(Extension(game), StringComparison.OrdinalIgnoreCase)) return false;
-        var stem = Path.GetFileNameWithoutExtension(fileName);
+        if (!WindowsPath.Extension(fileName).Equals(Extension(game), StringComparison.OrdinalIgnoreCase)) return false;
+        var stem = WindowsPath.FileNameWithoutExtension(fileName);
         var safe = SafeName(game.Name);
         return stem.Equals(safe, StringComparison.OrdinalIgnoreCase)
             || (stem.StartsWith(safe + " (", StringComparison.OrdinalIgnoreCase) && stem.EndsWith(')') && int.TryParse(stem[(safe.Length + 2)..^1], out _));

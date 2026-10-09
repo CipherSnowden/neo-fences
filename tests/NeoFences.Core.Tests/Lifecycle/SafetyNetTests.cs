@@ -187,6 +187,7 @@ public class SafetyNetTests
     [Fact]
     public void Save_ProbesTheFileOnce_WithoutTheLockedFileWait_OrTheRepair() // M33 review I6: a save never freezes the UI
     {
+        if (!OperatingSystem.IsWindows()) return; // a locked file is Windows' (Linux has no mandatory locks; M39)
         using var directory = new TempDirectory();
         var repairs = 0;
         var store = new JsonStore<NeoFencesConfig>(directory.Path, "config.json", NeoFencesConfig.CurrentSchemaVersion, ConfigJson.Deserialize,

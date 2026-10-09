@@ -54,7 +54,7 @@ public static class CollectRules
     public static CollectKinds KindOf(string name, bool isFolder)
     {
         if (isFolder) return CollectKinds.None;
-        var extension = Path.GetExtension(name);
+        var extension = WindowsPath.Extension(name);
         if (InstallerExtensions.Contains(extension)) return CollectKinds.Installers;
         if (extension.Equals(".exe", StringComparison.OrdinalIgnoreCase)
             && (name.Contains("setup", StringComparison.OrdinalIgnoreCase) || name.Contains("install", StringComparison.OrdinalIgnoreCase)))

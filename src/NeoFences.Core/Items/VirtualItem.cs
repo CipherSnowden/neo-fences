@@ -109,7 +109,7 @@ public static class ItemKinds
     /// extension (its id is <c>{GUID}\folder\x.exe</c>), else the front of a Store app's id ("Microsoft.WindowsCalculator").
     /// </summary>
     public static string AppName(string appId) =>
-        appId.Contains('\\') ? Path.GetFileNameWithoutExtension(appId) : appId.Split('_', '!')[0];
+        appId.Contains('\\') ? WindowsPath.FileNameWithoutExtension(appId) : appId.Split('_', '!')[0];
 
     /// <summary>The app's id (AppUserModelID), or null when the target is not an app.</summary>
     public static string? AppIdOf(string target) =>

@@ -67,7 +67,7 @@ public sealed record IconCacheIndex
             foreach (var (key, entry) in stored.Entries ?? [])
             {
                 // Only a PNG's own name in the cache folder counts: a hand-edited "..\x" never points elsewhere.
-                if (string.IsNullOrWhiteSpace(key) || entry is null || entry.File.Length == 0 || entry.File != Path.GetFileName(entry.File)
+                if (string.IsNullOrWhiteSpace(key) || entry is null || entry.File.Length == 0 || entry.File != WindowsPath.FileName(entry.File)
                     || !entry.File.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) continue;
                 entries[key] = entry;
             }

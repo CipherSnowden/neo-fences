@@ -69,7 +69,8 @@ public class WidgetsTests
     public void ClockText_FollowsTheCulturesTimeFormats()
     {
         var time = new DateTime(2026, 10, 5, 16, 7, 9);
-        Assert.Equal("4:07 PM", Widgets.ClockText(time, seconds: false, CultureInfo.GetCultureInfo("en-US")));
+        // Linux's ICU puts a narrow no-break space before "PM", Windows a plain one (M39: Core tests run on both).
+        Assert.Equal("4:07 PM", Widgets.ClockText(time, seconds: false, CultureInfo.GetCultureInfo("en-US")).Replace(' ', ' '));
         Assert.Equal("16:07:09", Widgets.ClockText(time, seconds: true, CultureInfo.GetCultureInfo("de-DE")));
     }
 

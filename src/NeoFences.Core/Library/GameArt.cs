@@ -28,7 +28,7 @@ public static class GameArt
         if (chosen is not null) return new CoverArt(chosen, IsPoster: true);
         if (poster is not null) return new CoverArt(poster, IsPoster: true);
         if (online is not null) return new CoverArt(online, IsPoster: true);
-        return logo is not null && PictureExtensions.Contains(Path.GetExtension(logo).ToLowerInvariant()) ? new CoverArt(logo, IsPoster: false) : null;
+        return logo is not null && PictureExtensions.Contains(WindowsPath.Extension(logo).ToLowerInvariant()) ? new CoverArt(logo, IsPoster: false) : null;
     }
 
     /// <summary>The online lookup runs for games without a chosen cover or a cover on disk (a logo still looks up).</summary>

@@ -53,7 +53,7 @@ public static class SetupFile
     public static IReadOnlyList<SetupPicture> PicturesOf(NeoFencesConfig config, ItemsDocument items) =>
         items.Fences.Values.SelectMany(list => list).Select(item => item.Icon?.Image).Select(name => (Folder: IconsFolder, Name: name))
             .Concat(config.Library.CoverChoices.Values.Select(name => (Folder: CoversFolder, Name: (string?)name)))
-            .Select(picture => (picture.Folder, Name: Path.GetFileName(picture.Name ?? "")))
+            .Select(picture => (picture.Folder, Name: WindowsPath.FileName(picture.Name ?? "")))
             .Where(picture => picture.Name.Length > 0)
             .Select(picture => new SetupPicture(picture.Folder, picture.Name))
             .Distinct()
@@ -164,7 +164,7 @@ public static class SetupFile
             {
                 var folder = Path.Combine(dataDirectory, picture.Folder);
                 Directory.CreateDirectory(folder);
-                var target = Path.Combine(folder, Path.GetFileName(picture.FileName));
+                var target = Path.Combine(folder, WindowsPath.FileName(picture.FileName));
                 File.WriteAllBytes(target + ".tmp", bytes);
                 File.Move(target + ".tmp", target, overwrite: true);
             }
