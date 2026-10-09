@@ -53,6 +53,7 @@ a:hover { color: #7aa9ff; }
   backdrop-filter: blur(12px);
 }
 .card .shot { margin-bottom: 14px; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+.card .shot.fit { object-fit: contain; background: rgba(0, 0, 0, 0.3); } /* a wide picture (the folder panel): whole, not cropped */
 .card h2 { font-size: 19px; margin: 0 0 6px; }
 .card p { color: var(--muted); margin: 0; }
 
