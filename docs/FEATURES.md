@@ -80,6 +80,7 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Fence settings (a look of its own per fence: style, background, title, title bar on hover, spacing), five look presets and own ones, Export / Import setup as one file, Reset settings | 0.23 (M36) | done | ADR-057 |
 | Performance at scale: icons from a cache at start, visible icons first, nothing ticking while hidden or in a game, a 500-item / 50-fence measurement | 0.24 (M37) | done | ADR-058 |
 | Keyboard way in: Peek puts the keyboard in a fence (Tab to the next, Esc back to your app), visible focus; a scripted Windows 11 VM test pass | 0.25 (M38) | done | ADR-060 |
+| Release readiness: freeware licence, privacy and security notes, third-party notices, checked downloads (checksums and attestations), issue forms, a landing page; Core tested on Linux | 0.26 (M39) | done | ADR-061 |
 | Auto-collect rules (the other half of dynamic collections) | later | — | replaces Rules (ADR-040) |
 | Theme packs: "Nanosuit" (Crysis HUD), "Animus" (Assassin's Creed) | v2 | — | |
 | Custom Win11-style compact context menu | v2 | — | |

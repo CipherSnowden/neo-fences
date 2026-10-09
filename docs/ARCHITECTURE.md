@@ -202,6 +202,13 @@ foreground; `FenceHost.Keyboard.cs` remembers the app, gives the keyboard to a f
 `FenceCycleRequested`). `tools/vm/` builds a Windows 11 Hyper-V VM and runs the checklist in it; `CheckReport` (Core)
 reads the results. `research/m38-keyboard-and-windows-11-vm.md`.
 
+**0.26.0 (M39, release readiness)**: ADR-061 — `WindowsPath` (Core) reads stored Windows paths by Windows' rules on every
+OS, so Core's tests run on Linux in CI (`core-linux`); NeoFences' own files keep `System.IO.Path`. The repo has
+`LICENSE.txt`, `PRIVACY.md`, `SECURITY.md`, `THIRD-PARTY-NOTICES.txt` (the first, second and fourth ship next to the exe;
+Settings → About → Licence and notices), issue forms, `docs/RELEASING.md`, and a landing page (`site/`, published by
+`pages.yml` with the guide's pictures). Releases carry `SHA256SUMS.txt` and build attestations.
+`research/m39-release-readiness.md`.
+
 **0.21.0 (M34, icons and game tiles)**: game tiles in Windows 11's style — rounded 2:3 covers with a soft shadow
 (two faint layers, no effect), the name below or, on fences with labels on hover, over the cover; hover lifts, selection
 rings in the accent; a glow tile for games without art (the icon shrunk to a few pixels and stretched as a backdrop, the

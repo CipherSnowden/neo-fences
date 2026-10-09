@@ -854,3 +854,14 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AX4 | Peek, then close the app you came from; Peek from the tray menu / Settings; Peek with an elevated window in front; start a full-screen game while peeking | no crash, nothing wrong comes forward, Peek ends (game mode) |
 | AX5 | While peeking: delete a fence, roll one up, switch / detach a tab, pause NeoFences | Tab still lands on a shown fence; no stale outline |
 | AX6 | `tools/vm/Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live -Data <a copy of your NeoFences data folder>` (M38.1) | 8 of 8 PASS in the VM (Peek and the keyboard, under the mouse, Tab walk, Esc in Properties, Esc after switching apps, a full-screen app, a rolled-up fence); your PC untouched |
+
+## AY — 0.26.0 release readiness (M39)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AY1 | CI on main | the Windows job and `core-linux` both green |
+| AY2 | The 0.26.0 draft | `SHA256SUMS.txt` among the assets; `gh attestation verify <Setup.exe> --repo CipherSnowden/neo-fences` passes; `Get-FileHash` matches its line |
+| AY3 | `tools/vm/Invoke-VmChecks.ps1` for the candidate in NF-Win11 | every check PASS, `trust-files` included |
+| AY4 | Settings → About → **Licence and notices** | the licence opens; `THIRD-PARTY-NOTICES.txt` and `PRIVACY.md` are beside it |
+| AY5 | The landing page at desktop and phone width; every link | reads well, one column on a phone; the download fetches the latest Setup.exe; guide, issues, licence, privacy, security and Microsoft's FAQ open |
+| AY6 | GitHub → Issues → New issue | the Bug and Idea forms; blank issues off; "Security problem" goes to a private report |

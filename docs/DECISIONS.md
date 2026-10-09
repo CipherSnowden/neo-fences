@@ -1551,3 +1551,30 @@ owner's. The owner chose the keyboard through Peek (no second hotkey) and a scri
 **Consequences.** The keyboard reaches every fence from any app without a new hotkey or a hook. The first pass on Windows 11
 26300 found no NeoFences problem (12 of 12); it found Windows' first-hour "quiet time", which hides full-screen apps from
 game mode on a brand-new account. Tab and Enter inside the fences are checked by hand (AX), not in the VM.
+
+## ADR-061 — A freeware licence, trust files, checked downloads, Core on Linux, one landing page
+**Date:** 2026-10-10 · **Status:** Accepted · **Amends:** ADR-039 (releases also carry checksums and attestations)
+
+**Context.** Before 1.0.0-rc goes to friends, strangers need to know what NeoFences is, what they may do with it, what it
+sends, and that a download is genuine — without a code-signing certificate (none affordable for an individual in India,
+ADR-039). Core was meant to be pure C#, but nothing ran it off Windows; on Linux 45 of its tests failed.
+
+**Decision.**
+- **Licence:** a short custom freeware licence (`LICENSE.txt`, the owner's wording; not lawyer-reviewed): free at home
+  and at work, the unmodified installer may be shared, no selling or modified versions, the source is published to be
+  read and built for oneself. Not open source.
+- **Trust files:** `PRIVACY.md` (no telemetry; only the update check and opt-in covers and website icons go over the
+  network), `SECURITY.md` (private vulnerability reporting), `THIRD-PARTY-NOTICES.txt`; the licence, notices and privacy
+  note ship next to `NeoFences.exe`, and Settings → About → **Licence and notices** opens the licence. Issue forms for
+  bugs and ideas.
+- **Checked downloads:** every release carries `SHA256SUMS.txt` and GitHub build attestations
+  (`gh attestation verify`).
+- **Core on Linux:** `WindowsPath` reads the Windows paths Core stores by Windows' rules on every OS; NeoFences' own
+  files keep `System.IO.Path`. CI runs Core's tests on Ubuntu as well as Windows.
+- **One landing page:** `site/` on GitHub Pages; the README and the guide explain SmartScreen and Smart App Control
+  honestly (no push to turn Smart App Control off).
+- **Outreach at 1.0:** VirusTotal, Microsoft's false-positive review and a winget entry, prepared in
+  `docs/RELEASING.md`, done at 1.0.0.
+
+**Consequences.** A later Linux or macOS port starts from a Core that already runs there; the release flow is written
+down; a stranger can check a download without trusting the page that links it.
