@@ -1,5 +1,7 @@
 using System.IO;
+using System.Reflection;
 using System.Windows.Threading;
+using NeoFences.Core.Lifecycle;
 using NeoFences.Core.Updates;
 using NeoFences.Shell;
 using Serilog;
@@ -43,9 +45,14 @@ public sealed partial class FenceHost
         try
         {
             var local = Environment.GetEnvironmentVariable("NEOFENCES_UPDATE_SOURCE");
+            // 1.0.0-rc (ADR-062): a release candidate follows the GitHub pre-releases (the next RC, then the stable release);
+            // a stable copy never sees them.
+            var ownVersion = typeof(FenceHost).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            var prereleases = UpdateChannel.FollowsPrereleases(ownVersion);
             IUpdateSource source = local is { Length: > 0 } && Directory.Exists(local)
                 ? new SimpleFileSource(new DirectoryInfo(local))
-                : new GithubSource(ReleasesRepository, accessToken: null, prerelease: false);
+                : new GithubSource(ReleasesRepository, accessToken: null, prerelease: prereleases);
+            if (prereleases) Log.Information("updates: this release candidate ({Version}) also takes pre-releases", ownVersion);
             var manager = new UpdateManager(source);
             if (!manager.IsInstalled)
             {
