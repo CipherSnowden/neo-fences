@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NeoFences — your desktop, in fences</title>
+  <meta name="description" content="NeoFences: translucent fences on your Windows 11 desktop that hold links to your apps, games, files, folders and websites. Free.">
+  <link rel="icon" href="favicon.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- M39 (ADR-061): one hand-written page; the pictures come from docs/guide (the Pages workflow copies them to img/). -->
+  <header class="bar">
+    <a class="brand" href="./"><img src="favicon.ico" alt="" width="28" height="28"> NeoFences</a>
+    <nav>
+      <a href="https://github.com/CipherSnowden/neo-fences/blob/main/docs/GUIDE.md">Guide</a>
+      <a href="https://github.com/CipherSnowden/neo-fences">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Your desktop, in fences.</h1>
+      <p class="lead">Translucent fences hold links to your apps, games, files, folders and websites — never the files
+        themselves. Widgets, live folder panels, game covers, and a desktop that stays tidy. Built for a gaming PC first.</p>
+      <div class="actions">
+        <a class="download" href="https://github.com/CipherSnowden/neo-fences/releases/latest/download/NeoFences.App-win-Setup.exe">Download for Windows 11</a>
+        <span class="meta">Free · 64-bit · <a href="https://github.com/CipherSnowden/neo-fences/releases/latest">release notes</a></span>
+      </div>
+      <img class="shot hero-shot" src="img/desktop.jpg" alt="A desktop with NeoFences: a Games fence with covers, an Apps fence, a Downloads folder panel and a Desk fence with widgets" width="1600" height="900">
+    </section>
+
+    <section class="features" aria-label="What it does">
+      <article class="card">
+        <img class="shot" src="img/games.jpg" alt="A Games fence with large cover tiles" loading="lazy">
+        <h2>Games as covers</h2>
+        <p>Steam, Epic, GOG, Ubisoft, EA, Battle.net, Xbox and your own game folders — found and shown as covers, next to
+          your apps.</p>
+      </article>
+      <article class="card">
+        <img class="shot" src="img/widgets.png" alt="Clock, date and system stats widgets" loading="lazy">
+        <h2>Widgets</h2>
+        <p>A clock, the date, and CPU, GPU, RAM and temperatures — in any fence, at any size.</p>
+      </article>
+      <article class="card">
+        <img class="shot" src="img/panel.png" alt="A Downloads folder panel in details view" loading="lazy">
+        <h2>Live folder panels</h2>
+        <p>Downloads, a game folder or a USB stick shown live inside a fence, as details, a list or icons.</p>
+      </article>
+      <article class="card">
+        <h2>Peek and the keyboard</h2>
+        <p><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Space</kbd> brings the fences above your windows with the keyboard in one:
+          arrows, <kbd>Enter</kbd>, <kbd>Tab</kbd> to the next fence, <kbd>Esc</kbd> back to your app.</p>
+      </article>
+      <article class="card">
+        <h2>Quiet while you play</h2>
+        <p>A full-screen game puts NeoFences to sleep: no timers, no network, about 0&nbsp;% CPU until you are back.</p>
+      </article>
+      <article class="card">
+        <h2>Your files are safe</h2>
+        <p>Fences hold links: removing one never touches a file. Hidden desktop icons always come back — after a crash too.
+          Snapshots and an undo for everything else.</p>
+      </article>
+    </section>
+
+    <section class="install" id="install">
+      <h2>Install in a minute</h2>
+      <ol>
+        <li><a href="https://github.com/CipherSnowden/neo-fences/releases/latest/download/NeoFences.App-win-Setup.exe">Download the installer</a> and run it.
+          No administrator rights needed.</li>
+        <li>If Windows says <em>"Windows protected your PC"</em>, click <strong>More info → Run anyway</strong>. NeoFences
+          is unsigned, not unsafe: a signing certificate costs money every year. Every download can be
+          <a href="https://github.com/CipherSnowden/neo-fences#check-your-download">checked</a> instead.</li>
+        <li>If <strong>Smart App Control</strong> blocks it, that Windows feature allows only signed apps; turning it off is
+          your decision — read <a href="https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions">Microsoft's FAQ</a> first.</li>
+      </ol>
+      <p class="note">NeoFences updates itself. No telemetry, no accounts, no ads — <a href="https://github.com/CipherSnowden/neo-fences/blob/main/PRIVACY.md">privacy</a>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="https://github.com/CipherSnowden/neo-fences/blob/main/docs/GUIDE.md">Guide</a>
+    <a href="https://github.com/CipherSnowden/neo-fences/issues/new/choose">Report a bug</a>
+    <a href="https://github.com/CipherSnowden/neo-fences/blob/main/LICENSE.txt">Licence</a>
+    <a href="https://github.com/CipherSnowden/neo-fences/blob/main/PRIVACY.md">Privacy</a>
+    <a href="https://github.com/CipherSnowden/neo-fences/blob/main/SECURITY.md">Security</a>
+    <span>Windows 11 · free · © 2026 CipherSnowden</span>
+  </footer>
+</body>
+</html>

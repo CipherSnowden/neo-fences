@@ -1,0 +1,77 @@
+/* M39 (ADR-061): the landing page — dark glass, like the fences. No framework, no web fonts. */
+:root {
+  --bg: #0b0d12;
+  --glass: rgba(255, 255, 255, 0.06);
+  --edge: rgba(255, 255, 255, 0.12);
+  --text: #e9ecf2;
+  --muted: #a3abba;
+  --accent: #4c8dff;
+  --accent-text: #ffffff;
+  --radius: 14px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 700px at 15% -10%, #1d2a4a 0%, transparent 60%),
+              radial-gradient(900px 600px at 110% 10%, #2a1d3f 0%, transparent 55%), var(--bg);
+  color: var(--text);
+  font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+
+a { color: var(--accent); }
+a:hover { color: #7aa9ff; }
+
+.bar, main, footer { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+.bar { display: flex; align-items: center; justify-content: space-between; padding-top: 18px; padding-bottom: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 600; font-size: 18px; }
+.bar nav { display: flex; gap: 20px; }
+.bar nav a { color: var(--muted); text-decoration: none; }
+.bar nav a:hover { color: var(--text); }
+
+.hero { text-align: center; padding: 48px 0 24px; }
+.hero h1 { font: 700 clamp(34px, 6vw, 60px)/1.1 "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; margin: 0 0 16px; letter-spacing: -0.02em; }
+.lead { color: var(--muted); font-size: clamp(17px, 2.2vw, 20px); max-width: 720px; margin: 0 auto 28px; }
+.actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 40px; }
+.download {
+  display: inline-block; padding: 14px 28px; border-radius: 999px; background: var(--accent); color: var(--accent-text);
+  font-weight: 600; font-size: 18px; text-decoration: none; box-shadow: 0 8px 30px rgba(76, 141, 255, 0.35);
+}
+.download:hover { color: var(--accent-text); background: #3b7cf0; }
+.download:focus-visible, a:focus-visible { outline: 3px solid #9fc0ff; outline-offset: 3px; }
+.meta { color: var(--muted); font-size: 14px; }
+
+.shot { display: block; width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--edge); }
+.hero-shot { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); }
+
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 56px 0; }
+.card {
+  background: var(--glass); border: 1px solid var(--edge); border-radius: var(--radius); padding: 18px;
+  backdrop-filter: blur(12px);
+}
+.card .shot { margin-bottom: 14px; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+.card h2 { font-size: 19px; margin: 0 0 6px; }
+.card p { color: var(--muted); margin: 0; }
+
+kbd {
+  font: 600 13px/1 "Segoe UI", system-ui, sans-serif; padding: 3px 7px; border-radius: 6px;
+  border: 1px solid var(--edge); background: rgba(255, 255, 255, 0.08); color: var(--text);
+}
+
+.install { background: var(--glass); border: 1px solid var(--edge); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 56px; }
+.install h2 { margin-top: 0; }
+.install li { margin-bottom: 10px; }
+.note { color: var(--muted); margin-bottom: 0; }
+
+footer { display: flex; flex-wrap: wrap; gap: 18px; padding-top: 24px; padding-bottom: 40px; border-top: 1px solid var(--edge); color: var(--muted); font-size: 14px; }
+footer a { color: var(--muted); }
+footer span { margin-left: auto; }
+
+@media (max-width: 600px) {
+  .bar nav { gap: 14px; }
+  .install { padding: 18px; }
+  footer span { margin-left: 0; width: 100%; }
+}

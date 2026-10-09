@@ -7,19 +7,25 @@ play, and it never moves, renames or deletes anything of yours.
 
 ![NeoFences on a desktop: a Games fence with covers, an Apps fence, a Downloads folder panel and widgets](docs/guide/desktop.jpg)
 
+**[Download for Windows 11](https://github.com/CipherSnowden/neo-fences/releases/latest/download/NeoFences.App-win-Setup.exe)**
+· [Website](https://ciphersnowden.github.io/neo-fences/) · [Guide](docs/GUIDE.md) · Free ([licence](LICENSE.txt))
+
 ## Install
 
-1. Open the [Releases](../../releases) page and download `NeoFences.App-win-Setup.exe` from the newest release. If
-   your browser warns that the file "isn't commonly downloaded", keep it (Edge: **…** → **Keep** → **Show more** →
+1. Download `NeoFences.App-win-Setup.exe` from the [latest release](https://github.com/CipherSnowden/neo-fences/releases/latest).
+   If your browser warns that the file "isn't commonly downloaded", keep it (Edge: **…** → **Keep** → **Show more** →
    **Keep anyway**).
 2. Run it. NeoFences installs for your user only (no administrator rights needed) and starts. Its icon sits in the
    notification area (the tray), next to the clock. On Windows 11 it may be behind the **^** arrow there; drag it
    onto the taskbar to keep it in view.
 3. **The first time only**, Windows may show *"Windows protected your PC"*: click **More info → Run anyway**. NeoFences
-   is not code-signed yet, so Windows does not know the publisher.
+   is unsigned, not unsafe: a code-signing certificate costs money every year, so Windows does not know the publisher
+   yet. Instead, every download can be checked — see [Check your download](#check-your-download).
 
-> **Smart App Control:** on PCs where Windows' Smart App Control is on (some fresh Windows 11 installs), unsigned apps are
-> blocked without a "Run anyway" button. NeoFences cannot run while Smart App Control is on.
+> **Smart App Control:** if it is on (some fresh Windows 11 installs), Windows blocks unsigned apps such as NeoFences
+> and offers no "Run anyway". Turning it off is your decision — read
+> [Microsoft's Smart App Control FAQ](https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions)
+> first.
 
 NeoFences **updates itself**: when a new version is ready the tray menu shows *"Restart to update"*; if you ignore it,
 the update installs the next time NeoFences exits. You can turn this off in **Settings → Updates**.
@@ -64,10 +70,25 @@ The [guide](docs/GUIDE.md) explains everything else, with pictures. In the app: 
 
 Uninstalling (Windows Settings → Apps) brings your desktop icons back and leaves that folder in place.
 
-## Status and license
+## Check your download
 
-Free to download and use. The source is published for transparency; **all rights reserved** — it is not open source
-(no license is granted to copy, modify or redistribute it).
+Every release lists `SHA256SUMS.txt`, and GitHub keeps a signed record (a build attestation) that each file was built
+from this repository by its release workflow. In PowerShell, in your Downloads folder:
+
+```powershell
+(Get-FileHash .\NeoFences.App-win-Setup.exe -Algorithm SHA256).Hash   # compare with the line in SHA256SUMS.txt
+gh attestation verify .\NeoFences.App-win-Setup.exe --repo CipherSnowden/neo-fences   # needs the GitHub CLI
+```
+
+## Licence, privacy, security
+
+- **Free** to use at home or at work and to share unchanged — see [LICENSE.txt](LICENSE.txt). The source is published so
+  anyone can see what NeoFences does; it is not open source.
+- **Privacy:** no telemetry, no accounts, no ads; the only network traffic is the update check and, if you turn them on,
+  game covers and website icons — see [PRIVACY.md](PRIVACY.md).
+- **Bugs and ideas:** the [issue forms](https://github.com/CipherSnowden/neo-fences/issues/new/choose).
+  **Security problems:** privately, see [SECURITY.md](SECURITY.md).
+- Third-party components and their licences: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
 ## Building
 
@@ -79,5 +100,6 @@ dotnet test
 dotnet run --project src/NeoFences.App
 ```
 
+Core (`src/NeoFences.Core`) is plain .NET: `dotnet test tests/NeoFences.Core.Tests` also runs on Linux, as CI does.
 `build\pack.ps1 -Version x.y.z` makes an installer locally (Velopack). Releases are built by GitHub Actions from version
 tags. Design notes, decisions (ADRs) and the test checklist are in [`docs/`](docs/).
