@@ -925,3 +925,17 @@ passes for Setup.exe, the portable zip and both packages). `SHA256SUMS.txt` firs
 with the four downloadable files' lines and the workflow now lists only those (with `--clobber`). Install check in
 `NF-Win11` (0.25.0 updated itself to 0.26.0 from the draft's own files): 13 of 13. Published; the landing page's
 folder-panel picture now shows whole.
+
+## 2026-10-10 — 1.0.0-rc.1 for friends
+
+**Done:** bounded design approved in chat (owner: feedback through the issue forms or the owner; about a week with no
+blocker, then 1.0.0). RC tags (`vX.Y.Z-rc.N`) start the Release workflow and upload as GitHub pre-releases
+(`vpk upload --pre`); `UpdateChannel.FollowsPrereleases` (Core, 7 tests) makes an RC install follow pre-releases while
+stable copies never see them; `docs/RELEASING.md` RC section; ADR-062; one guide line. Released 1.0.0-rc.1: CI green
+(Windows and Linux), the draft marked pre-release with checksums and attestations verified, the VM install check 13 of 13
+(0.25.0's successor 0.26.0 updated itself to rc.1 from the draft's files), published as a pre-release; the website's
+Download still serves 0.26.0; a one-off VM check — a fresh 0.26.0 checked the real GitHub releases, saw rc.1 as a
+pre-release and stayed on 0.26.0 (no download, no failed check).
+**Decisions:** ADR-062.
+**Next:** friends try rc.1 (link: the v1.0.0-rc.1 release page); fixes go into rc.2…; about a week after the last RC with
+no crash, data loss or stuck-icons report, 1.0.0 (version bump only) and the 1.0 outreach in `docs/RELEASING.md`.
