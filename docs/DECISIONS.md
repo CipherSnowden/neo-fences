@@ -1578,3 +1578,23 @@ ADR-039). Core was meant to be pure C#, but nothing ran it off Windows; on Linux
 
 **Consequences.** A later Linux or macOS port starts from a Core that already runs there; the release flow is written
 down; a stranger can check a download without trusting the page that links it.
+
+## ADR-062 — Release candidates are GitHub pre-releases that only release candidates follow
+**Date:** 2026-10-10 · **Status:** Accepted · **Amends:** ADR-039 (the Release workflow took stable `x.y.z` tags only)
+
+**Context.** 1.0.0 goes to friends first as a release candidate, for about a week. ADR-039 kept every pre-release tag out
+of the Release workflow so that installed copies never jump to a test build; an RC still has to be built, attested and
+installable, and a friend on rc.1 should get rc.2 and 1.0.0 without reinstalling.
+
+**Decision.**
+- Tags `vX.Y.Z-rc.N` start the Release workflow too; the draft is uploaded as a **GitHub pre-release** (`vpk upload
+  --pre`), with the same checksums and attestations. Other pre-release tags still start nothing.
+- An installed copy's update check takes pre-releases only when its own version is one (`UpdateChannel.FollowsPrereleases`,
+  Core): stable copies never see an RC; an RC follows the next RC and then the stable release (1.0.0 is newer than every
+  1.0.0-rc.N).
+- Friends get an RC from its release page link; the website keeps offering the latest stable release.
+- About a week after the last RC with no crash, data loss or "icons stuck hidden" report, 1.0.0 is that RC's code with
+  the version bumped (`docs/RELEASING.md`).
+
+**Consequences.** The owner and other stable users stay on 0.26.x until 1.0.0; release candidates are tested in the same
+VM pass as any release; feedback comes through the issue forms or through the owner.

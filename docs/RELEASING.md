@@ -1,7 +1,25 @@
 # Releasing NeoFences
 
-Every step that leaves this PC (push, tag, publish, submissions) is asked of the owner first. Versions are `x.y.z`; the
-Release workflow ignores pre-release tags on purpose, so installed copies never jump to a test build (ADR-039).
+Every step that leaves this PC (push, tag, publish, submissions) is asked of the owner first. Versions are `x.y.z`, and
+release candidates `x.y.z-rc.N` (ADR-062): those are GitHub pre-releases, which stable copies never update to. Any other
+pre-release tag starts nothing (ADR-039).
+
+## A release candidate (1.0.0-rc.N)
+
+For friends to try before a stable release. The same steps as "Every release" below, except:
+
+- **Version** `1.0.0-rc.N` in the csproj; tag `v1.0.0-rc.N`. The Release workflow uploads it as a **pre-release** draft
+  (`vpk upload … --pre`). Publish it the same way; it stays marked pre-release.
+- **Who gets it:** nobody automatically. Installed stable copies skip pre-releases; an RC install follows the next RC and
+  then the stable release (`UpdateChannel.FollowsPrereleases`). Friends install it from the RC's release page link
+  (`https://github.com/CipherSnowden/neo-fences/releases/tag/v1.0.0-rc.N`), which the owner sends them. The website's
+  Download button keeps fetching the latest stable release.
+- **After publishing:** check in `NF-Win11` that a fresh install of the last stable release reports "up to date", not the
+  RC (Settings → Updates → Check now, or its log: no "update … downloaded").
+- **Feedback:** the GitHub issue forms, or friends tell the owner, who passes it on. Every crash, data loss or "desktop
+  icons stuck hidden" report is fixed in the next RC.
+- **To 1.0.0:** about a week after the last RC with no such report, 1.0.0 is that RC's code with the version bumped (no
+  other change), released through "Every release", then "At 1.0.0" below.
 
 ## Every release
 

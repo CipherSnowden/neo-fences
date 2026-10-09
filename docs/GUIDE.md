@@ -288,6 +288,9 @@ are off, widgets and folder panels stop updating, auto-collect waits, and update
 
 ## 11. Updates
 
+A test version for friends (a **release candidate**, e.g. 1.0.0-rc.1) updates to the next test version and then to the
+finished release by itself; a normal copy never switches to a test version.
+
 NeoFences checks for updates and downloads them in the background. When one is ready the tray menu shows **Restart to
 update to v…**; if you ignore it, the update installs the next time NeoFences exits. **Settings → Updates**: **Download
 updates automatically** (on or off) and **Check now**.

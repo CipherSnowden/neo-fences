@@ -1,9 +1,12 @@
 # A pushed version tag (v1.8.0) builds, tests and packs NeoFences and uploads it as a DRAFT release (M17, ADR-039).
 # The draft is installed and checked on the developer PC, then published; only then do installed copies update.
+# A release candidate (v1.0.0-rc.1, ADR-062) is uploaded as a GitHub pre-release: stable copies never see it (they skip
+# pre-releases), and only release candidates follow it. Other pre-release tags (v1.9.0-beta) still start nothing (final
+# review M5).
 name: Release
 on:
   push:
-    tags: ['v[0-9]+.[0-9]+.[0-9]+'] # stable versions only: a v1.9.0-beta tag would otherwise reach every installed copy (final review M5)
+    tags: ['v[0-9]+.[0-9]+.[0-9]+', 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+']
 permissions:
   contents: write # the draft release; the workflow's own token, no stored secret
   id-token: write # M39 (ADR-061): build attestations, signed by GitHub
@@ -63,7 +66,9 @@ jobs:
             artifacts/releases/NeoFences.App-win-Portable.zip
       - name: Upload as a draft release
         shell: pwsh
-        run: dotnet vpk upload github --repoUrl "https://github.com/${{ github.repository }}" --token "${{ secrets.GITHUB_TOKEN }}" --outputDir artifacts/releases --tag "${{ github.ref_name }}" --releaseName "NeoFences ${{ github.ref_name }}"
+        run: |
+          $candidate = @(if ("${{ github.ref_name }}" -like '*-rc.*') { '--pre' }) # ADR-062: a release candidate is a pre-release
+          dotnet vpk upload github --repoUrl "https://github.com/${{ github.repository }}" --token "${{ secrets.GITHUB_TOKEN }}" --outputDir artifacts/releases --tag "${{ github.ref_name }}" --releaseName "NeoFences ${{ github.ref_name }}" @candidate
       - name: Upload the checksums to the draft
         shell: pwsh
         env:
