@@ -6,6 +6,8 @@ on:
     tags: ['v[0-9]+.[0-9]+.[0-9]+'] # stable versions only: a v1.9.0-beta tag would otherwise reach every installed copy (final review M5)
 permissions:
   contents: write # the draft release; the workflow's own token, no stored secret
+  id-token: write # M39 (ADR-061): build attestations, signed by GitHub
+  attestations: write
 jobs:
   release:
     runs-on: windows-latest
@@ -38,6 +40,31 @@ jobs:
         shell: pwsh
         run: ./build/pack.ps1 -Version "${{ steps.version.outputs.version }}" -ReleaseNotes artifacts/release-notes.md
       # Stage 2 (ADR-039): code signing goes here (vpk pack --signParams / --azureTrustedSignFile) once a certificate exists.
+      # M39 (ADR-061): unsigned, so every download can be checked instead — its SHA-256 and GitHub's build attestation.
+      # Only this version's files (artifacts/releases also holds the previous release, downloaded for the delta).
+      - name: Checksums
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $names = @("NeoFences.App-$version-full.nupkg", "NeoFences.App-$version-delta.nupkg", 'NeoFences.App-win-Setup.exe', 'NeoFences.App-win-Portable.zip', 'releases.win.json', 'RELEASES')
+          $lines = foreach ($name in $names) {
+            $path = Join-Path artifacts/releases $name
+            if (Test-Path -LiteralPath $path) { "$((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant())  $name" }
+          }
+          Set-Content artifacts/SHA256SUMS.txt -Value $lines -Encoding ascii
+          Get-Content artifacts/SHA256SUMS.txt
+      - name: Build attestations
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            artifacts/releases/NeoFences.App-${{ steps.version.outputs.version }}-*.nupkg
+            artifacts/releases/NeoFences.App-win-Setup.exe
+            artifacts/releases/NeoFences.App-win-Portable.zip
       - name: Upload as a draft release
         shell: pwsh
         run: dotnet vpk upload github --repoUrl "https://github.com/${{ github.repository }}" --token "${{ secrets.GITHUB_TOKEN }}" --outputDir artifacts/releases --tag "${{ github.ref_name }}" --releaseName "NeoFences ${{ github.ref_name }}"
+      - name: Upload the checksums to the draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.ref_name }}" artifacts/SHA256SUMS.txt --repo "${{ github.repository }}"

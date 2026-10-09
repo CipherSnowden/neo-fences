@@ -1,4 +1,5 @@
-# Every push to main and every pull request: build and run all tests on Windows (M17, ADR-039).
+# Every push to main and every pull request: build and run all tests on Windows (M17, ADR-039), and Core's tests on
+# Linux (M39, ADR-061).
 name: CI
 on:
   push:
@@ -16,3 +17,12 @@ jobs:
           dotnet-version: '10.0.x'
       - run: dotnet build NeoFences.slnx -c Release
       - run: dotnet test NeoFences.slnx -c Release --no-build
+  # M39 (ADR-061): Core is pure C# and its tests pass on Linux too (WindowsPath reads stored paths by Windows' rules).
+  core-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet test tests/NeoFences.Core.Tests -c Release
