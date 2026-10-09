@@ -255,6 +255,9 @@ catches up afterwards.
   **Shift+Tab** go to the next / previous fence. Press the hotkey again or **Esc** to send the fences back — the app you
   were in gets the keyboard back; a click outside or opening something also ends Peek. Change the keys in
   **Settings → General → Peek hotkey**.
+
+  ![Peek over Notepad: the Games fence has the keyboard (accent outline), its first cover the ring](guide/peek.jpg)
+
 - **Pause:** tray → **Pause NeoFences** gives the desktop back to Windows (fences hidden, icons shown) until you resume.
 
 ## 9. Snapshots
