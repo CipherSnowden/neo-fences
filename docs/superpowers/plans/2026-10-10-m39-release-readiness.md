@@ -50,7 +50,8 @@ pass; patch 2 builds with 0 warnings, puts the three files next to the exe, 878 
 - Windows 11 x64 only (ADR-059); hard rules stand — no new NuGet dependency, Win32 only in Shell, Core test-first, user
   files never touched.
 - The public repo never holds the owner's e-mail address or a claude.ai artifact link: secret scan
-  (`gmail|claude\.ai/artifact`) before every commit and push.
+  (`gmail|claude.ai/artifact`) before every commit and push. Expected hit: `THIRD-PARTY-NOTICES.txt` carries other
+  authors' addresses from .NET's own notices (e.g. Mono.Cecil's) — those must stay; only the owner's address is a leak.
 - The licence text is the owner-approved wording, unchanged.
 - PRIVACY states exactly what goes over the network: the update check and downloads from GitHub; only with "Find covers
   and website icons online" (off by default): game names to Steam's store search, covers from Steam's CDN, a website
