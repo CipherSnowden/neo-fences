@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-10",
-  commit: "f1b9738",
-  phase: "0.25.0 — keyboard way in and the Windows 11 VM (path to 1.0)",
-  current: "0.25.0 RELEASED: Peek (Ctrl+Alt+Space) puts the keyboard in a fence with a visible ring, Tab to the next fence, Esc back to your app; checked in a fresh Windows 11 VM (12 of 12); your installed copy updates itself · next: M39 release readiness",
+  commit: "a0b9293",
+  phase: "0.26.0 — release readiness (path to 1.0)",
+  current: "M39 merged: freeware licence, privacy and security notes, third-party notices (Settings → About → Licence and notices), checked downloads (checksums and attestations), issue forms, a landing page, new screenshots, Core tests on Linux · next: release 0.26.0 (asked), then 1.0.0-rc for friends",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -807,6 +807,14 @@ const HUB = {
     "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
   ],
   tasks: [
+    { group: "M39 · Release readiness (0.26.0)", items: [
+      { t: "You picked all four groups, a short freeware licence (your wording), one landing page, outreach at 1.0", s: "done" },
+      { t: "Core on Linux: 45 tests failed in WSL (Windows paths read by Linux rules); WindowsPath → 878 pass on both", s: "done" },
+      { t: "Native build; Opus review: 1 critical fixed (a setup file could write outside the data folder), privacy wording corrected; 882 tests", s: "done" },
+      { t: "VM passes on 0.26.0-rc.1: 13 of 13 and 8 of 8; screenshots from your setup (demo Downloads, data path hidden); merged locally", s: "done" },
+      { t: "Release 0.26.0; turn on Pages and private vulnerability reporting (asked first)", s: "todo" },
+      { t: "1.0.0-rc for friends (its own small design)", s: "todo" }
+    ] },
     { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
       { t: "You picked the keyboard through Peek and a scripted VM test pass; Windows 10 dropped — Windows 11 only (ADR-059)", s: "done" },
       { t: "Hyper-V on; NF-Win11 built from your ISO (no Setup clicks); five runs fixed the test tooling, then 12 of 12", s: "done" },
@@ -1218,7 +1226,7 @@ const HUB = {
     { id: "M37", name: "Performance at scale", goal: "Icon cache, visible first, idle timers, lighter items, a 500 / 50 measurement — released 0.24.0", s: "done" },
     { id: "M38", name: "Compatibility and accessibility", goal: "Peek takes the keyboard (Tab, Esc back), visible focus; a scripted Windows 11 VM pass, 12 of 12 — released 0.25.0", s: "done" },
     { id: "M38.1", name: "Test VMs for live checks", goal: "A second VM (NF-Win11-Dev) and Invoke-VmChecks.ps1 -Live: live checks of branch builds in a VM, not on your PC — merged", s: "done" },
-    { id: "M39", name: "Release readiness", goal: "Freeware licence, README, then 1.0.0-rc to friends and 1.0.0", s: "todo" }
+    { id: "M39", name: "Release readiness", goal: "Freeware licence, privacy, security, notices, checked downloads, issue forms, landing page, Core on Linux — merged, release pending", s: "wip" }
   ],
   versions: [
     { v: "v1.0", s: "done", scope: "Core fences, Takeover + Portals, drag-drop, shell menus, roll-up, scrolling, per-monitor layouts, tray, settings, Quick-hide, Peek, game-mode idle, watchdog, installer (2026-10-03)." },
@@ -1246,6 +1254,7 @@ const HUB = {
     { v: "0.23.0", s: "done", scope: "Fence settings and presets (M36): each fence its own look (style, background, title font and alignment, title bar on hover, spacing), five look presets and your own, Export / Import setup as one .neofences file, Reset settings to defaults. Released 2026-10-06; the installed 0.22.0 updated itself." },
     { v: "0.24.0", s: "done", scope: "Performance at scale (M37): icons from a cache at start, visible icons first, nothing ticking while hidden or in a game, labels drawn once, cover tiles built only for covers, a 500-item / 50-fence measurement. Released 2026-10-06; the installed 0.23.0 updated itself." },
     { v: "0.25.0", s: "done", scope: "Keyboard way in and the Windows 11 VM (M38): Peek puts the keyboard in a fence (arrows, Enter, Tab to the next fence, Esc back to your app) with a visible ring; a scripted Windows 11 test pass in Hyper-V. Released 2026-10-10; install check in the Windows 11 VM." },
+    { v: "0.26.0", s: "todo", scope: "Release readiness (M39): a freeware licence, privacy and security notes and third-party notices (in the app: Settings → About → Licence and notices), SHA-256 checksums and build attestations on every release, issue forms, a landing page, install help for SmartScreen and Smart App Control, new guide pictures. Merged 2026-10-10; release pending." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1440,7 +1449,8 @@ const HUB = {
     { id: "ADR-057", t: "Per-fence looks that fall back to all fences; presets copy; the whole setup as one file", s: "Accepted", d: "A fence's own look overrides Settings → Appearance part by part (empty = Like all fences); presets are copies; Export / Import a .neofences zip; import and reset take a whole snapshot first (Settings and presets too).", c: "Per-fence fonts are back in a window (ADR-038 amended); no new dependency; schema stays 5." },
     { id: "ADR-058", t: "Measure first; an icon and name cache; visible first; timers only while needed", s: "Accepted", d: "A 500 / 50 measurement script and timing marks; icons asked once per run, cached in cache\\icons and shown from there at start, re-checked daily; widget, hover and collect timers stop while nothing shows; labels drawn once; tiles only for covers.", c: "Icons 11 s → 3 s at 500 items; ready-to-run and virtualization not done; the start is now bound by creating the fence windows." },
     { id: "ADR-059", t: "Windows 11 is the only target", s: "Accepted", d: "NeoFences targets Windows 11 x64 only; Windows 10 is neither targeted nor tested (it may run; its fallbacks stay as harmless degradation).", c: "README, guide and project instructions say Windows 11; the never-run older desktop-layer path stays untested and is no release blocker." },
-    { id: "ADR-060", t: "Peek takes the keyboard; a scripted Windows 11 test pass in a Hyper-V VM", s: "Accepted", d: "After its hotkey Peek gives the keyboard to the fence under the mouse (else the last used, else the first); Tab / Shift+Tab between fences, Esc or the hotkey gives it back; the ring shows only from the keyboard. tools/vm builds a Windows 11 VM and runs a 12-check pass for every release candidate." }
+    { id: "ADR-060", t: "Peek takes the keyboard; a scripted Windows 11 test pass in a Hyper-V VM", s: "Accepted", d: "After its hotkey Peek gives the keyboard to the fence under the mouse (else the last used, else the first); Tab / Shift+Tab between fences, Esc or the hotkey gives it back; the ring shows only from the keyboard. tools/vm builds a Windows 11 VM and runs a 12-check pass for every release candidate." },
+    { id: "ADR-061", t: "A freeware licence, trust files, checked downloads, Core on Linux, one landing page", s: "Accepted", d: "Free at home and at work, share unchanged, no selling or modified versions; PRIVACY, SECURITY and third-party notices ship with the app; releases carry SHA256SUMS and attestations; WindowsPath keeps Core identical on Linux, tested in CI; a GitHub Pages landing page; outreach at 1.0." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1539,7 +1549,8 @@ const HUB = {
     { date: "2026-10-06", topic: "M35 modern menus and dialogs (merged)", done: "Mockups (menus with icons, Settings section list, swatches); prototype probe; native build (774 tests); Opus review fixes; live check AU incl. light mode; merged locally.", next: "Released 0.22.0; next: M36 fence settings and presets" },
     { date: "2026-10-06", topic: "M36 fence settings and presets (merged)", done: "Mockups (small settings window, five presets); two prototype probes; native build (810 tests); Opus review fixes (import collect watermarks, export temp name); live check AV; merged locally.", next: "Released 0.23.0; next: M37 performance at scale" },
     { date: "2026-10-06", topic: "M37 performance at scale (merged)", done: "Six measured prototype rounds; native build (824 tests); Opus review fixes (widgets frozen at start, placeholder icons, shortcut re-checks, the script's restore); live check AW; merged locally.", next: "Released 0.24.0; next: M38 compatibility" },
-    { date: "2026-10-07", topic: "M38 keyboard way in and the Windows 11 VM (merged)", done: "Windows 11 only (ADR-059); Hyper-V and NF-Win11 built; keyboard probe; five VM runs to 12 of 12; native build (837 tests); Opus review fixes; live check 7 of 7; VM pass on 0.25.0-rc.1 12 of 12; merged locally.", next: "M38.1 test VMs for live checks (your call: tests in VMs, not on your PC); release 0.25.0 when you say so; M39." }
+    { date: "2026-10-07", topic: "M38 keyboard way in and the Windows 11 VM (merged)", done: "Windows 11 only (ADR-059); Hyper-V and NF-Win11 built; keyboard probe; five VM runs to 12 of 12; native build (837 tests); Opus review fixes; live check 7 of 7; VM pass on 0.25.0-rc.1 12 of 12; merged locally.", next: "M38.1 test VMs for live checks (your call: tests in VMs, not on your PC); release 0.25.0 when you say so; M39." },
+    { date: "2026-10-10", topic: "M39 release readiness (merged)", done: "0.25.0 released (VM install check); M38.1 second VM; M39: Core on Linux (WindowsPath), trust files, checked downloads, landing page, screenshots; Opus review C1 fixed; VM passes 13/13 and 8/8; merged locally.", next: "Release 0.26.0 (asked), then 1.0.0-rc for friends." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2228,7 +2239,21 @@ const HUB = {
     ["9007222", "chore: bumped the version to 0.25.0"],
     ["22e1359", "docs: marked the 0.25.0 release as approved"],
     ["019fa47", "test: made the locked-config test unlock on its own thread so a busy CI runner cannot outlast the retries"],
-    ["f1b9738", "docs: recorded the 0.25.0 release"]
+    ["f1b9738", "docs: recorded the 0.25.0 release"],
+    ["5569c35", "docs: refreshed the hub for the 0.25.0 release"],
+    ["9b3384e", "docs: claimed M39 release readiness"],
+    ["9e2ce1a", "docs: added the M39 release readiness design spec"],
+    ["f676c60", "docs: added the M39 release readiness implementation plan"],
+    ["271175b", "docs: noted the expected third-party address in the M39 secret scan"],
+    ["6244350", "fix: made Core read stored Windows paths the same on every OS so its tests pass on Linux"],
+    ["9c5f283", "feat: added the licence, privacy, security and third-party notices, Licence and notices in Settings, and issue forms"],
+    ["c3fa5f3", "ci: added Core tests on Linux, and checksums and build attestations to releases"],
+    ["cc93637", "docs: added the landing page, the release checklist and the README's install, download check and licence sections"],
+    ["ff9b19a", "docs: described release readiness in ADR-061, architecture, features, checklist AY and the M39 note"],
+    ["84ecfe6", "fix: kept drive-relative names from leaving NeoFences' folder and corrected what the privacy note says about website icons"],
+    ["b8a84b5", "docs: refreshed the guide's screenshots and added Peek with the keyboard"],
+    ["cda7c2a", "docs: added the M39 VM passes and screenshots to the research note"],
+    ["a0b9293", "docs: recorded M39 as merged in the roadmap and session log"]
   ]
 };
 /* ===== END HUB DATA ===== */
