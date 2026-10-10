@@ -40,7 +40,7 @@ public partial class DesktopFillWindow : Window
     /// <param name="library">The Game Library's settings: its scan tells which desktop entries are games.</param>
     /// <param name="lastScan">The Game Library's last scan (its index), reused when there is one; empty: scanned here (M20).</param>
     public DesktopFillWindow(IReadOnlyList<(string Id, string Title)> fences, IReadOnlyDictionary<string, string> alreadyIn,
-        LibrarySettings library, IReadOnlyList<GameEntry> lastScan, IconLoader iconLoader, bool iconsHidden)
+        LibrarySettings library, IReadOnlyList<GameEntry> lastScan, IconLoader iconLoader, bool iconsHidden, bool suggestHideIcons)
     {
         InitializeComponent();
         _fences = fences;
@@ -49,6 +49,7 @@ public partial class DesktopFillWindow : Window
         _lastScan = lastScan;
         _iconLoader = iconLoader;
         HideIconsBox.Visibility = iconsHidden ? Visibility.Collapsed : Visibility.Visible;
+        HideIconsBox.IsChecked = suggestHideIcons; // rc.2: ticked on a first start (feedback: the icons showed twice, in fences and on the desktop)
         AddButton.Click += (_, _) => Accept();
         Loaded += (_, _) => Load();
     }

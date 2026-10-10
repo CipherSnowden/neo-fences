@@ -58,8 +58,8 @@ After installing, NeoFences starts with one fence: the **welcome**. It says what
 
 
 - **Sort my desktop…** opens **Add from desktop…**: pick the groups you want (Games, Apps, Folders and files, Web links);
-  each becomes a fence of links to what is on your desktop. Tick **Hide desktop icons while NeoFences runs** there if you
-  want only the fences on your desktop (the icons come back whenever NeoFences exits). Once the new fences are made, the
+  each becomes a fence of links to what is on your desktop. **Hide desktop icons while NeoFences runs** is ticked there,
+  so only the fences show (untick it to keep the icons; they come back whenever NeoFences exits). Once the new fences are made, the
   empty welcome fence goes away by itself.
 - **Add item…** adds one file, folder, app or website to this fence.
 - **Guide** opens this guide.

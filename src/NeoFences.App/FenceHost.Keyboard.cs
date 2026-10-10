@@ -39,17 +39,30 @@ public sealed partial class FenceHost
 
     private void GiveKeyboard(FenceWindow window)
     {
-        if (_keyboardWindow is { } previous && previous != window) previous.ReleaseKeyboard();
+        if (_keyboardWindow is { } previous && previous != window)
+        {
+            previous.ReleaseKeyboard();
+            Reattach(previous);
+        }
+        DesktopHost.DetachFromDesktop(window.Handle); // rc.2: never Progman's last active window (Win+D)
         if (!KeyboardFocus.TryGive(window.Handle)) Log.Information("peek: Windows kept the keyboard elsewhere; the fence shows its ring for the mouse");
         window.TakeKeyboard();
         _keyboardWindow = window;
         _lastKeyboardFence = window.BoxId;
     }
 
+    /// <summary>Back under Progman once the keyboard has gone elsewhere (after the give-back, so it never activates there).</summary>
+    private void Reattach(FenceWindow window) =>
+        window.Dispatcher.BeginInvoke(() =>
+        {
+            if (!DesktopHost.AttachToDesktop(window.Handle)) Log.Warning("peek: fence {FenceId} not attached to the desktop again", window.FenceId);
+        }, System.Windows.Threading.DispatcherPriority.Background);
+
     /// <summary>Peek ended (any way): the fence lets the keyboard go.</summary>
     private void ReleaseKeyboardForPeek()
     {
         _keyboardWindow?.ReleaseKeyboard();
+        if (_keyboardWindow is { } released) Reattach(released);
         _keyboardWindow = null;
     }
 

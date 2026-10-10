@@ -26,6 +26,13 @@ public static class DesktopHost
         return IsAttached(fenceHandle);
     }
 
+    /// <summary>
+    /// rc.2 (feedback #6): the fence leaves Progman while it has Peek's keyboard. Activated while owned by Progman it would
+    /// become Progman's last active window, and every later Win+D would hand the desktop's activation to it — ending "show
+    /// desktop" at once, so the second Win+D minimized instead of restoring (until NeoFences restarted).
+    /// </summary>
+    public static void DetachFromDesktop(nint fenceHandle) => PInvoke.SetWindowLongPtr((HWND)fenceHandle, WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT, 0);
+
     public static unsafe bool IsAttached(nint fenceHandle)
     {
         var progman = FindProgman();

@@ -137,6 +137,23 @@ Check 'peek-keyboard' {
   Keys @(0x1B); Start-Sleep -Seconds 1; $back = [NfVm.W]::GetForegroundWindow() -eq $notepad
   "keyboard in a fence: $inFence; back to Notepad after Esc: $back"; $inFence -and $back
 }
+# rc.2 (feedback #6): after Peek had the keyboard, Win+D twice must still bring a maximized window back (Windows
+# Terminal, as the owner found it).
+Check 'win-d-after-peek' {
+  Add-Type -Namespace NfVmD -Name W -MemberDefinition @'
+[DllImport("user32.dll")] public static extern bool ShowWindow(System.IntPtr h, int cmd);
+[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassName(System.IntPtr h, System.Text.StringBuilder s, int n);
+'@
+  $find = { @([NfVm.W]::TopLevel() | Where-Object { $s = New-Object System.Text.StringBuilder 256; [void][NfVmD.W]::GetClassName($_, $s, 256); $s.ToString() -eq 'CASCADIA_HOSTING_WINDOW_CLASS' }) | Select-Object -First 1 }
+  if (-not (& $find)) { Start-Process wt.exe; [void](Wait { [bool](& $find) } 40) }
+  $terminal = & $find; if (-not $terminal) { throw 'Windows Terminal did not open' }
+  [void][NfVmD.W]::ShowWindow($terminal, 3); Keys @(0x12); [void][NfVm.W]::SetForegroundWindow($terminal); Start-Sleep -Seconds 1
+  Keys @(0x11, 0x12, 0x20); Start-Sleep -Seconds 1; Keys @(0x1B); Start-Sleep -Seconds 1 # Peek takes the keyboard, Esc gives it back
+  Keys @(0x5B, 0x44); Start-Sleep -Seconds 3; $hidden = [NfVm.W]::IsIconic($terminal)
+  Keys @(0x5B, 0x44); Start-Sleep -Seconds 3; $back = -not [NfVm.W]::IsIconic($terminal) -and [NfVm.W]::IsWindowVisible($terminal)
+  Get-Process WindowsTerminal -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+  "desktop shown by the first Win+D: $hidden; Terminal back after the second: $back"; $hidden -and $back
+}
 Check 'uninstall' {
   StopNeoFences; (Start-Process (Join-Path $appDir 'Update.exe') -ArgumentList '--uninstall' -PassThru).WaitForExit(); Start-Sleep -Seconds 5
   $gone = -not (Test-Path -LiteralPath $exe); "app removed: $gone; icons hidden: $(IconsHidden)"; $gone -and -not (IconsHidden)
