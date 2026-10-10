@@ -45,6 +45,9 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
 - [~] **1.0.0-rc** to friends (claimed by session 2026-10-10 release-candidate): RC tags as GitHub pre-releases that stable copies never see, RC installs follow RCs; about a week, no blockers; then **1.0.0**
   - [x] Released 1.0.0-rc.1 on 2026-10-10 as a GitHub pre-release (VM: 13 of 13 from 0.26.0; a fresh 0.26.0 saw it and stayed on 0.26.0) — with friends; 1.0.0 about a week after the last RC with no blocker
   - [x] Released 1.0.0-rc.2 on 2026-10-11 (Win+D after Peek, icons hidden after the first sort, crisper text; VM 14 of 14 from rc.1)
+- [~] **M41a — Feel** (1.0.0-rc.3; claimed by session 2026-10-11 m41a-feel): themes (Classic, Aurora glass, Game HUD, Neon, Light Mica), title styles and emoji, Motion Off/Calm/Lively, one click opens, name styles, Guided/Compact fence menu, widgets in Small/Medium/Large with a gallery and flip setup, floating widget boards, Calendar and Now playing, a hands-off hidden desktop — spec `docs/superpowers/specs/2026-10-11-m41a-feel-design.md`
+  - [ ] Spec reviewed by the owner; plan; build; VM checks; rc.3
+- [ ] **M41b — Settings** (1.0.0-rc.4): option audit, Fence settings v4, Settings v2, recipes
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
   - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches
