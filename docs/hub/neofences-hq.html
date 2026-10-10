@@ -785,10 +785,10 @@ flowchart TD
 <script>
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
-  updated: "2026-10-10",
-  commit: "feca51d",
+  updated: "2026-10-11",
+  commit: "8f92b62",
   phase: "1.0.0-rc — release candidate with friends (path to 1.0)",
-  current: "1.0.0-rc.1 RELEASED to friends as a GitHub pre-release (your 0.26.0 and every stable copy ignore it; an RC install follows rc.2 and 1.0.0) · next: friends' feedback for about a week, fixes in rc.2, then 1.0.0 and the outreach",
+  current: "1.0.0-rc.2 RELEASED (friends' rc.1 updates itself): Win+D works after Peek, icons hidden after the first desktop sort, crisper text · M41 look and feel brainstormed visually (themes, titles, motion, one-click, Settings v4/v2, recipes) · next: widgets brainstorm, then the M41a spec",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -814,7 +814,9 @@ const HUB = {
       { t: "VM passes on 0.26.0-rc.1: 13 of 13 and 8 of 8; screenshots from your setup (demo Downloads, data path hidden); merged locally", s: "done" },
       { t: "Released 0.26.0: Pages and private reporting on, CI green on Windows and Linux, attestations verified, VM install check 13 of 13", s: "done" },
       { t: "1.0.0-rc.1 released as a pre-release: RC tags build, RC installs follow RCs, stable copies never see them (ADR-062); VM 13 of 13; a fresh 0.26.0 ignored it", s: "done" },
-      { t: "Friends try rc.1 for about a week; blockers fixed in rc.2…; then 1.0.0 and the 1.0 outreach", s: "wip" }
+      { t: "Friends' feedback on rc.1: Win+D bug (found in the VM: Peek's keyboard hand-over), icons, text, settings, titles, widgets, motion", s: "done" },
+      { t: "Released 1.0.0-rc.2: three fixes, new VM check win-d-after-peek, 14 of 14", s: "done" },
+      { t: "M41a feel (themes, titles, widgets, motion, one-click) → rc.3; M41b settings (audit, Settings v4/v2, recipes) → rc.4; then 1.0", s: "wip" }
     ] },
     { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
       { t: "You picked the keyboard through Peek and a scripted VM test pass; Windows 10 dropped — Windows 11 only (ADR-059)", s: "done" },
@@ -1257,6 +1259,7 @@ const HUB = {
     { v: "0.25.0", s: "done", scope: "Keyboard way in and the Windows 11 VM (M38): Peek puts the keyboard in a fence (arrows, Enter, Tab to the next fence, Esc back to your app) with a visible ring; a scripted Windows 11 test pass in Hyper-V. Released 2026-10-10; install check in the Windows 11 VM." },
     { v: "0.26.0", s: "done", scope: "Release readiness (M39): a freeware licence, privacy and security notes and third-party notices (in the app: Settings → About → Licence and notices), SHA-256 checksums and build attestations on every release, issue forms, a landing page, install help for SmartScreen and Smart App Control, new guide pictures. Released 2026-10-10; install check in the Windows 11 VM." },
     { v: "1.0.0-rc.1", s: "done", scope: "Release candidate for friends: a GitHub pre-release that stable copies never see; it updates itself to later release candidates and to 1.0.0. Released 2026-10-10." },
+    { v: "1.0.0-rc.2", s: "done", scope: "Release candidate 2: Win+D works after Peek, desktop icons hidden after the first desktop sort, crisper fence text. Released 2026-10-11." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1554,7 +1557,8 @@ const HUB = {
     { date: "2026-10-06", topic: "M37 performance at scale (merged)", done: "Six measured prototype rounds; native build (824 tests); Opus review fixes (widgets frozen at start, placeholder icons, shortcut re-checks, the script's restore); live check AW; merged locally.", next: "Released 0.24.0; next: M38 compatibility" },
     { date: "2026-10-07", topic: "M38 keyboard way in and the Windows 11 VM (merged)", done: "Windows 11 only (ADR-059); Hyper-V and NF-Win11 built; keyboard probe; five VM runs to 12 of 12; native build (837 tests); Opus review fixes; live check 7 of 7; VM pass on 0.25.0-rc.1 12 of 12; merged locally.", next: "M38.1 test VMs for live checks (your call: tests in VMs, not on your PC); release 0.25.0 when you say so; M39." },
     { date: "2026-10-10", topic: "M39 release readiness (merged)", done: "0.25.0 released (VM install check); M38.1 second VM; M39: Core on Linux (WindowsPath), trust files, checked downloads, landing page, screenshots; Opus review C1 fixed; VM passes 13/13 and 8/8; merged locally.", next: "Release 0.26.0 (asked), then 1.0.0-rc for friends." },
-    { date: "2026-10-10", topic: "0.26.0 and 1.0.0-rc.1 released", done: "0.26.0: website live, Pages and private reporting on, checksums fixed to the downloadable files, VM 13 of 13. RC: pre-release channel (ADR-062), rc.1 published, VM 13 of 13, a fresh 0.26.0 ignored it.", next: "Friends' feedback for about a week; rc.2 for any blocker; then 1.0.0 and the outreach." }
+    { date: "2026-10-10", topic: "0.26.0 and 1.0.0-rc.1 released", done: "0.26.0: website live, Pages and private reporting on, checksums fixed to the downloadable files, VM 13 of 13. RC: pre-release channel (ADR-062), rc.1 published, VM 13 of 13, a fresh 0.26.0 ignored it.", next: "Friends' feedback for about a week; rc.2 for any blocker; then 1.0.0 and the outreach." },
+    { date: "2026-10-11", topic: "rc.1 feedback, rc.2, M41 brainstorm", done: "Win+D bug reproduced and fixed via VM probes; rc.2 released (14 of 14); visual brainstorm of titles, widgets, motion, themes, clicks, menus, Fence settings v4, Settings v2, recipes.", next: "Widgets brainstorm; M41a spec and plan." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2269,7 +2273,14 @@ const HUB = {
     ["0716046", "ci: published release candidates as GitHub pre-releases, with the RC steps in the release checklist, the guide and ADR-062"],
     ["3d83797", "chore: bumped the version to 1.0.0-rc.1"],
     ["02b2460", "docs: marked the 1.0.0-rc.1 release as approved"],
-    ["feca51d", "docs: recorded the 1.0.0-rc.1 release"]
+    ["feca51d", "docs: recorded the 1.0.0-rc.1 release"],
+    ["5af7ddc", "docs: prepared the winget manifest and the 1.0 outreach steps"],
+    ["61cd79a", "fix: kept Win+D working after Peek and hid the desktop icons by default when sorting the desktop on a first start"],
+    ["f471dc7", "fix: drew fence text in display mode with fixed hinting so names and titles look crisp"],
+    ["4a58953", "fix: left Windows Terminal open in the Win+D VM check, since it also hosts the test script"],
+    ["3ad9070", "chore: bumped the version to 1.0.0-rc.2"],
+    ["05f08f0", "docs: marked the 1.0.0-rc.2 release as approved"],
+    ["8f92b62", "docs: recorded the 1.0.0-rc.2 release and the feedback round"]
   ]
 };
 /* ===== END HUB DATA ===== */
