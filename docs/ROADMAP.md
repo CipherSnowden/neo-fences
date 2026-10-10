@@ -44,6 +44,7 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Released 0.26.0 on 2026-10-10 (Pages and private vulnerability reporting on; checksums and attestations verified; VM install check 13 of 13)
 - [~] **1.0.0-rc** to friends (claimed by session 2026-10-10 release-candidate): RC tags as GitHub pre-releases that stable copies never see, RC installs follow RCs; about a week, no blockers; then **1.0.0**
   - [x] Released 1.0.0-rc.1 on 2026-10-10 as a GitHub pre-release (VM: 13 of 13 from 0.26.0; a fresh 0.26.0 saw it and stayed on 0.26.0) — with friends; 1.0.0 about a week after the last RC with no blocker
+  - [ ] Release 1.0.0-rc.2 (Win+D after Peek, icons hidden after the first sort, crisper text; the user approved the release 2026-10-11)
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
   - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches
