@@ -151,7 +151,7 @@ Check 'win-d-after-peek' {
   Keys @(0x11, 0x12, 0x20); Start-Sleep -Seconds 1; Keys @(0x1B); Start-Sleep -Seconds 1 # Peek takes the keyboard, Esc gives it back
   Keys @(0x5B, 0x44); Start-Sleep -Seconds 3; $hidden = [NfVm.W]::IsIconic($terminal)
   Keys @(0x5B, 0x44); Start-Sleep -Seconds 3; $back = -not [NfVm.W]::IsIconic($terminal) -and [NfVm.W]::IsWindowVisible($terminal)
-  Get-Process WindowsTerminal -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+  # Terminal stays open: on Windows 11 it also hosts this hidden test script, so ending its process would end the run.
   "desktop shown by the first Win+D: $hidden; Terminal back after the second: $back"; $hidden -and $back
 }
 Check 'uninstall' {
