@@ -49,8 +49,9 @@ For friends to try before a stable release. The same steps as "Every release" be
 NeoFences is unsigned (ADR-039, ADR-061): Windows' SmartScreen warns until a download has a reputation, and antivirus
 tools sometimes flag new unsigned installers. After publishing 1.0.0:
 
-1. **VirusTotal:** look up Setup.exe and the portable zip by their SHA-256 on https://www.virustotal.com (upload them if
-   they are unknown). Note any detections in the session log.
+1. **VirusTotal** (the owner, in a browser — the page cannot be read headless and the API needs an account key): open
+   `https://www.virustotal.com/gui/file/<sha256>` for Setup.exe and the portable zip (hashes from `SHA256SUMS.txt`);
+   upload them if they are unknown. Note any detections in the session log.
 2. **Microsoft false-positive review** (the owner signs in and submits): https://www.microsoft.com/wdsi/filesubmission →
    "Software developer" → upload `NeoFences.App-win-Setup.exe`, detection "Incorrectly detected as malware/malicious"
    (or SmartScreen), and this text:
@@ -59,13 +60,14 @@ tools sometimes flag new unsigned installers. After publishing 1.0.0:
    > its SHA-256 is listed in the release's SHA256SUMS.txt and it carries a GitHub build attestation. It is unsigned
    > because a code-signing certificate is not affordable for this free project. Please review it for SmartScreen
    > reputation.
-3. **winget** (after the owner's OK; the pull request comes from the owner's GitHub account):
-   - `winget install Microsoft.WingetCreate` once;
-   - `wingetcreate new https://github.com/CipherSnowden/neo-fences/releases/download/v1.0.0/NeoFences.App-win-Setup.exe`
-     — identifier `CipherSnowden.NeoFences`, installer type `exe`, silent switch `--silent`, scope `user`, licence
-     "Freeware", licence URL `https://github.com/CipherSnowden/neo-fences/blob/main/LICENSE.txt`, privacy URL
-     `.../blob/main/PRIVACY.md`, short description "Translucent fences on your desktop that hold links to your apps,
-     games, files and websites";
-   - check it in Windows Sandbox or the VM (`winget validate`, `winget install --manifest <folder>`), then let
-     wingetcreate submit (`--submit`), or open the pull request to `microsoft/winget-pkgs` with `gh`;
-   - later versions: `wingetcreate update CipherSnowden.NeoFences --version x.y.z --urls <Setup.exe url> --submit`.
+3. **winget** (after the owner's OK; the pull request comes from the owner's GitHub account). The manifest is ready in
+   `tools/winget/` (identifier `CipherSnowden.NeoFences`, a user-scope `exe` installer that is silent with `--silent`,
+   licence "Freeware", the privacy and licence URLs). Prepared 2026-10-10 on 1.0.0-rc.1: `winget validate` passes, and
+   Setup registers in Apps & features as key `NeoFences.App`, name "NeoFences", publisher "NeoFences" — the manifest's
+   `ProductCode` and `AppsAndFeaturesEntries` say so, so winget recognizes an installed copy.
+   - Copy the three files to a scratch folder, replace `{VERSION}` (e.g. `1.0.0`) and `{SHA256}` (Setup.exe's line in
+     `SHA256SUMS.txt`, upper case), drop the template comment line, and run `winget validate --manifest <folder>`.
+   - Fork `microsoft/winget-pkgs` (`gh repo fork microsoft/winget-pkgs --clone=false`), add the files under
+     `manifests/c/CipherSnowden/NeoFences/<version>/` on a branch, and open the pull request (`gh pr create`). The
+     winget-pkgs checks install it in their own sandbox; answer their bot if it asks.
+   - Later versions: the same with the new version and hash (or `wingetcreate update` if it is installed).

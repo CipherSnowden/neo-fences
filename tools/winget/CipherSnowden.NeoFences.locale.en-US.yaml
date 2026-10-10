@@ -1,0 +1,21 @@
+# winget manifest template (1.0 outreach, docs/RELEASING.md): replace {VERSION} and {SHA256} (from SHA256SUMS.txt, upper case).
+PackageIdentifier: CipherSnowden.NeoFences
+PackageVersion: {VERSION}
+PackageLocale: en-US
+Publisher: CipherSnowden
+PublisherUrl: https://github.com/CipherSnowden
+PublisherSupportUrl: https://github.com/CipherSnowden/neo-fences/issues
+PrivacyUrl: https://github.com/CipherSnowden/neo-fences/blob/main/PRIVACY.md
+PackageName: NeoFences
+PackageUrl: https://ciphersnowden.github.io/neo-fences/
+License: Freeware
+LicenseUrl: https://github.com/CipherSnowden/neo-fences/blob/main/LICENSE.txt
+ShortDescription: Translucent fences on your desktop that hold links to your apps, games, files and websites.
+Tags:
+- desktop
+- organizer
+- fences
+- productivity
+ReleaseNotesUrl: https://github.com/CipherSnowden/neo-fences/releases/tag/v{VERSION}
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

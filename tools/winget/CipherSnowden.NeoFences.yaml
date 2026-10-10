@@ -1,0 +1,6 @@
+# winget manifest template (1.0 outreach, docs/RELEASING.md): replace {VERSION} and {SHA256} (from SHA256SUMS.txt, upper case).
+PackageIdentifier: CipherSnowden.NeoFences
+PackageVersion: {VERSION}
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.6.0

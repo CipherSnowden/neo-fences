@@ -1,0 +1,25 @@
+# winget manifest template (1.0 outreach, docs/RELEASING.md): replace {VERSION} and {SHA256} (from SHA256SUMS.txt, upper case).
+PackageIdentifier: CipherSnowden.NeoFences
+PackageVersion: {VERSION}
+Platform:
+- Windows.Desktop
+MinimumOSVersion: 10.0.22000.0
+InstallerType: exe
+Scope: user
+InstallModes:
+- silent
+InstallerSwitches:
+  Silent: --silent
+  SilentWithProgress: --silent
+UpgradeBehavior: install
+ProductCode: NeoFences.App
+AppsAndFeaturesEntries:
+- DisplayName: NeoFences
+  Publisher: NeoFences
+  ProductCode: NeoFences.App
+Installers:
+- Architecture: x64
+  InstallerUrl: https://github.com/CipherSnowden/neo-fences/releases/download/v{VERSION}/NeoFences.App-win-Setup.exe
+  InstallerSha256: {SHA256}
+ManifestType: installer
+ManifestVersion: 1.6.0
