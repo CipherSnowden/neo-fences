@@ -939,3 +939,28 @@ pre-release and stayed on 0.26.0 (no download, no failed check).
 **Decisions:** ADR-062.
 **Next:** friends try rc.1 (link: the v1.0.0-rc.1 release page); fixes go into rc.2…; about a week after the last RC with
 no crash, data loss or stuck-icons report, 1.0.0 (version bump only) and the 1.0 outreach in `docs/RELEASING.md`.
+
+## 2026-10-11 — friends' feedback on rc.1; 1.0.0-rc.2; M41 brainstorm
+
+**Feedback (a friend on rc.1):** jagged icons/covers and soft text; a click leaves a selection ring; settings hard to
+understand, duplicated, some options without effect; fence titles and widgets look weak; fences feel "dead"; Win+D twice
+didn't bring windows back; after "Sort my desktop" the desktop icons still showed; desktop clicks with fences hidden.
+**Win+D investigation (VMs, then a passive recorder on the owner's PC with the owner's OK):** not reproduced on a fresh
+start; reproduced in `NF-Win11-Dev` after one Peek with Windows Terminal maximized; 0.24.0 passed (pre-M38), so the M38
+keyboard hand-over caused it. After a fence had been activated while owned by Progman it became Progman's last active
+window, and every later Win+D handed the desktop's activation to that fence, ending "show desktop" at once (probes A —
+clearing WPF focus — and B — no `Activate()` — did not help; C — detach the fence from Progman while it has the
+keyboard, re-attach after — fixed it, 6 of 6).
+**Done (rc.2):** the Win+D fix (`DesktopHost.DetachFromDesktop`, `FenceHost.Keyboard` re-attach); "Hide desktop icons"
+ticked by default in "Sort my desktop" on a first start (guide updated); fence text in Display mode with fixed hinting
+(a VM probe compared four builds; zoomed crops sent to the owner). New release-candidate VM check `win-d-after-peek`
+(Windows Terminal hosts the guest script on Windows 11 — never end its process in a check). Released 1.0.0-rc.2: CI green,
+checksums and attestations verified, VM install check rc.1 → rc.2 from the draft's files 14 of 14, published as a
+pre-release (the website still serves 0.26.0).
+**M41 brainstorm (visual companion, owner's picks):** see the M41 spec when written — title styles (Simple, Clean, Pill,
+Caps B), widget styles (glass cards, rings, minimal), B3 motion, four themes with transparency, one click opens (no
+selection look), menu styles Compact/Guided, Fence settings v4 (live preview over the wallpaper, explainer panel,
+badges), global Settings v2 (visual pickers, search), recipes with two-step apply, desktop clicks (double-click hides
+fences and frees the desktop). Widgets need more brainstorming. Desktop switcher: not in NeoFences (YASB or a separate
+project).
+**Next:** widgets brainstorm, then the M41a spec and plan.
