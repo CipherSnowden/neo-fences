@@ -5,8 +5,10 @@
         Title="NeoFences fence" Width="320" Height="220"
         WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="True"
         Background="#01000000" ShowInTaskbar="False" ShowActivated="False"
-        UseLayoutRounding="True" RenderOptions.BitmapScalingMode="HighQuality">
-    <!-- M34: edges on whole pixels and high-quality scaling, so icons and covers stay sharp at 125/150 %. -->
+        UseLayoutRounding="True" RenderOptions.BitmapScalingMode="HighQuality" TextOptions.TextFormattingMode="Display" TextOptions.TextHintingMode="Fixed">
+    <!-- M34: edges on whole pixels and high-quality scaling, so icons and covers stay sharp at 125/150 %.
+         rc.2: text in "Display" mode with fixed hinting: a transparent window gets no ClearType, and this keeps the letters
+         on whole pixels instead of soft (probe: visibly crisper names, same cost; the label cache and shadow stay). -->
     <!-- Layered window (AllowsTransparency) + accent blur, owned by Progman: ADR-011.
          The 1/255-alpha background keeps the empty area hit-testable (fully transparent pixels click through).
          Colours are DynamicResources set by ApplyTheme (light/dark follows Windows, M2c). -->
