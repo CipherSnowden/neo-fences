@@ -54,13 +54,13 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 │ FenceWindow · FenceItemView · IconLoader · ItemPropertiesWindow           │
 │ AppPickerWindow · RelocateWindow · DesktopFillWindow · MissingItemWindow  │
 │ FolderViewWindow · AddGamesWindow · SettingsWindow · FolderLister         │
-│ FenceGridPanel · SizePicker                                               │
+│ FenceGridPanel · SizePicker · FenceThemeLayer · WidgetFace · NowPlayingCard│
 │ DrawFenceOverlay                                                          │
 └──────────────┬────────────────────────────────────────────────────────────┘
 ┌──────────────▼─────────── NeoFences.Shell (Win32/COM, CsWin32) ───────────┐
 │ DesktopHost · DesktopIcons · ShellItems · ShellItemMenu · ShellDragDrop   │
 │ TargetProbe · PathPicker · IconPicker · FolderWatcher · DesktopMouseHook  │
-│ AppList · KnownFolders · SystemStats                                      │
+│ AppList · KnownFolders · SystemStats · MediaSessions · DesktopReveal      │
 │ GameDetection · GameScanners · Monitors · TrayIcon · Watchdog             │
 └──────────────┬────────────────────────────────────────────────────────────┘
 ┌──────────────▼─────────── NeoFences.Core (pure C#) ───────────────────────┐
@@ -114,6 +114,14 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 | Shell/DesktopHost, FenceWindowChrome | fences at desktop level (owner = Progman, re-applied on TaskbarCreated), Peek, accent blur, rounded corners | SetWindowLongPtr(GWLP_HWNDPARENT), SetWindowCompositionAttribute |
 | Shell/DesktopMouseHook (+DesktopWindows), Core/Input | desktop double-click (quick-hide), right-drag (draw a fence), Peek click-outside (ADR-020) | WH_MOUSE_LL (own thread), UI Automation |
 | Shell/GlobalHotkey, GameDetection, TrayIcon, Monitors | Peek hotkey; game mode (ADR-021); tray; monitors and DPI | RegisterHotKey, SHQueryUserNotificationState, Shell_NotifyIcon, EnumDisplayMonitors |
+| Core/Model (M41a) | `Clicks` (`OpenWith` One / Double click, a fence's own over Settings'; `FenceMenuStyle`), `RunState.HandlesRightButton` / `RevealWanted` (ADR-066), `FenceTheme` / `TitleStyle` / `NameStyle` / `Motion` + `MotionPolicy`, `Settings.NewInstall` (Aurora, Clean) and `ThemesIntroduced`, `Emoji.Normalize` (one grapheme), `Titles.CountText`, `Fence.Emoji` / `OpenWith` / `WidgetsFloat` (ADR-063–065) | System.Globalization |
+| Core/Appearance (M41a) | `FenceLook.Resolve`: Classic as before; a theme's own tone (Light Mica light, the others dark), veil from the strength, the fence's colour as accent (HUD's cyan without one), HUD's mono title | — |
+| Core/Items (M41a) | `WidgetSize` + `WidgetSizes` (Small 2×1, Medium 2×2, Large 4×2; old spans to the nearest; drag snap), `CalendarMonth` (weeks from the first day of the week, ISO week), `WorldClocks` (IANA cities, at most two), `NowPlaying` (timeline text, live position, the "nothing playing" face, player names), `WidgetBoards.OnlyWidgets`; `WidgetKind.NowPlaying`; Date shown as Calendar | TimeZoneInfo, ISOWeek |
+| Shell/MediaSessions, VolumeKeys, PlayerWindows (M41a) | Windows' media sessions (read, cover bytes, play/pause / next / previous / shuffle / repeat / seek; every failure logged once, "nothing playing"); the volume keys; a player's window to the front (ADR-065) | Windows.Media.Control (WinRT, the SDK projection), SendInput, SetForegroundWindow |
+| Shell/DesktopReveal (M41a) | "Click wallpaper to reveal desktop": the shell's MinimizeAll / UndoMinimizeALL (ADR-066) | Shell.Application (late-bound) |
+| App/FenceThemeLayer, FenceWindow.Motion (M41a) | the theme's drawing behind the items (Aurora's lights, HUD's frame and scan line, Neon's glow, Mica's grain), ≤ 20 fps, paused while hidden or rolled up; item hover lift / glow / tilt / sweep, press dip / ripple, staggered arrival, tooltips growing in, the title-on-hover fade (ADR-063) | WPF animations (render transforms, brushes) |
+| App/WidgetFace, NowPlayingCard, FenceWindow.Widgets, FenceHost.Media (M41a) | widget faces per kind and size in glass cards (ADR-065); Now playing's sleeve, record, tonearm, scrub and players; the gallery drawn in the fence ("+" on the title, Widget…), the widget's back (flip, a popup raised topmost), the corner grip's snap; the media reading on the widget tick, covers in memory | WPF (code-built), Popup |
+| App/FenceHost.Clicks (M41a) | one click opens (per fence), the fence menu's shape (Guided / Compact, `ArrangeMenu`), names' style and motion pushed to the windows, the one-time themes tip | — |
 
 ## Threads
 

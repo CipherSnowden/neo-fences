@@ -865,3 +865,22 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AY4 | Settings → About → **Licence and notices** | the licence opens; `THIRD-PARTY-NOTICES.txt` and `PRIVACY.md` are beside it |
 | AY5 | The landing page at desktop and phone width; every link | reads well, one column on a phone; the download fetches the latest Setup.exe; guide, issues, licence, privacy, security and Microsoft's FAQ open |
 | AY6 | GitHub → Issues → New issue | the Bug and Idea forms; blank issues off; "Security problem" goes to a private report |
+
+## AZ — 1.0.0-rc.3 feel (M41a)
+
+| ID | Steps | Expected |
+|---|---|---|
+| AZ1 | `tools/vm/Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live` | every check PASS, the M41a ones included: one click opens, Ctrl+click selects, both fence menus, a hidden desktop's own right-click menu, reveal |
+| AZ2 | Click an item, a game cover, a folder; drag one a little and let go; double-click one | one click opens it once; a drag moves it and opens nothing; a double-click opens it once; no ring stays |
+| AZ3 | Ctrl+click two items, then drag them; drag a box over three; right-click one and close its menu | the two move together; the three show selected; after the menu nothing stays selected |
+| AZ4 | Settings → Fences → Open items with → Double click; a fence's Fence settings → Open items with → One click | other fences open on a double-click and select on one; that fence opens on one click |
+| AZ5 | Settings → Appearance → Fence menu: Guided, then Compact; right-click a fence of items, a folder view and a tab | Guided: headings over the right entries (no Add heading on a folder view); Compact: the icon row works and closes the menu; Lock shows lit when locked |
+| AZ6 | Double-click the desktop; right-click it, drag on it, use an interactive Wallpaper Engine wallpaper; double-click again | Windows' own menu and drag; the wallpaper reacts; the fences come back |
+| AZ7 | Settings → General → Click wallpaper to reveal desktop on; click empty wallpaper with windows open; click it again; double-click it | windows step aside, come back; a double-click quick-hides instead |
+| AZ8 | `Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live -Script probe-looks.ps1`, then `-Script probe-widgets.ps1` | every step PASS; the screenshots show the five themes, four title styles and three name styles, the widgets in their sizes, a floating board, Now playing with Media Player's track, a widget's back and the gallery |
+| AZ9 | An existing setup from rc.2 updated to rc.3 | its look unchanged (Classic, Simple titles); one "New: fence themes · Try them" tip; Try them opens Fence settings; it never shows again |
+| AZ10 | Settings → Appearance: each theme; Transparency from Clear to Solid; Motion Lively / Calm / Off; Item names Crisp / Chips / Plain; with Windows light and dark | each fence follows; Light Mica stays light in dark mode, the others dark in light mode; names stay readable; nothing moves with Off |
+| AZ11 | A game in full screen with Lively motion and an Aurora fence | game mode: nothing of the theme moves; after the game it moves again |
+| AZ12 | Ten Aurora / HUD / Neon fences, Motion Lively, idle for a minute (Task Manager, NeoFences' CPU) — on the owner's PC, asked first | average under 2 %; else theme motion drops to 10 fps |
+| AZ13 | Spotify (or a YouTube tab) playing, a Now playing widget Large; pause, next, the bar, shuffle, repeat, the wheel, the cover; a second player; stop all | each works or is hidden when the player does not allow it; the pills switch players; the wheel shows Windows' volume flyout; the cover brings the player forward; then "Nothing playing" with the last song |
+| AZ14 | Widgets: add each from the gallery in S, M and L; drag a corner across sizes; ⚙ → change options → Done; an old 3×3 clock from rc.2 | the snap label shows the size; the back flips and closes; the old clock shows Large; nothing else moves |

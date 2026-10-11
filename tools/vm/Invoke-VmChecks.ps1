@@ -16,6 +16,7 @@ param(
   [Parameter(ParameterSetName = 'Live')][string]$Build, # a self-contained publish folder; default: this checkout, published now
   [Parameter(ParameterSetName = 'Live')][string]$Data,
   [Parameter(ParameterSetName = 'Live')][string[]]$Files = @(),
+  [Parameter(ParameterSetName = 'Live')][string]$Script = 'live-checks.ps1', # M41a: or a probe in guest (screenshots for a look)
   [string]$Out = (Join-Path ([IO.Path]::GetTempPath()) "neofences-vm-$Name"),
   [string]$CoreDll = (Join-Path $PSScriptRoot '..\..\src\NeoFences.Core\bin\Debug\net10.0\NeoFences.Core.dll')
 )
@@ -29,6 +30,12 @@ if ($Live -and -not $Build) {
   "publishing this checkout to $Build"
   dotnet publish (Join-Path $PSScriptRoot '..\..\src\NeoFences.App') -c Release -r win-x64 --self-contained -o $Build -v quiet | Out-Null
   if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
+}
+if ($Live) {
+  # M41a: the VM has no audio device, so no real player reports a song to Windows; FakePlayer does (test-only, never shipped).
+  $fakePlayer = Join-Path ([IO.Path]::GetTempPath()) "neofences-vm-fakeplayer-$Name"
+  dotnet publish (Join-Path $PSScriptRoot 'FakePlayer') -c Release -r win-x64 --self-contained -o $fakePlayer -v quiet | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'dotnet publish of FakePlayer failed' }
 }
 if ($Live -and -not (Test-Path -LiteralPath (Join-Path $Build 'NeoFences.exe'))) { throw "no NeoFences.exe in $Build" }
 
@@ -52,9 +59,10 @@ try {
   Invoke-Command -Session $session -ScriptBlock { Remove-Item 'C:\NeoFencesTest\run' -Recurse -Force -ErrorAction SilentlyContinue; New-Item -ItemType Directory 'C:\NeoFencesTest\run\feed' -Force | Out-Null }
   if ($Live) {
     Copy-Item -ToSession $session -Path $Build -Destination 'C:\NeoFencesTest\run\build' -Recurse
+    Copy-Item -ToSession $session -Path $fakePlayer -Destination 'C:\NeoFencesTest\run\fakeplayer' -Recurse
     if ($Data) { Copy-Item -ToSession $session -Path $Data -Destination 'C:\NeoFencesTest\run\data' -Recurse }
     foreach ($folder in $Files) { Copy-Item -ToSession $session -Path $folder -Destination "C:\Users\tester\Desktop\$(Split-Path $folder -Leaf)" -Recurse }
-    $runJson = [ordered]@{ machine = $machine; candidate = 'this checkout'; script = 'live-checks.ps1' } | ConvertTo-Json
+    $runJson = [ordered]@{ machine = $machine; candidate = 'this checkout'; script = $Script } | ConvertTo-Json
   } else {
     Copy-Item -ToSession $session -LiteralPath $PreviousSetup -Destination 'C:\NeoFencesTest\run\previous-Setup.exe'
     Copy-Item -ToSession $session -Path (Join-Path $Feed '*') -Destination 'C:\NeoFencesTest\run\feed' -Recurse

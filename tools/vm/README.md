@@ -67,8 +67,15 @@ pwsh -File tools\vm\Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live [-Data <a copy 
 It publishes the checkout self-contained (the VM has no .NET; or pass `-Build <publish folder>`), starts it on a copy of
 `-Data` (else a fresh start) with the `-Files` folders on the tester's Desktop, and runs `guest\live-checks.ps1`: Peek
 and the keyboard, the fence under the mouse, Tab through every fence, Esc in Properties (with data), Esc after switching
-apps, a full-screen app ending Peek, a rolled-up fence opening for the keyboard. Same report as above. Only copies go into
-the VM; the originals are never changed.
+apps, a full-screen app ending Peek, a rolled-up fence opening for the keyboard; and (M41a) one click opening an item,
+Ctrl+click selecting, both fence menus, a quick-hidden desktop's own right-click menu, Click wallpaper to reveal desktop.
+Same report as above. Only copies go into the VM; the originals are never changed. The release-candidate pass runs the
+one-click and hidden-desktop checks too.
+
+**Probes for a look (M41a):** `-Script probe-looks.ps1` (six fences in the themes and title styles, the name styles, the
+hover, Fence settings) or `-Script probe-widgets.ps1` (the widgets in their sizes, a floating board, Now playing with a
+song Edge plays, a widget's back, the gallery) run instead of the live checks; the screenshots in the output folder are
+the result.
 
 ## Removing them
 

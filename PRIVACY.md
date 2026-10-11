@@ -20,6 +20,9 @@ Nothing else. Opening an item you put in a fence (a website, a program) is you o
 Your fences, items, settings, snapshots, backups, the icon cache and the logs live in `%LOCALAPPDATA%\NeoFences` and
 never leave your PC. NeoFences never moves, renames, changes or deletes your files: fences hold links to them.
 
+A **Now playing** widget reads what plays from Windows itself (the media controls Windows shows for Spotify, a browser or
+Media Player); the song, its cover and the player stay in memory on your PC and are never saved or sent anywhere.
+
 ## Logs and bug reports
 
 The logs help find bugs. They never contain your Windows user name (your profile folder is written as `%USERPROFILE%`),

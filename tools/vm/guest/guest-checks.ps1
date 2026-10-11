@@ -154,6 +154,11 @@ Check 'win-d-after-peek' {
   # Terminal stays open: on Windows 11 it also hosts this hidden test script, so ending its process would end the run.
   "desktop shown by the first Win+D: $hidden; Terminal back after the second: $back"; $hidden -and $back
 }
+# M41a (spec 2026-10-11-m41a-feel-design section 9): one click opens an item; a quick-hidden desktop's right-click menu is
+# Windows' own (the live checks share these, live-helpers.ps1).
+. (Join-Path $root 'live-helpers.ps1')
+Check 'one-click-open' { Keys @(0x5B, 0x44); Start-Sleep -Seconds 2; OneClickOpen } # Win+D first: the maximized Terminal above covers the fences
+Check 'hidden-desktop-passthrough' { HiddenDesktopPassthrough }
 Check 'uninstall' {
   StopNeoFences; (Start-Process (Join-Path $appDir 'Update.exe') -ArgumentList '--uninstall' -PassThru).WaitForExit(); Start-Sleep -Seconds 5
   $gone = -not (Test-Path -LiteralPath $exe); "app removed: $gone; icons hidden: $(IconsHidden)"; $gone -and -not (IconsHidden)

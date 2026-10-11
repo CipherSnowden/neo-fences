@@ -1598,3 +1598,105 @@ installable, and a friend on rc.1 should get rc.2 and 1.0.0 without reinstalling
 
 **Consequences.** The owner and other stable users stay on 0.26.x until 1.0.0; release candidates are tested in the same
 VM pass as any release; feedback comes through the issue forms or through the owner.
+
+## ADR-063 — Themes with a little life, title styles, name styles and motion
+**Date:** 2026-10-11 · **Status:** Accepted · **Builds on:** ADR-011 (layered window, accent blur), ADR-057 (a fence's own look)
+
+**Context.** Friends on rc.1: fences look "dead", titles weak, text soft; they liked the idea of game-themed fences. The
+owner picked four themes, four title styles, three name styles and the B3 motion in the visual brainstorm (2026-10-11).
+
+**Decision.**
+- **Themes** (`FenceTheme`, per fence in `OwnLook.Theme`, a default in Settings → Appearance): **Classic** (the look
+  before, its colour styles kept), **Aurora glass** (accent-tinted light drifting behind the items), **Game HUD** (cut
+  corners, accent lines, a scan line, a mono title), **Neon** (a breathing lit edge, a glowing title), **Light Mica**
+  (bright glass, grain, a top highlight, dark ink). A theme has its own tone (Light Mica light, the others dark) whatever
+  Windows uses; the strength slider is shown as **Transparency** and stays the veil's density; the fence's colour is the
+  accent (HUD's cyan without one). Drawn with brushes and shapes in the layered window (no per-frame effects, no Mica —
+  impossible on a layered window); what moves runs at most 20 frames a second, only while shown and not rolled up.
+- **Title styles** (`TitleStyle`): Simple, Clean (accent underline, count), Pill (emoji, name and count in a pill), Caps
+  (a glowing marker, spaced capitals, count); a per-fence **emoji** (`Fence.Emoji`, one grapheme). WPF draws emoji in one
+  colour (no colour-font support).
+- **Item names** (`NameStyle`, every fence): Crisp (a tight 1 px shadow, the default), Chips (an opaque pill, so ClearType
+  can work in the layered window), Plain.
+- **Motion** (`Motion`: Lively by default, Calm, Off): hover lift and glow, press dip, items arriving (Calm); tilt, light
+  sweep, ripple, staggered rise (Lively). Off in a game, in safe mode and with Windows' animation effects off
+  (`MotionPolicy`). Covers and folder panels keep their own hover.
+- **Defaults:** a new install (and Reset settings) gets Aurora glass with 30 % transparency and Clean titles
+  (`Settings.NewInstall`); an existing setup keeps Classic and Simple (the record's defaults) and sees one "New: fence
+  themes · Try them" tip (`Settings.ThemesIntroduced`).
+
+**Consequences.** The look is a per-fence choice like the rest of M36's; no schema change. A theme costs a little CPU while
+it moves (measured on the owner's PC before rc.3).
+
+## ADR-064 — One click opens; the fence menu comes Guided or Compact
+**Date:** 2026-10-11 · **Status:** Accepted · **Amends:** ADR-056 (the fence menu's entries), M34's selection look
+
+**Context.** Friends on rc.1: a click "just selects" an item and leaves an accent ring behind; the owner wants a click to
+"just go or do". The fence menu repeated what Fence settings… already holds (icon size, labels, layout).
+
+**Decision.**
+- **One click opens** an item, a game or a folder (press and release without moving; 4 px or more is a drag as before).
+  Nothing stays selected after it. **Ctrl+click** and the drag box still select several, and that selection shows until
+  the next plain click; a right-click's selection lasts only while its menu is open. Widgets keep the double-click (their
+  face is for reading); folder panels keep Explorer's double-click inside their file list.
+- **Settings → Fences → Open items with: One click** (default, existing setups too) **/ Double click**; each fence may
+  choose its own in Fence settings (`Fence.OpenWith`, null = like all fences).
+- **Settings → Appearance → Fence menu: Guided** (default; headings *Add to this fence*, *This fence*, *Everything*, Add
+  opened up) **/ Compact** (an icon row — add an item, rename, fence settings, lock — over a short list with Add as a
+  submenu). One set of entries, arranged in code. View ▸ (icon size, labels, layout) left the menu for Fence settings;
+  Sort by moved up a level. Colour stays until Fence settings gets accent swatches (M41b); Refresh is an action and stays.
+
+**Consequences.** Opening is one action less; selecting several is deliberate. No schema change: the new fields default
+when absent.
+
+## ADR-065 — Widgets in three sizes, a gallery, a flip side, floating boards; Now playing through the Windows SDK projection
+**Date:** 2026-10-11 · **Status:** Accepted · **Amends:** ADR-047 (widgets), ADR-059 (Windows 11 only: now also in the
+build target)
+
+**Context.** Friends found the widgets washed out; the owner picked glass cards in Small/Medium/Large, a gallery from the
+fence, settings on the widget's back, floating widget-only fences, a Calendar (the Date widget's successor) and a polished
+Now playing (now-playing-v3).
+
+**Decision.**
+- **Sizes** (`WidgetSize`): Small 2×1, Medium 2×2, Large 4×2 cells, each its own layout; a stored free span maps to the
+  nearest (`WidgetSizes.Of`, nothing rewritten); a corner drag snaps (`WidgetSizes.Snap`); the widget menu has Size ▸.
+- **Gallery:** "+" on the title (on hover) and the fence menu's **Widget…** open live previews, drawn inside the fence (a popup over a fence that is never the active window stayed invisible); a click on S / M / L adds
+  that size. (Dragging a widget from the gallery onto another fence: not yet.)
+- **Flip side:** ⚙ on hover (and the menu's Widget settings…) squashes the widget and opens its back — size and options
+  (the clock's seconds, date line and up to two world clocks; the stats' °F) — in a popup in the menus' colours; Done
+  flips back. Mouse only: a fence never takes the keyboard outside Peek (rc.2's Win+D fix).
+- **Floating boards:** `Fence.WidgetsFloat` drops the fence's glass, blur and title (they show on hover with a dashed
+  outline); each widget carries its own denser card. Offered once when a fence comes to hold only widgets.
+- **Calendar** is `WidgetKind.Date` shown as "Calendar" (no migration); **Now playing** is `WidgetKind.NowPlaying`.
+- **Now playing** reads Windows' media sessions (`GlobalSystemMediaTransportControlsSessionManager`, WinRT) in Shell
+  (`MediaSessions`): title, artist, album, cover (memory only), playing, timeline (LIVE without an end), shuffle, repeat,
+  the players; commands play/pause, previous, next, shuffle, repeat, seek. The wheel sends Windows' volume keys (its own
+  flyout shows the level); a click on the cover brings the player forward (best effort). Read on the widget tick only
+  while one is shown; never in a game, paused or hidden.
+- **Build target:** Shell and App move to `net10.0-windows10.0.22621.0` (minimum 10.0.22000) for the SDK projection that
+  ships with the .NET SDK — no NuGet package; Microsoft.Windows.SDK.NET.dll and WinRT.Runtime.dll (MIT) join the
+  self-contained app and THIRD-PARTY-NOTICES. Measured: the self-contained publish grows from 144 MB to 170 MB (about +26 MB, mostly the projection).
+
+**Consequences.** Widgets look and size alike; the old free spans keep working. The installer is a little bigger. Sound
+and Game monitor widgets follow in 1.1.
+
+## ADR-066 — A hidden desktop belongs to the user; click wallpaper to reveal it
+**Date:** 2026-10-11 · **Status:** Accepted · **Refines:** ADR-007, ADR-011 (S2 right-click replay), ADR-053
+
+**Context.** The owner double-clicks the desktop to hide every fence and then wants the desktop exactly as Windows gives it
+— the right-click menu, dragging, Wallpaper Engine's interactive wallpapers. The hook (S2) swallowed every desktop
+right-press for the draw gesture and replayed plain clicks, also while the fences were hidden.
+
+**Decision.**
+- While the fences are quick-hidden the mouse hook only **watches**: it swallows and replays nothing; it reacts only to
+  the double-click on empty desktop that shows the fences again (`RunState.HandlesRightButton = DrawGesture && !QuickHidden`).
+  With the fences shown, right-presses are held back only while **Right-drag on the desktop to draw a fence** is on.
+- **Click wallpaper to reveal desktop** (Settings → General, off by default; macOS-style): a left press and release in
+  place on empty wallpaper (`DesktopGesture.Click`) moves the windows aside with the shell's "minimize all"
+  (Shell.Application `MinimizeAll`), and the next such click brings them back (`UndoMinimizeALL`), once the double-click
+  time passes without a second click — a double-click still quick-hides. Not `ToggleDesktop`: right after a click on the
+  wallpaper the desktop has the focus and it does nothing (VM probe). Not over a visible native icon, not while hidden,
+  paused, gaming or in safe mode. The hook is wanted when any of the three gestures is on.
+
+**Consequences.** Hidden means hands off; a fence-drawing right-drag still works while the fences show. The reveal gesture
+adds a left-up to what the hook reads (still `WH_MOUSE_LL` only, hard rule 3).

@@ -40,6 +40,7 @@ the update installs the next time NeoFences exits. You can turn this off in **Se
 3. **Tidy the desktop (optional):** in **Settings → General**, switch on **Hide desktop icons while NeoFences runs**. Your
    icons come back whenever NeoFences exits — even after a crash.
 4. **Quick-hide:** double-click empty desktop to hide all fences (and the icons); double-click again to bring them back.
+   While they are hidden the desktop is all yours (right-click, drag, interactive wallpapers).
 5. **Peek:** press **Ctrl+Alt+Space** to bring the fences above your open windows with the keyboard in one (arrows,
    **Enter**, **Tab** to the next fence); press it again or **Esc** to send them back.
 

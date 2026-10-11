@@ -58,6 +58,9 @@ NeoFences (see LICENSE.txt) includes the components below. Each keeps its own li
    SOFTWARE.
 
    The .NET runtime and WPF themselves include third-party components; their notices are in appendices B and C.
+6. The Windows SDK projection for .NET (Microsoft.Windows.SDK.NET.dll) and C#/WinRT's runtime (WinRT.Runtime.dll),
+   included in the self-contained app since 1.0.0-rc.3 for Now playing — https://github.com/microsoft/CsWinRT —
+   © Microsoft Corporation. MIT License (the same text as .NET's above).
 
 ================================================================================
 Appendix A — Apache License 2.0 (Serilog, Serilog.Sinks.File)
