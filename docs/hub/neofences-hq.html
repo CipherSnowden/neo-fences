@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-11",
-  commit: "6af2b93",
+  commit: "7afeb62",
   phase: "1.0.0-rc — release candidate with friends (path to 1.0)",
-  current: "rc.5 FIXES READY (not released): desktop checks on your PC found widgets cut off in a narrow fence and a Wallpaper Engine playlist showing the wrong wallpaper in the preview — both fixed, reviewed, VM 19 of 19 · YOUR TURN: go for 1.0.0-rc.5; check Now playing with Spotify and a full-screen game",
+  current: "1.0.0-rc.5 RELEASED (pre-release) and installed on your PC: widgets show the design that fits, Wallpaper Engine playlists get a plain preview · VM 16 of 16 from rc.4 · NOW: about a week with friends, then 1.0.0 · YOUR TURN: send friends the rc.5 link; check Now playing with Spotify and a full-screen game",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -839,7 +839,8 @@ const HUB = {
       { t: "Released 1.0.0-rc.4 as a pre-release (VM install check rc.3 to rc.4: 16 of 16)", s: "done" },
       { t: "Desktop checks on your PC: rc.3 → rc.4 update kept your look; hidden desktop over Wallpaper Engine works; found 2 bugs", s: "done" },
       { t: "rc.5 fixes: widgets show the biggest design that fits; Wallpaper Engine playlists get a plain preview; review fixed; VM 19 of 19", s: "done" },
-      { t: "Go for 1.0.0-rc.5; check Now playing with Spotify and a full-screen game", s: "you" },
+      { t: "Released 1.0.0-rc.5 (VM 16 of 16 from rc.4) and installed on your PC (look unchanged, widgets whole)", s: "done" },
+      { t: "Send friends the rc.5 link; check Now playing with Spotify and a full-screen game", s: "you" },
       { t: "About a week with friends with no crash, data loss or stuck icons; then 1.0.0", s: "todo" }
     ] },
     { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
@@ -1286,7 +1287,7 @@ const HUB = {
     { v: "1.0.0-rc.2", s: "done", scope: "Release candidate 2: Win+D works after Peek, desktop icons hidden after the first desktop sort, crisper fence text. Released 2026-10-11." },
     { v: "1.0.0-rc.3", s: "done", scope: "Feel (M41a): fence themes, title and name styles, emoji, Motion Off/Calm/Lively, one click opens, Guided/Compact fence menu, widgets in Small/Medium/Large with a gallery and a flip side, floating widget boards, Calendar, Now playing, a hidden desktop that is fully yours, click wallpaper to reveal it. Released 2026-10-11." },
     { v: "1.0.0-rc.4", s: "done", scope: "Settings (M41b): a fence's look and behaviour in one window — This fence or All fences, a live preview over your wallpaper, explanations, undo, recipes (Game shelf, Work desk, Downloads inbox, Minimal); Settings in seven pages with search; options that did nothing removed. Released 2026-10-11." },
-    { v: "1.0.0-rc.5", s: "wip", scope: "Fixes from the desktop checks on your PC: widgets in a narrow fence show the biggest design that fits instead of being cut off; the Fence settings preview and wallpaper colours no longer follow a Wallpaper Engine playlist's old wallpaper. Ready; waiting for your go." },
+    { v: "1.0.0-rc.5", s: "done", scope: "Fixes from the desktop checks on your PC: widgets in a narrow fence show the biggest design that fits instead of being cut off; the Fence settings preview and wallpaper colours no longer follow a Wallpaper Engine playlist's old wallpaper. Released 2026-10-11." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1603,7 +1604,7 @@ const HUB = {
     { date: "2026-10-11", topic: "rc.1 feedback, rc.2, M41 brainstorm", done: "Win+D bug reproduced and fixed via VM probes; rc.2 released (14 of 14); visual brainstorm of titles, widgets, motion, themes, clicks, menus, Fence settings v4, Settings v2, recipes.", next: "Widgets brainstorm; M41a spec and plan." },
     { date: "2026-10-11", topic: "M41a feel built, 1.0.0-rc.3 released", done: "Widgets brainstorm; spec approved; prototype VM 14 of 14; plan; built (1010 tests, ADR-063 to 066); Opus review fixes; widget clicks fixed; CPU 0.42 % on your PC; VM 15 of 15; rc.3 released (install check 16 of 16); installed on your PC; M41b option audit (120 options, 10 decisions for you).", next: "You pick the 10 audit cards; then the M41b spec → plan → build → rc.4. You look at Now playing with Spotify or YouTube." },
     { date: "2026-10-11", topic: "M41b settings built", done: "Your 10 audit picks; spec; plan; built (1070 tests, ADR-067): Fence settings with All fences, preview and recipes, Settings with search; Opus review fixed; VM 19 of 19. Released 1.0.0-rc.4 (VM 16 of 16 from rc.3).", next: "About a week with friends, then 1.0.0; you look at Now playing with Spotify or YouTube." },
-    { date: "2026-10-11", topic: "rc.4 desktop checks, rc.5 fixes", done: "rc.3 → rc.4 on your PC kept your look; hidden desktop over Wallpaper Engine OK; two bugs found and fixed (widgets cut off, playlist preview); Opus review fixed; 1078 tests; VM 19 of 19.", next: "Your go for rc.5; Now playing with Spotify; a full-screen game." }
+    { date: "2026-10-11", topic: "rc.4 desktop checks, rc.5 fixes", done: "rc.3 → rc.4 on your PC kept your look; hidden desktop over Wallpaper Engine OK; two bugs found and fixed (widgets cut off, playlist preview); Opus review fixed; 1078 tests; VM 19 of 19. Released rc.5 (VM 16 of 16) and installed on your PC.", next: "About a week with friends, then 1.0.0; Now playing with Spotify; a full-screen game." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2363,7 +2364,11 @@ const HUB = {
     ["659ba12", "fix: widgets in a fence too narrow for their size show the biggest design that fits instead of a cut-off one"],
     ["f4b6ddf", "fix: the Fence settings preview shows a plain background while Wallpaper Engine plays a playlist, not a wallpaper that is not showing"],
     ["aff830a", "fix: fixed the review findings: corner drags and the clock's back use the chosen widget size, one face build per resize, Wallpaper Engine playlists read from the same user"],
-    ["6af2b93", "docs: recorded the rc.4 desktop checks and the rc.5 fixes"]
+    ["6af2b93", "docs: recorded the rc.4 desktop checks and the rc.5 fixes"],
+    ["da64d09", "docs: refreshed the hub for the rc.5 fixes"],
+    ["ca19796", "chore: bumped the version to 1.0.0-rc.5"],
+    ["605197d", "docs: marked the 1.0.0-rc.5 release as approved"],
+    ["7afeb62", "docs: recorded the 1.0.0-rc.5 release"]
   ]
 };
 /* ===== END HUB DATA ===== */
