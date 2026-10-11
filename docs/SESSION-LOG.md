@@ -1111,3 +1111,12 @@ rc.5 → rc.6 in a minute, the four fences unchanged; the next start uses GitHub
 square — Windows draws a small icon's 256-px picture with a soft frame (alpha 38–77) round the canvas, and any alpha
 counted as art. Fixed: only solid art (alpha ≥ 128) counts (test with the frame; the owner's 25 icons checked side by
 side: no boxes, Redragon, Discord, Epic, Ubisoft, Forza and Mafia II smoother) → rc.7.
+**Released:** 1.0.0-rc.7 on 2026-10-12: the Release run built "delta 1.0.0-rc.6 -> 1.0.0-rc.7" (157 KB) — the `--pre`
+fix works; checksums and attestation verified; VM install check rc.6 → rc.7 given the delta alone (no full package):
+16 of 16; published as a pre-release. **On the owner's PC:** the first try was cut by the PC sleeping (the delta download
+failed on resume: "unreachable host"; it would retry in 6 h); a restart updated it from GitHub by the delta in under 2
+minutes. Icons cached by rc.6 still showed boxes (AMD, Apex Light, GCC, MSI Afterburner, Sideloadly): the cache index kept
+version 2, so rc.7 reused rc.6's pictures. Each cached icon is loaded fresh once a day, so copies heal within 24 h; on the
+owner's PC NeoFences' own icon cache was cleared and every icon came back right.
+**Lesson:** a change to how an icon is drawn bumps the icon cache version in the same release.
+**Next:** the owner uses rc.7 for a few days (shortened from a week, the owner's call); then 1.0.0 from rc.7's code.
