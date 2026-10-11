@@ -165,6 +165,22 @@ public class AppearanceTests
         Assert.Null(WallpaperEngineFiles.PreviewName("""{ "preview": "../../escape.jpg" }""")); // stays inside the wallpaper's folder
     }
 
+    // rc.5 (owner's desktop): with a playlist, "file" is only the wallpaper last picked in Wallpaper Engine, not the one shown.
+    [Fact]
+    public void WallpaperEngine_APlaylistOfSeveral_IsNoKnownWallpaper()
+    {
+        const string config = """
+            { "cipher": { "general": { "wallpaperconfig": { "selectedwallpapers": {
+                "Monitor0": { "file": "C:/WE/kara/scene.pkg", "playlist": { "items": [ "C:/WE/rain/scene.pkg", "C:/WE/kara/scene.pkg" ], "name": "Mine" } },
+                "Monitor1": { "file": "C:/WE/one/scene.pkg", "playlist": { "items": [ "C:/WE/one/scene.pkg" ] } },
+                "Monitor2": { "file": "C:/WE/two/scene.pkg" } } } } } }
+            """;
+        Assert.Equal([0], WallpaperEngineFiles.PlaylistMonitors(config));
+        Assert.Equal(3, WallpaperEngineFiles.SelectedWallpapers(config).Count);
+        Assert.Empty(WallpaperEngineFiles.PlaylistMonitors("{ not json"));
+        Assert.Empty(WallpaperEngineFiles.PlaylistMonitors("""{ "u": { "general": { "wallpaperconfig": { "selectedwallpapers": { "Monitor0": { "playlist": { "items": 5 } } } } } } }"""));
+    }
+
     // ---------- §2 config ----------
 
     [Fact]

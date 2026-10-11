@@ -26,6 +26,9 @@ public static class WallpaperSources
             .FirstOrDefault(File.Exists);
     }
 
+    /// <summary>A monitor whose Wallpaper Engine playlist changes the wallpaper (rc.5): the one showing is not known.</summary>
+    public const string PlaylistOrigin = "Wallpaper Engine playlist";
+
     /// <summary>Every monitor with its wallpaper image (null when only Windows' accent is left for it).</summary>
     public static IReadOnlyList<WallpaperImage> Read(Action<string, Exception> logFailure)
     {
@@ -35,7 +38,8 @@ public static class WallpaperSources
         {
             // ponytail: WE's "MonitorN" is taken as Windows' Nth wallpaper monitor; its first entry when N is missing.
             if (engine.Count > 0 && (engine.TryGetValue(index, out var preview) || engine.TryGetValue(engine.Keys.Min(), out preview)))
-                return monitor with { ImagePath = preview.Path, Origin = "Wallpaper Engine: " + preview.Title };
+                return preview.Path is null ? monitor with { ImagePath = null, Origin = PlaylistOrigin } // rc.5: no picture, Windows' accent
+                    : monitor with { ImagePath = preview.Path, Origin = "Wallpaper Engine: " + preview.Title };
             return monitor;
         }).ToList();
     }
@@ -55,15 +59,18 @@ public static class WallpaperSources
         }
     }
 
-    private static IReadOnlyDictionary<int, (string Path, string Title)> WallpaperEnginePreviews(Action<string, Exception> logFailure)
+    private static IReadOnlyDictionary<int, (string? Path, string Title)> WallpaperEnginePreviews(Action<string, Exception> logFailure)
     {
-        var previews = new Dictionary<int, (string, string)>();
+        var previews = new Dictionary<int, (string?, string)>();
         try
         {
             if (!Process.GetProcessesByName("wallpaper64").Concat(Process.GetProcessesByName("wallpaper32")).Any()) return previews;
             if (WallpaperEngineConfig() is not { } config) return previews;
-            foreach (var (index, file) in WallpaperEngineFiles.SelectedWallpapers(File.ReadAllText(config)))
+            var configJson = File.ReadAllText(config);
+            var playlists = WallpaperEngineFiles.PlaylistMonitors(configJson);
+            foreach (var (index, file) in WallpaperEngineFiles.SelectedWallpapers(configJson))
             {
+                if (playlists.Contains(index)) { previews[index] = (null, ""); continue; }
                 var folder = Path.GetDirectoryName(file);
                 var project = folder is null ? null : Path.Combine(folder, "project.json");
                 if (project is null || !File.Exists(project)) continue;

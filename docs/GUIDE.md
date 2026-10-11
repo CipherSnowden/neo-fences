@@ -94,7 +94,8 @@ Double-click again, or fence menu → **Unroll**, to unroll.
 
 **Fence settings:** fence menu → **Fence settings…** (**Tab settings…** on a tab). Every look and behaviour setting of a
 fence is here, in one window beside the fence. Each change shows at once — on the fence itself and in the window's
-**preview** (the fence over your wallpaper, Wallpaper Engine's included). Point at a setting: its part of the preview
+**preview** (the fence over your wallpaper, Wallpaper Engine's included; while Wallpaper Engine plays a playlist the
+preview shows a plain background, since the wallpaper on screen keeps changing). Point at a setting: its part of the preview
 lights up and the panel under the preview says what it does, its default and a tip.
 
 - **This fence | All fences** (top): change this fence, or every fence at once. In **This fence**, each setting shows
@@ -221,7 +222,9 @@ Point at a fence and click the **+** on its title (or fence menu → **Widget…
 **Large** — a bigger size shows more, not just bigger.
 
 - **Size:** drag a widget's corner (the grip shows when you point at it) — it snaps to Small, Medium or Large and says
-  which while you drag — or right-click it → **Size** (or pick **S**, **M**, **L** in the gallery).
+  which while you drag — or right-click it → **Size** (or pick **S**, **M**, **L** in the gallery). A widget in a fence too
+  narrow for its size shows the biggest one that fits (a Large widget in a narrow fence shows Medium); widen the fence to
+  see it Large.
 - **Settings:** point at a widget and click **⚙** (or right-click → **Widget settings…**): it flips over to its settings;
   changes show at once; **Done** flips it back.
 - **Clock:** Small shows the time and the day, Medium adds the date, Large the seconds and up to two **world clocks** (pick

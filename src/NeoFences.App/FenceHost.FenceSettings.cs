@@ -350,7 +350,9 @@ public sealed partial class FenceHost
                 picture = null;
             }
         }
-        note ??= _previewWallpapers is null ? "Reading your wallpaper…" : "Your wallpaper isn't a picture — showing a plain background";
+        note ??= _previewWallpapers is null ? "Reading your wallpaper…"
+            : monitor?.Origin == WallpaperSources.PlaylistOrigin ? "Wallpaper Engine plays a playlist — showing a plain background"
+            : "Your wallpaper isn't a picture — showing a plain background";
         session.Window.SetPreview(window.Content as Visual, window.ActualWidth, window.ActualHeight, style.TitleHeight, picture, crop, note);
     }
 

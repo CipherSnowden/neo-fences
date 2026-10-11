@@ -900,3 +900,11 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | BA9 | Settings search: "double", "icons", "x", an emoji, empty | double: both double-click settings; a Fence settings result opens Fence settings (All fences) at that row; odd text: no crash, "Nothing found" |
 | BA10 | Fence settings' preview with a picture wallpaper, with Wallpaper Engine, with a solid colour | the fence over its wallpaper (Wallpaper Engine's preview picture); a plain background with the note otherwise; Hold to compare shows the opening look |
 | BA11 | `Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live` and `-Script probe-settings.ps1` | every check PASS; the screenshots show both windows, the recipe confirmations and the search |
+
+## BB — 1.0.0-rc.5 fixes (found on the owner's desktop)
+
+| ID | Steps | Expected |
+|---|---|---|
+| BB1 | A 275-px fence with widgets from before rc.3 (clock 3×1, calendar 3×1, stats 3×3), names on hover; a wide fence with a Large clock and calendar | the narrow fence's widgets show Medium (the whole month, every stats tile), nothing cut off; the wide one shows Large. `Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live -Script probe-widget-fit.ps1` |
+| BB2 | Wallpaper Engine playing a playlist of several wallpapers → Fence settings | the preview shows a plain background and "Wallpaper Engine plays a playlist — showing a plain background"; one wallpaper (no playlist): its preview picture |
+| BB3 | Wallpaper Engine playlist + Settings → Colour fences from the wallpaper | fences take Windows' accent colour, not a colour from a wallpaper that is not showing |
