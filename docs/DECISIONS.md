@@ -1595,6 +1595,10 @@ installable, and a friend on rc.1 should get rc.2 and 1.0.0 without reinstalling
 - Friends get an RC from its release page link; the website keeps offering the latest stable release.
 - About a week after the last RC with no crash, data loss or "icons stuck hidden" report, 1.0.0 is that RC's code with
   the version bumped (`docs/RELEASING.md`).
+- **Amended 2026-10-11 (rc.5):** the delta is built from the release before the tag: after a release candidate the
+  latest pre-release (`vpk download github --pre`), else the latest stable. vpk's default (latest stable) built rc.1–rc.5
+  from 0.26.0, so every RC install failed the patch checksum and downloaded the full package. 1.0.0 is built from the
+  last RC; copies still on 0.26.0 take the full package.
 
 **Consequences.** The owner and other stable users stay on 0.26.x until 1.0.0; release candidates are tested in the same
 VM pass as any release; feedback comes through the issue forms or through the owner.
