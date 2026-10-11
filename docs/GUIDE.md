@@ -81,7 +81,7 @@ maybe behind the **^** arrow on Windows 11.
 **Name it:** fence menu → **Rename** (**Rename tab** in a fence with tabs; or double-click a tab's name).
 
 **Move and resize:** drag the title to move; drag an edge or corner to resize. Fences snap to each other and to the
-screen edges with a small gap.
+screen edges with a small gap; anywhere else they snap to an invisible 16-px grid, so fences line up.
 
 **Roll up:** double-click the title, or fence menu → **Roll up**. The fence shrinks to its title bar; it opens again when
 the mouse rests on it, or when you click its title (choose in **Fence settings… → Behaviour → Rolled-up fences open**).

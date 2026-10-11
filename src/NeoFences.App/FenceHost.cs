@@ -28,6 +28,7 @@ public sealed partial class FenceHost
     private static readonly TimeSpan ReattachInterval = TimeSpan.FromMilliseconds(500);
     private const double SnapGapDips = 8;        // spec §6: 8 px spacing from other fences and screen edges
     private const double SnapThresholdDips = 12; // how close an edge must come before it snaps
+    private const double SnapGridDips = 16;      // rc.6 (owner): edges away from other fences land on a 16-px desktop grid
     private const int ReattachAttempts = 10;
     private const int PeekHotkeyId = 1;
     private const int PeekEscapeHotkeyId = 2;
@@ -536,7 +537,8 @@ public sealed partial class FenceHost
             thresholdPx: (int)Math.Round(SnapThresholdDips * monitor.Scale),
             // A resize snap never makes the fence smaller than its minimum (M2c review carry-over).
             minWidthPx: (int)Math.Round(LayoutEngine.MinWidth * monitor.Scale),
-            minHeightPx: (int)Math.Round(LayoutEngine.MinHeight * monitor.Scale));
+            minHeightPx: (int)Math.Round(LayoutEngine.MinHeight * monitor.Scale),
+            gridPx: (int)Math.Round(SnapGridDips * monitor.Scale));
     }
 
     private void RenameFence(FenceWindow window, string title)

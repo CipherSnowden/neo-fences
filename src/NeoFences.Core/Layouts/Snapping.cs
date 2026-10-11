@@ -20,8 +20,10 @@ public static class Snapping
 {
     /// <param name="minWidthPx">A resize snap that would make the fence narrower than this is skipped (M8b).</param>
     /// <param name="minHeightPx">Likewise for the height.</param>
+    /// <param name="gridPx">rc.6 (owner): an edge that snaps to nothing else lands on a desktop grid of this size, its lines
+    /// starting at the work area's gap; 0: no grid.</param>
     public static PixelRect Snap(PixelRect rect, SnapEdges edges, PixelRect workArea, IReadOnlyList<PixelRect> others, int gapPx, int thresholdPx,
-        int minWidthPx = 1, int minHeightPx = 1)
+        int minWidthPx = 1, int minHeightPx = 1, int gridPx = 0)
     {
         var left = rect.X;
         var top = rect.Y;
@@ -39,6 +41,8 @@ public static class Snapping
             return closest is { } value && Math.Abs(value - edge) <= thresholdPx ? value : null;
         }
 
+        int? OnGrid(int edge, int origin) => gridPx > 0 ? origin + (int)Math.Round((edge - origin) / (double)gridPx) * gridPx : null;
+
         var leftTarget = Best(left, [workArea.X + gapPx, .. besideIt.Select(other => other.X + other.Width + gapPx), .. besideIt.Select(other => other.X)]);
         var rightTarget = Best(right, [workArea.X + workArea.Width - gapPx, .. besideIt.Select(other => other.X - gapPx), .. besideIt.Select(other => other.X + other.Width)]);
         var topTarget = Best(top, [workArea.Y + gapPx, .. aboveOrBelow.Select(other => other.Y + other.Height + gapPx), .. aboveOrBelow.Select(other => other.Y)]);
@@ -46,10 +50,16 @@ public static class Snapping
 
         if (edges == SnapEdges.Move)
         {
-            var dx = Closer(leftTarget - left, rightTarget - right);
-            var dy = Closer(topTarget - top, bottomTarget - bottom);
+            // The grid only where neither edge of an axis snaps to a fence or the screen: those keep their gaps.
+            var dx = leftTarget is null && rightTarget is null ? (OnGrid(left, workArea.X + gapPx) ?? left) - left : Closer(leftTarget - left, rightTarget - right);
+            var dy = topTarget is null && bottomTarget is null ? (OnGrid(top, workArea.Y + gapPx) ?? top) - top : Closer(topTarget - top, bottomTarget - bottom);
             return rect with { X = rect.X + dx, Y = rect.Y + dy };
         }
+
+        leftTarget ??= OnGrid(left, workArea.X + gapPx);
+        rightTarget ??= OnGrid(right, workArea.X + gapPx);
+        topTarget ??= OnGrid(top, workArea.Y + gapPx);
+        bottomTarget ??= OnGrid(bottom, workArea.Y + gapPx);
 
         if (edges.HasFlag(SnapEdges.Left) && leftTarget is { } newLeft && right - newLeft >= minWidthPx) left = newLeft;
         if (edges.HasFlag(SnapEdges.Right) && rightTarget is { } newRight && newRight - left >= minWidthPx) right = newRight;

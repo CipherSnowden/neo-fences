@@ -162,4 +162,43 @@ public class SnappingTests
             minWidthPx: 120, minHeightPx: 60);
         Assert.Equal(1132, snapped.X);
     }
+    // rc.6 (owner): away from other fences, edges snap to a desktop grid — lines every 16 px from the work area's gap.
+    private const int Grid = 16;
+    private static PixelRect GridSnap(PixelRect rect, SnapEdges edges, params PixelRect[] others) =>
+        Snapping.Snap(rect, edges, workArea: WorkArea, others: others, gapPx: Gap, thresholdPx: Threshold, gridPx: Grid);
+
+    [Fact]
+    public void Move_AwayFromEverything_LandsOnTheGrid() =>
+        Assert.Equal(new PixelRect(104, 56, 300, 200), GridSnap(new PixelRect(103, 61, 300, 200), SnapEdges.Move)); // lines at 8, 24 … 104; 56
+
+    [Fact]
+    public void Move_BesideAnotherFence_TheFenceGapWins()
+    {
+        var other = new PixelRect(500, 300, 200, 200);
+        Assert.Equal(708, GridSnap(new PixelRect(713, 301, 100, 100), SnapEdges.Move, other).X); // 700 + 8, not the grid's 712
+    }
+
+    [Fact]
+    public void Move_RightEdgeBesideAFence_BeatsAGridLineCloserOnTheLeft()
+    {
+        var other = new PixelRect(500, 300, 200, 200);
+        // right edge 489 → 492 (the fence gap, 3 px); the left edge is 1 px from the line at 392 — the fence still wins
+        Assert.Equal(new PixelRect(396, 301, 96, 100).X, GridSnap(new PixelRect(393, 301, 96, 100), SnapEdges.Move, other).X);
+    }
+
+    [Fact]
+    public void Resize_AFreeEdge_LandsOnTheGrid() =>
+        Assert.Equal(new PixelRect(104, 56, 288, 192), GridSnap(new PixelRect(104, 56, 290, 199), SnapEdges.Right | SnapEdges.Bottom)); // right 394 → 392, bottom 255 → 248
+
+    [Fact]
+    public void Resize_NeverBelowTheMinimum()
+    {
+        var snapped = Snapping.Snap(new PixelRect(104, 56, 135, 100), SnapEdges.Right, workArea: WorkArea, others: [], gapPx: Gap, thresholdPx: Threshold,
+            gridPx: Grid, minWidthPx: 132, minHeightPx: 60);
+        Assert.Equal(135, snapped.Width); // the line at 232 would make it 128
+    }
+
+    [Fact]
+    public void NoGrid_KeepsTheOldBehaviour() =>
+        Assert.Equal(new PixelRect(103, 61, 300, 200), Snap(new PixelRect(103, 61, 300, 200), SnapEdges.Move));
 }
