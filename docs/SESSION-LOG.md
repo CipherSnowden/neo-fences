@@ -989,5 +989,10 @@ the SDK projection), ADR-066 (hidden desktop, reveal). The owner does not review
 **Deferred minors:** a press dip after a drag; widget bars use Windows' tone; an untitled media session shows a blank
 title; the calendar rebuilds every second; a pending reveal is not cancelled; touchpad wheel steps; process disposal and
 the MediaKeys.cs name; the emoji box keeps extra text.
-**Next:** VM live checks on the branch build; the owner's CPU check (or skip: theme motion at 10 fps); merge; 1.0.0-rc.3
-with the owner's go; then M41b settings.
+**CPU check (owner's PC, asked first):** ten Aurora / HUD / Neon fences, Motion Lively, idle 60 s: 0.42 % in Task Manager
+(`tools/perf/measure-themes.ps1`; data backed up and put back). A widget's double-click opened nothing after the no-selection
+fix (a handled press never reaches MouseDoubleClick): a widget now opens from its second press; VM live checks 15 of 15.
+**Released:** 1.0.0-rc.3 on 2026-10-11: CI green, checksums and attestation verified, VM install check rc.2 → rc.3 from the
+draft's files 16 of 16, published as a pre-release (the website still serves 0.26.0).
+**Next:** M41b settings → rc.4 (fold in the deferred minors and the gallery's search); the owner looks at Now playing with
+Spotify or YouTube on rc.3.
