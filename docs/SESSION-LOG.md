@@ -1003,3 +1003,26 @@ Spotify or YouTube on rc.3.
 style on non-Classic themes; title weight/alignment under Caps/Pill), 34 reachable in two or more places, 22 unclear.
 Ten decisions on `settings-audit.html` in the visual companion, each with a suggestion.
 **Next:** the owner picks the ten audit cards → M41b spec → plan → build → rc.4.
+
+## 2026-10-11 — M41b settings built (rc.4 candidate)
+
+**Done:** the owner picked all ten audit suggestions; spec approved; plan written (the owner does not review plans);
+built on `m41b-settings`: Fence settings v4 (This fence | All fences with badges, Make them follow, Use all defaults,
+undo per window, live preview of the real fence over the wallpaper picture — Wallpaper Engine's included — explainer,
+recipes), Settings v2 (seven pages with coloured tiles, search over a settings catalog that also opens Fence settings,
+gesture pictures), recipes replacing presets (Game shelf, Work desk, Downloads inbox, Minimal; two confirmations and a
+whole snapshot for all fences), the audit's removals (clock Seconds / Date line, Hidden games, Labels for new fences,
+widget-back Size, covers' Normal / Large, fence menu Colour ▸), wording fixes (Sort now, Roll up, Run as administrator
+once, Also files named, Only files like), the rc.3 leftovers. Core: `AllFences` with a one-time move of icon sizes and
+labels to All fences (`AllFencesIntroduced`; a snapshot restore pre-normalizes without it — a bug the tests caught),
+`SettingEdits`, `Recipes`, `SettingsCatalog`; 1070 tests. Final Opus review "with fixes": recipe snapshots now whole,
+Fence settings undo limited to what it changes and cleared on a restore, a corrupt wallpaper picture no longer crashes the
+preview, recipe layouts pin cells and skip non-item fences, rc.3 presets named like a new built-in kept as "(mine)", one
+undo step per slider drag. VM live checks 19 of 19 (new: upgrade-looks-same, fence-settings-all, recipe-all,
+settings-search); probe screenshots sent to the owner.
+**Decisions:** ADR-067.
+**Deferred minors:** a recipe on one fence replaces its whole own look; Save / Matching use dark-mode transparency; the
+preview goes stale after a tab switch until the window is activated; fences from an old fences-only snapshot come back with
+own 48 / Always; All fences' accent row duplicates the wallpaper colour switch; Recipes.Changes omits some parts; Downloads
+inbox's panel change is not undone by Ctrl+Z; small leftovers (a doc summary, a reversed wheel's first notch, DefaultLabels).
+**Next:** the owner's go for 1.0.0-rc.4 (merge, version, release); the owner looks at Now playing with Spotify / YouTube.
