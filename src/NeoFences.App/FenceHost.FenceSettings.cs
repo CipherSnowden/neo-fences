@@ -25,10 +25,13 @@ public sealed partial class FenceHost
         public FenceSettingsWindow Window { get; } = window;
         public string? FenceId { get; } = fenceId;
         public bool AllFences { get; set; } = fenceId is null;
-        public Stack<NeoFencesConfig> Undo { get; } = new();
+        public Stack<SettingsUndoStep> Undo { get; } = new();
         /// <summary>The config when the window opened: Hold to compare shows it.</summary>
         public NeoFencesConfig Opened { get; } = opened;
     }
+
+    /// <summary>One Ctrl+Z step: the config before, and the folder panels a Downloads inbox recipe changed (1.0.1: items.json's).</summary>
+    private sealed record SettingsUndoStep(NeoFencesConfig Config, IReadOnlyList<(string ItemId, FolderPanel Panel)>? PanelsBefore = null);
 
     /// <param name="fenceId">The fence, or null: the window for All fences (Settings → Change the look of all fences…, search).</param>
     /// <param name="focusSettingId">A <see cref="SettingsCatalog"/> id to bring into view (Settings' search).</param>
@@ -55,7 +58,7 @@ public sealed partial class FenceHost
         window.CustomColourRequested += () => PickColourInSettings(session);
         window.WallpaperColourChanged += on =>
         {
-            session.Undo.Push(_config);
+            session.Undo.Push(new(_config));
             SetAppearance(Appearance with { WallpaperAccent = on });
         };
         window.MakeFollowRequested += setting => EditInSettings(session, config => AllFences.MakeFollow(config, setting), $"{setting}: every fence follows");
@@ -64,7 +67,7 @@ public sealed partial class FenceHost
         window.Renamed += name =>
         {
             if (_config.Fences.All(fence => fence.Id != session.FenceId)) return; // gone meanwhile (final review)
-            session.Undo.Push(_config);
+            session.Undo.Push(new(_config));
             _config = FenceEdits.Rename(_config, session.FenceId!, name);
             if (WindowShowing(session.FenceId!) is { } shown) shown.SetTitle(_config.Fences.First(fence => fence.Id == shown.FenceId).Title);
             foreach (var fenceWindow in _windows.Values) RefreshTabs(fenceWindow);
@@ -115,7 +118,7 @@ public sealed partial class FenceHost
         var scope = session.AllFences ? "All fences" : "this fence";
         if (id == "fence.layout" && value is FenceLayout layout && session.FenceId is { } fenceId)
         {
-            session.Undo.Push(_config);
+            session.Undo.Push(new(_config));
             // The shown tab takes the menu's path (a Free layout pins the cells where the items are now).
             if (WindowShowing(fenceId) is { } shown) SetFenceLayout(shown, layout);
             else _config = FenceEdits.SetLayout(_config, fenceId, layout);
@@ -124,7 +127,7 @@ public sealed partial class FenceHost
         }
         if (id == "fence.rollUp" && value is RollupExpand mode)
         {
-            session.Undo.Push(_config);
+            session.Undo.Push(new(_config));
             SetRollupExpand(mode);
             AfterSettingsChange(session, $"{id} = {value} (All fences)");
             return;
@@ -139,7 +142,7 @@ public sealed partial class FenceHost
         var before = _config;
         _config = change(_config);
         if (ReferenceEquals(before, _config)) return;
-        session.Undo.Push(before);
+        session.Undo.Push(new(before));
         AfterSettingsChange(session, what);
     }
 
@@ -169,10 +172,11 @@ public sealed partial class FenceHost
 
     private void UndoInSettings(FenceSettingsSession session)
     {
-        if (!session.Undo.TryPop(out var previous)) return;
+        if (!session.Undo.TryPop(out var step)) return;
         var rollup = _config.Settings.RollupExpand;
         var wallpaperAccent = Appearance.WallpaperAccent;
-        _config = SettingEdits.UndoTo(_config, previous);
+        _config = SettingEdits.UndoTo(_config, step.Config);
+        foreach (var (itemId, panel) in step.PanelsBefore ?? []) SetPanel(itemId, panel);
         foreach (var window in _windows.Values)
         {
             if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { } fence) continue;
@@ -216,9 +220,10 @@ public sealed partial class FenceHost
         if (!session.AllFences && session.FenceId is { } fenceId)
         {
             if (_config.Fences.FirstOrDefault(fence => fence.Id == fenceId) is not { } fence || !RecipeDialogs.ConfirmOne(session.Window, recipe, fence.Title)) return;
+            var steps = session.Undo.Count;
             EditInSettings(session, config => Recipes.Apply(config, fenceId, recipe), $"recipe {recipe.Name} (this fence)");
             ApplyRecipeLayout(recipe, [fenceId]);
-            if (recipe.Inbox) MakeInboxPanels([fenceId]);
+            if (recipe.Inbox) MakeInboxPanels(session, [fenceId], steps);
             return;
         }
         var gameFences = _config.Fences.Where(fence => _items.Of(fence.Id).Any(item => item.GameId is not null)).Select(fence => fence.Id).ToList();
@@ -231,10 +236,11 @@ public sealed partial class FenceHost
             MessageDialog.Tell(session.Window, "Nothing changed", "NeoFences could not save the snapshot to go back to, so the recipe was not applied (see the log).");
             return;
         }
+        var undoSteps = session.Undo.Count;
         EditInSettings(session, config => Recipes.ApplyToAll(config, recipe, onlyGames ? gameFences : null), $"recipe {recipe.Name} ({(onlyGames ? "fences with games" : "all fences")})");
         var changed = onlyGames ? gameFences : [.. _config.Fences.Select(fence => fence.Id)];
         ApplyRecipeLayout(recipe, changed);
-        if (recipe.Inbox) MakeInboxPanels(changed);
+        if (recipe.Inbox) MakeInboxPanels(session, changed, undoSteps);
     }
 
     /// <summary>
@@ -253,11 +259,19 @@ public sealed partial class FenceHost
         ScheduleSave();
     }
 
-    /// <summary>Downloads inbox: every folder panel in these fences shows Details, newest first.</summary>
-    private void MakeInboxPanels(IReadOnlyCollection<string> fenceIds)
+    /// <summary>
+    /// Downloads inbox: every folder panel in these fences shows Details, newest first. Ctrl+Z puts the panels back with the
+    /// recipe's step (1.0.1); <paramref name="undoSteps"/> is the undo count before the recipe (a recipe that changed nothing
+    /// else gets a step of its own).
+    /// </summary>
+    private void MakeInboxPanels(FenceSettingsSession session, IReadOnlyCollection<string> fenceIds, int undoSteps)
     {
-        foreach (var item in fenceIds.SelectMany(fenceId => _items.Of(fenceId)).Where(item => item.Panel is not null).ToList())
-            SetPanel(item.Id, item.Panel! with { Look = PanelLook.Details, Sort = PanelSort.Date, Descending = true });
+        var before = fenceIds.SelectMany(fenceId => _items.Of(fenceId)).Where(item => item.Panel is not null).Select(item => (item.Id, item.Panel!)).ToList();
+        if (before.Count == 0) return;
+        foreach (var (itemId, panel) in before) SetPanel(itemId, panel with { Look = PanelLook.Details, Sort = PanelSort.Date, Descending = true });
+        var step = session.Undo.Count > undoSteps ? session.Undo.Pop() : new SettingsUndoStep(_config);
+        session.Undo.Push(step with { PanelsBefore = before });
+        RefreshFenceSettings(session.FenceId ?? AllFencesKey); // Undo may have become available
     }
 
     /// <summary>Hold to compare: the fence (or every fence, in All fences mode) as it was when the window opened.</summary>
@@ -356,10 +370,12 @@ public sealed partial class FenceHost
         session.Window.SetPreview(window.Content as Visual, window.ActualWidth, window.ActualHeight, style.TitleHeight, picture, crop, note);
     }
 
-    /// <summary>Every monitor's wallpaper picture, read once on the shell worker (Wallpaper Engine's preview included).</summary>
+    /// <summary>
+    /// Every monitor's wallpaper picture, read on the shell worker (Wallpaper Engine's preview included) when a settings window
+    /// opens and when the wallpaper changes (1.0.1: once per run before); the old pictures show until the new ones are read.
+    /// </summary>
     private void LoadPreviewWallpapers()
     {
-        if (_previewWallpapers is not null) return;
         var dispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
         _shellWorker.Run(() =>
         {

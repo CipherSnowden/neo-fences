@@ -110,7 +110,11 @@ public sealed partial class FenceHost
         _messages.DisplayChanged += OnDisplayChanged;
         _messages.ThemeChanged += OnThemeChanged;
         _messages.AccentChanged += OnAccentChanged; // M32 final review I3
-        _messages.WallpaperChanged += () => { if (Appearance.WallpaperAccent) UpdateAccents(); }; // M14
+        _messages.WallpaperChanged += () =>
+        {
+            if (Appearance.WallpaperAccent) UpdateAccents(); // M14
+            if (_fenceSettings.Count > 0) LoadPreviewWallpapers(); // 1.0.1: the previews show the new wallpaper
+        };
         _messages.TimeSettingsChanged += () =>
         {
             // .NET caches the user's formats and time zone: clocks follow a 12/24-hour or time-zone change at once (M25 review I5).
@@ -579,7 +583,6 @@ public sealed partial class FenceHost
         _items = ItemEdits.RemoveFence(_items, fence.Id);
         SaveNow();
         SyncBoxes(); // closes the window when its box is gone
-        RefreshFenceSettings(fence.Id); // M36: its settings window closes too
         UpdateWatching();
         ForgetGoneTargets();
         UpdateLibrary(); // M23: no game fence left, no scan
@@ -668,6 +671,7 @@ public sealed partial class FenceHost
         ApplyLayout();
         RestyleAll(); // M14: after placing, so each fence takes its own monitor's accent
         ScheduleSave();
+        RefreshAllFenceSettings(); // M36: a deleted fence's settings window closes; 1.0.1: previews show the tabs in front
     }
 
     private void RefreshTabs(FenceWindow window)
@@ -688,6 +692,7 @@ public sealed partial class FenceHost
         RefreshWindow(window);
         OnWidgetTick(); // M37: a tab with widgets may have come to the front (the widget timer may be stopped)
         ScheduleSave();
+        RefreshAllFenceSettings(); // 1.0.1: a settings window's preview shows the tab in front, or "not shown right now"
     }
 
     private void CycleTab(FenceWindow window, int step)
