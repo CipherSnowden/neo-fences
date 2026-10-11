@@ -141,7 +141,7 @@ A recipe sets a fence's look and behaviour — theme, accent choice, transparenc
 
 - **Core, test-first:** the all-fences resolution (own value / follows), Use all defaults, Make them follow; the rc.4
   migration (equal values follow, the most common becomes all-fences, the dark transparency kept, presets → recipes);
-  recipe apply to one fence and to all (only items' fences with games, items and places untouched); the settings search
+  recipe apply to one fence, to all, and to only the fences that hold games (items and places untouched); the settings search
   index (every option findable by its label and words); every audit removal leaves configs loading (old fields ignored).
 - **VM checks** (`Invoke-VmChecks.ps1 -Live`): open Fence settings, switch a fence to Neon (the fence changes live), All
   fences → Game HUD changes a following fence and not one with its own theme; apply Game shelf to all fences (snapshot
