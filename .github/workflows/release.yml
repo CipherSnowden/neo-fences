@@ -34,7 +34,7 @@ jobs:
         run: |
           dotnet tool restore
           $previous = git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>$null
-          $pre = if ($previous -like '*-*') { @('--pre') } else { @() }
+          $pre = @(); if ($previous -like '*-*') { $pre += '--pre' } # an array: a lone string splats as its letters (rc.6)
           Write-Host "previous release: $previous $pre"
           dotnet vpk download github --repoUrl "https://github.com/${{ github.repository }}" --token "${{ secrets.GITHUB_TOKEN }}" --outputDir artifacts/releases @pre
       - name: Release notes (feat and fix commits since the previous tag)
