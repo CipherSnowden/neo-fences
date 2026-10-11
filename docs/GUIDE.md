@@ -357,8 +357,8 @@ setting).
 - **Look & feel** — **Change the look of all fences…** (Fence settings for All fences: theme, titles, colours, icon sizes,
   clicks), **Animations** (**Lively**, **Calm**, **Off**: items lift under the mouse and dip when pressed, the themes' light
   moves; always off in games and when Windows' animation effects are off), **Item names** (**Crisp**, **Chips** — each name
-  on a soft pill, sharpest on busy wallpapers — or **Plain**), **Menu style** (**Guided** or **Compact**), **Colour fences
-  from the wallpaper**.
+  on a soft pill, sharpest on busy wallpapers — or **Plain**), **Menu style** (**Guided** or **Compact**). The colour from
+  the wallpaper is in **Change the look of all fences…** → **Accent colour**.
 - **Desktop** — **Hide desktop icons while NeoFences runs**, the three desktop gestures with a picture each, **Start with
   Windows**, **Show shortcut arrows**.
 - **Games** — see [Games](#3-games) and [Game mode](#10-game-mode).

@@ -37,6 +37,14 @@ public class SettingsCatalogTests
     [InlineData("   ")]
     public void AnEmptyQuery_FindsNothing(string? query) => Assert.Empty(SettingsCatalog.Search(query));
 
+    // 1.0.1 (the owner's pick): the wallpaper colour lives only in Fence settings' Accent colour row (All fences).
+    [Fact]
+    public void TheWallpaperColour_IsFoundAtTheAccentColourRow_Only()
+    {
+        Assert.Equal(["fence.accent"], SettingsCatalog.Search("wallpaper colour").Select(setting => setting.Id));
+        Assert.DoesNotContain(SettingsCatalog.All, setting => setting.Id == "look.wallpaperColour");
+    }
+
     // 1.0.1 (rc.4 review minor): pasted text with half an emoji threw from string.Normalize on every keystroke.
     [Fact]
     public void ALoneSurrogate_DoesNotThrow_AndFindsNothing()

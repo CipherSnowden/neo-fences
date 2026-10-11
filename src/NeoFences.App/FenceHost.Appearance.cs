@@ -175,17 +175,8 @@ public sealed partial class FenceHost
         }
     }
 
-    /// <summary>What Settings → Appearance shows: the settings, the tone now and where the accent comes from.</summary>
-    private AppearanceView AppearanceView()
-    {
-        var first = _accents.Count > 0 ? _accents[0] : default;
-        var accent = first.Accent ?? (Appearance.WallpaperAccent ? _windowsAccent : null);
-        var origin = !Appearance.WallpaperAccent ? ""
-            : first.Accent is not null ? "From " + first.Monitor.Origin
-            : _windowsAccent is not null ? "From Windows' accent colour (no wallpaper colour found)"
-            : "Reading the wallpaper…";
-        return new AppearanceView(Appearance, _lightTheme, accent?.ToHex(), origin);
-    }
+    /// <summary>What Settings → Look &amp; feel shows: the settings and the tone now.</summary>
+    private AppearanceView AppearanceView() => new(Appearance, _lightTheme);
 
     /// <summary>Fence menu → Colour → Custom colour… (M14, M35): the colour picker; Cancel changes nothing.</summary>
     private void PickCustomColour(FenceWindow window)

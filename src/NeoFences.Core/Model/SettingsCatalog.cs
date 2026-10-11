@@ -18,7 +18,7 @@ public static class SettingsCatalog
     public static IReadOnlyList<SettingInfo> All { get; } =
     [
         new("fence.theme", "Theme", SettingsPlace.FenceLook, "The whole look of the fence: its glass, light and lines.", "Aurora glass (Classic for setups from before rc.3)", "Game HUD and Neon suit a games fence.", "style skin aurora hud neon mica classic"),
-        new("fence.accent", "Accent colour", SettingsPlace.FenceLook, "The fence's colour: its edge, underline and glow.", "None (the theme's own, or Windows' accent)", "\"Windows accent\" changes with Windows.", "colour color swatch tint"),
+        new("fence.accent", "Accent colour", SettingsPlace.FenceLook, "The fence's colour: its edge, underline and glow.", "None (the theme's own, or Windows' accent)", "\"Windows accent\" changes with Windows. For all fences: None, or a colour from the wallpaper.", "colour color swatch tint wallpaper"),
         new("fence.transparency", "Transparency", SettingsPlace.FenceLook, "How much of the wallpaper shows through.", "30 %", "Lower is more see-through.", "opacity see-through solid glass strength"),
         new("fence.colourStyle", "Colour style", SettingsPlace.FenceLook, "How a Classic fence shows its colour.", "Accent edge", "Only for the Classic theme.", "edge tinted strip"),
         new("fence.titleStyle", "Title style", SettingsPlace.FenceTitle, "How the title is drawn.", "Clean", "Pill shows the emoji and the count in a pill.", "simple clean pill caps"),
@@ -37,7 +37,6 @@ public static class SettingsCatalog
         new("look.motion", "Animations", SettingsPlace.LookAndFeel, "Items lift under the mouse, themes' light moves.", "Lively", "Always off in games and when Windows' animations are off.", "motion animation lively calm off"),
         new("look.names", "Item names", SettingsPlace.LookAndFeel, "Crisp text, or on soft chips readable over any wallpaper.", "Crisp", "Chips help on busy wallpapers.", "text chips crisp plain readable"),
         new("look.menu", "Menu style", SettingsPlace.LookAndFeel, "The fence menu: Guided (with headings) or Compact (an icon row).", "Guided", "", "menu compact guided"),
-        new("look.wallpaperColour", "Colour fences from the wallpaper", SettingsPlace.LookAndFeel, "Fences without a colour take one from your wallpaper.", "Off", "", "accent wallpaper colour color"),
         new("desktop.hideIcons", "Hide desktop icons while NeoFences runs", SettingsPlace.Desktop, "Hides Windows' desktop icons; they always come back when NeoFences exits.", "Off", "", "icons hide desktop"),
         new("desktop.quickHide", "Double-click empty desktop hides all fences", SettingsPlace.Desktop, "Then the desktop is fully yours; double-click again to bring them back.", "On", "", "double click quick-hide gesture"),
         new("desktop.reveal", "Click wallpaper to reveal the desktop", SettingsPlace.Desktop, "One click on empty wallpaper moves your windows aside; click again for them back.", "Off", "A double-click still hides fences.", "single click reveal show desktop windows aside"),

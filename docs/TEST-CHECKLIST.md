@@ -419,7 +419,7 @@ M0 spike checks. In the app they are section N (D2 → N3, D7 → N14, D8 → N1
 | AA7 | Settings → Title font: Bahnschrift, Huge, Bold | every fence title changes; the title bar grows and nothing is clipped |
 | AA8 | (removed in v1.7.1: one title font for all fences, ADR-038) | — |
 | AA9 | A box with tabs of different colours: switch tabs | the box takes the front tab's colour (one title font for all fences since v1.7.1); headers keep their marks |
-| AA10 | Settings → "Colour fences from the wallpaper" on (Wallpaper Engine running) | uncoloured fences take the wallpaper's colour; Settings names the WE wallpaper |
+| AA10 | Fence settings (All fences) → Accent colour → From the wallpaper (Wallpaper Engine running; Settings → Look & feel until rc.7) | uncoloured fences take the wallpaper's colour; the preview shows the WE wallpaper |
 | AA11 | Change the Wallpaper Engine wallpaper | within a few seconds the accent follows |
 | AA12 | Close Wallpaper Engine, change the Windows wallpaper | the accent follows the Windows wallpaper |
 | AA13 | Two monitors with different wallpapers | each fence takes its own monitor's colour; moving a fence across changes it |
@@ -907,7 +907,19 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 |---|---|---|
 | BB1 | A 275-px fence with widgets from before rc.3 (clock 3×1, calendar 3×1, stats 3×3), names on hover; a wide fence with a Large clock and calendar | the narrow fence's widgets show Medium (the whole month, every stats tile), nothing cut off; the wide one shows Large. `Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live -Script probe-widget-fit.ps1` |
 | BB2 | Wallpaper Engine playing a playlist of several wallpapers → Fence settings | the preview shows a plain background and "Wallpaper Engine plays a playlist — showing a plain background"; one wallpaper (no playlist): its preview picture |
-| BB3 | Wallpaper Engine playlist + Settings → Colour fences from the wallpaper | fences take Windows' accent colour, not a colour from a wallpaper that is not showing |
+| BB3 | Wallpaper Engine playlist + All fences → Accent colour → From the wallpaper | fences take Windows' accent colour, not a colour from a wallpaper that is not showing |
 | BB4 | On a PC with a graphics card (not the VMs: they draw no window borders): a fence of only widgets with **Widgets float**; a Game HUD fence; an Aurora fence; the pointer elsewhere | the board shows only its widgets' cards, no thin light frame; the HUD fence only its cut-corner frame, no rounded grey line; the Aurora fence one edge, not two |
 | BB5 | Drag a fence around empty desktop, slowly; then next to another fence; resize its right edge | away from fences it steps on a 16-px grid (no jitter, it follows the mouse); beside a fence the 8-px gap wins; resizing steps the edge on the grid, never below the minimum size |
 | BB6 | A fence with apps whose icons have large art (Steam, Redragon) and apps with only small icons (AMD Ryzen Master, Sideloadly), at 48 px; after the update from rc.5 | large-art icons smooth, not stair-stepped; small-art icons as sharp as in Explorer; every icon reloads once after the update (the cache starts over) |
+
+## BC — 1.0.1 polish (the rc.4 review's deferred minors)
+
+| ID | Steps | Expected |
+|---|---|---|
+| BC1 | A fence with its own title font, centred title and Roomy spacing → recipe Game shelf (this fence) | theme, title style and transparency change; the font, centring and spacing stay; the confirmation lists only what changes |
+| BC2 | Windows in light mode, a Classic fence → Save as recipe… → switch Windows to dark | the saved recipe keeps the light transparency; its card is lit in light mode only |
+| BC3 | Fence settings open for a tab of a box → click another tab of that box; then delete the fence the All fences window previews; then change the wallpaper | the tab's window says "This fence is not shown right now" (or shows it again); the All fences preview moves to another fence; the preview shows the new wallpaper |
+| BC4 | A fence with a folder panel (List, by name) → recipe Downloads inbox (this fence) → Ctrl+Z in Fence settings | the panel turns Details, newest first; Ctrl+Z brings back List by name and the old look in one step |
+| BC5 | Restore a fences-only snapshot taken before rc.4 (for example "Before deleting …") | the fences look as before; no "This fence" badges for icon size or names where they match All fences |
+| BC6 | Settings → Look & feel; Settings search "wallpaper colour" | no wallpaper switch on Look & feel; the search opens Fence settings (All fences) at Accent colour; paste half an emoji into the search: no crash |
+| BC7 | Tray → New Game Library fence (none yet) | its names follow All fences (no "This fence" badge for names); icon size 64 is its own |

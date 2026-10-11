@@ -101,19 +101,6 @@
                     <StackPanel x:Name="FenceMenuChoice" Orientation="Horizontal" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource Card}" Tag="look.wallpaperColour">
-                <DockPanel>
-                    <CheckBox x:Name="AccentBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Colour fences from the wallpaper" />
-                    <StackPanel>
-                        <TextBlock Text="Colour fences from the wallpaper" TextWrapping="Wrap" />
-                        <TextBlock x:Name="AccentDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <Border x:Name="AccentSwatch" Width="16" Height="16" CornerRadius="3" Margin="0,0,6,0" Visibility="Collapsed" VerticalAlignment="Center" />
-                            <TextBlock x:Name="AccentSource" Style="{StaticResource Description}" VerticalAlignment="Center" Margin="0" Visibility="Collapsed" />
-                        </StackPanel>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
             </StackPanel>
 
             <StackPanel x:Name="DesktopPage" Margin="0,16,0,0" Visibility="Collapsed">

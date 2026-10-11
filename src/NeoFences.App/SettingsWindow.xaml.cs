@@ -128,8 +128,7 @@ public partial class SettingsWindow : Window
         foreach (var (description, id) in new (TextBlock, string)[]
                  { (StartupDescription, "desktop.startWithWindows"), (HideIconsDescription, "desktop.hideIcons"), (QuickHideGestureDescription, "desktop.quickHide"),
                    (DrawGestureDescription, "desktop.draw"), (RevealGestureDescription, "desktop.reveal"), (ArrowsDescription, "desktop.shortcutArrows"),
-                   (GameModeDescription, "games.gameMode"), (FenceMenuDescription, "look.menu"), (MotionDescription, "look.motion"), (NamesDescription, "look.names"),
-                   (AccentDescription, "look.wallpaperColour") })
+                   (GameModeDescription, "games.gameMode"), (FenceMenuDescription, "look.menu"), (MotionDescription, "look.motion"), (NamesDescription, "look.names") })
         {
             var info = SettingsCatalog.Find(id);
             description.Text = info.Tip.Length == 0 ? info.What : $"{info.What} {info.Tip}";
@@ -137,7 +136,7 @@ public partial class SettingsWindow : Window
         // Screen readers read each setting's description with it (M6b review carry-over).
         foreach (var (control, description) in new (UIElement, TextBlock)[]
                  { (StartupBox, StartupDescription), (HideIconsBox, HideIconsDescription), (QuickHideGestureBox, QuickHideGestureDescription), (DrawGestureBox, DrawGestureDescription), (RevealGestureBox, RevealGestureDescription), (HotkeyBox, HotkeyDescription),
-                   (ArrowsBox, ArrowsDescription), (GameModeBox, GameModeDescription), (AccentBox, AccentDescription) })
+                   (ArrowsBox, ArrowsDescription), (GameModeBox, GameModeDescription) })
         {
             System.Windows.Automation.AutomationProperties.SetHelpText(control, description.Text);
         }
