@@ -25,6 +25,7 @@ public sealed class NowPlayingCard : Grid
 {
     private const double SpinSeconds = 2.4;
     private FenceItemView? _view;
+    private int _wheelRemainder; // M41b: wheel units short of a whole volume step
     private WidgetSize? _built;
     private readonly RotateTransform _spin = new();
     private readonly TranslateTransform _out = new();
@@ -54,7 +55,9 @@ public sealed class NowPlayingCard : Grid
         PreviewMouseWheel += (_, wheel) => // the Windows volume, with its own flyout
         {
             wheel.Handled = true;
-            VolumeKeys.Step(up: wheel.Delta > 0);
+            // M41b (rc.3 leftover): a touchpad's small deltas add up to one step per notch (120), not one per event.
+            (var steps, _wheelRemainder) = VolumeWheel.Add(_wheelRemainder, wheel.Delta);
+            for (var step = 0; step < Math.Abs(steps); step++) VolumeKeys.Step(up: steps > 0);
         };
         Unloaded += (_, _) => Spin(false);
     }

@@ -148,14 +148,6 @@ public sealed class FenceItemView : INotifyPropertyChanged
     /// <summary>M41a: what plays now, for a Now playing widget (the host reads Windows' media sessions).</summary>
     public NowPlayingData? Media { get; set { if (Equals(field, value)) return; field = value; Changed(); } }
 
-    /// <summary>The clock's time, or the date page's weekday (M25).</summary>
-    public string WidgetMain { get; private set { field = value; Changed(); } } = "";
-
-    /// <summary>The clock's date line, or the date page's day number.</summary>
-    public string WidgetSub { get; private set { field = value; Changed(); } } = "";
-
-    /// <summary>The date page's month and year.</summary>
-    public string WidgetFoot { get; private set { field = value; Changed(); } } = "";
 
     /// <summary>The stats widget's tiles (M31): CPU, CPU TEMP, GPU, GPU TEMP, RAM.</summary>
     public IReadOnlyList<StatTile> StatTiles { get; private set { field = value; Changed(); } } = [];
@@ -168,16 +160,8 @@ public sealed class FenceItemView : INotifyPropertyChanged
     public void RenderWidget(DateTime now, System.Globalization.CultureInfo culture, StatsSample? stats)
     {
         WidgetNow = now; // M41a: the faces update from it
-        switch (Widget)
+        switch (Widget) // M41b: the clock and calendar faces format from WidgetNow (the old text properties had no reader)
         {
-            case WidgetKind.Clock:
-                WidgetMain = Widgets.ClockText(now, Options.Seconds, culture);
-                WidgetSub = Options.Date ? Widgets.ClockDateLine(now, culture) : ""; // M31: "Monday, 5 October"
-                break;
-            case WidgetKind.Date:
-                var page = Widgets.Page(now, culture);
-                (WidgetMain, WidgetSub, WidgetFoot) = (page.Weekday, page.Day, page.MonthYear);
-                break;
             case WidgetKind.Stats:
                 var tiles = Widgets.Tiles(stats, Options.Fahrenheit, culture); // M31
                 if (!tiles.SequenceEqual(StatTiles)) StatTiles = tiles; // M28: rebuilt only when a value changed

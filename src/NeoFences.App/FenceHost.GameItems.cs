@@ -125,7 +125,7 @@ public sealed partial class FenceHost
         Command(showAs, "Icon", null, () => SetShowAs(item.Id, ItemShow.Icon), isChecked: !GameItems.ShowsCover(item));
         menu.Items.Add(showAs);
         if (GameItems.ShowsCover(item)) Command(menu, "Choose cover…", MenuGlyph.Cover, () => ChooseCover(item)); // M34
-        menu.Items.Add(GameItems.ShowsCover(item) ? CoverSizeMenu([item]) : SizeMenu(menu, [item])); // M24; M34: Normal / Large covers
+        menu.Items.Add(SizeMenu(menu, [item])); // M24; M41b (audit card 10): covers take the same grid as every item
         menu.Items.Add(MenuGlyph.Entry("Open install folder", MenuGlyph.OpenFolder, () => OpenInstallFolder(window, item.Target),
             enabled: installed && LibraryItemOf(item.Target)?.Game.InstallFolder is not null)); // M23
         Command(menu, "Copy path", MenuGlyph.Copy, () => CopyText(item.Target));

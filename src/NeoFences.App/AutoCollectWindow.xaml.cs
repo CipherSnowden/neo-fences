@@ -39,6 +39,10 @@ public partial class AutoCollectWindow : Window
         _kinds = [(AppsCheck, CollectKinds.Apps), (InstallersCheck, CollectKinds.Installers), (DocumentsCheck, CollectKinds.Documents),
                   (PicturesCheck, CollectKinds.Pictures), (ArchivesCheck, CollectKinds.Archives), (AnythingCheck, CollectKinds.Anything)];
         foreach (var (box, _) in _kinds) box.Click += (_, _) => Edit(rule => rule with { Kinds = KindsChecked() });
+        // M41b (audit): Anything takes every file, so the other kinds grey out while it is ticked.
+        void AnythingMakesTheRestMoot() { foreach (var (box, kind) in _kinds) if (kind != CollectKinds.Anything) box.IsEnabled = AnythingCheck.IsChecked != true; }
+        AnythingCheck.Checked += (_, _) => AnythingMakesTheRestMoot();
+        AnythingCheck.Unchecked += (_, _) => AnythingMakesTheRestMoot();
         PatternsBox.TextChanged += (_, _) => Edit(rule => rule with { Patterns = PatternsBox.Text.Trim() });
         SourceBox.SelectionChanged += (_, _) => OnSourceChosen();
         RuleList.SelectionChanged += (_, _) => ShowRule();

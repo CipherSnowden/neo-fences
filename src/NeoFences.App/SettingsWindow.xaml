@@ -1,49 +1,55 @@
 <Window x:Class="NeoFences.App.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="NeoFences settings" Width="820" Height="680" MinWidth="640" MinHeight="420"
+        Title="NeoFences settings" Width="880" Height="700" MinWidth="680" MinHeight="460"
         WindowStartupLocation="CenterScreen" ThemeMode="System">
     <!-- Fluent (WPF's built-in theme, ThemeMode="System"): follows Windows light/dark and the accent colour (spec §6).
          Set only on this window: the fences keep their own look. Changes apply at once; there is no OK button. -->
-    <!-- M35 (spec §2): a section list on the left, the open section's page on the right. -->
+    <!-- M41b (spec 2026-10-11-m41b-settings-design §3, global-settings-v2): a search box over coloured page tiles; each row says
+         what it does. A fence's look lives in Fence settings (This fence | All fences); the search finds those settings too. -->
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="230" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <ListBox x:Name="SectionList" Margin="8,16,4,12" Background="Transparent" BorderThickness="0" AutomationProperties.Name="Settings sections">
-            <!-- M35: like Windows Settings — a subtle highlight and a short accent pill on the open section. -->
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="Margin" Value="0,1" />
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ListBoxItem">
-                                <Border x:Name="Row" CornerRadius="4" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                    <Grid>
-                                        <Border x:Name="Pill" Width="3" Height="16" CornerRadius="1.5" HorizontalAlignment="Left" Margin="-8,0,0,0"
-                                                Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
-                                        <ContentPresenter />
-                                    </Grid>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Row" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
-                                    </Trigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="Row" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
-                                        <Setter TargetName="Pill" Property="Visibility" Value="Visible" />
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </ListBox.ItemContainerStyle>
-        </ListBox>
+        <DockPanel Margin="10,16,4,12">
+            <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="2,0,2,10" AutomationProperties.Name="Search settings"
+                     ToolTip="Search settings — here and in Fence settings" />
+            <ListBox x:Name="SectionList" Background="Transparent" BorderThickness="0" AutomationProperties.Name="Settings pages">
+                <!-- M35: like Windows Settings — a subtle highlight and a short accent pill on the open page. -->
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Margin" Value="0,1" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Row" CornerRadius="4" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                        <Grid>
+                                            <Border x:Name="Pill" Width="3" Height="16" CornerRadius="1.5" HorizontalAlignment="Left" Margin="-8,0,0,0"
+                                                    Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
+                                            <ContentPresenter />
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                            <Setter TargetName="Pill" Property="Visibility" Value="Visible" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+        </DockPanel>
         <ScrollViewer x:Name="PageScroller" Grid.Column="1" VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20,16,28,28">
-            <TextBlock x:Name="PageTitle" Text="General" FontSize="28" FontWeight="SemiBold" />
+            <TextBlock x:Name="PageTitle" Text="Look &amp; feel" FontSize="28" FontWeight="SemiBold" />
+            <TextBlock x:Name="PageSubtitle" Style="{StaticResource Description}" Margin="0,2,0,0" TextWrapping="Wrap" />
             <!-- M33: a problem on top (safe mode, changes not saved), with the logs one click away. -->
             <Border x:Name="Banner" Visibility="Collapsed" Margin="0,12,0,0" Padding="14,10" CornerRadius="6"
                     Background="{DynamicResource SystemFillColorCautionBackgroundBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
@@ -53,217 +59,51 @@
                 </DockPanel>
             </Border>
 
-            <StackPanel x:Name="GeneralPage" Margin="0,16,0,0" Visibility="Collapsed">
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <CheckBox x:Name="StartupBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Start with Windows" />
-                    <StackPanel>
-                        <TextBlock Text="Start with Windows" TextWrapping="Wrap" />
-                        <TextBlock x:Name="StartupDescription" Style="{StaticResource Description}" Text="Your fences come back by themselves after a restart or a power cut." />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <CheckBox x:Name="HideIconsBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Hide desktop icons while NeoFences runs" />
-                    <StackPanel>
-                        <TextBlock Text="Hide desktop icons while NeoFences runs" TextWrapping="Wrap" />
-                        <TextBlock x:Name="HideIconsDescription" Style="{StaticResource Description}" Text="Windows' own desktop icons go away while NeoFences runs and come back when it is paused, closed, or stops unexpectedly. Your files stay where they are." />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <CheckBox x:Name="QuickHideGestureBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Double-click the desktop to quick-hide" />
-                    <StackPanel>
-                        <TextBlock Text="Double-click the desktop to quick-hide" TextWrapping="Wrap" />
-                        <TextBlock x:Name="QuickHideGestureDescription" Style="{StaticResource Description}" Text="Double-click empty desktop to hide all fences (and the icons); again to bring them back. Quick-hide stays in the tray menu." />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <CheckBox x:Name="DrawGestureBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Right-drag on the desktop to draw a fence" />
-                    <StackPanel>
-                        <TextBlock Text="Right-drag on the desktop to draw a fence" TextWrapping="Wrap" />
-                        <TextBlock x:Name="DrawGestureDescription" Style="{StaticResource Description}" Text="Hold the right mouse button on empty desktop and draw a rectangle. With every desktop gesture off, NeoFences watches no mouse clicks at all." />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-            <!-- M41a (ADR-066): macOS-style, off by default. -->
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <CheckBox x:Name="RevealGestureBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Click wallpaper to reveal desktop" />
-                    <StackPanel>
-                        <TextBlock Text="Click wallpaper to reveal desktop" TextWrapping="Wrap" />
-                        <TextBlock x:Name="RevealGestureDescription" Style="{StaticResource Description}" Text="Click empty wallpaper and your windows step aside, so your fences and wallpaper are in view; click it again to bring them back. Like Win+D." />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <StackPanel>
-                    <DockPanel>
-                        <TextBox x:Name="HotkeyBox" DockPanel.Dock="Right" Width="190" IsReadOnly="True" IsReadOnlyCaretVisible="False"
-                                 VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Peek hotkey" />
-                        <StackPanel>
-                            <TextBlock Text="Peek hotkey" TextWrapping="Wrap" />
-                            <TextBlock x:Name="HotkeyDescription" Style="{StaticResource Description}" Text="Shows your fences above all windows. Click the box, then press the new combination (with Alt or Win, or an F-key)." />
-                        </StackPanel>
-                    </DockPanel>
-                    <!-- Assertive live region: screen readers announce a refused combination at once (M6b review carry-over). -->
-                    <TextBlock x:Name="HotkeyStatus" Style="{StaticResource Description}" Margin="0,8,0,0" Visibility="Collapsed"
-                               AutomationProperties.LiveSetting="Assertive" />
-                </StackPanel>
-            </Border>
-
+            <!-- Search results (instead of a page while the box has text) -->
+            <StackPanel x:Name="SearchPage" Margin="0,16,0,0" Visibility="Collapsed">
+                <TextBlock x:Name="SearchEmpty" Style="{StaticResource Description}" Text="Nothing found. Try another word." Visibility="Collapsed" />
+                <StackPanel x:Name="SearchResults" />
             </StackPanel>
-            <StackPanel x:Name="FencesPage" Margin="0,16,0,0" Visibility="Collapsed">
-            <!-- M41a (ADR-064): one click opens by default; each fence can choose in Fence settings. -->
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <ComboBox x:Name="OpenWithBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Open items with">
-                        <ComboBoxItem Content="One click" Tag="OneClick" />
-                        <ComboBoxItem Content="Double click" Tag="DoubleClick" />
-                    </ComboBox>
-                    <StackPanel>
-                        <TextBlock Text="Open items with" TextWrapping="Wrap" />
-                        <TextBlock x:Name="OpenWithDescription" Style="{StaticResource Description}" Text="One click opens an item, a game or a folder. Ctrl+click or a drag box still selects several. Each fence can choose its own in Fence settings." />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <StackPanel>
-                    <DockPanel>
-                        <ComboBox x:Name="LabelsBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Labels for new fences">
-                            <ComboBoxItem Content="Always" Tag="Always" />
-                            <ComboBoxItem Content="On hover (icons only)" Tag="OnHover" />
-                        </ComboBox>
-                        <StackPanel>
-                            <TextBlock Text="Labels for new fences" TextWrapping="Wrap" />
-                            <TextBlock x:Name="LabelsDescription" Style="{StaticResource Description}" Text="Icons only shows an item's name when you point at it or select it. Each fence can also choose in its own menu." />
-                        </StackPanel>
-                    </DockPanel>
-                    <Button x:Name="LabelsApplyAllButton" Content="Apply to all fences" HorizontalAlignment="Left" Margin="0,10,0,0" />
-                </StackPanel>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <CheckBox x:Name="ArrowsBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Show shortcut arrows" />
-                    <StackPanel>
-                        <TextBlock Text="Show shortcut arrows" TextWrapping="Wrap" />
-                        <TextBlock x:Name="ArrowsDescription" Style="{StaticResource Description}" Text="The small arrow Windows draws on shortcut icons." />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <ComboBox x:Name="RollupBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Rolled-up fences open">
-                        <ComboBoxItem Content="When the mouse rests on them" Tag="Hover" />
-                        <ComboBoxItem Content="When you click their title" Tag="Click" />
-                    </ComboBox>
-                    <StackPanel>
-                        <TextBlock Text="Rolled-up fences open" TextWrapping="Wrap" />
-                        <TextBlock x:Name="RollupDescription" Style="{StaticResource Description}" Text="Double-click a fence's title to roll it up to its title bar." />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
 
-            </StackPanel>
-            <StackPanel x:Name="AppearancePage" Margin="0,16,0,0" Visibility="Collapsed">
-            <!-- M41a (ADR-063, spec §1–4): theme, title style, name style and motion; M41b turns them into visual pickers. -->
-            <Border Style="{StaticResource Card}">
+            <StackPanel x:Name="LookPage" Margin="0,16,0,0" Visibility="Collapsed">
+            <Border Style="{StaticResource Card}" Tag="look.allFences">
+                <DockPanel>
+                    <Button x:Name="ChangeAllLookButton" Content="Change the look of all fences…" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0"
+                            Style="{DynamicResource AccentButtonStyle}" Padding="16,8" />
+                    <StackPanel>
+                        <TextBlock Text="Theme, titles, colours, icon sizes and clicks" TextWrapping="Wrap" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource Description}" TextWrapping="Wrap"
+                                   Text="They live in Fence settings: for one fence (fence menu → Fence settings…) or for all fences at once, with a live preview." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Tag="look.motion">
                 <StackPanel>
-                    <DockPanel>
-                        <ComboBox x:Name="ThemeBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Theme">
-                            <ComboBoxItem Content="Classic" Tag="Classic" />
-                            <ComboBoxItem Content="Aurora glass" Tag="Aurora" />
-                            <ComboBoxItem Content="Game HUD" Tag="Hud" />
-                            <ComboBoxItem Content="Neon" Tag="Neon" />
-                            <ComboBoxItem Content="Light Mica" Tag="LightMica" />
-                        </ComboBox>
-                        <StackPanel>
-                            <TextBlock Text="Theme" TextWrapping="Wrap" />
-                            <TextBlock x:Name="ThemeDescription" Style="{StaticResource Description}" Text="Every fence without a theme of its own (Fence settings… gives one fence its own). Aurora's light drifts, HUD's scan line sweeps, Neon's edge breathes — gently, and never in a game." />
-                        </StackPanel>
-                    </DockPanel>
-                    <DockPanel Margin="0,10,0,0">
-                        <ComboBox x:Name="TitleStyleBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Title style">
-                            <ComboBoxItem Content="Simple" Tag="Simple" />
-                            <ComboBoxItem Content="Clean (underline, count)" Tag="Clean" />
-                            <ComboBoxItem Content="Pill (emoji, count)" Tag="Pill" />
-                            <ComboBoxItem Content="CAPS (marker, count)" Tag="Caps" />
-                        </ComboBox>
-                        <TextBlock Text="Title style" VerticalAlignment="Center" />
-                    </DockPanel>
-                    <DockPanel Margin="0,10,0,0">
-                        <ComboBox x:Name="NameStyleBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Item names">
-                            <ComboBoxItem Content="Crisp" Tag="Crisp" />
-                            <ComboBoxItem Content="Chips (on a soft pill)" Tag="Chips" />
-                            <ComboBoxItem Content="Plain" Tag="Plain" />
-                        </ComboBox>
-                        <TextBlock Text="Item names" VerticalAlignment="Center" />
-                    </DockPanel>
-                    <DockPanel Margin="0,10,0,0">
-                        <ComboBox x:Name="MotionBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Motion">
-                            <ComboBoxItem Content="Lively" Tag="Lively" />
-                            <ComboBoxItem Content="Calm" Tag="Calm" />
-                            <ComboBoxItem Content="Off" Tag="Off" />
-                        </ComboBox>
-                        <StackPanel>
-                            <TextBlock Text="Motion" TextWrapping="Wrap" />
-                            <TextBlock x:Name="MotionDescription" Style="{StaticResource Description}" Text="Items lift under the mouse and dip when pressed; they arrive one after another. Off in games and when Windows' animation effects are off." />
-                        </StackPanel>
-                    </DockPanel>
+                    <TextBlock Text="Animations" />
+                    <TextBlock x:Name="MotionDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    <StackPanel x:Name="MotionChoice" Orientation="Horizontal" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" Tag="look.names">
                 <StackPanel>
-                    <TextBlock Text="Colour style" />
-                    <TextBlock Style="{StaticResource Description}" Text="How a Classic fence shows its colour (fence menu → Colour); the other themes use it as their accent." />
-                    <UniformGrid Rows="1" Margin="0,10,0,0" AutomationProperties.Name="Colour style">
-                        <RadioButton x:Name="AccentEdgeStyle" GroupName="ColourStyle" Margin="0,0,8,0" AutomationProperties.Name="Accent edge">
-                            <StackPanel>
-                                <Border Width="64" Height="36" CornerRadius="4" BorderThickness="1" BorderBrush="#E84855" Background="#30101018" HorizontalAlignment="Left">
-                                    <Rectangle Width="18" Height="3" Fill="#E84855" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6,10,0,0" />
-                                </Border>
-                                <TextBlock Text="Accent edge" Margin="0,4,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="TintedGlassStyle" GroupName="ColourStyle" Margin="0,0,8,0" AutomationProperties.Name="Tinted glass">
-                            <StackPanel>
-                                <Border Width="64" Height="36" CornerRadius="4" BorderThickness="1" BorderBrush="#B3E84855" Background="#59E84855" HorizontalAlignment="Left" />
-                                <TextBlock Text="Tinted glass" Margin="0,4,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="TitleStripStyle" GroupName="ColourStyle" AutomationProperties.Name="Title strip">
-                            <StackPanel>
-                                <Border Width="64" Height="36" CornerRadius="4" BorderThickness="1" BorderBrush="#40808080" Background="#30101018" HorizontalAlignment="Left">
-                                    <Border Height="11" CornerRadius="3,3,0,0" Background="#BFE84855" VerticalAlignment="Top" />
-                                </Border>
-                                <TextBlock Text="Title strip" Margin="0,4,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                    </UniformGrid>
+                    <TextBlock Text="Item names" />
+                    <TextBlock x:Name="NamesDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    <StackPanel x:Name="NameStyleChoice" Orientation="Horizontal" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" Tag="look.menu">
                 <StackPanel>
-                    <TextBlock Text="Transparency" />
-                    <TextBlock x:Name="StrengthDescription" Style="{StaticResource Description}" />
-                    <DockPanel Margin="0,8,0,0">
-                        <TextBlock Text="Clear" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,10,0" Style="{StaticResource Description}" />
-                        <TextBlock Text="Solid" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="10,0,0,0" Style="{StaticResource Description}" />
-                        <Slider x:Name="StrengthSlider" Minimum="0" Maximum="85" TickFrequency="5" IsSnapToTickEnabled="True" SmallChange="5" LargeChange="10"
-                                VerticalAlignment="Center" AutomationProperties.Name="Transparency" />
-                    </DockPanel>
+                    <TextBlock Text="Menu style" />
+                    <TextBlock x:Name="FenceMenuDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    <StackPanel x:Name="FenceMenuChoice" Orientation="Horizontal" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" Tag="look.wallpaperColour">
                 <DockPanel>
                     <CheckBox x:Name="AccentBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Colour fences from the wallpaper" />
                     <StackPanel>
                         <TextBlock Text="Colour fences from the wallpaper" TextWrapping="Wrap" />
-                        <TextBlock Style="{StaticResource Description}" Text="Fences without a colour of their own take the wallpaper's colour (also Wallpaper Engine's)." />
+                        <TextBlock x:Name="AccentDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                             <Border x:Name="AccentSwatch" Width="16" Height="16" CornerRadius="3" Margin="0,0,6,0" Visibility="Collapsed" VerticalAlignment="Center" />
                             <TextBlock x:Name="AccentSource" Style="{StaticResource Description}" VerticalAlignment="Center" Margin="0" Visibility="Collapsed" />
@@ -271,71 +111,160 @@
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <Border Style="{StaticResource Card}">
-                <StackPanel>
-                    <TextBlock Text="Title font" />
-                    <TextBlock Style="{StaticResource Description}" Text="Every fence's title uses it." />
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <ComboBox x:Name="FontFamilyBox" Width="200" IsEditable="False" AutomationProperties.Name="Title font" VirtualizingPanel.IsVirtualizing="True">
-                            <ComboBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <VirtualizingStackPanel />
-                                </ItemsPanelTemplate>
-                            </ComboBox.ItemsPanel>
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}" FontFamily="{Binding}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <ComboBox x:Name="FontSizeBox" Width="110" Margin="8,0,0,0" AutomationProperties.Name="Title size">
-                            <ComboBoxItem Content="Small" Tag="12" />
-                            <ComboBoxItem Content="Normal" Tag="14" />
-                            <ComboBoxItem Content="Large" Tag="17" />
-                            <ComboBoxItem Content="Huge" Tag="20" />
-                        </ComboBox>
-                        <ComboBox x:Name="FontWeightBox" Width="110" Margin="8,0,0,0" AutomationProperties.Name="Title weight">
-                            <ComboBoxItem Content="Regular" Tag="Regular" />
-                            <ComboBoxItem Content="SemiBold" Tag="SemiBold" />
-                            <ComboBoxItem Content="Bold" Tag="Bold" />
-                        </ComboBox>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            <!-- M41a (spec §5): the fence menu's shape. -->
-            <Border Style="{StaticResource Card}">
+            </StackPanel>
+
+            <StackPanel x:Name="DesktopPage" Margin="0,16,0,0" Visibility="Collapsed">
+            <Border Style="{StaticResource Card}" Tag="desktop.hideIcons">
                 <DockPanel>
-                    <ComboBox x:Name="FenceMenuBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Fence menu">
-                        <ComboBoxItem Content="Guided (with headings)" Tag="Guided" />
-                        <ComboBoxItem Content="Compact (icon row)" Tag="Compact" />
-                    </ComboBox>
+                    <CheckBox x:Name="HideIconsBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Hide desktop icons while NeoFences runs" />
                     <StackPanel>
-                        <TextBlock Text="Fence menu" TextWrapping="Wrap" />
-                        <TextBlock x:Name="FenceMenuDescription" Style="{StaticResource Description}" Text="Guided names each group of a fence's right-click menu; Compact puts the everyday actions in a row of icons on top." />
+                        <TextBlock Text="Hide desktop icons while NeoFences runs" TextWrapping="Wrap" />
+                        <TextBlock x:Name="HideIconsDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
                     </StackPanel>
                 </DockPanel>
             </Border>
-
+            <TextBlock Style="{StaticResource Description}" Margin="4,8,0,4" TextWrapping="Wrap"
+                       Text="A click and a double-click on empty wallpaper do different things: one click reveals the desktop (when turned on), a double-click hides the fences." />
+            <Border Style="{StaticResource Card}" Tag="desktop.quickHide">
+                <DockPanel>
+                    <CheckBox x:Name="QuickHideGestureBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Double-click empty desktop hides all fences" />
+                    <ContentControl x:Name="QuickHidePicture" DockPanel.Dock="Left" Margin="0,0,14,0" Focusable="False" />
+                    <StackPanel>
+                        <TextBlock Text="Double-click empty desktop hides all fences" TextWrapping="Wrap" />
+                        <TextBlock x:Name="QuickHideGestureDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Tag="desktop.reveal">
+                <DockPanel>
+                    <CheckBox x:Name="RevealGestureBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Click wallpaper to reveal the desktop" />
+                    <ContentControl x:Name="RevealPicture" DockPanel.Dock="Left" Margin="0,0,14,0" Focusable="False" />
+                    <StackPanel>
+                        <TextBlock Text="Click wallpaper to reveal the desktop" TextWrapping="Wrap" />
+                        <TextBlock x:Name="RevealGestureDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Tag="desktop.draw">
+                <DockPanel>
+                    <CheckBox x:Name="DrawGestureBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Right-drag draws a new fence" />
+                    <ContentControl x:Name="DrawPicture" DockPanel.Dock="Left" Margin="0,0,14,0" Focusable="False" />
+                    <StackPanel>
+                        <TextBlock Text="Right-drag draws a new fence" TextWrapping="Wrap" />
+                        <TextBlock x:Name="DrawGestureDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Tag="desktop.startWithWindows">
+                <DockPanel>
+                    <CheckBox x:Name="StartupBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Start with Windows" />
+                    <StackPanel>
+                        <TextBlock Text="Start with Windows" TextWrapping="Wrap" />
+                        <TextBlock x:Name="StartupDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Tag="desktop.shortcutArrows">
+                <DockPanel>
+                    <CheckBox x:Name="ArrowsBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Show shortcut arrows" />
+                    <StackPanel>
+                        <TextBlock Text="Show shortcut arrows" TextWrapping="Wrap" />
+                        <TextBlock x:Name="ArrowsDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
             </StackPanel>
-            <StackPanel x:Name="GameModePage" Margin="0,16,0,0" Visibility="Collapsed">
-            <Border Style="{StaticResource Card}">
+
+            <StackPanel x:Name="GamesPage" Margin="0,16,0,0" Visibility="Collapsed">
+            <Border x:Name="LibraryCard" Style="{StaticResource Card}" Tag="games.sources">
+                <StackPanel>
+                    <TextBlock x:Name="LibraryDescription" Style="{StaticResource Description}" Margin="0,0,0,8" TextWrapping="Wrap"
+                               Text="Finds the games installed on this PC. Put them in any fence with fence menu → Add → Games…; newly installed games go to the fence chosen below. Launcher games start through their launcher. Your games and files are never changed." />
+                    <TextBlock Text="Look for games in" Margin="0,4,0,4" FontWeight="SemiBold" />
+                    <WrapPanel>
+                        <CheckBox x:Name="SteamSourceBox" Margin="0,0,16,6" />
+                        <CheckBox x:Name="EpicSourceBox" Margin="0,0,16,6" />
+                        <CheckBox x:Name="GogSourceBox" Margin="0,0,16,6" />
+                        <CheckBox x:Name="UbisoftSourceBox" Margin="0,0,16,6" />
+                        <CheckBox x:Name="EaSourceBox" Margin="0,0,16,6" />
+                        <CheckBox x:Name="BattleNetSourceBox" Margin="0,0,16,6" />
+                        <CheckBox x:Name="XboxSourceBox" Margin="0,0,16,6" />
+                        <CheckBox x:Name="FoldersSourceBox" Margin="0,0,16,6" />
+                        <CheckBox x:Name="ShortcutsSourceBox" Margin="0,0,16,6" />
+                    </WrapPanel>
+                    <StackPanel x:Name="GameFoldersPanel" Tag="games.folders">
+                        <TextBlock Text="Game folders (each sub-folder is a game)" Margin="0,8,0,4" FontWeight="SemiBold" />
+                        <TextBlock x:Name="GameFoldersOffNote" Style="{StaticResource Description}" Text="Turn on “My game folders” above to use them." Visibility="Collapsed" />
+                        <ListBox x:Name="GameFolderList" MaxHeight="120" AutomationProperties.Name="Game folders" />
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button x:Name="AddGameFolderButton" Content="Add folder…" Margin="0,0,8,6" />
+                            <Button x:Name="RemoveGameFolderButton" Content="Remove" Margin="0,0,8,6" IsEnabled="False" />
+                        </WrapPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,8" Tag="games.newGames">
+                        <TextBlock Text="New games go to" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold" />
+                        <ComboBox x:Name="NewGamesBox" MinWidth="200" AutomationProperties.Name="New games go to" />
+                    </StackPanel>
+                    <WrapPanel Margin="0,4,0,0">
+                        <Button x:Name="RefreshLibraryButton" Content="Refresh library now" Margin="0,0,8,6" />
+                    </WrapPanel>
+                    <TextBlock x:Name="LibraryStatus" Style="{StaticResource Description}" />
+                </StackPanel>
+            </Border>
+            <!-- M34 (ADR-055): online art, off until the owner says yes (asked once). -->
+            <Border Style="{StaticResource Card}" Tag="games.onlineArt">
+                <DockPanel>
+                    <CheckBox x:Name="OnlineArtBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Find covers and website icons online" />
+                    <StackPanel>
+                        <TextBlock Text="Find covers and website icons online" TextWrapping="Wrap" />
+                        <TextBlock Style="{StaticResource Description}" TextWrapping="Wrap" Text="Sends the names of games without a cover to the Steam store, and asks your web links' sites for their icons. Nothing else leaves your PC. Off: covers already found stay." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Tag="games.gameMode">
                 <StackPanel>
                     <DockPanel>
                         <CheckBox x:Name="GameModeBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Go idle while a full-screen game runs" />
                         <StackPanel>
                             <TextBlock Text="Go idle while a full-screen game runs" TextWrapping="Wrap" />
-                            <TextBlock x:Name="GameModeDescription" Style="{StaticResource Description}" Text="NeoFences removes its mouse hook and waits with background work, so games get every bit of input. Fences stay where they are." />
+                            <TextBlock x:Name="GameModeDescription" Style="{StaticResource Description}" TextWrapping="Wrap" />
                         </StackPanel>
                     </DockPanel>
                     <TextBlock x:Name="GameModeStatus" Style="{StaticResource Description}" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
-
             </StackPanel>
-            <StackPanel x:Name="SnapshotsPage" Margin="0,16,0,0" Visibility="Collapsed">
-            <Border x:Name="SnapshotsCard" Style="{StaticResource Card}">
+
+            <StackPanel x:Name="KeysPage" Margin="0,16,0,0" Visibility="Collapsed">
+            <Border Style="{StaticResource Card}" Tag="keys.peek">
                 <StackPanel>
-                    <TextBlock x:Name="SnapshotsDescription" Style="{StaticResource Description}" Margin="0,0,0,8"
+                    <DockPanel>
+                        <TextBox x:Name="HotkeyBox" DockPanel.Dock="Right" Width="190" IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                                 VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Peek hotkey" />
+                        <StackPanel>
+                            <TextBlock Text="Peek hotkey" TextWrapping="Wrap" />
+                            <TextBlock x:Name="HotkeyDescription" Style="{StaticResource Description}" TextWrapping="Wrap" Text="Shows your fences above all windows; the keyboard works in them. Click the box, then press the new combination (with Alt or Win, or an F-key)." />
+                        </StackPanel>
+                    </DockPanel>
+                    <!-- Assertive live region: screen readers announce a refused combination at once (M6b review carry-over). -->
+                    <TextBlock x:Name="HotkeyStatus" Style="{StaticResource Description}" Margin="0,8,0,0" Visibility="Collapsed"
+                               AutomationProperties.LiveSetting="Assertive" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Keys in a fence" FontWeight="SemiBold" />
+                    <TextBlock Style="{StaticResource Description}" TextWrapping="Wrap" Margin="0,4,0,0" xml:space="preserve">Arrows — move between items · Enter — open
+Tab / Shift+Tab — next / previous fence (in Peek) · Esc — back to your app
+F2 — rename · Del — remove the item (never a file) · Ctrl+Z — undo a removal</TextBlock>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+
+            <StackPanel x:Name="SnapshotsPage" Margin="0,16,0,0" Visibility="Collapsed">
+            <Border x:Name="SnapshotsCard" Style="{StaticResource Card}" Tag="safety.snapshots">
+                <StackPanel>
+                    <TextBlock x:Name="SnapshotsDescription" Style="{StaticResource Description}" Margin="0,0,0,8" TextWrapping="Wrap"
                                Text="Save how your fences are arranged and put it back later. Restoring first saves 'Before restore', so it can be undone. Your files are never changed; settings come back only with 'Before import' and 'Before reset'." />
                     <ListBox x:Name="SnapshotList" MaxHeight="220" AutomationProperties.Name="Snapshots">
                         <ListBox.ItemTemplate>
@@ -364,73 +293,36 @@
                 </StackPanel>
             </Border>
             <!-- M36 (spec §3): the whole setup as one file, for another PC or a fresh start. -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" Tag="safety.export">
                 <StackPanel>
                     <TextBlock Text="Your whole setup in one file" />
-                    <TextBlock Style="{StaticResource Description}" Text="Export saves your fences, items, settings, own presets and the pictures you chose as icons and covers to one .neofences file. Import replaces your setup with a file's; your current one is saved as a snapshot first, so Restore undoes it. Your files are never in it and never changed." />
+                    <TextBlock Style="{StaticResource Description}" TextWrapping="Wrap" Text="Export saves your fences, items, settings, own recipes and the pictures you chose as icons and covers to one .neofences file. Import replaces your setup with a file's; your current one is saved as a snapshot first, so Restore undoes it. Your files are never in it and never changed." />
                     <WrapPanel Margin="0,10,0,0">
                         <Button x:Name="ExportSetupButton" Content="Export setup…" Margin="0,0,8,6" />
                         <Button x:Name="ImportSetupButton" Content="Import setup…" Margin="0,0,0,6" />
                     </WrapPanel>
                 </StackPanel>
             </Border>
-
-            </StackPanel>
-            <StackPanel x:Name="GamesPage" Margin="0,16,0,0" Visibility="Collapsed">
-            <Border x:Name="LibraryCard" Style="{StaticResource Card}">
-                <StackPanel>
-                    <TextBlock x:Name="LibraryDescription" Style="{StaticResource Description}" Margin="0,0,0,8"
-                               Text="Finds the games installed on this PC. Put them in any fence with fence menu → Add → Games…; newly installed games go to the fence chosen below. Launcher games start through their launcher. Nothing is downloaded unless you turn on finding covers below, and your games and files are never changed." />
-                    <!-- M34 (ADR-055): online art, off until the owner says yes (asked once). -->
-                    <DockPanel Margin="0,4,0,10">
-                        <CheckBox x:Name="OnlineArtBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Find covers and website icons online" />
-                        <StackPanel>
-                            <TextBlock Text="Find covers and website icons online" TextWrapping="Wrap" />
-                            <TextBlock Style="{StaticResource Description}" Text="Sends the names of games without a cover to the Steam store, and asks your web links' sites for their icons. Nothing else leaves your PC. Off: covers already found stay." />
-                        </StackPanel>
-                    </DockPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
-                        <TextBlock Text="New games go to" VerticalAlignment="Center" Margin="0,0,10,0" />
-                        <ComboBox x:Name="NewGamesBox" MinWidth="200" AutomationProperties.Name="New games go to" />
+            <!-- M36 (spec §3): every Settings page back to its defaults; fences, items, recipes and the games' data stay. -->
+            <Border Style="{StaticResource Card}" Tag="safety.reset">
+                <DockPanel>
+                    <Button x:Name="ResetSettingsButton" Content="Reset settings…" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" />
+                    <StackPanel>
+                        <TextBlock Text="Reset settings" TextWrapping="Wrap" />
+                        <TextBlock Style="{StaticResource Description}" TextWrapping="Wrap" Text="Every setting back to how NeoFences comes. Your fences, items, own recipes, game folders and chosen covers stay. A snapshot is taken first." />
                     </StackPanel>
-                    <TextBlock Text="Game folders (each sub-folder is a game)" Margin="0,4,0,4" />
-                    <ListBox x:Name="GameFolderList" MaxHeight="120" AutomationProperties.Name="Game folders" />
-                    <WrapPanel Margin="0,8,0,0">
-                        <Button x:Name="AddGameFolderButton" Content="Add folder…" Margin="0,0,8,6" />
-                        <Button x:Name="RemoveGameFolderButton" Content="Remove" Margin="0,0,8,6" IsEnabled="False" />
-                    </WrapPanel>
-                    <TextBlock Text="Look for games in" Margin="0,8,0,4" />
-                    <WrapPanel>
-                        <CheckBox x:Name="SteamSourceBox" Margin="0,0,16,6" />
-                        <CheckBox x:Name="EpicSourceBox" Margin="0,0,16,6" />
-                        <CheckBox x:Name="GogSourceBox" Margin="0,0,16,6" />
-                        <CheckBox x:Name="UbisoftSourceBox" Margin="0,0,16,6" />
-                        <CheckBox x:Name="EaSourceBox" Margin="0,0,16,6" />
-                        <CheckBox x:Name="BattleNetSourceBox" Margin="0,0,16,6" />
-                        <CheckBox x:Name="XboxSourceBox" Margin="0,0,16,6" />
-                        <CheckBox x:Name="FoldersSourceBox" Margin="0,0,16,6" />
-                        <CheckBox x:Name="ShortcutsSourceBox" Margin="0,0,16,6" />
-                    </WrapPanel>
-                    <TextBlock Text="Hidden games" Margin="0,8,0,4" />
-                    <TextBlock x:Name="HiddenGamesEmpty" Style="{StaticResource Description}" Text="None." />
-                    <ListBox x:Name="HiddenGameList" MaxHeight="120" AutomationProperties.Name="Hidden games" />
-                    <WrapPanel Margin="0,8,0,0">
-                        <Button x:Name="ShowGameAgainButton" Content="Show again" Margin="0,0,8,6" IsEnabled="False" />
-                        <Button x:Name="RefreshLibraryButton" Content="Refresh library now" Margin="0,0,8,6" />
-                    </WrapPanel>
-                    <TextBlock x:Name="LibraryStatus" Style="{StaticResource Description}" />
-                </StackPanel>
+                </DockPanel>
             </Border>
-
             </StackPanel>
+
             <StackPanel x:Name="UpdatesPage" Margin="0,16,0,0" Visibility="Collapsed">
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" Tag="updates.auto">
                 <StackPanel>
                     <DockPanel>
                         <CheckBox x:Name="AutoUpdateBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Download updates automatically" />
                         <StackPanel>
                             <TextBlock Text="Download updates automatically" TextWrapping="Wrap" />
-                            <TextBlock Style="{StaticResource Description}" Text="Checks GitHub at start and once a day, never during a game. Off: no update checks." />
+                            <TextBlock Style="{StaticResource Description}" TextWrapping="Wrap" Text="Checks GitHub at start and once a day, never during a game, and installs on the next start. Off: no update checks." />
                         </StackPanel>
                     </DockPanel>
                     <TextBlock x:Name="UpdateStatus" Style="{StaticResource Description}" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite" />
@@ -440,32 +332,30 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
-
-            </StackPanel>
-            <StackPanel x:Name="AboutPage" Margin="0,16,0,0" Visibility="Collapsed">
             <Border Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock x:Name="VersionText" />
-                    <TextBlock x:Name="DataFolderText" Style="{StaticResource Description}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                        <Button x:Name="OpenLogsButton" Content="Open logs folder" Margin="0,0,8,0" />
-                        <Button x:Name="OpenDataButton" Content="Open data folder" Margin="0,0,8,0" />
-                        <!-- M29: the guide on GitHub (ADR-050). -->
-                        <Button x:Name="HelpButton" Content="Help (online guide)" Margin="0,0,8,0" />
-                        <!-- M39 (ADR-061): LICENSE.txt next to NeoFences.exe; it names the notices and the privacy note beside it. -->
-                        <Button x:Name="LicenceButton" Content="Licence and notices" />
-                    </StackPanel>
+                    <TextBlock Text="What leaves your PC" FontWeight="SemiBold" />
+                    <TextBlock Style="{StaticResource Description}" TextWrapping="Wrap" Margin="0,4,0,0"
+                               Text="Only two things, and only when turned on: the update check asks GitHub for new versions; finding covers sends game names to the Steam store and asks your web links' sites for their icons. Now playing reads Windows on your PC only." />
+                    <Button x:Name="PrivacyButton" Content="Privacy" HorizontalAlignment="Left" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
-            <!-- M36 (spec §3): every Settings page back to its defaults; fences, items, presets and the games' data stay. -->
-            <Border Style="{StaticResource Card}">
-                <DockPanel>
-                    <Button x:Name="ResetSettingsButton" Content="Reset settings to defaults…" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" />
-                    <StackPanel>
-                        <TextBlock Text="Reset settings" TextWrapping="Wrap" />
-                        <TextBlock Style="{StaticResource Description}" Text="Every page of Settings back to how NeoFences comes. Your fences, items, own presets, game folders, hidden games and chosen covers stay. A snapshot is taken first." />
-                    </StackPanel>
-                </DockPanel>
+            </StackPanel>
+
+            <StackPanel x:Name="AboutPage" Margin="0,16,0,0" Visibility="Collapsed">
+            <Border Style="{StaticResource Card}" Tag="help.guide">
+                <StackPanel>
+                    <TextBlock x:Name="VersionText" FontWeight="SemiBold" />
+                    <TextBlock x:Name="DataFolderText" Style="{StaticResource Description}" TextWrapping="Wrap" />
+                    <WrapPanel Margin="0,12,0,0">
+                        <!-- M29: the guide on GitHub (ADR-050). -->
+                        <Button x:Name="HelpButton" Content="Help (online guide)" Margin="0,0,8,6" Style="{DynamicResource AccentButtonStyle}" />
+                        <Button x:Name="OpenLogsButton" Content="Open logs folder" Margin="0,0,8,6" />
+                        <Button x:Name="OpenDataButton" Content="Open data folder" Margin="0,0,8,6" />
+                        <!-- M39 (ADR-061): LICENSE.txt next to NeoFences.exe; it names the notices and the privacy note beside it. -->
+                        <Button x:Name="LicenceButton" Content="Licence and notices" Margin="0,0,0,6" />
+                    </WrapPanel>
+                </StackPanel>
             </Border>
             </StackPanel>
         </StackPanel>

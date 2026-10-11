@@ -75,7 +75,7 @@ public sealed partial class FenceHost
     private void ResetSettings()
     {
         if (!MessageDialog.Ask(_settingsWindow, "Reset every setting to its default?",
-                "Your fences, items, own presets, game folders, hidden games and chosen covers stay. A snapshot is taken first, so restoring it undoes this.",
+                "Your fences, items, own recipes, game folders and chosen covers stay. A snapshot is taken first, so restoring it undoes this.",
                 primary: "Reset", secondary: "Cancel")) return;
         if (!SaveWholeSnapshot("Before reset", failureTitle: "Settings not reset")) return;
         var reset = SettingsReset.Apply(_config);

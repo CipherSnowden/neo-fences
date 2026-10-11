@@ -1389,11 +1389,14 @@ public partial class FenceWindow : Window
     /// <summary>The widgets' bars in the Windows accent (M31); again on every accent change (M32), not only a light/dark flip.</summary>
     public void ApplyWidgetBar(bool light)
     {
-        var bar = light ? new LinearGradientBrush(SystemColors.AccentColorDark1, SystemColors.AccentColor, 0) : new LinearGradientBrush(SystemColors.AccentColorLight2, SystemColors.AccentColorLight1, 0);
+        // M41b (rc.3 leftover): the fence's tone and accent (a theme's own), not Windows' — Windows' only before the first style.
+        if (_style is { } style) light = style.LightTone;
+        var accent = _style is { } styled ? AccentColour(styled) : light ? SystemColors.AccentColorDark1 : SystemColors.AccentColorLight1;
+        var softer = Color.FromArgb(0xFF, (byte)((accent.R + 0xFF) / 2), (byte)((accent.G + 0xFF) / 2), (byte)((accent.B + 0xFF) / 2));
+        var bar = light ? new LinearGradientBrush(accent, accent, 0) : new LinearGradientBrush(accent, softer, 0);
         bar.Freeze();
         Resources["WidgetBar"] = bar;
         // M34 (spec §4): items and tiles select in the accent too: a tinted rounded box with an accent edge, a ring around a cover.
-        var accent = light ? SystemColors.AccentColorDark1 : SystemColors.AccentColorLight1;
         var fill = new SolidColorBrush(Color.FromArgb(light ? (byte)0x30 : (byte)0x40, accent.R, accent.G, accent.B));
         var edge = new SolidColorBrush(Color.FromArgb(0xD9, accent.R, accent.G, accent.B));
         fill.Freeze();
@@ -1454,7 +1457,9 @@ public partial class FenceWindow : Window
             SetIconSize(style.IconSize);
             SetLabelMode(style.Labels);
         }
+        var accentChanged = _style?.Accent != style.Accent || _style?.LightTone != style.LightTone;
         _style = style;
+        if (accentChanged) ApplyWidgetBar(style.LightTone); // M41b: bars and selection in the fence's accent
         Resources["FenceVeil"] = Frozen(style.Veil);
         Resources["FenceOutline"] = Frozen(style.Border);
         Resources["FenceTitleText"] = Frozen(style.TitleText);
@@ -1534,6 +1539,7 @@ public partial class FenceWindow : Window
         {
             if (value == _motion) return;
             _motion = value;
+            if (value == Motion.Off) SettleItems(); // M41b: nothing stays lifted
             ApplyThemeLayer(); // and UpdateThemePause: Now playing's record too (final review C2)
         }
     }
@@ -2094,6 +2100,7 @@ public partial class FenceWindow : Window
         // The element under the pointer first: a Free fence keeps the others' offsets from it (M28).
         var dragged = ItemList.SelectedItems.OfType<FenceItemView>().Select(view => view.Key).OrderBy(key => key == _pressedKey ? 0 : 1).ToList();
         if (dragged.Count > 0) DragRequested?.Invoke(dragged); // returns when the drag ends (Windows' modal loop)
+        SettleItems(); // M41b: the drag loop took the release, so the press dip never came back up
     }
 
     private void OnListRelease(object sender, MouseButtonEventArgs args)

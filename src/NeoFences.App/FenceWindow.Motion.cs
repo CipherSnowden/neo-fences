@@ -82,6 +82,26 @@ public partial class FenceWindow
         move.BeginAnimation(TranslateTransform.XProperty, sweep);
     }
 
+    /// <summary>
+    /// M41b (rc.3 leftover): every item back at rest — after a drag (Windows' drag loop swallows the release, so the dip stayed
+    /// at 96 %) and when Motion turns Off (a lifted item stayed lifted).
+    /// </summary>
+    private void SettleItems()
+    {
+        for (var index = 0; index < ItemList.Items.Count; index++)
+        {
+            if (ItemList.ItemContainerGenerator.ContainerFromIndex(index) is not ListBoxItem container || ChromeOf(container) is not { } chrome
+                || chrome.RenderTransform is not TransformGroup) continue;
+            var (lift, press, tilt) = TransformsOf(chrome);
+            lift.BeginAnimation(TranslateTransform.YProperty, null);
+            press.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            press.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            tilt.BeginAnimation(RotateTransform.AngleProperty, null);
+            (lift.Y, press.ScaleX, press.ScaleY, tilt.Angle) = (0, 1, 1, 0);
+            chrome.Effect = null;
+        }
+    }
+
     /// <summary>Press: a dip to 96 % and back (Calm, Lively); a ripple from the pointer (Lively).</summary>
     private void PressFeedback(MouseButtonEventArgs press, bool pressed)
     {

@@ -105,7 +105,7 @@ public sealed partial class FenceHost
         if (items.Count > 1)
         {
             Command("Open", MenuGlyph.Open, () => { foreach (var item in items) OpenKey(window, item.Id); }); // a widget opens its own app, never ShellExecute on its target (M25 review I2)
-            menu.Items.Add(items.All(GameItems.ShowsCover) ? CoverSizeMenu(items) : SizeMenu(menu, items)); // M24; M34: covers' own sizes
+            menu.Items.Add(SizeMenu(menu, items)); // M24; M41b (audit card 10): covers take the same grid
             menu.Items.Add(new Separator());
             Command($"Remove {items.Count} items from fence", MenuGlyph.Remove, () => RemoveItems(window, [.. items.Select(item => item.Id)]), danger: true);
         }
@@ -135,7 +135,7 @@ public sealed partial class FenceHost
                 menu.Items.Add(new Separator());
             }
             Command("Open", MenuGlyph.Open, () => OpenVirtualItem(window, item, runAsAdmin: item.RunAsAdmin));
-            if (onDisk && !check.IsFolder) Command("Run as administrator", MenuGlyph.Admin, () => OpenVirtualItem(window, item, runAsAdmin: true));
+            if (onDisk && !check.IsFolder) Command("Run as administrator once", MenuGlyph.Admin, () => OpenVirtualItem(window, item, runAsAdmin: true)); // M41b: the lasting one is in Properties
             if (onDisk) Command("Open file location", MenuGlyph.OpenFolder, () => ShowInFolder(item.Target));
             if (onDisk && check.IsFolder && check.State == TargetState.Ok) Command("Show as folder panel", MenuGlyph.Folder, () => SetPanelShown(item.Id, FolderPanels.Create(item.Target, BusyFolders).Panel)); // M26
             Command("Copy path", MenuGlyph.Copy, () => CopyText(item.Target));

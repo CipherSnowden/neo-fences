@@ -241,18 +241,4 @@ public sealed partial class FenceHost
 
     private static string FileNameOf(string gameId) =>
         string.Concat(gameId.Take(80).Select(character => char.IsAsciiLetterOrDigit(character) ? char.ToLowerInvariant(character) : '-'));
-
-    /// <summary>Size ▸ for covers (owner's choice at planning): Normal (1×2) or Large (2×4, twice).</summary>
-    private MenuItem CoverSizeMenu(IReadOnlyList<VirtualItem> items)
-    {
-        var size = MenuGlyph.Entry("Size", MenuGlyph.Size); // M35
-        var spans = items.Select(FenceGrid.SpanOf).Distinct().ToList();
-        foreach (var (name, span) in new[] { ("Normal", CoverSizes.Normal), ("Large (twice as big)", CoverSizes.Large) })
-        {
-            var entry = new MenuItem { Header = name, IsCheckable = true, IsChecked = spans.Count == 1 && spans[0] == span };
-            entry.Click += (_, _) => SetSize([.. items.Select(item => item.Id)], span == CoverSizes.Normal ? null : span);
-            size.Items.Add(entry);
-        }
-        return size;
-    }
 }

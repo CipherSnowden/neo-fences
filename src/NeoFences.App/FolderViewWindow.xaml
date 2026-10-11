@@ -42,9 +42,9 @@
                 <ComboBoxItem Content="Folders only" />
             </ComboBox>
 
-            <TextBlock Grid.Row="2" Text="Types" Style="{StaticResource FieldLabel}" Margin="0,0,12,2" />
+            <TextBlock Grid.Row="2" Text="Only files like" Style="{StaticResource FieldLabel}" Margin="0,0,12,2" />
             <TextBox x:Name="PatternsBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,2"
-                     AutomationProperties.Name="Types: file name patterns, for example *.png;*.jpg" />
+                     AutomationProperties.Name="Only files like, for example *.png;*.jpg" />
             <TextBlock x:Name="PatternsHint" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Hint}" Margin="0,0,0,10"
                        Text="e.g. *.png;*.jpg or pdf — empty shows every type. Subfolders always show." />
 

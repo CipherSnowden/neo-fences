@@ -9,11 +9,11 @@ namespace NeoFences.App;
 /// <param name="PeekHotkey">As a person reads it (key caps).</param>
 /// <param name="PeekHotkeyActive">False when Windows refused it (another app owns it): the window says so.</param>
 public sealed record SettingsView(
-    bool StartWithWindows, bool HideDesktopIcons, string PeekHotkey, bool PeekHotkeyActive, RollupExpand RollupExpand,
-    bool GameModeEnabled, bool GameModeActive, string Version, string DataFolder, LabelMode DefaultLabels, bool ShowShortcutArrows,
+    bool StartWithWindows, bool HideDesktopIcons, string PeekHotkey, bool PeekHotkeyActive,
+    bool GameModeEnabled, bool GameModeActive, string Version, string DataFolder, bool ShowShortcutArrows,
     IReadOnlyList<NeoFences.Core.Config.SnapshotEntry> Snapshots, LibraryView Library, AppearanceView Appearance, UpdatesView Updates,
     bool QuickHideGesture = true, bool DrawGesture = true, string? Banner = null,
-    bool RevealGesture = false, OpenWith OpenItemsWith = OpenWith.OneClick, FenceMenuStyle FenceMenu = FenceMenuStyle.Guided);
+    bool RevealGesture = false, FenceMenuStyle FenceMenu = FenceMenuStyle.Guided);
 
 /// <summary>One row of the Snapshots list (M10).</summary>
 public sealed record SnapshotRow(string Path, string Name, string When)
@@ -22,8 +22,10 @@ public sealed record SnapshotRow(string Path, string Name, string When)
 }
 
 /// <summary>
-/// The settings window (spec §6, M6b): General, Fences, Game mode, About and logs. Every change is reported to the host
-/// at once; the host applies, saves and calls <see cref="Show(SettingsView)"/> back with the result.
+/// The settings window (M41b, spec 2026-10-11-m41b-settings-design §3): a search box over seven pages — Look &amp; feel,
+/// Desktop, Games, Peek &amp; keys, Snapshots &amp; safety, Updates &amp; privacy, Help &amp; about; every row says what it does
+/// (<see cref="SettingsCatalog"/>). A fence's look and clicks live in Fence settings, which the search opens too. Every change
+/// is reported to the host at once; the host applies, saves and calls <see cref="Show(SettingsView)"/> back with the result.
 /// </summary>
 public partial class SettingsWindow : Window
 {
@@ -35,10 +37,15 @@ public partial class SettingsWindow : Window
     /// <summary>Settings → the desktop gesture switches (M33).</summary>
     public event Action<bool>? QuickHideGestureChanged;
     public event Action<bool>? DrawGestureChanged;
-    /// <summary>M41a: "Click wallpaper to reveal desktop", "Open items with", "Fence menu".</summary>
+    /// <summary>M41a: "Click wallpaper to reveal desktop", "Menu style".</summary>
     public event Action<bool>? RevealGestureChanged;
-    public event Action<OpenWith>? OpenItemsWithChanged;
     public event Action<FenceMenuStyle>? FenceMenuChanged;
+    /// <summary>M41b: Look &amp; feel → "Change the look of all fences…" (Fence settings in All fences mode).</summary>
+    public event Action? ChangeAllFencesLookRequested;
+    /// <summary>M41b: a search result that lives in Fence settings: its catalog id.</summary>
+    public event Action<string>? FenceSettingRequested;
+    /// <summary>M41b: Updates &amp; privacy → Privacy (PRIVACY next to NeoFences.exe).</summary>
+    public event Action? PrivacyRequested;
     /// <summary>A new Peek hotkey was pressed in the box (text like "Ctrl+Alt+P"); answer with <see cref="ShowHotkeyResult"/>.</summary>
     public event Action<string>? PeekHotkeyChosen;
     /// <summary>Settings → Updates (M17).</summary>
@@ -47,7 +54,6 @@ public partial class SettingsWindow : Window
     public event Action? RestartToUpdateRequested;
     /// <summary>The keyboard layout changed while Settings is open (M16): the hotkey label shows the new layout's characters.</summary>
     public event Action? KeyboardLayoutChanged;
-    public event Action<RollupExpand>? RollupExpandChanged;
     public event Action<bool>? GameModeChanged;
     public event Action? OpenLogsRequested;
     public event Action? OpenDataRequested;
@@ -66,9 +72,9 @@ public partial class SettingsWindow : Window
     public event Action? ResetSettingsRequested;
     /// <summary>The hotkey box got (true) or lost (false) the keyboard: the host releases the Peek hotkey meanwhile (M6b review).</summary>
     public event Action<bool>? HotkeyRecording;
-    public event Action<LabelMode>? DefaultLabelsChanged;
-    public event Action<LabelMode>? LabelsAppliedToAll;
     public event Action<bool>? ShortcutArrowsChanged;
+
+    private Action<int>? _selectFenceMenu;
 
     public SettingsWindow()
     {
@@ -80,20 +86,28 @@ public partial class SettingsWindow : Window
         OnToggled(QuickHideGestureBox, isChecked => QuickHideGestureChanged?.Invoke(isChecked)); // M33
         OnToggled(DrawGestureBox, isChecked => DrawGestureChanged?.Invoke(isChecked));
         OnToggled(RevealGestureBox, isChecked => RevealGestureChanged?.Invoke(isChecked)); // M41a
-        OpenWithBox.SelectionChanged += (_, _) =>
+        _selectFenceMenu = Segmented(FenceMenuChoice, ["Guided", "Compact"], index => FenceMenuChanged?.Invoke(index == 1 ? FenceMenuStyle.Compact : FenceMenuStyle.Guided));
+        ChangeAllLookButton.Click += (_, _) => ChangeAllFencesLookRequested?.Invoke(); // M41b
+        PrivacyButton.Click += (_, _) => PrivacyRequested?.Invoke();
+        SearchBox.TextChanged += (_, _) => ShowSearch();
+        SearchBox.KeyDown += (_, key) =>
         {
-            if (!_updating && OpenWithBox.SelectedItem is ComboBoxItem { Tag: string openWith }) OpenItemsWithChanged?.Invoke(Enum.Parse<OpenWith>(openWith));
+            if (key.Key == Key.Enter && SearchResults.Children.OfType<Button>().FirstOrDefault() is { } first)
+            {
+                key.Handled = true;
+                first.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            }
+            else if (key.Key == Key.Escape && SearchBox.Text.Length > 0)
+            {
+                key.Handled = true;
+                SearchBox.Text = "";
+            }
         };
-        FenceMenuBox.SelectionChanged += (_, _) =>
-        {
-            if (!_updating && FenceMenuBox.SelectedItem is ComboBoxItem { Tag: string style }) FenceMenuChanged?.Invoke(Enum.Parse<FenceMenuStyle>(style));
-        };
+        QuickHidePicture.Content = GesturePicture(clicks: 2, rightDrag: false);
+        RevealPicture.Content = GesturePicture(clicks: 1, rightDrag: false);
+        DrawPicture.Content = GesturePicture(clicks: 0, rightDrag: true);
         BannerLogsButton.Click += (_, _) => OpenLogsRequested?.Invoke();
         OnToggled(GameModeBox, isChecked => GameModeChanged?.Invoke(isChecked));
-        RollupBox.SelectionChanged += (_, _) =>
-        {
-            if (!_updating && RollupBox.SelectedItem is ComboBoxItem { Tag: string mode }) RollupExpandChanged?.Invoke(Enum.Parse<RollupExpand>(mode));
-        };
         HotkeyBox.PreviewKeyDown += OnHotkeyKeyDown;
         HotkeyBox.GotKeyboardFocus += (_, _) =>
         {
@@ -106,12 +120,20 @@ public partial class SettingsWindow : Window
             if (HotkeyStatus.Tag is null) HotkeyStatus.Visibility = Visibility.Collapsed;
         };
         OnToggled(ArrowsBox, isChecked => ShortcutArrowsChanged?.Invoke(isChecked));
-        LabelsBox.SelectionChanged += (_, _) => { if (!_updating) DefaultLabelsChanged?.Invoke(SelectedLabels); };
-        LabelsApplyAllButton.Click += (_, _) => LabelsAppliedToAll?.Invoke(SelectedLabels);
+        // M41b: each row's line is the catalog's (the same words as Fence settings' explainer and the guide).
+        foreach (var (description, id) in new (TextBlock, string)[]
+                 { (StartupDescription, "desktop.startWithWindows"), (HideIconsDescription, "desktop.hideIcons"), (QuickHideGestureDescription, "desktop.quickHide"),
+                   (DrawGestureDescription, "desktop.draw"), (RevealGestureDescription, "desktop.reveal"), (ArrowsDescription, "desktop.shortcutArrows"),
+                   (GameModeDescription, "games.gameMode"), (FenceMenuDescription, "look.menu"), (MotionDescription, "look.motion"), (NamesDescription, "look.names"),
+                   (AccentDescription, "look.wallpaperColour") })
+        {
+            var info = SettingsCatalog.Find(id);
+            description.Text = info.Tip.Length == 0 ? info.What : $"{info.What} {info.Tip}";
+        }
         // Screen readers read each setting's description with it (M6b review carry-over).
         foreach (var (control, description) in new (UIElement, TextBlock)[]
                  { (StartupBox, StartupDescription), (HideIconsBox, HideIconsDescription), (QuickHideGestureBox, QuickHideGestureDescription), (DrawGestureBox, DrawGestureDescription), (RevealGestureBox, RevealGestureDescription), (HotkeyBox, HotkeyDescription),
-                   (LabelsBox, LabelsDescription), (ArrowsBox, ArrowsDescription), (RollupBox, RollupDescription), (GameModeBox, GameModeDescription), (OpenWithBox, OpenWithDescription), (FenceMenuBox, FenceMenuDescription) })
+                   (ArrowsBox, ArrowsDescription), (GameModeBox, GameModeDescription), (AccentBox, AccentDescription) })
         {
             System.Windows.Automation.AutomationProperties.SetHelpText(control, description.Text);
         }
@@ -164,7 +186,6 @@ public partial class SettingsWindow : Window
         box.Unchecked += (_, _) => { if (!_updating) report(false); };
     }
 
-    private LabelMode SelectedLabels => LabelsBox.SelectedIndex == 1 ? LabelMode.OnHover : LabelMode.Always;
 
     private SnapshotRow? SelectedSnapshot => SnapshotList.SelectedItem as SnapshotRow;
     private string? _renamingPath;
@@ -223,39 +244,181 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary>Tray → Restore snapshot → "More in Settings…": the Snapshots card in view (M13c).</summary>
-    public void ShowSnapshotsCard() => ShowPage("Snapshots"); // M35: its own page
+    public void ShowSnapshotsCard() => ShowPage(SnapshotsPageName); // M35: its own page
+
+    private const string SnapshotsPageName = "Snapshots & safety";
 
     /// <summary>
-    /// The section list (M35, spec §2): General, Fences, Appearance, Games, Game mode, Snapshots, Updates, About — the open one
-    /// marked, only its page shown; the arrow keys move through the list, Tab goes into the page.
+    /// The pages (M41b, global-settings-v2): coloured tiles, the open one marked, only its page shown; the arrow keys move
+    /// through the list, Tab goes into the page.
     /// </summary>
-    private (string Name, string Glyph, FrameworkElement Page)[] Sections =>
+    private (string Name, string Emoji, string Colour, string Subtitle, SettingsPlace Place, FrameworkElement Page)[] Sections =>
     [
-        ("General", MenuGlyph.Settings, GeneralPage), ("Fences", MenuGlyph.NewFence, FencesPage), ("Appearance", MenuGlyph.Colour, AppearancePage),
-        ("Games", MenuGlyph.Games, GamesPage), ("Game mode", MenuGlyph.GameMode, GameModePage), ("Snapshots", MenuGlyph.Snapshot, SnapshotsPage),
-        ("Updates", MenuGlyph.Refresh, UpdatesPage), ("About", MenuGlyph.Properties, AboutPage),
+        ("Look & feel", "🎨", "#FF8A5CF6", "How everything moves and reads. Each fence's look is in Fence settings.", SettingsPlace.LookAndFeel, LookPage),
+        ("Desktop", "🖥", "#FF3B82F6", "What NeoFences does with your desktop and its icons.", SettingsPlace.Desktop, DesktopPage),
+        ("Games", "🎮", "#FF22C55E", "Finding your games, their covers, and staying out of the way while you play.", SettingsPlace.Games, GamesPage),
+        ("Peek & keys", "⌨", "#FFF59E0B", "Your fences above all windows, and the keys that work in them.", SettingsPlace.PeekAndKeys, KeysPage),
+        (SnapshotsPageName, "🛟", "#FFEF4444", "Ways back: snapshots, your whole setup in one file, a reset.", SettingsPlace.Snapshots, SnapshotsPage),
+        ("Updates & privacy", "🔄", "#FF06B6D4", "Staying up to date, and what leaves your PC.", SettingsPlace.Updates, UpdatesPage),
+        ("Help & about", "ℹ", "#FF64748B", "The guide, the logs, the licence.", SettingsPlace.Help, AboutPage),
     ];
 
     private void BuildSections()
     {
-        foreach (var (name, glyph, _) in Sections)
+        foreach (var (name, emoji, colour, _, _, _) in Sections)
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal };
-            row.Children.Add(new TextBlock { Text = glyph, FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 15,
-                Width = 22, Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
+            row.Children.Add(new Border
+            {
+                Width = 26, Height = 26, CornerRadius = new CornerRadius(7), Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center,
+                Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString(colour)!,
+                Child = new TextBlock { Text = emoji, FontFamily = new System.Windows.Media.FontFamily("Segoe UI Emoji"), FontSize = 13, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+            });
             row.Children.Add(new TextBlock { Text = name, VerticalAlignment = VerticalAlignment.Center });
-            var item = new ListBoxItem { Content = row, Tag = name, Padding = new Thickness(10, 7, 10, 7) };
+            var item = new ListBoxItem { Content = row, Tag = name, Padding = new Thickness(10, 6, 10, 6) };
             System.Windows.Automation.AutomationProperties.SetName(item, name);
             SectionList.Items.Add(item);
         }
         SectionList.SelectionChanged += (_, _) =>
         {
             if (SectionList.SelectedItem is not ListBoxItem { Tag: string name }) return;
-            foreach (var (section, _, page) in Sections) page.Visibility = section == name ? Visibility.Visible : Visibility.Collapsed;
-            PageTitle.Text = name;
-            PageScroller.ScrollToTop();
+            if (SearchBox.Text.Length > 0) SearchBox.Text = ""; // a page click leaves the search
+            ShowSelectedPage();
         };
         SectionList.SelectedIndex = 0;
+    }
+
+    private void ShowSelectedPage()
+    {
+        if (SectionList.SelectedItem is not ListBoxItem { Tag: string name }) return;
+        SearchPage.Visibility = Visibility.Collapsed;
+        foreach (var (section, _, _, subtitle, _, page) in Sections)
+        {
+            page.Visibility = section == name ? Visibility.Visible : Visibility.Collapsed;
+            if (section == name) PageSubtitle.Text = subtitle;
+        }
+        PageTitle.Text = name;
+        PageScroller.ScrollToTop();
+    }
+
+    /// <summary>The search (M41b, spec §3): every setting whose words match, here and in Fence settings; a click goes there.</summary>
+    private void ShowSearch()
+    {
+        var query = SearchBox.Text;
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            ShowSelectedPage();
+            return;
+        }
+        foreach (var (_, _, _, _, _, page) in Sections) page.Visibility = Visibility.Collapsed;
+        SearchPage.Visibility = Visibility.Visible;
+        PageTitle.Text = "Search";
+        PageSubtitle.Text = $"Settings that match “{query.Trim()}”.";
+        SearchResults.Children.Clear();
+        var found = SettingsCatalog.Search(query);
+        SearchEmpty.Visibility = found.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var setting in found)
+        {
+            var where = SettingsCatalog.InFenceSettings(setting.Place)
+                ? $"Fence settings → {setting.Place.ToString()[5..]} (all fences, or one fence)"
+                : $"Settings → {Sections.First(section => section.Place == setting.Place).Name}";
+            var result = new Button
+            {
+                HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(12, 8, 12, 8), Margin = new Thickness(0, 0, 0, 6), HorizontalAlignment = HorizontalAlignment.Stretch,
+                Content = new StackPanel
+                {
+                    Children =
+                    {
+                        new TextBlock { Text = setting.Label, FontWeight = FontWeights.SemiBold },
+                        new TextBlock { Text = where, Style = (Style)FindResource("Description") },
+                        new TextBlock { Text = setting.What, Style = (Style)FindResource("Description"), TextWrapping = TextWrapping.Wrap },
+                    },
+                },
+            };
+            System.Windows.Automation.AutomationProperties.SetName(result, $"{setting.Label}, {where}");
+            result.Click += (_, _) => GoToSetting(setting);
+            SearchResults.Children.Add(result);
+        }
+    }
+
+    private void GoToSetting(SettingInfo setting)
+    {
+        if (SettingsCatalog.InFenceSettings(setting.Place))
+        {
+            FenceSettingRequested?.Invoke(setting.Id);
+            return;
+        }
+        var page = Sections.First(section => section.Place == setting.Place);
+        SearchBox.Text = "";
+        ShowPage(page.Name);
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (FindCard(page.Page, setting.Id) is not { } card) return;
+            card.BringIntoView();
+            var flash = new System.Windows.Media.Animation.DoubleAnimation(0.35, 1, TimeSpan.FromMilliseconds(260)) { AutoReverse = true, RepeatBehavior = new System.Windows.Media.Animation.RepeatBehavior(2) };
+            card.BeginAnimation(OpacityProperty, flash);
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
+    }
+
+    private static FrameworkElement? FindCard(DependencyObject root, string id)
+    {
+        if (root is FrameworkElement { Tag: string tag } element && tag == id) return element;
+        foreach (var child in LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>())
+        {
+            if (FindCard(child, id) is { } found) return found;
+        }
+        return null;
+    }
+
+    /// <summary>A small drawn picture of a desktop gesture (spec §3): a wallpaper, a pointer and ×1 / ×2, or a dashed right-drag box.</summary>
+    private static UIElement GesturePicture(int clicks, bool rightDrag)
+    {
+        var canvas = new System.Windows.Controls.Canvas { Width = 64, Height = 44 };
+        canvas.Children.Add(new System.Windows.Shapes.Rectangle
+        {
+            Width = 64, Height = 44, RadiusX = 5, RadiusY = 5,
+            Fill = new System.Windows.Media.LinearGradientBrush(System.Windows.Media.Color.FromRgb(0x3B, 0x5B, 0x9A), System.Windows.Media.Color.FromRgb(0x1E, 0x2B, 0x4A), 60),
+        });
+        if (rightDrag)
+        {
+            var box = new System.Windows.Shapes.Rectangle { Width = 30, Height = 18, Stroke = System.Windows.Media.Brushes.White, StrokeThickness = 1.2, StrokeDashArray = [3, 2] };
+            System.Windows.Controls.Canvas.SetLeft(box, 10);
+            System.Windows.Controls.Canvas.SetTop(box, 10);
+            canvas.Children.Add(box);
+        }
+        var pointer = new TextBlock { Text = "➤", Foreground = System.Windows.Media.Brushes.White, FontSize = 14, RenderTransform = new System.Windows.Media.RotateTransform(-120) };
+        System.Windows.Controls.Canvas.SetLeft(pointer, rightDrag ? 46 : 30);
+        System.Windows.Controls.Canvas.SetTop(pointer, rightDrag ? 40 : 34);
+        canvas.Children.Add(pointer);
+        var label = new TextBlock { Text = rightDrag ? "right" : $"×{clicks}", Foreground = System.Windows.Media.Brushes.White, FontSize = 10, FontWeight = FontWeights.SemiBold };
+        System.Windows.Controls.Canvas.SetLeft(label, 6);
+        System.Windows.Controls.Canvas.SetTop(label, 30);
+        canvas.Children.Add(label);
+        return canvas;
+    }
+
+    /// <summary>Segmented buttons (M41b): the host's answer decides which one is lit.</summary>
+    private Action<int> Segmented(Panel host, string[] names, Action<int> chosen)
+    {
+        var buttons = new List<System.Windows.Controls.Primitives.ToggleButton>();
+        var selected = -1;
+        for (var index = 0; index < names.Length; index++)
+        {
+            var at = index;
+            var button = new System.Windows.Controls.Primitives.ToggleButton { Content = names[index], Padding = new Thickness(14, 5, 14, 5), Margin = new Thickness(0, 0, 4, 0) };
+            button.Click += (_, _) =>
+            {
+                button.IsChecked = at == selected;
+                if (!_updating && at != selected) chosen(at);
+            };
+            buttons.Add(button);
+            host.Children.Add(button);
+        }
+        return index =>
+        {
+            selected = index;
+            for (var at = 0; at < buttons.Count; at++) buttons[at].IsChecked = at == index;
+        };
     }
 
     /// <summary>Opens a section by name ("Snapshots", "Games", …).</summary>
@@ -284,7 +447,6 @@ public partial class SettingsWindow : Window
     {
         ShowSnapshots(view.Snapshots);
         _updating = true;
-        LabelsBox.SelectedIndex = view.DefaultLabels == LabelMode.OnHover ? 1 : 0;
         ArrowsBox.IsChecked = view.ShowShortcutArrows;
         if (!view.PeekHotkeyActive && !HotkeyBox.IsKeyboardFocused)
         {
@@ -295,12 +457,10 @@ public partial class SettingsWindow : Window
         QuickHideGestureBox.IsChecked = view.QuickHideGesture; // M33
         DrawGestureBox.IsChecked = view.DrawGesture;
         RevealGestureBox.IsChecked = view.RevealGesture; // M41a
-        OpenWithBox.SelectedIndex = view.OpenItemsWith == OpenWith.DoubleClick ? 1 : 0;
-        FenceMenuBox.SelectedIndex = view.FenceMenu == FenceMenuStyle.Compact ? 1 : 0;
+        _selectFenceMenu?.Invoke(view.FenceMenu == FenceMenuStyle.Compact ? 1 : 0);
         BannerText.Text = view.Banner ?? "";
         Banner.Visibility = view.Banner is null ? Visibility.Collapsed : Visibility.Visible;
         HotkeyBox.Text = view.PeekHotkey;
-        RollupBox.SelectedIndex = view.RollupExpand == RollupExpand.Click ? 1 : 0;
         GameModeBox.IsChecked = view.GameModeEnabled;
         ShowLibrary(view.Library);
         ShowAppearance(view.Appearance);

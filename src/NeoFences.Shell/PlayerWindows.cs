@@ -1,29 +1,9 @@
 using System.Diagnostics;
 using Windows.Win32;
 using Windows.Win32.Foundation;
-using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace NeoFences.Shell;
-
-/// <summary>
-/// Now playing's mouse wheel (M41a): Windows' own volume keys, so Windows' volume flyout shows the level.
-/// ponytail: the volume keys' 2 % steps and Windows' flyout, not Core Audio and an in-widget bar; IAudioEndpointVolume if the
-/// owner wants the level drawn inside the widget.
-/// </summary>
-public static class VolumeKeys
-{
-    public static void Step(bool up)
-    {
-        var key = up ? VIRTUAL_KEY.VK_VOLUME_UP : VIRTUAL_KEY.VK_VOLUME_DOWN;
-        Span<INPUT> inputs =
-        [
-            new INPUT { type = INPUT_TYPE.INPUT_KEYBOARD, Anonymous = { ki = new KEYBDINPUT { wVk = key } } },
-            new INPUT { type = INPUT_TYPE.INPUT_KEYBOARD, Anonymous = { ki = new KEYBDINPUT { wVk = key, dwFlags = KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP } } },
-        ];
-        PInvoke.SendInput(inputs, System.Runtime.InteropServices.Marshal.SizeOf<INPUT>());
-    }
-}
 
 /// <summary>Now playing's cover click (M41a): the player's window to the front, best effort (a Store app's id names no process).</summary>
 public static class PlayerWindows
@@ -33,7 +13,16 @@ public static class PlayerWindows
         try
         {
             var name = Path.GetFileNameWithoutExtension(appId[(appId.LastIndexOfAny(['!', '\\', '/']) + 1)..]);
-            var window = Process.GetProcessesByName(name).Select(process => (HWND)process.MainWindowHandle).FirstOrDefault(handle => handle != HWND.Null);
+            var processes = Process.GetProcessesByName(name);
+            HWND window;
+            try
+            {
+                window = processes.Select(process => (HWND)process.MainWindowHandle).FirstOrDefault(handle => handle != HWND.Null);
+            }
+            finally
+            {
+                foreach (var process in processes) process.Dispose(); // M41b (rc.3 leftover)
+            }
             if (window == HWND.Null)
             {
                 log($"now playing: no window found for {appId}");

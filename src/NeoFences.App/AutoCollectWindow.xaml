@@ -55,7 +55,7 @@
                 <CheckBox x:Name="AnythingCheck" Content="Anything" Margin="0,0,16,4" />
             </WrapPanel>
 
-            <TextBlock Grid.Row="2" Text="Also" Style="{StaticResource FieldLabel}" Margin="0,0,12,2" />
+            <TextBlock Grid.Row="2" Text="Also files named" Style="{StaticResource FieldLabel}" Margin="0,0,12,2" />
             <TextBox x:Name="PatternsBox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,2"
                      AutomationProperties.Name="Also these file name patterns, for example *.iso" />
             <TextBlock x:Name="PatternsHint" Grid.Row="3" Grid.Column="1" Style="{StaticResource Hint}" Margin="0,0,0,10"

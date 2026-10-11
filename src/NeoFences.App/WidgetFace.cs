@@ -202,6 +202,7 @@ public sealed class WidgetFace : Grid
         left.VerticalAlignment = VerticalAlignment.Center;
         left.Margin = new Thickness(12, 0, 8, 0);
         var cities = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 14, 0) };
+        var shownCities = "";
         _refresh = () =>
         {
             if (_view is not { } view) return;
@@ -213,10 +214,13 @@ public sealed class WidgetFace : Grid
             date.Text = size == WidgetSize.Small ? "" : now.ToString(culture.DateTimeFormat.MonthDayPattern, culture);
             date.Visibility = size == WidgetSize.Small ? Visibility.Collapsed : Visibility.Visible;
             if (size != WidgetSize.Large) return;
+            var shown = (view.Options.Cities ?? []).Select(id => WorldClocks.Show(id, new DateTimeOffset(now), culture)).ToList();
+            var key = string.Join("|", shown.Select(city => $"{city.Name} {city.Time}"));
+            if (key == shownCities) return; // M41b (rc.3 leftover): rebuilt when a city's time changes (once a minute), not every second
+            shownCities = key;
             cities.Children.Clear();
-            foreach (var id in view.Options.Cities ?? [])
+            foreach (var (name, at) in shown)
             {
-                var (name, at) = WorldClocks.Show(id, new DateTimeOffset(now), culture);
                 cities.Children.Add(Text(10, FontWeights.SemiBold, opacity: 0.65, caps: true).With(name));
                 cities.Children.Add(Text(19, FontWeights.SemiBold, display: true).With(at, margin: new Thickness(0, 0, 0, 6)));
             }
@@ -376,12 +380,15 @@ public sealed class WidgetFace : Grid
         DockPanel.SetDock(header, Dock.Top);
         panel.Children.Add(header);
         panel.Children.Add(days);
+        (DateOnly Today, DateOnly Month, string Culture)? shownKey = null;
         refresh = () =>
         {
             if (_view is not { } view) return;
             var culture = CultureInfo.CurrentCulture;
             var today = DateOnly.FromDateTime(view.WidgetNow);
             var shownMonth = new DateOnly(today.Year, today.Month, 1).AddMonths(_monthOffset);
+            if (shownKey == (today, shownMonth, culture.Name)) return; // M41b (rc.3 leftover): rebuilt on a new day or month, not every second
+            shownKey = (today, shownMonth, culture.Name);
             title.Text = shownMonth.ToDateTime(TimeOnly.MinValue).ToString(culture.DateTimeFormat.YearMonthPattern, culture);
             var firstDay = culture.DateTimeFormat.FirstDayOfWeek;
             days.Children.Clear();

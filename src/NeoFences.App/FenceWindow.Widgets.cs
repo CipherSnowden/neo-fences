@@ -90,12 +90,13 @@ public partial class FenceWindow
         header.Children.Add(done);
         header.Children.Add(MenuText(Widgets.NameOf(kind), 14, FontWeights.SemiBold));
         stack.Children.Add(header);
-        stack.Children.Add(Row("Size", Segmented([.. Enum.GetValues<WidgetSize>().Select(size => (size.ToString(), size == view.WidgetSize, (Action)(() => ChooseWidgetSize(view.Key, size))))])));
+        // M41b (audit cards 3, 9): no Size row (gallery, corner drag and right-click → Size), no Seconds / Date line (the size decides).
         switch (kind)
         {
+            case WidgetKind.Clock when view.WidgetSize != WidgetSize.Large:
+                stack.Children.Add(Note("Small shows the time and the day, Medium adds the date. World clocks show on the Large clock — make it Large to pick them."));
+                break;
             case WidgetKind.Clock:
-                stack.Children.Add(Row("Seconds", Switch(options.Seconds, on => Set(options with { Seconds = on }))));
-                stack.Children.Add(Row("Date line", Switch(options.Date, on => Set(options with { Date = on }))));
                 for (var index = 0; index < WorldClocks.Max; index++)
                 {
                     var slot = index;
@@ -112,7 +113,6 @@ public partial class FenceWindow
                     };
                     stack.Children.Add(Row(slot == 0 ? "World clock" : "Second city", box));
                 }
-                stack.Children.Add(Note("World clocks show on the Large size."));
                 break;
             case WidgetKind.Stats:
                 stack.Children.Add(Row("Temperatures in °F", Switch(options.Fahrenheit, on => Set(options with { Fahrenheit = on }))));

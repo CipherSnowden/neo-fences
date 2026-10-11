@@ -923,15 +923,15 @@ public sealed partial class FenceHost
         window.QuickHideGestureChanged += enabled => SetGestures(quickHide: enabled, draw: _config.Settings.DrawGesture, reveal: _config.Settings.RevealGesture); // M33
         window.DrawGestureChanged += enabled => SetGestures(quickHide: _config.Settings.QuickHideGesture, draw: enabled, reveal: _config.Settings.RevealGesture);
         window.RevealGestureChanged += enabled => SetGestures(quickHide: _config.Settings.QuickHideGesture, draw: _config.Settings.DrawGesture, reveal: enabled); // M41a
-        window.OpenItemsWithChanged += SetOpenItemsWith;
         window.FenceMenuChanged += SetFenceMenu;
+        window.ChangeAllFencesLookRequested += () => OpenFenceSettings(null); // M41b: Fence settings, All fences
+        window.FenceSettingRequested += id => OpenFenceSettings(null, id); // M41b: a search result in Fence settings
         window.PeekHotkeyChosen += text =>
         {
             var (saved, message) = SetPeekHotkey(text);
             RefreshSettings();
             window.ShowHotkeyResult(saved, message);
         };
-        window.RollupExpandChanged += SetRollupExpand;
         window.TakeSnapshotRequested += () => TakeSnapshot();
         window.RestoreSnapshotRequested += RestoreSnapshot;
         window.RenameSnapshotRequested += (path, name) =>
@@ -968,21 +968,6 @@ public sealed partial class FenceHost
             // Leaving the box re-registers: Settings must show if that failed (final review I5).
             if (!recording) RefreshSettings();
         };
-        // M41b bridge until Settings v2 (Task 5): the labels box is All fences' names; "Apply to all" also makes every fence follow.
-        window.DefaultLabelsChanged += labels =>
-        {
-            _config = _config with { Settings = _config.Settings with { Appearance = Appearance with { Labels = labels } } };
-            RestyleAll();
-            SaveNow();
-        };
-        window.LabelsAppliedToAll += labels =>
-        {
-            _config = AllFences.MakeFollow(_config with { Settings = _config.Settings with { Appearance = Appearance with { Labels = labels } } }, LookSetting.Labels);
-            RestyleAll();
-            Log.Information("labels for every fence: {Labels}", labels);
-            SaveNow();
-            RefreshSettings();
-        };
         window.ShortcutArrowsChanged += show =>
         {
             _config = _config with { Settings = _config.Settings with { ShowShortcutArrows = show } };
@@ -998,6 +983,7 @@ public sealed partial class FenceHost
         window.OpenLogsRequested += () => OpenItem(AppPaths.LogsDirectory, ownerHandle: 0);
         window.HelpRequested += () => OpenItem(GuideUrl, ownerHandle: 0); // M29
         window.LicenceRequested += () => OpenItem(Path.Combine(AppContext.BaseDirectory, "LICENSE.txt"), ownerHandle: 0); // M39
+        window.PrivacyRequested += () => OpenItem(Path.Combine(AppContext.BaseDirectory, "PRIVACY.md"), ownerHandle: 0); // M41b
         window.OpenDataRequested += () => OpenItem(AppPaths.DataDirectory, ownerHandle: 0);
         window.Closed += (_, _) =>
         {
@@ -1016,17 +1002,14 @@ public sealed partial class FenceHost
         HideDesktopIcons: _config.Settings.HideDesktopIcons,
         PeekHotkey: PeekHotkeyDisplay,
         PeekHotkeyActive: _peekHotkeyProblem is null,
-        RollupExpand: _config.Settings.RollupExpand,
         GameModeEnabled: _config.Settings.GameMode,
         GameModeActive: _gameMode,
         Version: typeof(FenceHost).Assembly.GetName().Version?.ToString(3) ?? "",
         DataFolder: AppPaths.DataDirectory,
-        DefaultLabels: Appearance.Labels, // M41b bridge: All fences' names
         ShowShortcutArrows: _config.Settings.ShowShortcutArrows,
         QuickHideGesture: _config.Settings.QuickHideGesture, // M33
         DrawGesture: _config.Settings.DrawGesture,
         RevealGesture: _config.Settings.RevealGesture, // M41a
-        OpenItemsWith: _config.Settings.OpenItemsWith,
         FenceMenu: _config.Settings.FenceMenu,
         Banner: _banner,
         Snapshots: ListSnapshots(),
@@ -1801,11 +1784,14 @@ public sealed partial class FenceHost
     private void ScheduleReveal(int screenX, int screenY)
     {
         _revealTimer?.Stop();
+        var foreground = KeyboardFocus.Foreground(); // the desktop, just clicked
         _revealTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(DesktopReveal.DoubleClickTime) };
         _revealTimer.Tick += (_, _) =>
         {
             _revealTimer?.Stop();
             if (!Current.RevealWanted) return;
+            // M41b (rc.3 leftover): a quick click elsewhere (a window, the taskbar) took the foreground meanwhile: no reveal.
+            if (KeyboardFocus.Foreground() != foreground) return;
             if (!Current.IconsHidden && DesktopWindows.IsOverDesktopIcon(screenX, screenY, log: message => Log.Warning("{Message}", message))) return;
             // Final review I5: from what the desktop shows now — the user may have brought windows back meanwhile.
             var step = RevealPolicy.Next(windowsShown: DesktopReveal.AppWindowsShown(), revealedByUs: _revealed);

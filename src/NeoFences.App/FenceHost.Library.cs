@@ -313,7 +313,7 @@ public sealed partial class FenceHost
         HasFence: LibraryWanted,
         Folders: _config.Library.Folders,
         Sources: _config.Library.Sources,
-        Hidden: HiddenGamesForSettings(),
+
         Status: LibraryWanted ? _libraryStatus : "No games in any fence yet: fence menu → Add → Games…, or choose where new games go.",
         Fences: [.. _config.Fences.Where(fence => fence.Kind == FenceKind.Items).Select(fence => (fence.Id, fence.Title))],
         NewGamesFence: _config.Library.NewGamesFence,
@@ -331,11 +331,7 @@ public sealed partial class FenceHost
         }
         window.LibraryFoldersChanged += folders => Change(library => library with { Folders = folders }, "folders");
         window.LibrarySourcesChanged += sources => Change(library => library with { Sources = sources }, "sources");
-        window.ShowGameAgainRequested += id =>
-        {
-            var ids = (_library.Hidden.FirstOrDefault(game => game.Ids.Contains(id, StringComparer.OrdinalIgnoreCase))?.Ids ?? [id]).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            Change(library => library with { Hidden = [.. library.Hidden.Where(hiddenId => !ids.Contains(hiddenId))] }, "show again");
-        };
+
         window.RefreshLibraryRequested += () => ScanLibrary(full: true);
         window.OnlineArtChanged += SetOnlineArt; // M34 (ADR-055)
         window.NewGamesFenceChanged += fenceId =>
@@ -343,13 +339,5 @@ public sealed partial class FenceHost
             Change(library => library with { NewGamesFence = fenceId }, "new games go to");
             UpdateLibrary(); // a fence for new games: the scan runs
         };
-    }
-
-    /// <summary>One row per hidden game (all its ids together); a hidden id no scan finds any more is listed by itself.</summary>
-    private IReadOnlyList<HiddenGame> HiddenGamesForSettings()
-    {
-        var hidden = _config.Library.Hidden.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return [.. GameCatalog.HiddenGames([], _config.Library.Hidden, _library.Hidden)
-            .Select(entry => new HiddenGame(entry.Ids.FirstOrDefault(hidden.Contains) ?? entry.Ids[0], entry.Name, entry.Ids))];
     }
 }
