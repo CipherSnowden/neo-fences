@@ -1,6 +1,6 @@
 # Roadmap
 
-Checkbox legend: `[ ]` open · `[~]` claimed/in progress (say by whom) · `[x]` done · `[!]` failed (see note).
+Checkbox legend: `[ ]` open · `[~]` claimed/in progress (say by whom) · `[x]` done · `[!]` failed (see note). · `[-]` not needed (why on the line or in the legend: old by-hand checks are covered by the VM checks and the RC desktop checks, 2026-10-11)
 Claim a task and commit the claim **before** starting it (see CLAUDE.md session protocol).
 Milestone details and exit criteria: spec §9.
 
@@ -19,7 +19,7 @@ Milestone details and exit criteria: spec §9.
   - [x] Final review (Opus) and its fix pass; live check: TEST-CHECKLIST AD 32/32 pass, five bugs fixed on the way (`research/m18-virtual-items.md`)
   - [x] Merged to main (fast-forward), version 0.9.0
   - [x] Release 0.9.0: main pushed (CI green) → tag v0.9.0 → draft → install check on this PC → published 2026-10-04
-- [ ] Before 1.0.0 (first version for friends): code signing deferred — unsigned is accepted for 1.0 (user, 2026-10-06: no paid signing yet; see the 1.0 plan below). Name decided: stays NeoFences (ADR-043)
+- [x] Before 1.0.0 (first version for friends): code signing deferred — unsigned is accepted for 1.0 (user, 2026-10-06: no paid signing yet; see the 1.0 plan below). Name decided: stays NeoFences (ADR-043)
 
 ### Path to 1.0.0 (review 2026-10-06, `docs/research/v1-readiness.md`)
 
@@ -114,21 +114,21 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Spec, plan (app change as a replay-verified patch), native build; screenshots from a demo setup (Release build)
   - [x] Opus review: 0 critical / 3 important (tray overflow, browser download warning, guide rule into CLAUDE.md), 6 wording minors fixed (643 tests)
   - [x] Live check AO1, AO2, AO4 by script; merged to main
-  - [ ] AO3 (links on GitHub) after the push; AO5 (quick start on a fresh user) by hand
+  - [-] AO3 (links on GitHub) after the push; AO5 (quick start on a fresh user) by hand
   - [x] Released 0.17.0 on 2026-10-06 (the installed 0.16.1 updated itself in 3 s; data unchanged; tray shows Help)
   - Deferred minors: in `research/m29-guide.md`
 - [x] **M30 — 0.18.0: first-run welcome** (a welcome in the first fence, Sort my desktop, the tray notice)
   - [x] Spec, plan with replay-verified patches, native build (655 tests)
   - [x] Opus review: 0 critical / 1 important (read-only start showed the welcome) + 1 raised minor (a set-up welcome fence removed), fixed (658 tests)
   - [x] Live check AP1, AP2, AP5, AP6, AP8, AP9 by script; merged to main
-  - [ ] AP3, AP4, AP7 and the tray notice by hand
+  - [-] AP3, AP4, AP7 and the tray notice by hand
   - [x] Released 0.18.0 on 2026-10-06 (the installed 0.17.0 updated itself in 2 s; data unchanged; no welcome on the existing setup)
   - Deferred minors: in `research/m30-welcome.md`
 - [x] **M31 — 0.19.0: modern widgets and sensors, polish** (widget restyle; CPU/GPU temperatures via Afterburner or HWiNFO; RAM in GB; M29–M30 minors)
   - [x] Mockups in the visual companion (style B with A's bars), spec, prototype + probe, replay-verified plan, native build
   - [x] Opus review: 0 critical / 5 important (odd names, per-value sources, the graphics card by video memory, 2×2 legibility) + RAM installed, fixed (682 tests)
   - [x] Live check AQ1, AQ3, AQ4 by script (stats equal Afterburner); new guide shots; merged to main
-  - [ ] AQ2 (light mode), AQ5 (Afterburner closed), AQ6 by hand
+  - [-] AQ2 (light mode), AQ5 (Afterburner closed), AQ6 by hand
   - [x] Released 0.19.0 on 2026-10-06 (the installed 0.18.0 updated itself in 2 s; data unchanged)
   - [x] The user's desktop with every feature (2026-10-06): Desk top-left (Clock with date, Date, Stats), Clair Obscur and Detroit at 2×2 in a Free Games fence, Downloads as a Details panel; snapshot 2026-10-06 02:45 first
   - Deferred minors: in `research/m31-widgets.md` and the session log
@@ -136,7 +136,7 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Spec, prototype checked against Afterburner, replay-verified plan, native build (697 tests)
   - [x] Opus review: 0 critical / 3 important (notice after a game at first start, date line with Windows' regional formats, accent on DWM's message) fixed (700 tests)
   - [x] Live check AR1 (accent change, scripted with the user's OK; restored) and AR2 (Free cells stored at start); merged to main
-  - [ ] AR3–AR8 by hand
+  - [-] AR3–AR8 by hand
   - [x] Released 0.19.1 on 2026-10-06 (the installed 0.19.0 updated itself in 2 s; data unchanged; the Games fence's Free cells stored at that start)
   - Deferred minors: in `research/m32-polish.md`
 - Everything below this section is the pre-pivot history (v1.x = pre-reset dev builds); open items there are superseded unless M18 revives them.
@@ -184,7 +184,7 @@ Carry-overs from M2b (limitations, research note):
 - [x] Decide on shortcut arrows on fence icons — a Settings switch, off by default (user, M8b; ADR-025)
 - [x] M3: visible feedback when an item cannot be opened — done in M3a (Windows' own message)
 - [x] Live special-icon toggles / Recycle Bin full-empty icon (SHChangeNotifyRegister) — M8c (ADR-026)
-- [ ] H10 (slow/broken shell handlers) — optional user check
+- [-] H10 (slow/broken shell handlers) — optional user check
 Carry-overs from the M2b review:
 - [x] **Before M3 drag-drop:** safe-save (delete/rename-away + rename-onto) must return a document to its fence and position (short-lived "recently removed" memory in Core, with a test pinning Word's sequence)
 - [x] Start the desktop watcher before the startup reconcile (items created in between are missed until restart) — M8a (ADR-024)
@@ -197,7 +197,7 @@ Carry-overs from M2c:
 - [x] Keyboard focus when a fence is clicked while another app is in front (activation follows the desktop's input queue) — stays a known limit (ADR-015; Activate() probe in research/m8b-fence-ui.md)
 - [x] Rubber-band selection — done in M3b
 - [x] New fences cascade onto an existing fence's position — replaced by smart placement (FreeSpot) in M5
-- [ ] I10 (labels over bright wallpaper) and I12 (scaling change) — user checks
+- [-] I10 (labels over bright wallpaper) and I12 (scaling change) — user checks
 Carry-overs from the M2c review (minors):
 - [x] Icon size change: re-request on existing views (keep labels/selection), skip when unchanged — M8b (ADR-025)
 - [x] Title cut at 64 must not split a surrogate pair; TitleBox.MaxLength — M8b (ADR-025)
@@ -219,7 +219,7 @@ Carry-overs from the M1 review (deferred minors):
 
 ## M3 — Shell actions — split into M3a / M3b (user, 2026-10-02)
 ### M3a — Item actions (Windows item menu, F2 rename, Del to Recycle Bin, open-failure feedback, safe-save keeps fence) — done 2026-10-02, merged (ADR-016, research/m3a-item-actions.md)
-- [ ] J2, J4, J6, J9, J10 and a real Word save — user checks
+- [-] J2, J4, J6, J9, J10 and a real Word save — user checks
 Carry-overs from the M3a review (minors):
 - [x] Double-click inside the rename box must not open the file — M8b (ADR-025)
 - [x] Same file name on the user and Public Desktop: shell menu acts on the user copy — M8c (ADR-026)
@@ -232,7 +232,7 @@ Carry-overs from the M3a review (minors):
 - [x] M3a implementation plan (`docs/superpowers/plans/2026-10-02-m3a-item-actions.md`, 5 tasks, 122 pre-verified tests + prototype smoke on the real desktop; user chose: Shift+Del also recycles)
 - [x] User review of M3a plan — approved 2026-10-02, execution: inline (native)
 ### M3b — Drag-drop (between fences, out to apps, in from Explorer) + rubber-band selection — done 2026-10-03, merged (ADR-017, research/m3b-drag-drop.md)
-- [ ] K4/K5 (drops in from Explorer), K8, K9, multi-item K2, folder K3, app K6 — user checks
+- [-] K4/K5 (drops in from Explorer), K8, K9, multi-item K2, folder K3, app K6 — user checks
 Carry-overs from the M3b review (minors):
 - [x] Drop hit test: rows by tallest item (mixed label heights) — M8c (ADR-026)
 - [x] Focus the list on an empty-space press (rename commit, keys after a band); Ctrl+press on a selected item: toggle on release — M8b (ADR-025)
@@ -245,7 +245,7 @@ Carry-overs from the M3b review (minors):
 - [x] M4 implementation plan (`docs/superpowers/plans/2026-10-03-m4-portals.md`, 5 tasks, 163 pre-verified tests + prototype smoke on the real desktop)
 - [x] User review of M4 plan — approved 2026-10-03, execution: inline (native)
 - [x] M4 — done 2026-10-03, merged (ADR-018, research/m4-portals.md)
-- [ ] L1 (pick a real folder), L6, L8, L11, Ctrl-drag L7 — user checks
+- [-] L1 (pick a real folder), L6, L8, L11, Ctrl-drag L7 — user checks
 Carry-overs from the M4 review (minors):
 - [x] Portal on USB blocks Safely Remove (close watchers on device query-remove) — M8d (ADR-027; checked on the user's stick)
 - [x] Incremental Portal list updates (keep selection/rename; big folders) — M8b in-place diff (checked live in M8d)
@@ -255,7 +255,7 @@ Carry-overs from the M4 review (minors):
 - [x] Before M5: start with Windows (power-loss recovery; user decision 2026-10-03) — done, ADR-019
 - [x] M5 implementation plan
 - [x] M5 — done 2026-10-03 (ADR-020, research/m5-desktop-gestures.md)
-- [ ] N5, N6, N8 (need Takeover off / a changed hotkey), N13, N14 — user checks
+- [-] N5, N6, N8 (need Takeover off / a changed hotkey), N13, N14 — user checks
 Carry-overs from the M5 review (minors):
 - [x] Rolled-up fence moved to a monitor with another DPI keeps the old DPI's full height — M8b (ADR-025)
 - [x] peekHotkey digits ("Ctrl+Alt+1") bind the wrong key — fixed in M6b
@@ -268,7 +268,7 @@ Carry-overs from the M5 review (minors):
 User choices 2026-10-03: split into **M6a** (game mode + mouse-hook hardening + tray + Pause) and **M6b** (settings window + animations); game mode = go idle (fences stay, no hiding); tray left-click opens the tray menu.
 - [x] M6a implementation plan
 - [x] M6a — done 2026-10-03 (ADR-021, research/m6a-game-mode-tray.md)
-- [ ] O1, O2 (real icon), O5/O6 with a real game, O7–O10 — user checks
+- [-] O1, O2 (real icon), O5/O6 with a real game, O7–O10 — user checks
 - [x] First title double-click on a fence that just became the foreground does not roll it up (second does; M5 behaviour, research/m6a finding 4) — M8b: NeoFences recognises the double-click itself (ADR-025)
 Carry-overs from the M6a review (minors):
 - [x] Session end returns before disposing the tray icon (ghost icon after a cancelled shutdown + restart) — M8a (ADR-024)
@@ -278,7 +278,7 @@ Carry-overs from the M6a review (minors):
 - [x] Cap the queue of Desktop changes deferred during a game (one reconcile past ~500) — M8a (ADR-024)
 - [x] M6b implementation plan — user choices 2026-10-03: roll-up offers hover (default) and click; no Appearance section in v1 (tint/opacity with v2 themes)
 - [x] M6b — done 2026-10-03 (ADR-022, research/m6b-settings-animations.md)
-- [ ] P2, P3, P5, P7, P9, P11, P12 (and P10 with a real game) — user checks
+- [-] P2, P3, P5, P7, P9, P11, P12 (and P10 with a real game) — user checks
 Carry-overs from the M6b review (minors):
 - [x] Pause / ApplyLayout use raw Show/Hide (a stale quick-hide fade could hide a fence within 150 ms) — M8a (ADR-024)
 - [x] Friendly key names in the hotkey box ("Oemplus", "D1") — M8b (ADR-025)
@@ -296,7 +296,7 @@ in %LOCALAPPDATA%\NeoFences (icons always restored).
 - [x] Q3 by the user 2026-10-03: Settings → About shows 1.0.0
 - [x] Q6 by the user 2026-10-03: the installed NeoFences started by itself after a restart
 - [x] Q7 2026-10-03: v1.0.1 Setup over the installed 1.0.0 upgraded in place (fences, Takeover and start-with-Windows kept; 0.3 MB delta built)
-- [ ] Q9 — user check (skipped for now by the user)
+- [-] Q9 — user check (skipped for now by the user)
 - [x] Later: update source (GitHub Releases), code signing — update source M17; signing deferred (ADR-039)
 Carry-overs from the M7 review (minors):
 - [x] Uninstall stop-wait counts other users' NeoFences processes (filter by session) — M8a (ADR-024)
@@ -313,7 +313,7 @@ carry-overs (rubber band, cascade → smart placement, M2c scrollbar/DPI) are ti
 - [x] M8a implementation plan
 - [x] M8a — done 2026-10-03 (ADR-024, research/m8a-reliability.md), incl. the user-reported corner fix
 - [x] **v1.0.1 released and installed 2026-10-03** (tag v1.0.1): rounded corners + the M8a reliability fixes
-- [ ] R3–R8, R10 — user checks
+- [-] R3–R8, R10 — user checks
 Carry-overs from the M8a review (minors):
 - [x] Reconcile: consume the memories it applies; insert several memories for one fence by index — M8c (ADR-026)
 - [x] Coalesce watcher Overflowed (one re-arm + reconcile per burst; back off a watcher that errors at once) — M8c (ADR-026)
@@ -323,7 +323,7 @@ Carry-overs from the M8a review (minors):
 - [x] Polish: stacked summaries above FenceHost.Current, dead second tray dispose, backup-prune message, pack.ps1 leading zeros — M8b
 - [x] M8b implementation plan
 - [x] M8b — done 2026-10-03 (ADR-025, research/m8b-fence-ui.md): icon-only fences, shortcut arrows, fence UI + Settings carry-overs
-- [ ] S9, S10, S16 — user checks
+- [-] S9, S10, S16 — user checks
 - [x] **v1.1.0 released and installed 2026-10-03** (tag v1.1.0): icon-only fences, shortcut arrows, the M8b fixes
 - [x] Setup over an installed copy closed NeoFences but did not start 1.1.0 again (1.0.1 did): icons stayed hidden ~30 s with no app; investigate (start after a Setup upgrade, M8c) — M8c: a new instance waits for the exiting one; confirm at the next upgrade (T13)
 Carry-overs from the M8b review (minors):
@@ -335,7 +335,7 @@ Carry-overs from the M8b review (minors):
 - [x] Dead code: FenceWindow._itemRefs, CancelItemRenames, double summary on SetItems — M8c (ADR-026)
 - [x] M8c implementation plan
 - [x] M8c — done 2026-10-03 (ADR-026, research/m8c-shell-dragdrop.md): shell worker, item menu, live special icons, drag-drop details, review minors
-- [ ] T7, T8, T9, T10, T12, T13 — user checks
+- [-] T7, T8, T9, T10, T12, T13 — user checks
 Carry-overs from the M8c review (minors):
 - [x] Zip selections: use the file descriptors at drop time too (CF_HDROP still extracts on the UI thread when dropped) — M8d
 - [x] Mixed drops: hand Windows only the non-desktop items (Ctrl makes "- Copy" duplicates; Public items move to the user Desktop); arrival index after items moved from above — ruled, ADR-035
@@ -347,7 +347,7 @@ Carry-overs from the M8c review (minors):
 - [x] DropZones.InsertIndex is a no-op with WrapPanel (rows already share the tallest height): correct ADR-026 or drop it — M13c (ADR-026 amended by ADR-035)
 - [x] M8d implementation plan
 - [x] M8d — done 2026-10-03 (ADR-027, research/m8d-portal-details.md): Safely Remove with Portals, Portal backoff, Enter on several items; the M8 carry-over batches are done
-- [ ] U2, U7 — user checks
+- [-] U2, U7 — user checks
 Carry-overs from the M8d review (minors):
 - [x] A release can be undone by watcher events or a refresh queued just before it (one vetoed eject; a retry works) — M13a
 - [x] A Portal whose folder is missing but whose parent is on the stick registers no notice (the parent watcher vetoes) — M13a
@@ -364,13 +364,13 @@ Carry-overs from the M8d review (minors):
 Carry-overs from the v1.1.2 review (minors / declined):
 - [ ] Elevated or other-user Setup: the started copy inherits Setup's token (an elevated NeoFences loses drag-drop from Explorer)
 - [ ] Check once whether VELOPACK_* variables reach NeoFences (and apps opened from fences) through the install hook
-- [ ] Q11 with a double-clicked Setup — user check
+- [-] Q11 with a double-clicked Setup — user check
 
 ## M9 — Fence tabs (v1.2, spec 2026-10-03-fence-tabs-design)
 User choices 2026-10-03: combine fences into one box (Fences 6), drag a tab out to split, a per-tab accent colour.
 - [x] M9 spec and implementation plan
 - [x] M9 — done 2026-10-03 (ADR-029, research/m9-fence-tabs.md)
-- [ ] V10 (power cut), V13 — user checks
+- [-] V10 (power cut), V13 — user checks
 - [x] **v1.2.0 released and installed 2026-10-03** (tag v1.2.0): fence tabs; restarted itself 3.9 s after Setup; config unchanged apart from the new `tabs` fields
 Carry-overs from the M9 review (minors):
 - [x] Mixed DPI: a detached tab keeps the box's pixel size (not its DIP size); the ghost uses the source monitor's scale — ruled, ADR-035
@@ -383,7 +383,7 @@ Carry-overs from the M9 review (minors):
 User choices 2026-10-03: undo a messy desktop; newer items stay put; tray + Settings; "Before restore" first.
 - [x] M10 spec and implementation plan
 - [x] M10 — done 2026-10-03 (ADR-030, research/m10-snapshots.md)
-- [ ] W9 — user check
+- [-] W9 — user check
 - [x] **v1.3.0 released and installed 2026-10-03** (tag v1.3.0): snapshots; restarted itself 4.1 s after Setup; config unchanged
 Carry-overs from the M10 review (minors):
 - [x] Failure notices only in the tray balloon (Settings-started actions, Do Not Disturb); NIIF_WARNING for failures — M13c
@@ -457,7 +457,7 @@ Carry-overs from the M14 review (minors):
 - [x] Settings font box is blank when the global font was removed (the name is kept) — M16
 - [x] Fence menu → Title font → Font builds ~300 items on first open (UI thread); brushes rebuilt on every restyle — M16
 - [x] Weak title contrast with some custom colours (Accent edge on the light veil); a font-size change mid roll-up can leave the bar 4 px off — M16
-- [ ] AA checks by hand (AA3 light mode, AA11–AA13 wallpaper changes and two monitors, AA15 a removed font, AA17 a game)
+- [-] AA checks by hand (AA3 light mode, AA11–AA13 wallpaper changes and two monitors, AA15 a removed font, AA17 a game)
 
 ## M15 — Search palette (v1.8, spec 2026-10-04-search-palette-design) — parked
 - [ ] M15 — built, reviewed and fixed on branch `m15-search-palette` (tip d7e106b: 446 tests; ADR-037 and the results are on the branch); **parked 2026-10-04 by user choice** (not needed yet; PowerToys Command Palette covers general search). Resume: rebase on main, branch check with the user's go, merge, release.
@@ -471,13 +471,13 @@ Carry-overs from the M14 review (minors):
 Carry-overs from the M16 review (minors):
 - [ ] A redundant library scan after the startup reconcile or deferred shell work (skip when one is running or pending)
 - [ ] Colour → Custom… stays ticked when Windows' colour picker itself throws (rare)
-- [ ] AA19 (Custom… → Cancel tick) and AA21–AA24 by hand
+- [-] AA19 (Custom… → Cancel tick) and AA21–AA24 by hand
 
 ## M17 — Public releases and auto-update (v1.8, spec 2026-10-04-public-releases-design)
 - [x] Repository public, history scrubbed, README (2026-10-04, with the user's go)
 - [x] M17 — done 2026-10-04 (ADR-039, research/m17-public-releases.md)
 - [x] **v1.8.0 released 2026-10-04: the first public release** (tag v1.8.0; CI green, 438 tests; draft installed and checked here — restarted itself in 4 s, config upgraded to schema 4; published on the Releases page)
-- [ ] AC checks on a friend's PC (AC1, AC6–AC8)
+- [-] AC checks on a friend's PC (AC1, AC6–AC8)
 Carry-overs from the M17 review (minors):
 - [ ] NEOFENCES_UPDATE_SOURCE pointing at a missing folder silently uses GitHub (and logs "local folder"): warn instead
 - [ ] Check whether `vpk download github` fetches draft releases (a re-run release workflow could refuse "version already packed")

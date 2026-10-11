@@ -790,21 +790,9 @@ const HUB = {
   phase: "1.0.0-rc — release candidate with friends (path to 1.0)",
   current: "1.0.0-rc.5 RELEASED (pre-release) and installed on your PC: widgets show the design that fits, Wallpaper Engine playlists get a plain preview · VM 16 of 16 from rc.4 · slow updates fixed (every RC's small update was built from 0.26.0, so it failed and the full 75 MB came down; next release builds it from rc.5) · NOW: about a week with friends, then 1.0.0 · YOUR TURN: send friends the rc.5 link; check Now playing with Spotify and a full-screen game",
   waiting: [
-    "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
-    "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
-    "NEW in 0.17.0 — Help: tray → Help (or Settings → About and logs → Help (online guide)) opens the guide on GitHub: every feature with pictures, a cheat-sheet of gestures and keys, install and troubleshooting. Worth checking: the README and guide links and images on GitHub (AO3), and the quick start on a fresh user (AO5).",
-    "In 0.16.0 — auto-collect: fence menu → Auto-collect… → New rule. Watch your Desktop or any folder; pick kinds (apps and shortcuts, installers, documents, pictures, archives, anything) or patterns. New matching files show up as items within ~2 s; nothing is moved; removed stays removed; files from while NeoFences was closed are caught up at start.",
-    "In 0.15.0 — folder panels: fence menu → Add folder panel… (or a folder item → Show as folder panel). Details / List / Icons, click a column header to sort, double-click a subfolder to browse in (Back / Up / Home), Size ▸ or Fill fence. Your Downloads view is now a panel that fills its fence.",
-    "In 0.14.0 — widgets: fence menu → Add widget → Clock, Date or System stats (CPU, RAM, GPU, C:). Any size via Size ▸; right-click the clock for seconds and a date line; double-click the clock for Windows' Clock app, the stats for Task Manager. Widgets do nothing while you game or the fences are hidden.",
-    "In 0.13.0 — element sizes: right-click any item → Size → pick columns × rows (up to 4 × 4); a bigger app is a bigger icon, a bigger game a bigger cover; smaller items fill the gaps. Fence menu → Layout → Free (fixed positions) keeps items exactly where you drop them; Flow (packed) is the default.",
-    "In 0.12.1 — small fixes: big folder views stay smooth, Folder view settings says why OK is greyed out, hidden view tabs follow folder renames, Game Library settings and game menus behave better.",
-    "In 0.12.0 — games are items: put any game in any fence next to your apps (Ctrl+drag a cover into Apps); right-click → Show as → Cover tile / Icon. Fence menu → Add games… lists every game found. Settings → Game Library → New games go to picks the fence that gets newly installed games. An uninstalled game dims with ⚠ and comes back when reinstalled. Your Games fence is now a normal fence (tray → Restore snapshot has \"Before games became items\").",
-    "In 0.11.0 — folder views: tray or fence menu → New folder view…, or right-click a folder item → Show as folder view. The fence shows that folder live (Downloads, a games folder, a USB stick), read-only: open, copy path, Add to fence ▸, drag out as a copy. Fence menu → Folder view settings… for files/folders only, types like *.png;*.jpg, sort, only the newest N. Downloads and Screenshots start newest first; past 500 entries a \"+ N more — Open folder\" line. A missing folder says \"Folder not available\"; fence menu → Refresh lists again.",
-    "In 0.10.1 — programs added from the app list show readable names (\"7-Zip File Manager\", not a long ID) and Shift+right-click gives Windows' own menu for them. Add from desktop… is quick when you have a Game Library fence and puts This PC / Control Panel shortcuts under Folders and files. Fix all only leaves an undo snapshot when it fixed something.",
-    "In 0.10.0 — Add item… → Browse ▾ → An app… lists every Start app (Store apps too), or drag an app from Start → All onto a fence. Tray or fence menu → Add from desktop… turns your desktop into fences in one dialog (add D:\\GameLibrary in Settings → Game Library so your games sort into Games). After a Locate…, NeoFences offers to fix the other missing items from the same old place; tray → Restore snapshot → Undo the last restore or fix puts them back.",
-    "In 0.9.0 — virtual items: drop files, folders, apps or browser links onto a fence (right-click → Add item… works too). Each item has its own name and icon (Properties); removing an item or a fence never touches the file. Renamed targets are followed; missing ones dim with a ⚠ and offer Locate…; a pulled USB stick dims its items until it is back.",
-    "Your desktop icons stay visible. Settings → \"Hide desktop icons while NeoFences runs\" hides them; they always come back (exit, crash, kill).",
-    "0.9.0 updates itself from GitHub releases. The installed copy starts with Windows."
+    "You're on 1.0.0-rc.5 (installed 2026-10-11). Two checks only your PC can do: play something in Spotify and try the Now playing widget (play/pause, next, the bar, the wheel for volume); play a full-screen game for a minute (the fences stay still, then move again).",
+    "Send friends the rc.5 link if you like. About a week with no crash, lost data or stuck icons, then 1.0.0 (rc.5's code, version bumped) — I ask for your go then.",
+    "After 1.0.0, about 15 minutes in a browser: VirusTotal, Microsoft's review of the installer, and (optional) winget — steps ready in RELEASING.md."
   ],
   tasks: [
     { group: "M39 · Release readiness (0.26.0)", items: [
@@ -816,7 +804,7 @@ const HUB = {
       { t: "1.0.0-rc.1 released as a pre-release: RC tags build, RC installs follow RCs, stable copies never see them (ADR-062); VM 13 of 13; a fresh 0.26.0 ignored it", s: "done" },
       { t: "Friends' feedback on rc.1: Win+D bug (found in the VM: Peek's keyboard hand-over), icons, text, settings, titles, widgets, motion", s: "done" },
       { t: "Released 1.0.0-rc.2: three fixes, new VM check win-d-after-peek, 14 of 14", s: "done" },
-      { t: "M41a feel (themes, titles, widgets, motion, one-click) → rc.3; M41b settings (audit, Settings v4/v2, recipes) → rc.4; then 1.0", s: "wip" }
+      { t: "M41a feel (themes, titles, widgets, motion, one-click) → rc.3; M41b settings (audit, Settings v4/v2, recipes) → rc.4; then 1.0", s: "done" }
     ] },
     { group: "M41a · Feel (1.0.0-rc.3)", items: [
       { t: "Widgets brainstorm: glass cards in S/M/L, gallery from the title's +, settings on the back, floating boards, Calendar, Now playing (cover glow + vinyl)", s: "done" },
@@ -827,8 +815,7 @@ const HUB = {
       { t: "A widget's double-click opened nothing after the no-selection fix — fixed (opens from the second press); VM live checks 15 of 15", s: "done" },
       { t: "CPU check on your PC: ten Aurora / HUD / Neon fences, Motion Lively, idle: 0.42 % in Task Manager (goal under 2 %)", s: "done" },
       { t: "Released 1.0.0-rc.3: CI green, attestation and checksums verified, VM install check rc.2 → rc.3 16 of 16", s: "done" },
-      { t: "Look at Now playing with Spotify or YouTube on rc.3 (the VM has no sound)", s: "you" },
-      { t: "M41b settings → rc.4 (option audit, Fence settings v4, Settings v2, recipes; plus the deferred minors and the gallery's search)", s: "wip" }
+      { t: "M41b settings → rc.4 (option audit, Fence settings v4, Settings v2, recipes; plus the deferred minors and the gallery's search)", s: "done" }
     ] },
     { group: "M41b · Settings (1.0.0-rc.4)", items: [
       { t: "rc.3 installed on your PC (your data copied first; it now follows release candidates)", s: "done" },
@@ -875,7 +862,7 @@ const HUB = {
       { t: "Mockups with your real covers and icons: tiles A (name over the cover on hover fences), glow tile, clean icons", s: "done" },
       { t: "Spec; Steam probe (9 of 12 names match); you chose Normal / Large cover sizes; prototype probe on a copy of your data", s: "done" },
       { t: "Native build (747 tests); Opus review: 4 important + 2 raised, all fixed; live check AT 12 scripted passes; merged locally", s: "done" },
-      { t: "Set it up on your fences (snapshot first; the covers question; room for the Large covers)", s: "todo" },
+      { t: "Set it up on your fences — your Games fence shows covers", s: "done" },
       { t: "Released 0.21.0: CI green, delta 533 KB, your 0.20.0 updated itself in 3 s, published", s: "done" }
     ] },
     { group: "M33 · Safety net (0.20.0)", items: [
@@ -889,7 +876,7 @@ const HUB = {
       { t: "Prototype + replay-verified plan, native build; Opus review fixes (notice after a game, date line with Windows' formats, accent on DWM's message) — 700 tests", s: "done" },
       { t: "Live check: accent switched to Blue and back (bars followed at once; your Red restored); Free spots stored at start; merged locally", s: "done" },
       { t: "Released 0.19.1 — your 0.19.0 updated itself in 2 s; Games fence spots stored at that start", s: "done" },
-      { t: "By hand: AR3–AR8 (hint line, notice after a game, Afterburner without CPU temp, HWiNFO off/on, two-GPU idle, Japanese date)", s: "todo" }
+      { t: "Not needed for 1.0 (the test-PC and desktop checks cover it) — optional: By hand: AR3–AR8 (hint line, notice after a game, Afterburner without CPU temp, HWiNFO off/on, two-GPU idle, Japanese date)", s: "parked" }
     ]},
     { group: "M31 · Modern widgets and sensors (0.19.0)", items: [
       { t: "You chose style B with A's bars in the visual companion; stats CPU, CPU TEMP, GPU, GPU TEMP, RAM in GB; °F option", s: "done" },
@@ -898,14 +885,14 @@ const HUB = {
       { t: "Live check: stats equal Afterburner's own values; new guide shots; merged locally", s: "done" },
       { t: "Released 0.19.0 — your 0.18.0 updated itself in 2 s; data unchanged", s: "done" },
       { t: "Your desktop with every feature: Desk top-left, Clair Obscur + Detroit at 2×2 (Free), Downloads as Details; snapshot 02:45 first", s: "done" },
-      { t: "By hand: light mode (AQ2), Afterburner closed (AQ5), welcome at minimum size (AQ6)", s: "todo" }
+      { t: "Not needed for 1.0 — optional: By hand: light mode (AQ2), Afterburner closed (AQ5), welcome at minimum size (AQ6)", s: "parked" }
     ]},
     { group: "M30 · First-run welcome (0.18.0)", items: [
       { t: "You chose a welcome inside the first fence; the sort removes the empty welcome fence; hide icons via the dialog's checkbox", s: "done" },
       { t: "Spec, replay-verified plan, native build; Opus review fixes (read-only start, a set-up welcome fence kept) — 658 tests", s: "done" },
       { t: "Live check AP1, AP2, AP5, AP6, AP8, AP9 by script; merged locally", s: "done" },
       { t: "Released 0.18.0 — your 0.17.0 updated itself in 2 s; data unchanged; no welcome on your setup", s: "done" },
-      { t: "AP3 (small / light), AP4 (drop on the welcome), AP7 (welcome as a tab) and the tray notice — by hand", s: "todo" }
+      { t: "Not needed for 1.0 — optional: AP3 (small / light), AP4 (drop on the welcome), AP7 (welcome as a tab) and the tray notice — by hand", s: "parked" }
     ]},
     { group: "M29 · A guide for friends (0.17.0)", items: [
       { t: "You chose a guide for friends; help on GitHub, linked from the app (ADR-050)", s: "done" },
@@ -913,7 +900,7 @@ const HUB = {
       { t: "Opus review: 0 critical / 3 important (tray overflow, download warning, guide rule in CLAUDE.md) + 6 wording fixes (643 tests)", s: "done" },
       { t: "Live check AO1/AO2/AO4 by script; merged locally", s: "done" },
       { t: "Released 0.17.0 — your 0.16.1 updated itself in 3 s; data unchanged; the tray shows Help", s: "done" },
-      { t: "AO3 links on GitHub, AO5 quick start on a fresh user — by hand", s: "todo" }
+      { t: "Not needed for 1.0 — optional: AO3 links on GitHub, AO5 quick start on a fresh user — by hand", s: "parked" }
     ]},
     { group: "M28 · Polish (0.16.1)", items: [
       { t: "You chose all four groups: 20 deferred minors of M24–M27", s: "done" },
@@ -951,13 +938,13 @@ const HUB = {
       { t: "Your direction: no fence types — a fence holds elements; their kind and settings decide the look. First step: games as items (cover or icon, Add games…, new games go to a chosen fence)", s: "done" },
       { t: "Prototype probed on a copy of your data, verified plan, native build; Opus review: 5 important + 2 re-graded fixed (515 tests)", s: "done" },
       { t: "Live check AH 18/18 while the PC was in my care (screenshots sent); merged locally (your rule until 1.0); released 0.12.0 — your 0.11.0 updated itself and your Games fence became game items", s: "done" },
-      { t: "Later: a folder panel element, widgets (clock, calendar), element sizes 1×1 / 1×2 / 2×1 / 2×2", s: "todo" }
+      { t: "Folder panels, widgets (clock, calendar) and element sizes — built (M24–M26, M41a)", s: "done" }
     ]},
     { group: "M21 · Folder views (0.11.0)", items: [
       { t: "You chose: dynamic collections → folder views only; subfolders open in Explorer; types, files/folders only, newest N; all four uses (games, work, Downloads, USB)", s: "done" },
       { t: "Prototype, plan with replay-verified patches, native build; Opus review: drive-root views, log once per outage, Browse on a dead share + 3 re-graded fixes (502 tests)", s: "done" },
       { t: "Live check AG: 19 pass (stick pull / Safely Remove skipped by your choice); views from one fence stacking on one spot found and fixed; merged; released 0.11.0 — your 0.10.1 updated itself", s: "done" },
-      { t: "Next candidate (your idea): one kind of fence — items, games and folder views as per-fence settings; the kinds stay in code for later", s: "todo" }
+      { t: "One kind of fence (your idea) — built in M22: items, games and folder panels in any fence", s: "done" }
     ]},
     { group: "M20 · Small fixes (0.10.1)", items: [
       { t: "You chose: small fixes only — the deferred M19 review minors; the microsecond R1 race stays as is", s: "done" },
@@ -981,20 +968,8 @@ const HUB = {
     ]},
     { group: "Before 1.0.0 · your decisions", items: [
       { t: "You: name — decided: stays NeoFences (ADR-043)", s: "done" },
-      { t: "You (optional): Settings → Game Library → add D:\\GameLibrary (your 0.9/0.10 data started fresh without it)", s: "todo" },
-      { t: "You: code signing — when 1.0.0 goes to friends (open-source license for free signing, or a paid certificate)", s: "todo" },
-      { t: "You (optional): real sign-out with “Hide desktop icons” on — icons must be back (C8)", s: "todo" }
-    ]},
-    { group: "Pre-pivot open items (superseded unless M19 revives them)", items: [
-      { t: "You (optional): tray → New Game Library fence; right-click Wallpaper Engine → Hide from library", s: "todo" },
-      { t: "You (optional): add your rules in Settings → Rules — e.g. Game shortcut / In a folder of mine → D:\\GameLibrary", s: "todo" },
-      { t: "You (optional): try tabs — drag a title onto another fence, click tabs, right-click a tab → Colour / Detach, drag a tab out (V-checks)", s: "todo" },
-      { t: "You (optional): next upgrade, double-click Setup.exe — NeoFences should come back by itself, one copy (Q11)", s: "todo" },
-      { t: "Drops in from Explorer: written, but cannot be scripted (Explorer ignores synthetic drags) — your check K4", s: "todo" },
-      { t: "You: I10 labels over bright wallpaper, I12 scaling change", s: "todo" },
-      { t: "You (optional): H10 — huge video + disconnected network shortcut stay responsive", s: "todo" },
-      { t: "You: real sign-out (C8) with desktop icons hidden — they must be back after signing in", s: "todo" },
-      { t: "You: cancelled shutdown, drag smoothness, elevated Win+D", s: "todo" }
+      { t: "Code signing — decided: unsigned for 1.0 (ADR-061); signing later", s: "done" },
+      { t: "Optional: a real sign-out with “Hide desktop icons” on — icons must be back (C8)", s: "parked" }
     ]},
     { group: "M13 · v1.6 carry-overs", items: [
       { t: "You chose: v1.6 carry-overs in 3 batches, each released (M13a data safety, M13b Game Library + rules polish, M13c fence + Settings UX)", s: "done" },
@@ -1032,7 +1007,7 @@ const HUB = {
       { t: "Hand check K4 passed; K5 found a real bug (Desktop file dropped from Explorer → Windows file dialog)", s: "done" },
       { t: "PIVOT: fences hold virtual items (own name/icon/path), no file operations, native icons visible (optional hide), dynamic fences later — ADR-040", s: "done" },
       { t: "Installed build + data removed (backed up); repo reset to one commit 0.8.0; GitHub release/tags/branch deleted; history in a local bundle", s: "done" },
-      { t: "M18 — Virtual items (0.9.0): spec → plan → execute → review → release", s: "todo" }
+      { t: "M18 — Virtual items (0.9.0): released", s: "done" }
     ]},
     { group: "M12 · Game Library (v1.5)", items: [
       { t: "M12 Game Library: you chose every game in one place; launchers, Xbox, D:\\GameLibrary, Desktop shortcuts; posters on disk; one A–Z fence; spec approved", s: "done" },
@@ -1232,7 +1207,7 @@ const HUB = {
     { id: "M10", name: "Snapshots (v1.3)", goal: "Save the arrangement by name, restore it later (undoable); tray + Settings — released as v1.3.0", s: "done" },
     { id: "M11", name: "Rules (v1.4)", goal: "New desktop items go to a fence by type, game launcher or folder, name, date or size; Apply rules now (undoable) — released as v1.4.0", s: "done" },
     { id: "M12", name: "Game Library (v1.5)", goal: "One fence with every installed game (Steam, Epic, GOG, Ubisoft, EA, Battle.net, Xbox, game folders), Steam posters, hide, live rescans — released as v1.5.0", s: "done" },
-    { id: "M13", name: "v1.6 carry-overs", goal: "Review carry-overs in 3 batches: data safety (v1.6.0), Game Library + rules polish (v1.6.1), fence + Settings UX (v1.6.2)", s: "wip" },
+    { id: "M13", name: "v1.6 carry-overs", goal: "Review carry-overs in 3 batches: data safety (v1.6.0), Game Library + rules polish (v1.6.1), fence + Settings UX (v1.6.2)", s: "done" },
     { id: "M18", name: "Virtual items (0.9.0)", goal: "Fences hold links with their own name and icon; no file operations; target watching; native icons visible — released as 0.9.0", s: "done" },
     { id: "M19", name: "Apps, bulk fix, Add from desktop (0.10.0)", goal: "Store/Start apps as items, bulk fix of missing items with undo, Add from desktop…, the M18 reliability leftovers — released as 0.10.0", s: "done" },
     { id: "M20", name: "Small fixes (0.10.1)", goal: "The deferred M19 review minors — released as 0.10.1", s: "done" },

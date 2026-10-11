@@ -1061,3 +1061,7 @@ stable release, so every RC's delta was built from 0.26.0. Fixed in the workflow
 the latest pre-release (`--pre`); RELEASING.md step 4 now checks the run's "Building delta" line. The published rc.5 delta
 stays as it is (rc.4 copies take the full package once, which works). 1.0.0 will be built from rc.5: copies on 0.26.0 take
 the full package.
+**Hub and roadmap tidied:** the hub's "Waiting on you" now lists only today's open checks (Now playing with Spotify, a
+full-screen game), the week with friends and the 1.0 browser steps; finished items marked done; old by-hand checks from
+0.17–0.19 and before the pivot marked not needed for 1.0 (`[-]` in the roadmap: the VM checks and the RC desktop checks
+cover them).
