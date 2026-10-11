@@ -70,6 +70,7 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [ ] Release 1.0.0 (the user approved the release 2026-10-12): rc.7's code, version bumped
   - [ ] After 1.0: a widget board with its own bigger grid (mockups with the owner)
   - [x] Updates downloaded the full package (75 MB) after the delta: the Release workflow built every RC's delta from the latest stable (0.26.0), so RC installs failed the patch checksum (Velopack log: "Restored data doesn't match checksum") and fell back; now built from the previous tag's release (`--pre` after an RC); check the run log at the next release
+- [~] **M42 — 1.0.1 polish** — claimed by session 2026-10-12 1.0.1-polish (branch `m42-polish`, merged only after 1.0.0 ships from rc.7's code): the rc.4 review's deferred minors
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
   - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches
