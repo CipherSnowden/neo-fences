@@ -1029,3 +1029,24 @@ inbox's panel change is not undone by Ctrl+Z; small leftovers (a doc summary, a 
 draft's files 16 of 16, published as a pre-release (the website still serves 0.26.0).
 **Next:** about a week with friends on rc.4, then 1.0.0 (that code, version bumped); the owner looks at Now playing with
 Spotify / YouTube.
+
+## 2026-10-11 — rc.4 on the owner's desktop; rc.5 fixes
+
+**Desktop checks (owner's PC, asked first; installed version reported per step):** BA1 — the installed rc.3 updated itself
+to rc.4 (delta download, restart): the same four fences in the same places and sizes, icon sizes and names moved to All
+fences (48, Always); config and items unchanged otherwise. AZ6 — with the fences hidden, Windows' own right-click menu over
+Wallpaper Engine; fences back. BA10 failed: the Fence settings preview showed "Detroit: Become Human – Kara" while Crysis 3
+was on screen. BA9 not run there (the script missed the menu entry; it passes in the VM).
+**Found and fixed (rc.5):** (1) widgets laid out Large (4×2) in a three-column fence were trimmed to three columns but drew
+the four-column design, cut off on the right (the owner's Desk: clock, calendar, stats from before rc.3) — the grid now
+hands each widget its trimmed span and it shows the biggest design that fits (`WidgetSizes.Fitting`); the Size menu, corner
+drag and the clock's back keep the chosen size. (2) Wallpaper Engine's `config.json` names only the last-picked wallpaper
+while a playlist plays (the owner's: five wallpapers, random, hourly) — such monitors get no picture: the preview shows a
+plain background with a note, the wallpaper accent uses Windows' accent. Capturing the live wallpaper was tried
+(PrintWindow on `WPEDesktopDX11Window`: black); Windows.Graphics.Capture would work but is a bigger change, after 1.0.
+Opus review: one bug (corner drag compared with the fitted size) and three risks fixed. Core 1078 tests; VM live checks
+19 of 19; probe `probe-widget-fit.ps1` (a copy of the owner's Desk fence) screenshots sent.
+**Open question:** whether Wallpaper Engine keeps an old playlist in `config.json` after a single wallpaper is picked from
+it — then that monitor keeps a plain preview until another wallpaper is picked (a wallpaper outside the old playlist shows).
+**Next:** the owner's go for 1.0.0-rc.5; then about a week with friends; then 1.0.0. The owner checks Now playing with
+Spotify and a full-screen game.

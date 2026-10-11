@@ -58,6 +58,8 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Built on branch `m41b-settings`: Core test-first (AllFences, SettingEdits, Recipes, SettingsCatalog; 1070 tests), Fence settings v4, Settings v2, the audit's removals, the rc.3 leftovers, ADR-067, guide, checklist BA; final Opus review "with fixes" — 5 important (+3 re-graded) fixed; VM live checks 19 of 19, probe screenshots sent to the owner
   - [x] Merged into main 2026-10-11
   - [x] Released 1.0.0-rc.4 on 2026-10-11 (Fence settings with All fences, preview and recipes; Settings with search; VM 16 of 16 from rc.3)
+- [x] **rc.5 fixes** (found in the desktop checks on the owner's PC, 2026-10-11; branch `rc5-fixes`): widgets in a fence too narrow for their size show the biggest design that fits (old 3-column clock, calendar and stats were cut off); the Fence settings preview and the wallpaper accent no longer use a Wallpaper Engine playlist's last-picked wallpaper (plain background, Windows' accent); checklist BB, probe `probe-widget-fit.ps1`
+  - [ ] Release 1.0.0-rc.5 (with the owner's go); then about a week with friends; then 1.0.0
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
   - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches
