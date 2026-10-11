@@ -147,4 +147,7 @@ public static class WidgetBoards
     /// <summary>The fence holds widgets and nothing else (by its items' targets).</summary>
     public static bool OnlyWidgets(IReadOnlyCollection<string> targets) =>
         targets.Count > 0 && targets.All(target => target.StartsWith(Widgets.TargetPrefix, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>"Let them float?" is offered once: when the fence becomes widgets only, not on every widget added after.</summary>
+    public static bool OfferFloat(IReadOnlyCollection<string> before, IReadOnlyCollection<string> after) => OnlyWidgets(after) && !OnlyWidgets(before);
 }

@@ -33,6 +33,32 @@ public static class DesktopReveal
         }
     }
 
+    /// <summary>
+    /// Final review I5: does an app window show now (visible, not minimized, not cloaked, a titled top-level window that is
+    /// not a tool window and not NeoFences' or the shell's)? The reveal decides from this at each click.
+    /// </summary>
+    public static unsafe bool AppWindowsShown()
+    {
+        var shown = false;
+        var ownProcess = (uint)Environment.ProcessId;
+        Windows.Win32.PInvoke.EnumWindows((window, _) =>
+        {
+            if (!Windows.Win32.PInvoke.IsWindowVisible(window) || Windows.Win32.PInvoke.IsIconic(window) || Windows.Win32.PInvoke.GetWindowTextLength(window) == 0) return true;
+            if (Windows.Win32.PInvoke.GetWindow(window, Windows.Win32.UI.WindowsAndMessaging.GET_WINDOW_CMD.GW_OWNER) != Windows.Win32.Foundation.HWND.Null) return true;
+            var exStyle = (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)Windows.Win32.PInvoke.GetWindowLongPtr(window, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+            if (exStyle.HasFlag(Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOOLWINDOW)) return true;
+            uint processId;
+            Windows.Win32.PInvoke.GetWindowThreadProcessId(window, &processId);
+            if (processId == ownProcess) return true;
+            if (DesktopWindows.ClassOf(window) is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd") return true;
+            int cloaked;
+            if (Windows.Win32.PInvoke.DwmGetWindowAttribute(window, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_CLOAKED, &cloaked, sizeof(int)).Succeeded && cloaked != 0) return true;
+            shown = true;
+            return false; // one is enough
+        }, 0);
+        return shown;
+    }
+
     /// <summary>Windows' double-click time (ms): a click becomes a reveal only once a second click can no longer follow.</summary>
     public static uint DoubleClickTime => Windows.Win32.PInvoke.GetDoubleClickTime();
 }

@@ -87,8 +87,9 @@ public sealed class FenceItemView : INotifyPropertyChanged
         IsGame = shown.IsGame;
         Widget = Widgets.Of(shown.Target); // M25
         Options = shown.Options ?? new WidgetOptions();
+        var span = Span;
         Span = shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One);
-        Changed(nameof(WidgetSize)); // M41a
+        if (Span != span) Changed(nameof(WidgetSize)); // M41a; final review I3: only a real change rebuilds a face
         StoredCell = shown.Cell;
         if (shown.Panel is { } panel) // M26
         {

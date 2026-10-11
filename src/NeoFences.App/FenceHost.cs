@@ -1804,8 +1804,10 @@ public sealed partial class FenceHost
             _revealTimer?.Stop();
             if (!Current.RevealWanted) return;
             if (!Current.IconsHidden && DesktopWindows.IsOverDesktopIcon(screenX, screenY, log: message => Log.Warning("{Message}", message))) return;
-            if (!DesktopReveal.Set(revealed: !_revealed, log: message => Log.Warning("{Message}", message))) return;
-            _revealed = !_revealed;
+            // Final review I5: from what the desktop shows now — the user may have brought windows back meanwhile.
+            var step = RevealPolicy.Next(windowsShown: DesktopReveal.AppWindowsShown(), revealedByUs: _revealed);
+            if (step == RevealStep.None || !DesktopReveal.Set(revealed: step == RevealStep.Reveal, log: message => Log.Warning("{Message}", message))) return;
+            _revealed = step == RevealStep.Reveal;
             Log.Information("reveal desktop: {Revealed}", _revealed);
         };
         _revealTimer.Start();

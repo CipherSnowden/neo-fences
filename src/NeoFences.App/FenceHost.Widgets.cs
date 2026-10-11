@@ -118,11 +118,12 @@ public sealed partial class FenceHost
     {
         if (window.Kind != Core.Model.FenceKind.Items) return;
         var widget = VirtualItem.Create(Widgets.Target(kind)) with { Size = WidgetSizes.SpanOf(size) };
+        string[] before = [.. _items.Of(window.FenceId).Select(item => item.Target)];
         _items = _items.With(window.FenceId, [.. _items.Of(window.FenceId), widget]); // not ItemEdits.Add: it would merge a second clock into the first
         Log.Information("{Widget} widget ({Size}) added to fence {FenceId}", kind, size, window.FenceId);
         ItemsChanged(checkTargets: []);
         if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is { WidgetsFloat: false } fence
-            && WidgetBoards.OnlyWidgets([.. _items.Of(window.FenceId).Select(item => item.Target)]))
+            && WidgetBoards.OfferFloat(before, after: [.. _items.Of(window.FenceId).Select(item => item.Target)])) // once: when it becomes widgets only
             window.ShowTip("Only widgets here — let them float?", "Float", () => ChangeFence(fence.Id, config => Core.Model.FenceEdits.SetWidgetsFloat(config, fence.Id, true)));
     }
 

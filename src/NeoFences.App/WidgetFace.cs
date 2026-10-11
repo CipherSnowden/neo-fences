@@ -40,9 +40,11 @@ public sealed class WidgetFace : Grid
 
     private void Build()
     {
+        // Final review I3: the card follows its own size changes; it is made once per item and let go of when replaced.
+        if (_view?.Widget == WidgetKind.NowPlaying && Children.OfType<NowPlayingCard>().FirstOrDefault() is { } existing && ReferenceEquals(existing.DataContext, _view)) return;
         if (_view?.Widget is not { } kind || _view.Widget == WidgetKind.NowPlaying)
         {
-            Children.Clear();
+            Clear();
             _refresh = null;
             _built = (null, WidgetSize.Small);
             if (_view?.Widget != WidgetKind.NowPlaying) return;
@@ -52,7 +54,7 @@ public sealed class WidgetFace : Grid
         }
         if (_built == (kind, _view.WidgetSize) && Children.Count > 0) return;
         _built = (kind, _view.WidgetSize);
-        Children.Clear();
+        Clear();
         var (content, nominal) = kind switch
         {
             WidgetKind.Clock => Clock(_view.WidgetSize),
@@ -138,6 +140,13 @@ public sealed class WidgetFace : Grid
         var template = new ControlTemplate(typeof(System.Windows.Controls.Primitives.Thumb)) { VisualTree = back };
         template.Seal();
         return template;
+    }
+
+    /// <summary>Empties the face; a Now playing card is let go of its item first (it listens to it).</summary>
+    private void Clear()
+    {
+        foreach (var card in Children.OfType<NowPlayingCard>()) card.DataContext = null;
+        Children.Clear();
     }
 
     // ---------- pieces ----------

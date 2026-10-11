@@ -228,3 +228,6 @@ Windows.Win32.UI.Controls.IImageList
 VIRTUAL_KEY
 IsIconic
 ShowWindow
+EnumWindows
+GetWindowTextLength
+DwmGetWindowAttribute

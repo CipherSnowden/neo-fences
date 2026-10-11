@@ -20,6 +20,8 @@ public sealed partial class FenceHost
     private MediaTrack? _lastTrack;
     private readonly Dictionary<string, string> _mediaChoice = new(StringComparer.Ordinal); // a widget's chosen player (this run)
     private readonly Dictionary<string, (string Key, ImageSource? Cover, ImageSource? Glow)> _covers = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, int> _coverTries = new(StringComparer.Ordinal); // per track: covers asked without an answer
+    private const int CoverTries = 6; // about six seconds on the widget tick
 
     /// <summary>From the widget tick: a fresh reading when a Now playing widget is shown, then every such widget updated.</summary>
     private void TickMedia(IReadOnlyList<FenceWindow> windows)
@@ -59,7 +61,14 @@ public sealed partial class FenceHost
         var dispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
         Task.Run(() => sessions.CoverAsync(session.AppId)).ContinueWith(read => dispatcher.BeginInvoke(() =>
         {
-            if (!read.IsCompletedSuccessfully || read.Result is not { } bytes) { _covers[session.AppId] = (session.CoverKey, null, null); return; }
+            if (!read.IsCompletedSuccessfully || read.Result is not { } bytes)
+            {
+                // Final review I7: a player often names the song before its cover — ask again on the next ticks (a few times).
+                var tries = _coverTries[session.CoverKey] = _coverTries.GetValueOrDefault(session.CoverKey) + 1;
+                if (tries < CoverTries) _covers.Remove(session.AppId);
+                else _covers[session.AppId] = (session.CoverKey, null, null); // no cover for this song: the placeholder sleeve
+                return;
+            }
             _covers[session.AppId] = (session.CoverKey, Decode(bytes, width: 300), Decode(bytes, width: 6));
             foreach (var window in WidgetWindows()) window.ShowMedia(MediaFor);
         }));

@@ -209,3 +209,21 @@ public class WidgetBoardTests
         Assert.Equal(["Asia/Tokyo", "Europe/London"], repaired.Widget!.Cities);
     }
 }
+
+/// <summary>Final review: "let them float" is offered once — when a fence first becomes widgets only, not on every widget after.</summary>
+public class FloatOfferTests
+{
+    private static readonly string Clock = Widgets.Target(WidgetKind.Clock), Stats = Widgets.Target(WidgetKind.Stats);
+
+    [Fact]
+    public void TheFirstWidgetInAnEmptyFence_IsOffered() => Assert.True(WidgetBoards.OfferFloat(before: [], after: [Clock]));
+
+    [Fact]
+    public void TheLastItemLeavingAWidgetFence_IsOffered() => Assert.True(WidgetBoards.OfferFloat(before: [Clock, @"C:\Games"], after: [Clock]));
+
+    [Fact]
+    public void AnotherWidgetInAWidgetOnlyFence_IsNotOfferedAgain() => Assert.False(WidgetBoards.OfferFloat(before: [Clock], after: [Clock, Stats]));
+
+    [Fact]
+    public void AFenceWithItems_IsNotOffered() => Assert.False(WidgetBoards.OfferFloat(before: [@"C:\Games"], after: [@"C:\Games", Clock]));
+}

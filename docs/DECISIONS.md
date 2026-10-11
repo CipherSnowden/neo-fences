@@ -1693,7 +1693,8 @@ right-press for the draw gesture and replayed plain clicks, also while the fence
   With the fences shown, right-presses are held back only while **Right-drag on the desktop to draw a fence** is on.
 - **Click wallpaper to reveal desktop** (Settings → General, off by default; macOS-style): a left press and release in
   place on empty wallpaper (`DesktopGesture.Click`) moves the windows aside with the shell's "minimize all"
-  (Shell.Application `MinimizeAll`), and the next such click brings them back (`UndoMinimizeALL`), once the double-click
+  (Shell.Application `MinimizeAll`) while any app window shows; with none showing since its reveal, the click brings them
+  back (`UndoMinimizeALL`) — decided from the desktop at each click (`RevealPolicy`), never a remembered toggle — once the double-click
   time passes without a second click — a double-click still quick-hides. Not `ToggleDesktop`: right after a click on the
   wallpaper the desktop has the focus and it does nothing (VM probe). Not over a visible native icon, not while hidden,
   paused, gaming or in safe mode. The hook is wanted when any of the three gestures is on.

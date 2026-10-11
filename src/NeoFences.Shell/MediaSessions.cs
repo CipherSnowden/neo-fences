@@ -24,16 +24,36 @@ public enum MediaCommand { PlayPause, Next, Previous, Shuffle, Repeat, Seek }
 public sealed class MediaSessions(Action<string> log)
 {
     private GlobalSystemMediaTransportControlsSessionManager? _manager;
+    private readonly object _gate = new(); // reads, covers and commands run on pool threads at once (final review)
     private readonly HashSet<string> _failuresLogged = new(StringComparer.Ordinal);
+
+    /// <summary>Final review I6: a player that never answers must not hold Now playing up — every WinRT wait is bounded.</summary>
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(3);
 
     private async Task<GlobalSystemMediaTransportControlsSessionManager?> ManagerAsync()
     {
-        try { return _manager ??= await GlobalSystemMediaTransportControlsSessionManager.RequestAsync(); }
+        lock (_gate) if (_manager is { } known) return known;
+        try
+        {
+            var manager = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync().AsTask().WaitAsync(Patience);
+            lock (_gate) return _manager ??= manager;
+        }
         catch (Exception failure) when (failure is not OutOfMemoryException) { Once("the media sessions API is not available", failure); return null; }
     }
 
     /// <summary>Every session, Windows' current one first; empty when nothing plays or Windows refuses.</summary>
     public async Task<IReadOnlyList<MediaSessionInfo>> ReadAsync()
+    {
+        try { return await ReadSessionsAsync(); }
+        catch (Exception failure) when (failure is not OutOfMemoryException)
+        {
+            Once("the media sessions could not be read", failure);
+            lock (_gate) _manager = null; // a broken manager is asked for again next time
+            return [];
+        }
+    }
+
+    private async Task<IReadOnlyList<MediaSessionInfo>> ReadSessionsAsync()
     {
         if (await ManagerAsync() is not { } manager) return [];
         var current = manager.GetCurrentSession()?.SourceAppUserModelId;
@@ -42,7 +62,7 @@ public sealed class MediaSessions(Action<string> log)
         {
             try
             {
-                var properties = await session.TryGetMediaPropertiesAsync();
+                var properties = await session.TryGetMediaPropertiesAsync().AsTask().WaitAsync(Patience);
                 var playback = session.GetPlaybackInfo();
                 var timeline = session.GetTimelineProperties();
                 var controls = playback.Controls;
@@ -70,8 +90,8 @@ public sealed class MediaSessions(Action<string> log)
         try
         {
             if (await ManagerAsync() is not { } manager || Session(manager, appId) is not { } session) return null;
-            if ((await session.TryGetMediaPropertiesAsync())?.Thumbnail is not { } thumbnail) return null;
-            using var stream = await thumbnail.OpenReadAsync();
+            if ((await session.TryGetMediaPropertiesAsync().AsTask().WaitAsync(Patience))?.Thumbnail is not { } thumbnail) return null;
+            using var stream = await thumbnail.OpenReadAsync().AsTask().WaitAsync(Patience);
             if (stream.Size is 0 or > 8 * 1024 * 1024) return null; // a broken or absurd cover
             using var copy = new MemoryStream();
             await System.IO.WindowsRuntimeStreamExtensions.AsStreamForRead(stream).CopyToAsync(copy);
@@ -87,21 +107,22 @@ public sealed class MediaSessions(Action<string> log)
         {
             if (await ManagerAsync() is not { } manager || Session(manager, appId) is not { } session) return false;
             var playback = session.GetPlaybackInfo();
-            return command switch
+            var asked = command switch
             {
-                MediaCommand.PlayPause => await session.TryTogglePlayPauseAsync(),
-                MediaCommand.Next => await session.TrySkipNextAsync(),
-                MediaCommand.Previous => await session.TrySkipPreviousAsync(),
-                MediaCommand.Shuffle => await session.TryChangeShuffleActiveAsync(playback.IsShuffleActive != true),
-                MediaCommand.Repeat => await session.TryChangeAutoRepeatModeAsync(playback.AutoRepeatMode switch
+                MediaCommand.PlayPause => session.TryTogglePlayPauseAsync(),
+                MediaCommand.Next => session.TrySkipNextAsync(),
+                MediaCommand.Previous => session.TrySkipPreviousAsync(),
+                MediaCommand.Shuffle => session.TryChangeShuffleActiveAsync(playback.IsShuffleActive != true),
+                MediaCommand.Repeat => session.TryChangeAutoRepeatModeAsync(playback.AutoRepeatMode switch
                 {
                     Windows.Media.MediaPlaybackAutoRepeatMode.None => Windows.Media.MediaPlaybackAutoRepeatMode.List,
                     Windows.Media.MediaPlaybackAutoRepeatMode.List => Windows.Media.MediaPlaybackAutoRepeatMode.Track,
                     _ => Windows.Media.MediaPlaybackAutoRepeatMode.None,
                 }),
-                MediaCommand.Seek when seekTo is { } at => await session.TryChangePlaybackPositionAsync((session.GetTimelineProperties().StartTime + at).Ticks),
-                _ => false,
+                MediaCommand.Seek when seekTo is { } at => session.TryChangePlaybackPositionAsync((session.GetTimelineProperties().StartTime + at).Ticks),
+                _ => null,
             };
+            return asked is not null && await asked.AsTask().WaitAsync(Patience);
         }
         catch (Exception failure) when (failure is not OutOfMemoryException) { Once($"the player refused {command} ({appId})", failure); return false; }
     }
@@ -111,6 +132,8 @@ public sealed class MediaSessions(Action<string> log)
 
     private void Once(string what, Exception failure)
     {
-        if (_failuresLogged.Add(what)) log($"now playing: {what}: {failure.GetType().Name}: {failure.Message}");
+        bool first;
+        lock (_gate) first = _failuresLogged.Add(what);
+        if (first) log($"now playing: {what}: {failure.GetType().Name}: {failure.Message}");
     }
 }

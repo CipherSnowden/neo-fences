@@ -65,3 +65,15 @@ public class ClicksTests
         Assert.Null(FenceEdits.SetOpenWith(config, games.Id, null).Fences[0].OpenWith);
     }
 }
+
+/// <summary>Final review I5: "Click wallpaper to reveal" decides from the desktop at click time, not a remembered toggle.</summary>
+public class RevealPolicyTests
+{
+    [Theory]
+    [InlineData(true, false, RevealStep.Reveal)]   // windows show: move them aside
+    [InlineData(true, true, RevealStep.Reveal)]    // the user brought some back (taskbar, Alt+Tab): aside again, not "undo"
+    [InlineData(false, true, RevealStep.Restore)]  // nothing shows since our reveal: bring them back
+    [InlineData(false, false, RevealStep.None)]    // nothing shows and we hid nothing: leave the desktop alone
+    public void TheStep_FollowsWhatTheDesktopShows(bool windowsShown, bool revealedByUs, RevealStep step) =>
+        Assert.Equal(step, RevealPolicy.Next(windowsShown, revealedByUs));
+}

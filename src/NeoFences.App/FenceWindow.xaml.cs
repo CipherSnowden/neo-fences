@@ -1231,6 +1231,8 @@ public partial class FenceWindow : Window
         ++_fadeGeneration;
         BeginAnimation(OpacityProperty, null);
         Show();
+        _hiddenByUser = false; // final review C2: paused, nothing of the theme or the record moved
+        UpdateThemePause();
     }
 
     /// <summary>Hides at once (Pause).</summary>
@@ -1239,6 +1241,8 @@ public partial class FenceWindow : Window
         ++_fadeGeneration;
         BeginAnimation(OpacityProperty, null);
         Hide();
+        _hiddenByUser = true;
+        UpdateThemePause();
     }
 
     /// <summary>Quick-hide (spec §6): a 150 ms fade, then hidden. Without animations it hides at once.</summary>
@@ -1368,6 +1372,9 @@ public partial class FenceWindow : Window
         Resources["HoverLabelBackground"] = hoverLabel;
         ApplyNameStyle(); // M41a: the names' shadow or chip follow the tone
         ApplyWidgetCards();
+        // Final review I4: the tone's defaults just replaced the look's veil, outline and title ink — the next ApplyStyle must
+        // put them back even when the look itself is unchanged (a theme's look does not depend on Windows' light or dark).
+        _style = null;
         // M31: the widgets' softer shadow, and their bars in the Windows accent (style A's gradient).
         var widgetShadow = new DropShadowEffect { Color = light ? Colors.White : Colors.Black, ShadowDepth = light ? 0 : 1, BlurRadius = 8, Opacity = 0.45 };
         widgetShadow.Freeze();
@@ -1439,8 +1446,8 @@ public partial class FenceWindow : Window
             ApplyTabLook(style); // only the headers SetTabs rebuilt (M16: brushes are not rebuilt when nothing changed)
             return;
         }
-        _style = style;
         if (style.LightTone != _lightTheme) ApplyTheme(style.LightTone); // M41a: a theme has its own tone, whatever Windows uses
+        _style = style;
         Resources["FenceVeil"] = Frozen(style.Veil);
         Resources["FenceOutline"] = Frozen(style.Border);
         Resources["FenceTitleText"] = Frozen(style.TitleText);
@@ -1520,7 +1527,7 @@ public partial class FenceWindow : Window
         {
             if (value == _motion) return;
             _motion = value;
-            ApplyThemeLayer();
+            ApplyThemeLayer(); // and UpdateThemePause: Now playing's record too (final review C2)
         }
     }
 
@@ -1546,7 +1553,22 @@ public partial class FenceWindow : Window
         UpdateThemePause();
     }
 
-    private void UpdateThemePause() => _themeLayer.Pause(_hiddenByUser || !ItemsShown);
+    private void UpdateThemePause()
+    {
+        var held = _hiddenByUser || !ItemsShown;
+        _themeLayer.Pause(held);
+        foreach (var card in FindChildren<NowPlayingCard>(ItemList)) card.Hold(held || _motion == Motion.Off); // final review C2
+    }
+
+    private static IEnumerable<T> FindChildren<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T match) yield return match;
+            else foreach (var deeper in FindChildren<T>(child)) yield return deeper;
+        }
+    }
 
     /// <summary>
     /// M41a (spec §2): Simple — the title as before, in display type; Clean — an accent underline and the count; Pill — emoji,

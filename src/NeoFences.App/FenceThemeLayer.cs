@@ -107,7 +107,11 @@ public sealed class FenceThemeLayer
         _hudFrame = new Path { Data = new PathGeometry([figure]), Fill = _veil, Stroke = accent, StrokeThickness = 1 };
         _host.Children.Add(_hudFrame);
         var tick = new SolidColorBrush(Color.FromArgb(0xB0, _accent.R, _accent.G, _accent.B));
-        _host.Children.Add(new Path { Data = Geometry.Parse($"M {width - 22},5 H {width - 5} V 22 M 5,{height - 22} V {height - 5} H 22"), Stroke = tick, StrokeThickness = 2 });
+        // Final review C1: built from points, never parsed from text — "M 298,5,5 …" in a comma-decimal culture threw.
+        var ticks = new PathGeometry();
+        foreach (var corner in new[] { new[] { new Point(width - 22, 5), new Point(width - 5, 5), new Point(width - 5, 22) }, new[] { new Point(5, height - 22), new Point(5, height - 5), new Point(22, height - 5) } })
+            ticks.Figures.Add(new PathFigure(corner[0], [new LineSegment(corner[1], isStroked: true), new LineSegment(corner[2], isStroked: true)], closed: false));
+        _host.Children.Add(new Path { Data = ticks, Stroke = tick, StrokeThickness = 2 });
         _scan = new Rectangle
         {
             Height = 36, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(1, 0, 1, 0),

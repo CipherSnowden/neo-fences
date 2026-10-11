@@ -29,9 +29,9 @@ public partial class FenceWindow
         ItemList.AddHandler(PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler((_, release) => PressFeedback(release, pressed: false)), handledEventsToo: true);
     }
 
-    /// <summary>The chrome that moves; none for covers (they lift themselves, M34) and folder panels (too big to tilt).</summary>
+    /// <summary>The chrome that moves; none for covers (they lift themselves, M34), folder panels (too big to tilt) and widgets.</summary>
     private static Border? ChromeOf(ListBoxItem container) =>
-        container.DataContext is FenceItemView { IsTile: false, IsPanel: false } ? container.Template?.FindName("Chrome", container) as Border : null;
+        container.DataContext is FenceItemView { IsTile: false, IsPanel: false, IsWidget: false } ? container.Template?.FindName("Chrome", container) as Border : null; // final review: a widget never tilts (its text would blur)
 
     /// <summary>The chrome's own transforms, made once: a lift, a press scale and a tilt.</summary>
     private static (TranslateTransform Lift, ScaleTransform Press, RotateTransform Tilt) TransformsOf(FrameworkElement element)

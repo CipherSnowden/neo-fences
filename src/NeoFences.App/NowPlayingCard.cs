@@ -30,6 +30,7 @@ public sealed class NowPlayingCard : Grid
     private readonly TranslateTransform _out = new();
     private readonly RotateTransform _arm = new(-4);
     private bool? _spinning;
+    private bool _playing, _held;
     private double _recordOut;
 
     // filled by Build for the size
@@ -369,7 +370,18 @@ public sealed class NowPlayingCard : Grid
         if (_repeat is not null) _repeat.Visibility = shown?.Repeat is null ? Visibility.Hidden : Visibility.Visible;
         if (_repeat?.Content is TextBlock repeatGlyph) (repeatGlyph.Text, repeatGlyph.Opacity) = shown?.Repeat == MediaRepeat.Track ? ("", 1) : ("", shown?.Repeat == MediaRepeat.List ? 1 : 0.5);
         ShowPlayers(media);
+        _playing = playing;
         Spin(playing);
+    }
+
+    /// <summary>
+    /// Final review C2: the window says when nothing may move — motion off (a game, safe mode, Windows' setting), the fence
+    /// hidden or rolled up. The widget's own tick stops then, so the window tells the card directly.
+    /// </summary>
+    public void Hold(bool held)
+    {
+        _held = held;
+        Spin(_playing);
     }
 
     /// <summary>Small app pills when several players have a session; the one shown is lit.</summary>
@@ -395,7 +407,7 @@ public sealed class NowPlayingCard : Grid
     /// <summary>Playing (and motion on): the record slides out, spins, the arm lowers. Else it spins down, the arm lifts, it slides home.</summary>
     private void Spin(bool playing)
     {
-        var moving = playing && Motion != Motion.Off && IsLoaded;
+        var moving = playing && Motion != Motion.Off && IsLoaded && !_held;
         if (_spinning == moving) return;
         _spinning = moving;
         var duration = new Duration(TimeSpan.FromMilliseconds(Motion == Motion.Off ? 1 : 700));
