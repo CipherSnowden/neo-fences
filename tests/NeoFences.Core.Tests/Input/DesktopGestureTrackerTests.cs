@@ -119,4 +119,48 @@ public class DesktopGestureTrackerTests
         Assert.Equal(DesktopGesture.RightDragCancelled, tracker.OnMouse(MouseAction.LeftDown, 600, 600, 9_000, overDesktop: true));
         Assert.Equal(DesktopGesture.None, tracker.OnMouse(MouseAction.RightUp, 600, 600, 9_100, overDesktop: true));
     }
+
+    // ---------- M41a (spec §7): a click on empty wallpaper, for "Click wallpaper to reveal desktop" ----------
+
+    [Fact]
+    public void PressAndReleaseInPlaceOnDesktop_IsAClick()
+    {
+        var tracker = NewTracker();
+        Assert.Equal(DesktopGesture.None, tracker.OnMouse(MouseAction.LeftDown, 100, 100, 1_000, overDesktop: true));
+        Assert.Equal(DesktopGesture.Click, tracker.OnMouse(MouseAction.LeftUp, 101, 100, 1_080, overDesktop: true));
+    }
+
+    [Fact]
+    public void ADoubleClicksSecondRelease_IsNotAClick()
+    {
+        var tracker = NewTracker();
+        tracker.OnMouse(MouseAction.LeftDown, 100, 100, 1_000, overDesktop: true);
+        Assert.Equal(DesktopGesture.Click, tracker.OnMouse(MouseAction.LeftUp, 100, 100, 1_050, overDesktop: true));
+        Assert.Equal(DesktopGesture.DoubleClick, tracker.OnMouse(MouseAction.LeftDown, 100, 100, 1_200, overDesktop: true));
+        Assert.Equal(DesktopGesture.None, tracker.OnMouse(MouseAction.LeftUp, 100, 100, 1_250, overDesktop: true));
+    }
+
+    [Fact]
+    public void ADragOnTheDesktop_IsNotAClick()
+    {
+        var tracker = NewTracker();
+        tracker.OnMouse(MouseAction.LeftDown, 100, 100, 1_000, overDesktop: true);
+        Assert.Equal(DesktopGesture.None, tracker.OnMouse(MouseAction.LeftUp, 160, 140, 1_400, overDesktop: true));
+    }
+
+    [Fact]
+    public void APressElsewhere_ReleasedOnTheDesktop_IsNotAClick()
+    {
+        var tracker = NewTracker();
+        tracker.OnMouse(MouseAction.LeftDown, 100, 100, 1_000, overDesktop: false);
+        Assert.Equal(DesktopGesture.None, tracker.OnMouse(MouseAction.LeftUp, 100, 100, 1_050, overDesktop: true));
+    }
+
+    [Fact]
+    public void AReleaseOverAWindow_IsNotAClick()
+    {
+        var tracker = NewTracker();
+        tracker.OnMouse(MouseAction.LeftDown, 100, 100, 1_000, overDesktop: true);
+        Assert.Equal(DesktopGesture.None, tracker.OnMouse(MouseAction.LeftUp, 100, 100, 1_050, overDesktop: false));
+    }
 }

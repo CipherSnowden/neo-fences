@@ -54,6 +54,18 @@ public static class FenceEdits
     public static NeoFencesConfig SetLabels(NeoFencesConfig config, string fenceId, LabelMode labels) =>
         config.WithFence(Require(config, fenceId) with { Labels = labels });
 
+    /// <summary>Fence settings → "Widgets float" (M41a).</summary>
+    public static NeoFencesConfig SetWidgetsFloat(NeoFencesConfig config, string fenceId, bool floating) =>
+        config.WithFence(Require(config, fenceId) with { WidgetsFloat = floating });
+
+    /// <summary>Fence settings → Emoji (M41a): one grapheme of what was typed, or none.</summary>
+    public static NeoFencesConfig SetEmoji(NeoFencesConfig config, string fenceId, string? emoji) =>
+        config.WithFence(Require(config, fenceId) with { Emoji = Emoji.Normalize(emoji) });
+
+    /// <summary>Fence settings → "Open items with" (M41a): the fence's own choice, or null (like all fences).</summary>
+    public static NeoFencesConfig SetOpenWith(NeoFencesConfig config, string fenceId, OpenWith? openWith) =>
+        config.WithFence(Require(config, fenceId) with { OpenWith = openWith });
+
     /// <summary>Fence settings… (M36): the fence's own look, replaced as a whole; a look with nothing set is none (like all fences).</summary>
     public static NeoFencesConfig SetLook(NeoFencesConfig config, string fenceId, OwnLook? look) =>
         config.WithFence(Require(config, fenceId) with { Look = ConfigNormalizer.NormalizeLook(look) });

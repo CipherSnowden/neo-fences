@@ -209,7 +209,7 @@ public class FenceSettingsTests
             },
         };
         var reset = SettingsReset.Apply(config);
-        Assert.Equal(new Settings(), reset.Settings);
+        Assert.Equal(Settings.NewInstall, reset.Settings); // M41a: as NeoFences comes now
         Assert.Equal(config.Fences, reset.Fences);
         Assert.Equal(config.Presets, reset.Presets);
         Assert.Equal((config.Library.Folders, config.Library.Hidden, config.Library.CoverChoices), (reset.Library.Folders, reset.Library.Hidden, reset.Library.CoverChoices));

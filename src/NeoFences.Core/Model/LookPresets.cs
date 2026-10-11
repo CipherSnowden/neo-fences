@@ -120,7 +120,7 @@ public static class SettingsReset
     /// </summary>
     public static NeoFencesConfig Apply(NeoFencesConfig config) => config with
     {
-        Settings = new Settings(),
+        Settings = Settings.NewInstall, // M41a: as NeoFences comes now (Aurora glass, Clean titles)
         Library = config.Library with { Sources = new LibrarySources(), OnlineArt = null, NewGamesFence = null },
     };
 }

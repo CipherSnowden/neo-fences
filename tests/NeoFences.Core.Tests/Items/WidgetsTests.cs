@@ -46,7 +46,8 @@ public class WidgetsTests
         Assert.Equal(new GridSpan(2, 1), FenceGrid.SpanOf(VirtualItem.Create(Widgets.Target(WidgetKind.Clock))));
         Assert.Equal(new GridSpan(2, 2), FenceGrid.SpanOf(VirtualItem.Create(Widgets.Target(WidgetKind.Date))));
         Assert.Equal(new GridSpan(2, 2), FenceGrid.SpanOf(VirtualItem.Create(Widgets.Target(WidgetKind.Stats))));
-        Assert.Equal(new GridSpan(1, 1), FenceGrid.SpanOf(VirtualItem.Create(Widgets.Target(WidgetKind.Clock)) with { Size = GridSpan.One }));
+        // M41a: a widget is always Small, Medium or Large — an old 1×1 clock is Small.
+        Assert.Equal(new GridSpan(2, 1), FenceGrid.SpanOf(VirtualItem.Create(Widgets.Target(WidgetKind.Clock)) with { Size = GridSpan.One }));
     }
 
     [Fact]
@@ -96,5 +97,5 @@ public class WidgetsTests
 
     [Fact]
     public void Names_AreReadable() =>
-        Assert.Equal(["Clock", "Date", "System stats"], new[] { WidgetKind.Clock, WidgetKind.Date, WidgetKind.Stats }.Select(Widgets.NameOf));
+        Assert.Equal(["Clock", "Calendar", "System stats"], new[] { WidgetKind.Clock, WidgetKind.Date, WidgetKind.Stats }.Select(Widgets.NameOf));
 }

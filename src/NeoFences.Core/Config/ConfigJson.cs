@@ -29,6 +29,9 @@ public static class ConfigJson
             new LenientEnumConverter<Items.PanelLook>(), new LenientEnumConverter<Items.PanelSort>(), // M26
             // M36: a fence's own look and the presets; a typo is "like all fences", never a lost file.
             new LenientEnumConverter<TitleAlign>(), new LenientEnumConverter<Spacing>(), new LenientEnumConverter<LabelMode>(),
+            // M41a: clicks, the menu's shape, themes, titles, names and motion — a typo is repaired, never a lost file.
+            new LenientEnumConverter<OpenWith>(), new LenientEnumConverter<FenceMenuStyle>(), new LenientEnumConverter<FenceTheme>(),
+            new LenientEnumConverter<TitleStyle>(), new LenientEnumConverter<NameStyle>(), new LenientEnumConverter<Motion>(),
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
         },
     };

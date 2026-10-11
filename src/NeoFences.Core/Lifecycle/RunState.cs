@@ -18,6 +18,9 @@ public sealed record RunState(bool HideIcons, bool QuickHidden, bool Paused, boo
     /// <summary>Settings → "Right-drag on the desktop to draw a fence" (M33, on by default).</summary>
     public bool DrawGesture { get; init; } = true;
 
+    /// <summary>Settings → "Click wallpaper to reveal desktop" (M41a, off by default).</summary>
+    public bool RevealGesture { get; init; }
+
     public bool FencesVisible => !Paused && !QuickHidden;
 
     /// <summary>Pause gives the desktop back to Windows: its icons show even with "Hide desktop icons" on (spec §6).</summary>
@@ -25,9 +28,18 @@ public sealed record RunState(bool HideIcons, bool QuickHidden, bool Paused, boo
 
     /// <summary>
     /// The only global hook goes away while paused or gaming (hard rule 3, spec §4.7), in safe mode, and when both desktop
-    /// gestures are switched off (M33).
+    /// gestures are switched off (M33; M41a: and the reveal gesture).
     /// </summary>
-    public bool MouseHookWanted => !Paused && !GameMode && !SafeMode && (QuickHideGesture || DrawGesture);
+    public bool MouseHookWanted => !Paused && !GameMode && !SafeMode && (QuickHideGesture || DrawGesture || RevealGesture);
+
+    /// <summary>
+    /// M41a (ADR-066): the hook holds back desktop right-presses only for the draw gesture, and never while the fences are
+    /// quick-hidden — a hidden desktop is the user's (Explorer's menu, drags, interactive wallpapers); the hook only watches.
+    /// </summary>
+    public bool HandlesRightButton => DrawGesture && !QuickHidden;
+
+    /// <summary>M41a: "Click wallpaper to reveal desktop" acts while the fences show and no game runs.</summary>
+    public bool RevealWanted => RevealGesture && FencesVisible && !GameMode && !SafeMode;
 
     /// <summary>Widgets, folder panels, auto-collect, the library scan and wallpaper watching: all off in safe mode (M33).</summary>
     public bool ExtrasWanted => !SafeMode;

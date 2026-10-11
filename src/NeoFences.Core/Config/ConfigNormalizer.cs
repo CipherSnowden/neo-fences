@@ -20,6 +20,8 @@ public static class ConfigNormalizer
             PeekHotkey = string.IsNullOrWhiteSpace(settings.PeekHotkey) ? defaults.PeekHotkey : settings.PeekHotkey,
             RollupExpand = Enum.IsDefined(settings.RollupExpand) ? settings.RollupExpand : defaults.RollupExpand,
             DefaultLabels = Enum.IsDefined(settings.DefaultLabels) ? settings.DefaultLabels : defaults.DefaultLabels, // M8b review
+            OpenItemsWith = Enum.IsDefined(settings.OpenItemsWith) ? settings.OpenItemsWith : defaults.OpenItemsWith, // M41a
+            FenceMenu = Enum.IsDefined(settings.FenceMenu) ? settings.FenceMenu : defaults.FenceMenu,
             Appearance = NormalizeAppearance(settings.Appearance),
         };
 
@@ -42,6 +44,8 @@ public static class ConfigNormalizer
                 Layout = Enum.IsDefined(loadedFence.Layout) ? loadedFence.Layout : Items.FenceLayout.Flow, // M24: a typo is Flow
                 Collect = Items.CollectRules.Normalize(loadedFence.Collect), // M27
                 Look = NormalizeLook(loadedFence.Look), // M36
+                OpenWith = loadedFence.OpenWith is { } openWith && Enum.IsDefined(openWith) ? openWith : null, // M41a
+                Emoji = Emoji.Normalize(loadedFence.Emoji),
             };
             fence = fence with { View = fence.IsLibrary ? null : Items.FolderViews.Normalize(loadedFence.View) }; // M21: never on the Library
             seenFenceIds.Add(fence.Id);
@@ -75,6 +79,10 @@ public static class ConfigNormalizer
             StrengthDark = Math.Clamp(appearance.StrengthDark, 0, AppearanceSettings.MaxStrength),
             StrengthLight = Math.Clamp(appearance.StrengthLight, 0, AppearanceSettings.MaxStrength),
             ColourStyle = Enum.IsDefined(appearance.ColourStyle) ? appearance.ColourStyle : defaults.ColourStyle,
+            Theme = Enum.IsDefined(appearance.Theme) ? appearance.Theme : defaults.Theme, // M41a
+            TitleStyle = Enum.IsDefined(appearance.TitleStyle) ? appearance.TitleStyle : defaults.TitleStyle,
+            NameStyle = Enum.IsDefined(appearance.NameStyle) ? appearance.NameStyle : defaults.NameStyle,
+            Motion = Enum.IsDefined(appearance.Motion) ? appearance.Motion : defaults.Motion,
             TitleFont = new TitleFont(
                 string.IsNullOrWhiteSpace(font?.Family) ? defaults.TitleFont.Family : font.Family.Trim(),
                 font?.Size is { } size && TitleFont.Sizes.Contains(size) ? size : defaults.TitleFont.Size,
@@ -103,6 +111,8 @@ public static class ConfigNormalizer
             TitleAlign = look.TitleAlign is { } align && Enum.IsDefined(align) ? align : null,
             TitleOnHover = look.TitleOnHover == true ? true : null, // false is the same as like all fences: one way to say it
             Spacing = look.Spacing is { } spacing && Enum.IsDefined(spacing) ? spacing : null,
+            Theme = look.Theme is { } theme && Enum.IsDefined(theme) ? theme : null, // M41a
+            TitleStyle = look.TitleStyle is { } titleStyle && Enum.IsDefined(titleStyle) ? titleStyle : null,
         };
         return clean == new OwnLook() ? null : clean;
     }

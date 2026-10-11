@@ -40,6 +40,19 @@ public sealed record Fence
     public bool Locked { get; init; }
     public LabelMode Labels { get; init; } = LabelMode.Always;
 
+    /// <summary>Its own "Open items with" (M41a, Fence settings); null: like all fences.</summary>
+    public OpenWith? OpenWith { get; init; }
+
+    /// <summary>Its emoji (M41a, Fence settings): one grapheme before the title (in a pill with the Pill style), or none.</summary>
+    public string? Emoji { get; init; }
+
+    /// <summary>
+    /// "Widgets float" (M41a, Fence settings): the fence drops its glass and title, each widget is its own glass card; hovering
+    /// shows the outline and the title. Written only when on.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool WidgetsFloat { get; init; }
+
     /// <summary>Only on a box's host (M9): every tab of the box in order, itself included. Empty = not a box.</summary>
     public IReadOnlyList<string> Tabs { get; init; } = [];
 

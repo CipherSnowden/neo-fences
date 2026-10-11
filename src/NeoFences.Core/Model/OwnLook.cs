@@ -26,4 +26,9 @@ public sealed record OwnLook
     public bool? TitleOnHover { get; init; }
 
     public Spacing? Spacing { get; init; }
+
+    /// <summary>M41a: the fence's own theme and title style.</summary>
+    public FenceTheme? Theme { get; init; }
+
+    public TitleStyle? TitleStyle { get; init; }
 }

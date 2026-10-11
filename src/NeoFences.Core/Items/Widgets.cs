@@ -3,7 +3,8 @@ using System.Globalization;
 namespace NeoFences.Core.Items;
 
 /// <summary>The widgets a fence can hold (M25, spec 2026-10-05-widgets-design).</summary>
-public enum WidgetKind { Clock, Date, Stats }
+/// <summary>M41a: Date is shown as the Calendar (its Small size is the old date page); Now playing is new.</summary>
+public enum WidgetKind { Clock, Date, Stats, NowPlaying }
 
 /// <summary>A widget's options: the clock's seconds and date line (M25); the stats' temperatures in °F (M31).</summary>
 public sealed record WidgetOptions
@@ -12,6 +13,10 @@ public sealed record WidgetOptions
     public bool Date { get; init; }
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
     public bool Fahrenheit { get; init; } // M32: written only when set (clocks never carry it)
+
+    /// <summary>M41a: the clock's world clocks (IANA zones, at most two; shown by its Large size). Written only when set.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<string>? Cities { get; init; }
 }
 
 /// <summary>
@@ -56,12 +61,13 @@ public static class Widgets
     public static string NameOf(WidgetKind kind) => kind switch
     {
         WidgetKind.Clock => "Clock",
-        WidgetKind.Date => "Date",
+        WidgetKind.Date => "Calendar",
+        WidgetKind.NowPlaying => "Now playing",
         _ => "System stats",
     };
 
-    /// <summary>Clock 2×1; Date and System stats 2×2.</summary>
-    public static GridSpan DefaultSpan(WidgetKind kind) => kind == WidgetKind.Clock ? new GridSpan(2, 1) : new GridSpan(2, 2);
+    /// <summary>The kind's default size's span (M41a): Clock Small (2×1), the others Medium (2×2).</summary>
+    public static GridSpan DefaultSpan(WidgetKind kind) => WidgetSizes.SpanOf(WidgetSizes.Of(null, kind));
 
     /// <summary>
     /// The stats widget's tiles (M31, spec 2026-10-06-modern-widgets-design §2): CPU, CPU TEMP, GPU, GPU TEMP, RAM (wide). A

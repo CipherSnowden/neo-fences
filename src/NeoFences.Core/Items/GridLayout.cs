@@ -39,9 +39,8 @@ public static class FenceGrid
     /// <summary>An item's span: a game shown as a cover is Normal (1×2) or Large (2×4, M34); else its own size, else a widget's or a panel's (M25, M26), else 1×1.</summary>
     public static GridSpan SpanOf(VirtualItem item) =>
         GameItems.ShowsCover(item) ? CoverSizes.SpanOf(item.Size) // M34: covers are Normal (1×2) or Large (2×4)
-        : item.Size ?? (Widgets.Of(item.Target) is { } widget ? Widgets.DefaultSpan(widget)
-            : FolderPanels.IsPanel(item) ? FolderPanels.DefaultSpan
-            : GridSpan.One);
+        : Widgets.Of(item.Target) is { } widget ? WidgetSizes.SpanOf(WidgetSizes.Of(item.Size, widget)) // M41a: Small, Medium or Large
+        : item.Size ?? (FolderPanels.IsPanel(item) ? FolderPanels.DefaultSpan : GridSpan.One);
 
     public static GridArrangement Arrange(IReadOnlyList<GridElement> elements, int columns, FenceLayout layout)
     {

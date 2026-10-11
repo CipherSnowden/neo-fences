@@ -222,6 +222,7 @@ public static class ItemEdits
                     Size = item.Size?.Clamp(GridSpan.Max), // M24: a hand-edited size within 1–4 each way
                     Cell = item.Cell is { Column: >= 0 and <= FenceGrid.MaxCell, Row: >= 0 and <= FenceGrid.MaxCell } ? item.Cell : null, // M24 final review I4
                     Panel = FolderPanels.Normalize(item.Panel), // M26: a hand-edited look, sort or count
+                    Widget = item.Widget is { Cities: { } cities } options ? options with { Cities = WorldClocks.Normalize(cities) } : item.Widget, // M41a
                 })
                 .ToList();
         }

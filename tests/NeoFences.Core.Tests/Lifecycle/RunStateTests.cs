@@ -72,4 +72,35 @@ public class RunStateTests
     [Fact]
     public void Takeover_HidesIcons_WhateverTheUserDidInExplorer() =>
         Assert.True(new RunState(HideIcons: true, QuickHidden: true, Paused: false, GameMode: false, IconsHiddenByUser: true).IconsHidden);
+
+    // ---------- M41a (spec §7, ADR-066): a hidden desktop belongs to the user ----------
+
+    [Fact]
+    public void QuickHidden_TheRightButtonGoesStraightToWindows()
+    {
+        var state = new RunState(HideIcons: false, QuickHidden: true, Paused: false, GameMode: false) { DrawGesture = true };
+        Assert.True(state.MouseHookWanted); // still watching for the double-click that shows the fences again
+        Assert.False(state.HandlesRightButton);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public void Shown_TheRightButtonIsHandledOnlyForTheDrawGesture(bool drawGesture, bool handled) =>
+        Assert.Equal(handled, new RunState(HideIcons: false, QuickHidden: false, Paused: false, GameMode: false) { DrawGesture = drawGesture }.HandlesRightButton);
+
+    [Fact]
+    public void TheRevealGestureAlone_WantsTheHook()
+    {
+        var state = new RunState(HideIcons: false, QuickHidden: false, Paused: false, GameMode: false) { QuickHideGesture = false, DrawGesture = false, RevealGesture = true };
+        Assert.True(state.MouseHookWanted);
+        Assert.True(state.RevealWanted);
+    }
+
+    [Theory]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(false, false, true)]
+    public void Reveal_OnlyWhileTheFencesShowAndNotGaming(bool quickHidden, bool gameMode, bool wanted) =>
+        Assert.Equal(wanted, new RunState(HideIcons: false, QuickHidden: quickHidden, Paused: false, GameMode: gameMode) { RevealGesture = true }.RevealWanted);
 }
