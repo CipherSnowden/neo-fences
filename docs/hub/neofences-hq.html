@@ -786,11 +786,11 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-11",
-  commit: "6a1a3aa",
+  commit: "c239229",
   phase: "1.0.0-rc — release candidate with friends (path to 1.0)",
-  current: "1.0.0-rc.5 on your PC; your last checks passed (Now playing with Spotify, game mode with Plague Inc) · fences set up: Aurora + Clean, Games in Game HUD, Desk a full-height board of bigger widgets · NOW: about a week with friends, then 1.0.0 · held for after 1.0.0: no frame around a widget board (branch board-edge, proven on your PC)",
+  current: "rc.6 BEING BUILT from your feedback: fences snap to a 16-px desktop grid; no Windows border around fences (no frame around widget boards, no rounded line around Game HUD); smoother app icons from their large art · glass tint 50 set on your PC · tests 1090, VM 19 of 19, review fixed · then release rc.6, install on your PC, and the week with friends starts again",
   waiting: [
-    "Your last checks passed on rc.5: Now playing followed Spotify; game mode switched on 4 s after Plague Inc started and NeoFences stayed at 1.35 % CPU. Your fences are set up (undo: tray → Restore snapshot → Before Claude's setup / Before bigger widgets).",
+    "rc.6 is being built from your feedback (grid snapping, fence borders, icons). I release it and install it on your PC when the checks pass; then the week with friends starts again from rc.6.",
     "Send friends the rc.5 link if you like. About a week with no crash, lost data or stuck icons, then 1.0.0 (rc.5's code, version bumped) — I ask for your go then.",
     "After 1.0.0, about 15 minutes in a browser: VirusTotal, Microsoft's review of the installer, and (optional) winget — steps ready in RELEASING.md."
   ],
@@ -831,7 +831,11 @@ const HUB = {
       { t: "Your checks: Now playing with Spotify, game mode with Plague Inc — passed", s: "done" },
       { t: "Your fences set up: Aurora + Clean, Games Game HUD + Caps, emoji titles, Desk a floating board of bigger widgets (snapshots first)", s: "done" },
       { t: "Frame around a widget board = Windows 11's window border; fixed on branch board-edge (VM 19 of 19), held so 1.0.0 stays rc.5's code", s: "done" },
-      { t: "Send friends the rc.5 link (optional)", s: "you" },
+      { t: "Your feedback: grid snapping, aliased icons and fences, the Crysis 3 smear", s: "done" },
+      { t: "Glass tint 0 → 50 on your PC (snapshot first) — the Crysis 3 smear much weaker", s: "done" },
+      { t: "rc.6: 16-px grid snapping; no Windows border on fences; smooth icons from large art (cache starts over); review fixed; 1090 tests; VM 19 of 19", s: "done" },
+      { t: "Release rc.6 and install it on your PC (you chose rc.6 now)", s: "wip" },
+      { t: "Send friends the rc.6 link (optional)", s: "you" },
       { t: "About a week with friends with no crash, data loss or stuck icons; then 1.0.0", s: "todo" },
       { t: "After 1.0.0: merge board-edge (1.0.1); design a widget board with its own bigger grid with you (mockups)", s: "todo" }
     ] },
@@ -1268,6 +1272,7 @@ const HUB = {
     { v: "1.0.0-rc.3", s: "done", scope: "Feel (M41a): fence themes, title and name styles, emoji, Motion Off/Calm/Lively, one click opens, Guided/Compact fence menu, widgets in Small/Medium/Large with a gallery and a flip side, floating widget boards, Calendar, Now playing, a hidden desktop that is fully yours, click wallpaper to reveal it. Released 2026-10-11." },
     { v: "1.0.0-rc.4", s: "done", scope: "Settings (M41b): a fence's look and behaviour in one window — This fence or All fences, a live preview over your wallpaper, explanations, undo, recipes (Game shelf, Work desk, Downloads inbox, Minimal); Settings in seven pages with search; options that did nothing removed. Released 2026-10-11." },
     { v: "1.0.0-rc.5", s: "done", scope: "Fixes from the desktop checks on your PC: widgets in a narrow fence show the biggest design that fits instead of being cut off; the Fence settings preview and wallpaper colours no longer follow a Wallpaper Engine playlist's old wallpaper. Released 2026-10-11." },
+    { v: "1.0.0-rc.6", s: "wip", scope: "Your feedback after rc.5: fences snap to a 16-px desktop grid; no Windows border around fences (widget boards, Game HUD); app icons from their large art, scaled down smoothly." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1585,7 +1590,8 @@ const HUB = {
     { date: "2026-10-11", topic: "M41a feel built, 1.0.0-rc.3 released", done: "Widgets brainstorm; spec approved; prototype VM 14 of 14; plan; built (1010 tests, ADR-063 to 066); Opus review fixes; widget clicks fixed; CPU 0.42 % on your PC; VM 15 of 15; rc.3 released (install check 16 of 16); installed on your PC; M41b option audit (120 options, 10 decisions for you).", next: "You pick the 10 audit cards; then the M41b spec → plan → build → rc.4. You look at Now playing with Spotify or YouTube." },
     { date: "2026-10-11", topic: "M41b settings built", done: "Your 10 audit picks; spec; plan; built (1070 tests, ADR-067): Fence settings with All fences, preview and recipes, Settings with search; Opus review fixed; VM 19 of 19. Released 1.0.0-rc.4 (VM 16 of 16 from rc.3).", next: "About a week with friends, then 1.0.0; you look at Now playing with Spotify or YouTube." },
     { date: "2026-10-11", topic: "rc.4 desktop checks, rc.5 fixes", done: "rc.3 → rc.4 on your PC kept your look; hidden desktop over Wallpaper Engine OK; two bugs found and fixed (widgets cut off, playlist preview); Opus review fixed; 1078 tests; VM 19 of 19. Released rc.5 (VM 16 of 16) and installed on your PC. Slow updates traced to RC deltas built from 0.26.0; workflow fixed.", next: "About a week with friends, then 1.0.0; Now playing with Spotify; a full-screen game." },
-    { date: "2026-10-11", topic: "Last rc.5 checks, fences set up, board frame", done: "Now playing with Spotify and game mode with Plague Inc passed (1.35 % CPU); slow updates traced and fixed in the release workflow; hub tidied; your fences set up, Desk widgets about twice as big; the board frame found (Windows 11 border) and fixed on a branch, VM 19 of 19.", next: "About a week with friends, then 1.0.0; then board-edge and the widget-board design." }
+    { date: "2026-10-11", topic: "Last rc.5 checks, fences set up, board frame", done: "Now playing with Spotify and game mode with Plague Inc passed (1.35 % CPU); slow updates traced and fixed in the release workflow; hub tidied; your fences set up, Desk widgets about twice as big; the board frame found (Windows 11 border) and fixed on a branch, VM 19 of 19.", next: "About a week with friends, then 1.0.0; then board-edge and the widget-board design." },
+    { date: "2026-10-11", topic: "Your feedback → rc.6", done: "Glass tint 50 on your PC; grid snapping (6 tests), Windows border off on every fence, icons from large art (IconArt, cache version 2); review: icon sizes, double lookups, orphaned cache pictures — fixed; 1090 tests; VM 19 of 19.", next: "Release rc.6, install it on your PC; the week with friends from rc.6." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2355,7 +2361,14 @@ const HUB = {
     ["b483dfb", "docs: amended ADR-062 with the delta base and refreshed the hub for the slow-update fix"],
     ["7b994d9", "docs: tidied the hub and roadmap so only real next steps stay open"],
     ["2ed9c3c", "docs: pointed the hub at the tidy commit"],
-    ["6a1a3aa", "docs: recorded the owner's last rc.5 checks, the fence setup and the board frame fix held for after 1.0.0"]
+    ["6a1a3aa", "docs: recorded the owner's last rc.5 checks, the fence setup and the board frame fix held for after 1.0.0"],
+    ["8bcbd57", "docs: refreshed the hub for the last rc.5 checks and the fence setup"],
+    ["5b0d25e", "fix: a floating widget board no longer shows Windows 11's thin window border as a frame around its widgets"],
+    ["7fe92f5", "feat: fences snap to a 16-px desktop grid when no other fence or screen edge is near"],
+    ["cd343e1", "fix: fences no longer show Windows 11's own window border on top of their edge, a rounded line around Game HUD's cut corners"],
+    ["865dcf8", "fix: app icons use the app's large art scaled down smoothly when it has it, instead of a rough 48-px frame"],
+    ["5eff713", "fix: fixed the review findings: large icon art only at fence sizes, a failing icon handler asked once, cached pictures no index names removed"],
+    ["c239229", "docs: recorded the owner's rc.5 feedback, the glass tint and the rc.6 changes"]
   ]
 };
 /* ===== END HUB DATA ===== */
