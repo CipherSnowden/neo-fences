@@ -47,7 +47,9 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Released 1.0.0-rc.2 on 2026-10-11 (Win+D after Peek, icons hidden after the first sort, crisper text; VM 14 of 14 from rc.1)
 - [~] **M41a — Feel** (1.0.0-rc.3; claimed by session 2026-10-11 m41a-feel): themes (Classic, Aurora glass, Game HUD, Neon, Light Mica), title styles and emoji, Motion Off/Calm/Lively, one click opens, name styles, Guided/Compact fence menu, widgets in Small/Medium/Large with a gallery and flip setup, floating widget boards, Calendar and Now playing, a hands-off hidden desktop — spec `docs/superpowers/specs/2026-10-11-m41a-feel-design.md`
   - [x] Spec reviewed by the owner (2026-10-11); plan `docs/superpowers/plans/2026-10-11-m41a-feel.md` (prototype, VM 14 of 14, replay-verified)
-  - [ ] Owner reviews the plan; build; final review; VM checks; the owner's CPU check; rc.3
+  - [x] Built on branch `m41a-feel` (native execution of the plan): Core test-first (1010 tests), App, docs (ADR-063 to 066, guide, checklist AZ1–AZ14); final Opus review "with fixes" — all critical and important findings fixed test-first
+  - [x] Owner follow-up: a plain click on a widget never selects it (hover highlights; a double-click still opens it); VM check `widget-click`
+  - [ ] VM live checks on the branch build; the owner's CPU check (ten Lively fences) or skip; merge; rc.3
 - [ ] **M41b — Settings** (1.0.0-rc.4): option audit, Fence settings v4, Settings v2, recipes
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043

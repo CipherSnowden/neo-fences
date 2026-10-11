@@ -964,3 +964,30 @@ badges), global Settings v2 (visual pickers, search), recipes with two-step appl
 fences and frees the desktop). Widgets need more brainstorming. Desktop switcher: not in NeoFences (YASB or a separate
 project).
 **Next:** widgets brainstorm, then the M41a spec and plan.
+
+## 2026-10-11 — M41a feel: widgets brainstorm, spec, plan, build
+
+**Widgets brainstorm (visual companion, owner's picks):** glass cards only (no per-widget style), Small/Medium/Large with
+a corner drag that snaps plus a Size menu, a gallery from a "+" on the fence title, settings on the widget's back (flip),
+a floating widget board per fence; Clock (Large: two world cities), Calendar (the Date widget's successor), System stats;
+Now playing moved into rc.3 (cover glow + vinyl out of its sleeve, now-playing-v3); Drives, Note and Continue playing
+dropped.
+**Done:** spec `docs/superpowers/specs/2026-10-11-m41a-feel-design.md` (approved by the owner); a prototype on a
+throwaway branch with VM live checks 14 of 14 (FakePlayer, a test-only window that plays into Windows' media controls,
+since the VM has no audio); plan `docs/superpowers/plans/2026-10-11-m41a-feel.md`; native build on branch `m41a-feel`:
+themes, title and name styles, emoji, Motion Off/Calm/Lively, one click opens, Guided/Compact fence menu, widget sizes,
+gallery, flip side, boards, Calendar, Now playing (Windows SDK projection, net10.0-windows10.0.22621.0), a hands-off
+hidden desktop and click-wallpaper-to-reveal. Final Opus review "with fixes": HUD crash on comma-decimal locales, Now
+playing at rest in games and while hidden, card rebuilds, theme tones, reveal decided from the desktop each click
+(`RevealPolicy`), timeouts for hung players, late covers retried, widgets out of item motion, the board offered once.
+Owner follow-up: a plain click on a widget no longer selects it. Core 1010 tests.
+**Found in the VM:** Windows' ToggleDesktop does nothing after a wallpaper click (MinimizeAll / UndoMinimizeALL instead);
+popups over a fence never rise (the fence is never active), so the gallery is drawn inside the fence; the title's "+"
+needs WM_NCMOUSEMOVE (the caption gets no WPF mouse events).
+**Decisions:** ADR-063 (themes, titles, names, motion), ADR-064 (one click, menu styles), ADR-065 (widgets, Now playing,
+the SDK projection), ADR-066 (hidden desktop, reveal). The owner does not review plans or code (no stack knowledge).
+**Deferred minors:** a press dip after a drag; widget bars use Windows' tone; an untitled media session shows a blank
+title; the calendar rebuilds every second; a pending reveal is not cancelled; touchpad wheel steps; process disposal and
+the MediaKeys.cs name; the emoji box keeps extra text.
+**Next:** VM live checks on the branch build; the owner's CPU check (or skip: theme motion at 10 fps); merge; 1.0.0-rc.3
+with the owner's go; then M41b settings.
