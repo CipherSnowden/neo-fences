@@ -49,7 +49,8 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Spec reviewed by the owner (2026-10-11); plan `docs/superpowers/plans/2026-10-11-m41a-feel.md` (prototype, VM 14 of 14, replay-verified)
   - [x] Built on branch `m41a-feel` (native execution of the plan): Core test-first (1010 tests), App, docs (ADR-063 to 066, guide, checklist AZ1–AZ14); final Opus review "with fixes" — all critical and important findings fixed test-first
   - [x] Owner follow-up: a plain click on a widget never selects it (hover highlights; a double-click still opens it); VM check `widget-click`
-  - [ ] VM live checks on the branch build; the owner's CPU check (ten Lively fences) or skip; merge; rc.3
+  - [x] The owner's CPU check (2026-10-11, `tools/perf/measure-themes.ps1`): ten Aurora / HUD / Neon fences with Motion Lively, idle 60 s: 0.42 % in Task Manager (6.6 % of one core, 16 logical processors), under the 2 % goal
+  - [ ] VM live checks on the branch build (15 checks); merge; rc.3 with the owner's go
 - [ ] **M41b — Settings** (1.0.0-rc.4): option audit, Fence settings v4, Settings v2, recipes
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
