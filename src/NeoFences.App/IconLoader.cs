@@ -259,8 +259,48 @@ public sealed class IconLoader : IDisposable
     {
         if (kind == ItemKind.Website) return SiteIcon(request);
         // M34: a shortcut that starts a Store app through Explorer (Minecraft Launcher's) shows the app's icon, not Explorer's.
-        if (ShellLinks.AppsFolderOf(request.Target) is { } app && Frozen(ShellItems.TryGetImage(app, request.SizePx)) is { } appIcon) return appIcon;
-        return Frozen(ShellItems.TryGetImage(request.Target, request.SizePx));
+        if (ShellLinks.AppsFolderOf(request.Target) is { } app && Smooth(app, request.SizePx) is { } appIcon) return appIcon;
+        return Smooth(request.Target, request.SizePx);
+    }
+
+    private const int LargeArtPx = 256;
+
+    /// <summary>
+    /// rc.6 (the owner's icons): real 256-px art scaled down smoothly when the app has it (Redragon's rough 48-px frame looked
+    /// jagged), else the icon at its own size (an app with only small art: scaling it up would only blur it).
+    /// </summary>
+    private static BitmapSource? Smooth(string target, int sizePx)
+    {
+        if (sizePx < LargeArtPx && ShellItems.TryGetImage(target, LargeArtPx) is { } large && IconArt.IsLarge(large.Pixels, large.Width, large.Height))
+            return ScaledDown(large, sizePx);
+        return Frozen(ShellItems.TryGetImage(target, sizePx));
+    }
+
+    /// <summary>Scaled with WIC's high-quality filter (a decode at the target size), keeping the shape; the big one if that fails.</summary>
+    private static BitmapSource? ScaledDown(ShellImage image, int sizePx)
+    {
+        try
+        {
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(Frozen(image)!));
+            using var stream = new MemoryStream();
+            encoder.Save(stream);
+            stream.Position = 0;
+            var picture = new BitmapImage();
+            picture.BeginInit();
+            picture.CacheOption = BitmapCacheOption.OnLoad;
+            if (image.Width >= image.Height) picture.DecodePixelWidth = sizePx;
+            else picture.DecodePixelHeight = sizePx;
+            picture.StreamSource = stream;
+            picture.EndInit();
+            picture.Freeze();
+            return picture;
+        }
+        catch (Exception failure) when (failure is not OutOfMemoryException) // hard rule 7: the big icon, scaled by the fence
+        {
+            Log.Debug(failure, "icon: scaling down failed");
+            return Frozen(image);
+        }
     }
 
     /// <summary>The site's own icon when NeoFences found one, else its letter badge (never the browser's icon, M34).</summary>

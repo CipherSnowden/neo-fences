@@ -33,7 +33,7 @@ public sealed record IconCacheEntry
 /// </summary>
 public sealed record IconCacheIndex
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2; // rc.6: icons from real large art; an older index (rough icons) starts over
 
     private static readonly JsonSerializerOptions Options = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = false };
 
@@ -62,7 +62,7 @@ public sealed record IconCacheIndex
         {
             if (!System.IO.File.Exists(path)) return (new IconCacheIndex(), null);
             var stored = JsonSerializer.Deserialize<Stored>(System.IO.File.ReadAllText(path), Options);
-            if (stored is null || stored.Version > CurrentVersion) return (new IconCacheIndex(), null); // a newer NeoFences': start over
+            if (stored is null || stored.Version != CurrentVersion) return (new IconCacheIndex(), null); // a newer or older NeoFences': start over
             var entries = new Dictionary<string, IconCacheEntry>(StringComparer.Ordinal);
             foreach (var (key, entry) in stored.Entries ?? [])
             {

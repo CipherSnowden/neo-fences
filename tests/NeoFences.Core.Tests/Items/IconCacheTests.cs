@@ -133,7 +133,7 @@ public class IconCacheTests
         using var folder = new TempDirectory();
         var path = folder.File("index.json");
         File.WriteAllText(path, """
-            { "version": 1, "entries": {
+            { "version": 2, "entries": {
               "good": { "file": "good.png", "lastUsed": "2026-10-06T12:00:00+00:00", "bytes": 10 },
               "escape": { "file": "..\\..\\evil.png", "lastUsed": "2026-10-06T12:00:00+00:00" },
               "other": { "file": "other.exe", "lastUsed": "2026-10-06T12:00:00+00:00" },
@@ -153,6 +153,16 @@ public class IconCacheTests
         using var folder = new TempDirectory();
         var path = folder.File("index.json");
         File.WriteAllText(path, """{ "version": 9, "entries": { "good": { "file": "good.png" } } }""");
+        Assert.Empty(IconCacheIndex.Load(path).Index.Entries);
+    }
+
+    // rc.6: icons drawn from real large art; an index from before holds the rough ones — they all load once again.
+    [Fact]
+    public void Load_TreatsAnOlderIndexAsEmpty()
+    {
+        using var folder = new TempDirectory();
+        var path = folder.File("index.json");
+        File.WriteAllText(path, """{ "version": 1, "entries": { "good": { "file": "good.png" } } }""");
         Assert.Empty(IconCacheIndex.Load(path).Index.Entries);
     }
 }
