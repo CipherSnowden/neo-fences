@@ -53,6 +53,9 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] The owner's CPU check (2026-10-11, `tools/perf/measure-themes.ps1`): ten Aurora / HUD / Neon fences with Motion Lively, idle 60 s: 0.42 % in Task Manager (6.6 % of one core, 16 logical processors), under the 2 % goal
   - [x] VM live checks on the branch build 15 of 15; merged locally into main
 - [~] **M41b — Settings** (1.0.0-rc.4; claimed by session 2026-10-11 m41b-settings): option audit, Fence settings v4, Settings v2, recipes; M41a deferred minors; the gallery's search
+  - [x] Option audit: 120 options inventoried (11 without effect at least sometimes, 34 in two or more places, 22 unclear); 10 decisions put to the owner in the visual companion (`settings-audit.html`), wording fixes and leftovers listed
+  - [ ] **Owner:** pick the 10 audit cards (where the look lives, presets vs recipes, clock switches, colour style, transparency, accent colour, hidden games, labels, widget size, cover size)
+  - [ ] Spec (from the audit picks, Fence settings v4, Settings v2, recipes, the deferred minors, the gallery's search) → owner OK → plan → build → review → VM checks → rc.4 with the owner's go
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
   - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches

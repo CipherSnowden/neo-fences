@@ -996,3 +996,10 @@ fix (a handled press never reaches MouseDoubleClick): a widget now opens from it
 draft's files 16 of 16, published as a pre-release (the website still serves 0.26.0).
 **Next:** M41b settings → rc.4 (fold in the deferred minors and the gallery's search); the owner looks at Now playing with
 Spotify or YouTube on rc.3.
+**Installed on the owner's PC:** rc.3 over 0.26.0 with the owner's OK (data folder copied first to
+`%LOCALAPPDATA%\NeoFences-backup-before-rc3`); it now follows release candidates.
+**M41b started:** option audit — 120 options (settings, fence settings, every menu, widget backs, panels, dialogs, tray);
+11 without effect at least sometimes (the clock's Seconds and Date line always; Hidden games for current setups; Colour
+style on non-Classic themes; title weight/alignment under Caps/Pill), 34 reachable in two or more places, 22 unclear.
+Ten decisions on `settings-audit.html` in the visual companion, each with a suggestion.
+**Next:** the owner picks the ten audit cards → M41b spec → plan → build → rc.4.
