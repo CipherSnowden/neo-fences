@@ -7,7 +7,7 @@ namespace NeoFences.Core.Items;
 /// </summary>
 public static class IconArt
 {
-    /// <summary>True when the visible art (alpha over 0) spans at least 60 % of the canvas on its longer side.</summary>
+    /// <summary>True when the solid art (alpha 128 or more) spans at least 60 % of the canvas on its longer side.</summary>
     /// <param name="bgraPixels">Width × height pixels, 4 bytes each, alpha last.</param>
     public static bool IsLarge(byte[] bgraPixels, int width, int height)
     {
@@ -16,7 +16,7 @@ public static class IconArt
         for (var y = 0; y < height; y++)
         for (var x = 0; x < width; x++)
         {
-            if (bgraPixels[(y * width + x) * 4 + 3] == 0) continue;
+            if (bgraPixels[(y * width + x) * 4 + 3] < 128) continue; // rc.6: not Windows' faint frame round a small icon
             (left, right, top, bottom) = (Math.Min(left, x), Math.Max(right, x), Math.Min(top, y), Math.Max(bottom, y));
         }
         if (right < 0) return false;

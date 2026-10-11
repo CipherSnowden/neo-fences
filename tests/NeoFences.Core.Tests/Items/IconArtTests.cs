@@ -23,6 +23,17 @@ public class IconArtTests
     public void LargeArt_IsArtThatFillsTheCanvas(int artSize, bool large) =>
         Assert.Equal(large, IconArt.IsLarge(Canvas(256, artSize), 256, 256));
 
+    // rc.6 on the owner's PC: Windows draws a small icon's 256-px picture with a faint frame (alpha 38–77) round the canvas.
+    [Fact]
+    public void ASmallIconInWindowsFaintFrame_IsNotLargeArt()
+    {
+        var pixels = Canvas(256, 48);
+        for (var i = 0; i < 256; i++)
+            foreach (var (x, y) in new[] { (i, 0), (i, 255), (0, i), (255, i), (i, 2), (2, i) })
+                pixels[(y * 256 + x) * 4 + 3] = 77;
+        Assert.False(IconArt.IsLarge(pixels, 256, 256));
+    }
+
     [Fact]
     public void NothingOrOddInput_IsNotLargeArt()
     {
