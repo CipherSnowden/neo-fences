@@ -1048,5 +1048,9 @@ Opus review: one bug (corner drag compared with the fitted size) and three risks
 19 of 19; probe `probe-widget-fit.ps1` (a copy of the owner's Desk fence) screenshots sent.
 **Open question:** whether Wallpaper Engine keeps an old playlist in `config.json` after a single wallpaper is picked from
 it — then that monitor keeps a plain preview until another wallpaper is picked (a wallpaper outside the old playlist shows).
-**Next:** the owner's go for 1.0.0-rc.5; then about a week with friends; then 1.0.0. The owner checks Now playing with
+**Released:** 1.0.0-rc.5 on 2026-10-11: CI green, checksums and attestation verified, VM install check rc.4 → rc.5 from the
+draft's files 16 of 16, published as a pre-release. Installed on the owner's PC (asked; the installed version reported per
+step): rc.4 → rc.5 by its own update, the same four fences in the same places and sizes, the Desk widgets whole. The update
+fetched the delta (7.6 MB) and then the full package (75 MB) on a ~70 KB/s link — about 16 minutes; worth a look later.
+**Next:** about a week with friends on rc.5, then 1.0.0 (that code, version bumped); the owner checks Now playing with
 Spotify and a full-screen game.
