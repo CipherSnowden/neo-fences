@@ -255,7 +255,8 @@ public class Rc3LeftoverTests
     [InlineData(0, 40, 0, 40)]
     [InlineData(80, 40, 1, 0)]
     [InlineData(0, -250, -2, -10)]
-    [InlineData(30, -40, 0, -10)]
+    [InlineData(30, -40, 0, -40)]   // 1.0.1 (rc.4 review minor): turning the other way drops the leftover
+    [InlineData(60, -120, -1, 0)]   // so the first notch back is a whole step, not swallowed
     public void TheWheel_AddsUpToWholeSteps(int remainder, int delta, int steps, int left) =>
         Assert.Equal((steps, left), VolumeWheel.Add(remainder, delta));
 }

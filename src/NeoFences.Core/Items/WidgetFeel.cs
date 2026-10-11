@@ -155,7 +155,11 @@ public static class NowPlaying
 /// <summary>M41b (spec §7): touchpads send small wheel deltas; one volume step per 120 units (Windows' notch), the rest kept.</summary>
 public static class VolumeWheel
 {
-    public static (int Steps, int Remainder) Add(int remainder, int delta) => ((remainder + delta) / 120, (remainder + delta) % 120);
+    public static (int Steps, int Remainder) Add(int remainder, int delta)
+    {
+        var total = (Math.Sign(remainder) == -Math.Sign(delta) ? 0 : remainder) + delta; // turned back: the leftover goes (1.0.1)
+        return (total / 120, total % 120);
+    }
 }
 
 public static class WidgetBoards
