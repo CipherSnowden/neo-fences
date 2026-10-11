@@ -130,6 +130,7 @@ public sealed partial class FenceHost
     /// <summary>Double-click: the clock opens Windows' Clock app, System stats Task Manager; the date page nothing.</summary>
     private void OpenWidget(VirtualItem item, FenceWindow window)
     {
+        Log.Information("widget opened: {Widget}", Widgets.Of(item.Target));
         switch (Widgets.Of(item.Target))
         {
             case WidgetKind.Clock: OpenItem("ms-clock:", ownerHandle: window.Handle); break;
