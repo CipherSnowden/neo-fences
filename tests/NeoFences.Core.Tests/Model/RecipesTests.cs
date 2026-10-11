@@ -65,6 +65,25 @@ public class RecipesTests
     }
 
     [Fact]
+    public void ARecipesLayout_IsNotSetByCore_TheAppPinsTheCellsFirst()
+    {
+        var recipe = Named("Game shelf") with { Layout = FenceLayout.Free };
+        var fence = Fence.Create("A");
+        var config = new NeoFencesConfig { Settings = Settings.NewInstall, Fences = [fence] };
+        Assert.Equal(FenceLayout.Flow, Recipes.Apply(config, fence.Id, recipe).Fences[0].Layout);
+        Assert.Equal(FenceLayout.Flow, Recipes.ApplyToAll(config, recipe, null).Fences[0].Layout);
+        Assert.Equal(FenceLayout.Flow, Recipes.ApplyToAll(config, recipe, [fence.Id]).Fences[0].Layout);
+    }
+
+    [Fact]
+    public void AnOldOwnPresetNamedLikeANewBuiltIn_IsKept_UnderANewName()
+    {
+        var config = ConfigNormalizer.Normalize(new NeoFencesConfig { Presets = [new Recipe { Name = "Game shelf", Look = new OwnLook { Strength = 12 } }] });
+        var kept = Assert.Single(config.Presets);
+        Assert.Equal(("Game shelf (mine)", 12), (kept.Name, kept.Look.Strength));
+    }
+
+    [Fact]
     public void ApplyToAll_NeverTouchesLayoutsOrItems()
     {
         var fence = Fence.Create("A");

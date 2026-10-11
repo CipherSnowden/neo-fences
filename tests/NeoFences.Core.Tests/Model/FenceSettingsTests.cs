@@ -101,15 +101,15 @@ public class FenceSettingsTests
             [
                 new Recipe { Name = "  Mine  ", IconSize = 50, Labels = (LabelMode)4 },
                 new Recipe { Name = "MINE" },          // the same name again
-                new Recipe { Name = "game shelf" },    // a built-in's name (M41b)
+                new Recipe { Name = "game shelf" },    // a built-in's name (M41b): kept as "… (mine)"
                 new Recipe { Name = " \t " },          // blank
                 null!,
                 new Recipe { Name = new string('x', 80), Look = null! },
             ],
         });
-        Assert.Equal(["Mine", new string('x', Recipes.MaxNameLength)], config.Presets.Select(recipe => recipe.Name));
+        Assert.Equal(["Mine", "game shelf (mine)", new string('x', Recipes.MaxNameLength)], config.Presets.Select(recipe => recipe.Name));
         Assert.Equal(new Recipe { Name = "Mine" }, config.Presets[0]); // odd icon size and labels dropped
-        Assert.Equal(new OwnLook(), config.Presets[1].Look);
+        Assert.Equal(new OwnLook(), config.Presets[2].Look);
     }
 
     // ---------- §2 presets: recipes since M41b (RecipesTests) ----------

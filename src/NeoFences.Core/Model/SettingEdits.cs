@@ -56,16 +56,20 @@ public static class SettingEdits
     }
 
     /// <summary>
-    /// Undo in Fence settings: Settings and every fence's settings (look, sizes, names, clicks, colour, emoji, name, layout,
-    /// lock, widgets float) as they were; fences made or deleted since stay as they are now, and items are never involved.
+    /// Undo in Fence settings: what Fence settings changes — All fences' look, Open items with, Rolled-up fences open, and every
+    /// fence's settings (look, sizes, names, clicks, colour, emoji, name, layout, lock, widgets float) — as it was. The rest of
+    /// Settings and the recipes stay as they are now (final review: Settings' switches have effects undo cannot replay);
+    /// fences made or deleted since stay too, and items are never involved.
     /// </summary>
     public static NeoFencesConfig UndoTo(NeoFencesConfig current, NeoFencesConfig previous)
     {
         var before = previous.Fences.ToDictionary(fence => fence.Id, StringComparer.Ordinal);
         return current with
         {
-            Settings = previous.Settings,
-            Presets = previous.Presets,
+            Settings = current.Settings with
+            {
+                Appearance = previous.Settings.Appearance, OpenItemsWith = previous.Settings.OpenItemsWith, RollupExpand = previous.Settings.RollupExpand,
+            },
             Fences = current.Fences.Select(fence => before.TryGetValue(fence.Id, out var was)
                 ? fence with
                 {

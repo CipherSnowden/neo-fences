@@ -42,6 +42,8 @@ public class SettingsCatalogTests
     [InlineData("🎮")]
     [InlineData("transparéncy")]
     [InlineData("zzzz qqqq")]
+    [InlineData("\ud83c")] // a lone surrogate (pasted half of an emoji)
+    [InlineData("a\udc00b")]
     public void OddQueries_NeverThrow(string query) => _ = SettingsCatalog.Search(query);
 
     [Fact]

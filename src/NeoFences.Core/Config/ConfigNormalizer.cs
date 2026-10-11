@@ -130,6 +130,8 @@ public static class ConfigNormalizer
         {
             if (preset is null) continue;
             var name = Recipes.Clean(preset.Name);
+            // M41b final review: an rc.3 own preset may carry a new built-in recipe's name — kept as "… (mine)", never dropped.
+            if (name.Length > 0 && Recipes.BuiltIn.Any(recipe => string.Equals(recipe.Name, name, StringComparison.OrdinalIgnoreCase))) name = Recipes.Clean(name + " (mine)");
             if (name.Length == 0 || !names.Add(name)) continue;
             kept.Add(new Recipe
             {

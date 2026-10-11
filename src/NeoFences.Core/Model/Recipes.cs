@@ -55,14 +55,16 @@ public static class Recipes
             Look = ConfigNormalizer.NormalizeLook(recipe.Look),
             IconSize = recipe.IconSize ?? fence.IconSize,
             Labels = recipe.Labels ?? fence.Labels,
-            Layout = recipe.Layout ?? fence.Layout,
             OpenWith = recipe.OpenWith ?? fence.OpenWith,
+            // A recipe's Layout is the App's to apply (final review): to Free, a fence first pins its cells where they show, and
+            // only a fence of items has a layout.
         });
     }
 
     /// <summary>
     /// Every fence (null): the recipe becomes All fences' values and every fence follows them; some fences: each gets the
-    /// recipe as its own (the others keep following). Places, sizes, items and layouts are never touched.
+    /// recipe as its own (the others keep following). Places, sizes, items and layouts are never touched (the App applies a
+    /// recipe's Layout per fence, pinning cells first).
     /// </summary>
     public static NeoFencesConfig ApplyToAll(NeoFencesConfig config, Recipe recipe, IReadOnlyCollection<string>? onlyFenceIds)
     {
@@ -89,7 +91,7 @@ public static class Recipes
         return config with
         {
             Settings = settings,
-            Fences = config.Fences.Select(fence => follow.Aggregate(fence, AllFences.ClearOwn) with { Layout = recipe.Layout ?? fence.Layout }).ToList(),
+            Fences = config.Fences.Select(fence => follow.Aggregate(fence, AllFences.ClearOwn)).ToList(),
         };
     }
 

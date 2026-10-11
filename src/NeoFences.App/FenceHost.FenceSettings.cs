@@ -63,6 +63,7 @@ public sealed partial class FenceHost
         window.UndoRequested += () => UndoInSettings(session);
         window.Renamed += name =>
         {
+            if (_config.Fences.All(fence => fence.Id != session.FenceId)) return; // gone meanwhile (final review)
             session.Undo.Push(_config);
             _config = FenceEdits.Rename(_config, session.FenceId!, name);
             if (WindowShowing(session.FenceId!) is { } shown) shown.SetTitle(_config.Fences.First(fence => fence.Id == shown.FenceId).Title);
@@ -79,6 +80,7 @@ public sealed partial class FenceHost
         window.RecipeChosen += recipe => ApplyRecipe(session, recipe);
         window.RecipeSaved += (name, emoji) =>
         {
+            if (_config.Fences.All(fence => fence.Id != session.FenceId)) return; // gone meanwhile (final review)
             _config = Recipes.Save(_config, session.FenceId!, name, emoji);
             Log.Information("recipe saved: {Name}", name);
             ScheduleSave();
@@ -215,20 +217,40 @@ public sealed partial class FenceHost
         {
             if (_config.Fences.FirstOrDefault(fence => fence.Id == fenceId) is not { } fence || !RecipeDialogs.ConfirmOne(session.Window, recipe, fence.Title)) return;
             EditInSettings(session, config => Recipes.Apply(config, fenceId, recipe), $"recipe {recipe.Name} (this fence)");
+            ApplyRecipeLayout(recipe, [fenceId]);
             if (recipe.Inbox) MakeInboxPanels([fenceId]);
             return;
         }
         var gameFences = _config.Fences.Where(fence => _items.Of(fence.Id).Any(item => item.GameId is not null)).Select(fence => fence.Id).ToList();
         if (RecipeDialogs.ConfirmAll(session.Window, recipe, _config.Fences.Count, gameFences.Count) is not { } onlyGames) return;
         var now = DateTimeOffset.Now;
-        if (_snapshots.Save(Snapshots.Take(_config, _items, name: $"Before {recipe.Name} ({now:d MMM HH:mm})", now: now)) is null)
+        // The whole setup (final review): the recipe changes All fences' values in Settings, so restoring must bring those back too.
+        if (_snapshots.Save(Snapshots.TakeWhole(_config, _items, name: $"Before {recipe.Name} ({now:d MMM HH:mm})", now: now)) is null)
         {
             Log.Warning(_snapshots.LastFailure, "recipe {Recipe}: the snapshot could not be saved; nothing changed", recipe.Name);
             MessageDialog.Tell(session.Window, "Nothing changed", "NeoFences could not save the snapshot to go back to, so the recipe was not applied (see the log).");
             return;
         }
         EditInSettings(session, config => Recipes.ApplyToAll(config, recipe, onlyGames ? gameFences : null), $"recipe {recipe.Name} ({(onlyGames ? "fences with games" : "all fences")})");
-        if (recipe.Inbox) MakeInboxPanels(onlyGames ? gameFences : [.. _config.Fences.Select(fence => fence.Id)]);
+        var changed = onlyGames ? gameFences : [.. _config.Fences.Select(fence => fence.Id)];
+        ApplyRecipeLayout(recipe, changed);
+        if (recipe.Inbox) MakeInboxPanels(changed);
+    }
+
+    /// <summary>
+    /// A recipe's Grid / Free (final review): only fences of items have a layout; a shown one takes the menu's path (to Free, its
+    /// cells are pinned where the items show now).
+    /// </summary>
+    private void ApplyRecipeLayout(Recipe recipe, IReadOnlyCollection<string> fenceIds)
+    {
+        if (recipe.Layout is not { } layout) return;
+        foreach (var fenceId in fenceIds)
+        {
+            if (_config.Fences.FirstOrDefault(fence => fence.Id == fenceId) is not { Kind: FenceKind.Items } fence || fence.Layout == layout) continue;
+            if (WindowShowing(fenceId) is { } shown) SetFenceLayout(shown, layout);
+            else _config = FenceEdits.SetLayout(_config, fenceId, layout);
+        }
+        ScheduleSave();
     }
 
     /// <summary>Downloads inbox: every folder panel in these fences shows Details, newest first.</summary>
@@ -307,13 +329,22 @@ public sealed partial class FenceHost
         {
             try
             {
-                picture = new BitmapImage(new Uri(path)) { CacheOption = BitmapCacheOption.OnLoad };
+                // BeginInit/EndInit: OnLoad releases the file and the decode width keeps it small (final review: an initializer
+                // after the constructor is ignored, and a corrupt picture throws FileFormatException — caught below).
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.UriSource = new Uri(path);
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.DecodePixelWidth = 1280;
+                image.EndInit();
+                image.Freeze();
+                picture = image;
                 // ponytail: the picture is taken as filling its monitor (Windows' Fill); Fit / Tile wallpapers are cropped a little off.
                 var (width, height) = ((double)(monitor.Right - monitor.Left), (double)(monitor.Bottom - monitor.Top));
                 crop = new Rect((rect.X - monitor.Left) / width, (rect.Y - monitor.Top) / height, rect.Width / width, rect.Height / height);
                 note = monitor.Origin;
             }
-            catch (Exception failure) when (failure is System.IO.IOException or UnauthorizedAccessException or NotSupportedException or UriFormatException or ArgumentException)
+            catch (Exception failure) when (failure is not OutOfMemoryException) // hard rule 7: no picture, a plain background
             {
                 Log.Information(failure, "fence settings preview: the wallpaper picture could not be read");
                 picture = null;

@@ -219,10 +219,19 @@ public partial class FenceSettingsWindow : Window
         var strengthLabel = new TextBlock { Style = (Style)FindResource("Description"), MinWidth = 42, TextAlignment = TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
         var strength = new Slider { Minimum = 0, Maximum = AppearanceSettings.MaxStrength, TickFrequency = 5, IsSnapToTickEnabled = true, SmallChange = 5, LargeChange = 10, VerticalAlignment = VerticalAlignment.Center };
         System.Windows.Automation.AutomationProperties.SetName(strength, "Transparency");
+        // One change per drag, not one per tick (final review: each step was an undo step, a save and a restyle of every fence).
+        var dragging = false;
+        var dragFrom = 0;
+        strength.AddHandler(Thumb.DragStartedEvent, new DragStartedEventHandler((_, _) => (dragging, dragFrom) = (true, (int)Math.Round(strength.Value))));
+        strength.AddHandler(Thumb.DragCompletedEvent, new DragCompletedEventHandler((_, _) =>
+        {
+            dragging = false;
+            if ((int)Math.Round(strength.Value) != dragFrom) Change("fence.transparency", (int)Math.Round(strength.Value));
+        }));
         strength.ValueChanged += (_, _) =>
         {
             strengthLabel.Text = $"{(int)strength.Value} %";
-            if (!_updating) Change("fence.transparency", (int)Math.Round(strength.Value));
+            if (!_updating && !dragging) Change("fence.transparency", (int)Math.Round(strength.Value)); // a click on the track or the keys
         };
         var strengthPanel = new DockPanel();
         strengthPanel.Children.Add(Docked(new TextBlock { Text = "See-through", Style = (Style)FindResource("Description"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) }, Dock.Left));

@@ -103,6 +103,31 @@ public class SettingEditsTests
     }
 
     [Fact]
+    public void UndoTo_LeavesSettingsOtherWindowsOwn_AndTheRecipes()
+    {
+        var before = SettingEdits.Set(Config, null, "fence.theme", FenceTheme.Neon);
+        var changed = SettingEdits.Set(before, null, "fence.theme", FenceTheme.Hud);
+        changed = changed with
+        {
+            Settings = changed.Settings with { HideDesktopIcons = true, StartWithWindows = false, PeekHotkey = "Ctrl+Alt+P" }, // Settings, meanwhile
+            Presets = [new Recipe { Name = "Mine" }],
+        };
+        var undone = SettingEdits.UndoTo(changed, before);
+        Assert.Equal(FenceTheme.Neon, undone.Settings.Appearance.Theme); // what Fence settings changed comes back
+        Assert.Equal((true, false, "Ctrl+Alt+P"), (undone.Settings.HideDesktopIcons, undone.Settings.StartWithWindows, undone.Settings.PeekHotkey));
+        Assert.Single(undone.Presets); // a recipe saved meanwhile stays
+    }
+
+    [Fact]
+    public void UndoTo_BringsBackOpenWithAndRollUp()
+    {
+        var before = Config;
+        var changed = SettingEdits.Set(SettingEdits.Set(before, null, "fence.openWith", OpenWith.DoubleClick), null, "fence.rollUp", RollupExpand.Click);
+        var undone = SettingEdits.UndoTo(changed, before);
+        Assert.Equal((before.Settings.OpenItemsWith, before.Settings.RollupExpand), (undone.Settings.OpenItemsWith, undone.Settings.RollupExpand));
+    }
+
+    [Fact]
     public void LayoutGoesThroughSet_AsTheFencesOwn()
     {
         var config = SettingEdits.Set(Config, Games.Id, "fence.layout", FenceLayout.Free);

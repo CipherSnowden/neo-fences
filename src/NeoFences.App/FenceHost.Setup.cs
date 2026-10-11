@@ -104,6 +104,7 @@ public sealed partial class FenceHost
     private void ReplaceSetup(NeoFencesConfig config, ItemsDocument items, bool whole)
     {
         _undo = null; // M33: everything was replaced; nothing older to undo
+        foreach (var session in _fenceSettings.Values) session.Undo.Clear(); // M41b final review: nor in Fence settings
         var settings = config.Settings;
         _config = config with { Settings = _config.Settings };
         _items = items;
