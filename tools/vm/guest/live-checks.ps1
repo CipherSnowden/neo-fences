@@ -99,6 +99,19 @@ Check 'reveal' { # Click wallpaper to reveal desktop: Notepad steps aside, a sec
   StopNeoFences; SetConfig 'revealGesture' $false; StartNeoFences
   "Notepad aside after a click: $aside; back after a second click: $back"; $aside -and $back
 }
+Check 'widget-click' { # the owner: a plain click on a widget never selects it (hover highlights); a double-click still opens Clock
+  StopNeoFences; CloseApps
+  $config = Get-Content -LiteralPath (Join-Path $data 'config.json') -Raw | ConvertFrom-Json; $fenceId = $config.fences[0].id
+  $items = [ordered]@{ schema = 1; fences = @{ $fenceId = @(@{ id = 'clock'; target = 'neofences:widget/clock'; size = @{ columns = 2; rows = 1 } }) } }
+  $items | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $data 'items.json') -Encoding UTF8
+  StartNeoFences
+  $widget = Element 'Clock' ([System.Windows.Automation.ControlType]::ListItem); if (-not $widget) { throw 'the clock is not in the fence' }
+  $x, $y = Center $widget; LeftClick $x $y; Start-Sleep -Seconds 1
+  $selected = $widget.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected; Shot 'widget-clicked'
+  DoubleClick $x $y; $clock = Wait { [bool](WindowLike 'Clock*') } 20
+  if ($clock) { [void][NfVm.W]::SetForegroundWindow((WindowLike 'Clock*')); Keys @(0x12, 0x73) }
+  "selected after one click: $selected; Clock opened by a double-click: $clock"; (-not $selected) -and $clock
+}
 Check 'now-playing' { # spec section 6.6: a song in Windows' media controls shows in the widget; its buttons reach the player
   StartFakePlayer; $ready = FakePressed 'ready'
   StopNeoFences; CloseApps

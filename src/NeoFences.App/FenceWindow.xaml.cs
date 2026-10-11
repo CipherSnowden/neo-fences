@@ -190,6 +190,7 @@ public partial class FenceWindow : Window
     private Point? _bandStart;                  // left button pressed on empty space: rubber band
     private ListBoxItem? _deferredToggle;       // Ctrl+press on a selected item: unselect it on release unless it was dragged
     private ListBoxItem? _clickCandidate;       // M41a: a plain press that opens the item on release, unless it becomes a drag
+    private bool _clickOpens;                   // false for a widget: its plain click only must not select it
     private ListBoxItem? _menuPicked;           // M41a: the item a right-click selected for its menu; unselected when the menu closes
 
     /// <summary>M41a (ADR-064): one click opens (the fence's own choice, else Settings'); false: Windows' double click.</summary>
@@ -2031,12 +2032,15 @@ public partial class FenceWindow : Window
         }
         _pressPoint = args.GetPosition(ItemList);
         _pressedKey = (container.DataContext as FenceItemView)?.Key;
-        // M41a: one click opens — no selection is left behind (a widget keeps its double-click: its face is for reading).
-        if (OneClickOpens && Keyboard.Modifiers == ModifierKeys.None && container.DataContext is FenceItemView { IsWidget: false }
-            && !(container.IsSelected && ItemList.SelectedItems.Count > 1))
+        // M41a: one click opens — no selection is left behind. A widget keeps its double-click (its face is for reading) and,
+        // like an item, never shows a selection after a plain click, in either mode (the owner: hover highlights, a click
+        // does not select). A drag still takes the pressed element along (OnListMove).
+        var widget = container.DataContext is FenceItemView { IsWidget: true };
+        if ((OneClickOpens || widget) && Keyboard.Modifiers == ModifierKeys.None && !(container.IsSelected && ItemList.SelectedItems.Count > 1))
         {
             ItemList.SelectedItems.Clear();
             _clickCandidate = args.ClickCount == 1 ? container : null; // a double-click's second press opens nothing more
+            _clickOpens = !widget;
             container.Focus();
             args.Handled = true;
             return;
@@ -2086,7 +2090,7 @@ public partial class FenceWindow : Window
 
     private void OnListRelease(object sender, MouseButtonEventArgs args)
     {
-        if (_clickCandidate is { DataContext: FenceItemView clicked } && _pressPoint is not null) OpenRequested?.Invoke(clicked.Key); // M41a: one click
+        if (_clickCandidate is { DataContext: FenceItemView clicked } && _pressPoint is not null && _clickOpens) OpenRequested?.Invoke(clicked.Key); // M41a: one click
         _clickCandidate = null;
         _pressPoint = null;
         if (_deferredToggle is { } toggled)
