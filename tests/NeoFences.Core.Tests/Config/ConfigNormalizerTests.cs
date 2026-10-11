@@ -47,7 +47,8 @@ public class ConfigNormalizerTests
 
         var normalized = ConfigNormalizer.Normalize(new NeoFencesConfig { Fences = [fence] });
 
-        Assert.Equal(expectedSize, normalized.Fences.Single(candidate => candidate.Id == fence.Id).IconSize);
+        // M41b: an odd size follows All fences; a supported one is shown (here it becomes All fences' as the only one).
+        Assert.Equal(expectedSize, NeoFences.Core.Appearance.FenceLook.Resolve(normalized.Settings.Appearance, normalized.Fences.Single(candidate => candidate.Id == fence.Id), false, null).IconSize);
     }
 
     [Fact]
@@ -60,7 +61,7 @@ public class ConfigNormalizerTests
 
         var normalized = ConfigNormalizer.Normalize(config);
 
-        Assert.Equal(new Settings(), normalized.Settings);
+        Assert.Equal(new Settings { AllFencesIntroduced = true }, normalized.Settings); // M41b: introduced once on load
         Assert.Empty(normalized.Layouts);
         var repaired = Assert.Single(normalized.Fences);
         Assert.False(string.IsNullOrWhiteSpace(repaired.Id));
@@ -104,7 +105,7 @@ public class ConfigNormalizerTests
 
         var normalized = ConfigNormalizer.Normalize(config);
 
-        Assert.Equal(LabelMode.Always, normalized.Fences.Single().Labels);
+        Assert.Equal(LabelMode.Always, NeoFences.Core.Appearance.FenceLook.Resolve(normalized.Settings.Appearance, normalized.Fences.Single(), false, null).Labels); // M41b
         Assert.Equal(RollupExpand.Hover, normalized.Settings.RollupExpand);
     }
 }

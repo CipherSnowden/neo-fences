@@ -80,7 +80,7 @@ public class ConfigJsonTests
         Assert.True(config.Settings.HideDesktopIcons);
         Assert.Equal("Ctrl+Alt+Space", config.Settings.PeekHotkey);
         var fence = Assert.Single(config.Fences);
-        Assert.Equal(48, fence.IconSize);
+        Assert.Null(fence.IconSize); // M41b: no own size = follows All fences (48)
         Assert.False(fence.IsLibrary);
     }
 

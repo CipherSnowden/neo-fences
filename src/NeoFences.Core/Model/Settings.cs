@@ -13,7 +13,7 @@ public sealed record Settings
     public bool StartWithWindows { get; init; } = true;
     public bool GameMode { get; init; } = true;
     public RollupExpand RollupExpand { get; init; } = RollupExpand.Hover;
-    /// <summary>Labels for new fences (M8b; Settings → Fences).</summary>
+    /// <summary>Labels for new fences (M8b); no UI since rc.4 — read once by <see cref="AllFences.Introduce"/>.</summary>
     public LabelMode DefaultLabels { get; init; } = LabelMode.Always;
     /// <summary>The small arrow Windows draws on shortcut icons (M8b, user choice: a setting, off by default).</summary>
     public bool ShowShortcutArrows { get; init; }
@@ -40,9 +40,12 @@ public sealed record Settings
     /// <summary>M41a: the one-time "New: fence themes" note was shown (a new install never needs it).</summary>
     public bool ThemesIntroduced { get; init; }
 
+    /// <summary>M41b: icon sizes and labels moved to All fences once (<see cref="AllFences.Introduce"/>); a new install never needs it.</summary>
+    public bool AllFencesIntroduced { get; init; }
+
     /// <summary>
     /// M41a: the settings NeoFences comes with — a new install, and Settings → Reset settings (Aurora glass and Clean titles;
     /// a setup from before rc.3 keeps the record's defaults, the look it had).
     /// </summary>
-    public static Settings NewInstall { get; } = new() { Appearance = AppearanceSettings.NewInstall, ThemesIntroduced = true };
+    public static Settings NewInstall { get; } = new() { Appearance = AppearanceSettings.NewInstall, ThemesIntroduced = true, AllFencesIntroduced = true };
 }

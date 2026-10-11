@@ -29,7 +29,8 @@ public sealed partial class FenceHost
     private void ApplyStyle(FenceWindow window)
     {
         if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { } shown) return;
-        window.ApplyStyle(FenceLook.Resolve(Appearance, shown, _lightTheme, AccentAt(window)));
+        var accent = System.Windows.SystemColors.AccentColor; // M41b: a fence that follows Windows' accent (live: OnAccentChanged restyles)
+        window.ApplyStyle(FenceLook.Resolve(Appearance, shown, _lightTheme, AccentAt(window), new Argb(0xFF, accent.R, accent.G, accent.B)));
         ApplyFeel(window, shown); // M41a
     }
 

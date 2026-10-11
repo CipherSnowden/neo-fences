@@ -44,7 +44,8 @@ public class M8cCoreTests
 
         var normalized = ConfigNormalizer.Normalize(config);
 
-        Assert.Equal(LabelMode.Always, normalized.Fences.Single(fence => fence.Id == games.Id).Labels);
+        Assert.Null(normalized.Fences.Single(fence => fence.Id == games.Id).Labels); // M41b: a broken value follows All fences
+        Assert.Equal(LabelMode.Always, normalized.Settings.Appearance.Labels);
         Assert.Equal(LabelMode.Always, normalized.Settings.DefaultLabels);
     }
 }

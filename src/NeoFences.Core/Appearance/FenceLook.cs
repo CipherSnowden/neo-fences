@@ -16,10 +16,13 @@ public sealed record ResolvedTitleFont(string Family, int Size, TitleWeight Weig
 /// <param name="TitleStyle">How the title is drawn (M41a).</param>
 /// <param name="Accent">The theme's accent (the fence's colour; HUD's cyan without one); null: Windows' accent.</param>
 /// <param name="LightTone">Dark ink on a light veil (Light Mica, Classic in light mode); else light ink.</param>
+/// <param name="IconSize">M41b: the fence's own icon size, else All fences'.</param>
+/// <param name="Labels">M41b: the fence's own names setting, else All fences'.</param>
 public sealed record FenceStyle(
     Argb? Colour, Argb Veil, Argb Border, Argb TitleText, Argb? TitleStrip, Argb? Bar, ResolvedTitleFont Font, double TitleHeight,
     TitleAlign Align = TitleAlign.Left, bool TitleOnHover = false, Spacing Spacing = Spacing.Normal,
-    FenceTheme Theme = FenceTheme.Classic, TitleStyle TitleStyle = TitleStyle.Simple, Argb? Accent = null, bool LightTone = false);
+    FenceTheme Theme = FenceTheme.Classic, TitleStyle TitleStyle = TitleStyle.Simple, Argb? Accent = null, bool LightTone = false,
+    int IconSize = 48, LabelMode Labels = LabelMode.Always);
 
 /// <summary>Decides how a fence looks (M14, spec 2026-10-04-appearance-design §3). Pure.</summary>
 public static class FenceLook
@@ -50,15 +53,17 @@ public static class FenceLook
 
     /// <param name="light">Windows apps use the light theme.</param>
     /// <param name="wallpaperAccent">The colour of the wallpaper behind this fence, when known.</param>
-    public static FenceStyle Resolve(AppearanceSettings appearance, Fence fence, bool light, Argb? wallpaperAccent)
+    /// <param name="windowsAccent">M41b: Windows' accent colour, for a fence that follows it (<see cref="Fence.WindowsAccent"/>).</param>
+    public static FenceStyle Resolve(AppearanceSettings appearance, Fence fence, bool light, Argb? wallpaperAccent, Argb? windowsAccent = null)
     {
         var own = fence.Look ?? new OwnLook(); // M36: the fence's own values over Settings' (ADR-057)
         var colour = Argb.FromHex(fence.CustomColor)
                      ?? (fence.TabColor is { } swatch && Swatches.TryGetValue(swatch, out var swatchColour) ? swatchColour : (Argb?)null)
+                     ?? (fence.WindowsAccent ? windowsAccent : null)
                      ?? (appearance.WallpaperAccent ? wallpaperAccent : null);
         var theme = own.Theme ?? appearance.Theme; // M41a (ADR-063)
         var titleStyle = own.TitleStyle ?? appearance.TitleStyle;
-        if (theme != FenceTheme.Classic) return Themed(appearance, own, colour, theme, titleStyle);
+        if (theme != FenceTheme.Classic) return Themed(appearance, fence, own, colour, theme, titleStyle);
         var ink = light ? LightInk : DarkInk;
         var veil = ink with { A = Alpha(own.Strength ?? (light ? appearance.StrengthLight : appearance.StrengthDark)) };
         var border = light ? new Argb(0x33, 0, 0, 0) : new Argb(0x40, 0xFF, 0xFF, 0xFF);
@@ -95,15 +100,15 @@ public static class FenceLook
         var mine = own.TitleFont;
         var font = new ResolvedTitleFont(mine?.Family ?? global.Family ?? "Segoe UI", mine?.Size ?? global.Size ?? 14, mine?.Weight ?? global.Weight ?? TitleWeight.SemiBold);
         return new FenceStyle(colour, veil, border, titleText, strip, bar, font, TitleHeightFor(font.Size),
-            own.TitleAlign ?? TitleAlign.Left, own.TitleOnHover == true, own.Spacing ?? Spacing.Normal,
-            FenceTheme.Classic, titleStyle, colour, light);
+            own.TitleAlign ?? appearance.TitleAlign, own.TitleOnHover ?? appearance.TitleOnHover, own.Spacing ?? appearance.Spacing,
+            FenceTheme.Classic, titleStyle, colour, light, fence.IconSize ?? appearance.IconSize, fence.Labels ?? appearance.Labels);
     }
 
     /// <summary>
     /// M41a (spec §1): a theme with a tone of its own — Light Mica light, the others dark, whatever Windows uses. The strength
     /// slider stays the veil's density (Transparency), from the tone's Settings value; the fence's colour is the accent.
     /// </summary>
-    private static FenceStyle Themed(AppearanceSettings appearance, OwnLook own, Argb? colour, FenceTheme theme, TitleStyle titleStyle)
+    private static FenceStyle Themed(AppearanceSettings appearance, Fence fence, OwnLook own, Argb? colour, FenceTheme theme, TitleStyle titleStyle)
     {
         var lightTone = theme == FenceTheme.LightMica;
         var strength = own.Strength ?? (lightTone ? appearance.StrengthLight : appearance.StrengthDark);
@@ -127,7 +132,8 @@ public static class FenceLook
         var family = mine?.Family ?? (theme == FenceTheme.Hud ? HudFont : global.Family ?? "Segoe UI");
         var font = new ResolvedTitleFont(family, mine?.Size ?? global.Size ?? 14, mine?.Weight ?? global.Weight ?? TitleWeight.SemiBold);
         return new FenceStyle(colour, ink with { A = Alpha(strength) }, border, titleText, TitleStrip: null, Bar: null, font, TitleHeightFor(font.Size),
-            own.TitleAlign ?? TitleAlign.Left, own.TitleOnHover == true, own.Spacing ?? Spacing.Normal, theme, titleStyle, accent, lightTone);
+            own.TitleAlign ?? appearance.TitleAlign, own.TitleOnHover ?? appearance.TitleOnHover, own.Spacing ?? appearance.Spacing, theme, titleStyle, accent, lightTone,
+            fence.IconSize ?? appearance.IconSize, fence.Labels ?? appearance.Labels);
     }
 
     /// <summary>

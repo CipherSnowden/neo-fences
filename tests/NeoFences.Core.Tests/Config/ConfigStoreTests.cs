@@ -124,7 +124,7 @@ public class ConfigStoreTests : IDisposable
         var result = store.Load();
 
         Assert.Equal(ConfigLoadSource.Primary, result.Source);
-        Assert.Equal(48, Assert.Single(result.Config.Fences).IconSize);
+        Assert.Equal(48, NeoFences.Core.Appearance.FenceLook.Resolve(result.Config.Settings.Appearance, Assert.Single(result.Config.Fences), false, null).IconSize); // M41b
     }
 
     [Fact]

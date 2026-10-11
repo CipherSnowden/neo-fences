@@ -57,6 +57,24 @@ public sealed record AppearanceSettings
     /// <summary>M41a: Off / Calm / Lively; off anyway while gaming or with Windows' animation effects off (MotionPolicy).</summary>
     public Motion Motion { get; init; } = Motion.Lively;
 
+    /// <summary>M41b: the icon size of fences without their own (Fence settings → All fences).</summary>
+    public int IconSize { get; init; } = 48;
+
+    /// <summary>M41b: names under icons for fences without their own (was Settings → "Labels for new fences").</summary>
+    public LabelMode Labels { get; init; }
+
+    /// <summary>M41b: where titles sit, for fences without their own.</summary>
+    public TitleAlign TitleAlign { get; init; }
+
+    /// <summary>M41b: true — the title bar shows only while the pointer is over the fence, for fences without their own.</summary>
+    public bool TitleOnHover { get; init; }
+
+    /// <summary>M41b: room between cells, for fences without their own.</summary>
+    public Spacing Spacing { get; init; }
+
+    /// <summary>M41b (audit card 5): one Transparency for dark and light mode — both stored values set.</summary>
+    public AppearanceSettings WithStrength(int strength) => this with { StrengthDark = strength, StrengthLight = strength };
+
     /// <summary>
     /// M41a (spec §1): how a new install looks — Aurora glass with some body, Clean titles. Existing setups keep the
     /// record's defaults (Classic, Simple): nothing changes under the user's feet.

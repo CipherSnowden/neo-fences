@@ -91,7 +91,7 @@ public sealed partial class FenceHost
             // The shown tab: its laid-out columns; a hidden tab: its own columns at its box's width (M28), not the shown tab's.
             var window = _windows.Values.FirstOrDefault(candidate => candidate.FenceId == fence.Id);
             var columns = window is not null ? (window.IsLoaded ? window.Columns : 0) // not laid out yet: pinned once it is (final review M4)
-                : FenceTabs.HostOf(_config, fence.Id) is { } host && _windows.TryGetValue(host.Id, out var box) ? box.ColumnsFor(fence, covers: items.Any(GameItems.ShowsCover))
+                : FenceTabs.HostOf(_config, fence.Id) is { } host && _windows.TryGetValue(host.Id, out var box) ? box.ColumnsFor(NeoFences.Core.Appearance.FenceLook.Resolve(Appearance, fence, _lightTheme, null), covers: items.Any(GameItems.ShowsCover))
                 : 0;
             if (columns == 0) continue; // no window for it (yet): pinned when it shows
             var arrangement = FenceGrid.Arrange([.. items.Select(item => new GridElement(FenceGrid.SpanOf(item), item.Cell))], columns, FenceLayout.Free);

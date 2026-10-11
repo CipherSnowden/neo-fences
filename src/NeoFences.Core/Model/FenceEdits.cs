@@ -18,11 +18,12 @@ public static class FenceEdits
         return config.WithFence(fence with { Title = trimmed.Length > MaxTitleLength ? trimmed[..cut] : trimmed });
     }
 
+    /// <summary>The fence's own icon size, or null: All fences' (M41b).</summary>
     /// <exception cref="ArgumentOutOfRangeException">Not one of <see cref="ConfigNormalizer.IconSizes"/>.</exception>
-    public static NeoFencesConfig SetIconSize(NeoFencesConfig config, string fenceId, int iconSize)
+    public static NeoFencesConfig SetIconSize(NeoFencesConfig config, string fenceId, int? iconSize)
     {
         var fence = Require(config, fenceId);
-        if (!ConfigNormalizer.IconSizes.Contains(iconSize)) throw new ArgumentOutOfRangeException(nameof(iconSize), iconSize, "Unsupported icon size.");
+        if (iconSize is { } size && !ConfigNormalizer.IconSizes.Contains(size)) throw new ArgumentOutOfRangeException(nameof(iconSize), iconSize, "Unsupported icon size.");
         return config.WithFence(fence with { IconSize = iconSize });
     }
 
@@ -31,8 +32,17 @@ public static class FenceEdits
     public static NeoFencesConfig SetCustomColor(NeoFencesConfig config, string fenceId, string hex)
     {
         var colour = Appearance.Argb.FromHex(hex) ?? throw new ArgumentException($"'{hex}' is not a #RRGGBB colour.", nameof(hex));
-        return config.WithFence(Require(config, fenceId) with { CustomColor = colour.ToHex(), TabColor = null });
+        return config.WithFence(Require(config, fenceId) with { CustomColor = colour.ToHex(), TabColor = null, WindowsAccent = false });
     }
+
+    /// <summary>M41b: one colour choice at a time — a swatch, a custom colour, Windows' accent (follows), or none.</summary>
+    public static NeoFencesConfig SetColour(NeoFencesConfig config, string fenceId, TabColor? swatch, string? customHex, bool windowsAccent) =>
+        config.WithFence(Require(config, fenceId) with
+        {
+            TabColor = windowsAccent ? null : swatch,
+            CustomColor = windowsAccent ? null : Appearance.Argb.FromHex(customHex)?.ToHex(),
+            WindowsAccent = windowsAccent,
+        });
 
     public static NeoFencesConfig SetLocked(NeoFencesConfig config, string fenceId, bool locked) =>
         config.WithFence(Require(config, fenceId) with { Locked = locked });
@@ -70,18 +80,10 @@ public static class FenceEdits
     public static NeoFencesConfig SetLook(NeoFencesConfig config, string fenceId, OwnLook? look) =>
         config.WithFence(Require(config, fenceId) with { Look = ConfigNormalizer.NormalizeLook(look) });
 
-    /// <summary>Settings → "Apply to all fences": every fence, and the default for new ones.</summary>
-    public static NeoFencesConfig SetLabelsEverywhere(NeoFencesConfig config, LabelMode labels) =>
-        config with
-        {
-            Fences = config.Fences.Select(fence => fence with { Labels = labels }).ToList(),
-            Settings = config.Settings with { DefaultLabels = labels },
-        };
-
-    /// <summary>A new empty fence (fence menu, tray, or one drawn on the desktop), with the default labels.</summary>
+    /// <summary>A new empty fence (fence menu, tray, or one drawn on the desktop); it follows All fences (M41b).</summary>
     public static (NeoFencesConfig Config, Fence Fence) CreateFence(NeoFencesConfig config, string title)
     {
-        var fence = Fence.Create(title) with { Labels = config.Settings.DefaultLabels };
+        var fence = Fence.Create(title);
         return (config with { Fences = [.. config.Fences, fence] }, fence);
     }
 

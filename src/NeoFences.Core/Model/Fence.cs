@@ -35,10 +35,20 @@ public sealed record Fence
     [System.Text.Json.Serialization.JsonIgnore]
     public FenceKind Kind => IsLibrary ? FenceKind.Library : View is not null ? FenceKind.View : FenceKind.Items;
 
-    public int IconSize { get; init; } = 48;
+    /// <summary>Its own icon size (M41b); null: All fences' (<see cref="AppearanceSettings.IconSize"/>).</summary>
+    public int? IconSize { get; init; }
     public bool RolledUp { get; init; }
     public bool Locked { get; init; }
-    public LabelMode Labels { get; init; } = LabelMode.Always;
+
+    /// <summary>Its own names setting (M41b); null: All fences' (<see cref="AppearanceSettings.Labels"/>).</summary>
+    public LabelMode? Labels { get; init; }
+
+    /// <summary>
+    /// M41b (audit card 6): the fence's colour is Windows' accent, followed live; a swatch or a custom colour clears it. Written
+    /// only when on.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool WindowsAccent { get; init; }
 
     /// <summary>Its own "Open items with" (M41a, Fence settings); null: like all fences.</summary>
     public OpenWith? OpenWith { get; init; }

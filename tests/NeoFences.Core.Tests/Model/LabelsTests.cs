@@ -17,16 +17,18 @@ public class LabelsTests
     {
         // Configs from v1.0 have no "labels" field: everything keeps looking the same.
         var (config, games) = Sample();
-        Assert.Equal(LabelMode.Always, games.Labels);
+        Assert.Null(games.Labels); // M41b: follows All fences (Always)
         Assert.Equal(LabelMode.Always, config.Settings.DefaultLabels);
         Assert.False(config.Settings.ShowShortcutArrows); // shortcut arrows: off unless chosen in Settings
         // A real v1.0 file: the new fields removed from the JSON itself (final review I6: a text replace never matched).
-        var json = System.Text.Json.Nodes.JsonNode.Parse(ConfigJson.Serialize(FenceEdits.SetLabelsEverywhere(config, LabelMode.OnHover)))!;
+        var labelled = config with { Fences = config.Fences.Select(fence => fence with { Labels = LabelMode.OnHover }).ToList(), Settings = config.Settings with { DefaultLabels = LabelMode.OnHover } };
+        var json = System.Text.Json.Nodes.JsonNode.Parse(ConfigJson.Serialize(labelled))!;
         foreach (var fence in json["fences"]!.AsArray()) Assert.True(fence!.AsObject().Remove("labels"));
         Assert.True(json["settings"]!.AsObject().Remove("defaultLabels"));
         Assert.True(json["settings"]!.AsObject().Remove("showShortcutArrows"));
         var loaded = ConfigJson.Deserialize(json.ToJsonString());
-        Assert.All(loaded.Fences, fence => Assert.Equal(LabelMode.Always, fence.Labels));
+        // M41b: no labels of its own = follows All fences, which shows them (Always).
+        Assert.All(loaded.Fences, fence => Assert.Equal(LabelMode.Always, NeoFences.Core.Appearance.FenceLook.Resolve(loaded.Settings.Appearance, fence, false, null).Labels));
         Assert.Equal(LabelMode.Always, loaded.Settings.DefaultLabels);
         Assert.False(loaded.Settings.ShowShortcutArrows);
     }
@@ -37,24 +39,17 @@ public class LabelsTests
         var (config, games) = Sample();
         var changed = FenceEdits.SetLabels(config, games.Id, LabelMode.OnHover);
         Assert.Equal(LabelMode.OnHover, changed.Fences.Single(fence => fence.Id == games.Id).Labels);
-        Assert.Equal(LabelMode.Always, changed.Fences[0].Labels);
+        Assert.Null(changed.Fences[0].Labels); // M41b: the other fence still follows All fences
     }
 
-    [Fact]
-    public void SetLabelsEverywhere_ChangesEveryFence_AndTheDefault()
-    {
-        var (config, _) = Sample();
-        var changed = FenceEdits.SetLabelsEverywhere(config, LabelMode.OnHover);
-        Assert.All(changed.Fences, fence => Assert.Equal(LabelMode.OnHover, fence.Labels));
-        Assert.Equal(LabelMode.OnHover, changed.Settings.DefaultLabels);
-    }
+    // M41b: "Apply to all fences" is All fences mode in Fence settings (AllFencesTests.MakeFollow_…).
 
     [Fact]
-    public void NewFences_TakeTheDefault()
+    public void NewFences_FollowAllFences()
     {
         var (config, _) = Sample();
         config = config with { Settings = config.Settings with { DefaultLabels = LabelMode.OnHover } };
-        Assert.Equal(LabelMode.OnHover, FenceEdits.CreateFence(config, "Tools").Fence.Labels);
+        Assert.Null(FenceEdits.CreateFence(config, "Tools").Fence.Labels); // M41b: follows All fences (AllFencesTests)
     }
 
     [Fact]

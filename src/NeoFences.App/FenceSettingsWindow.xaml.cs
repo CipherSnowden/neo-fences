@@ -182,8 +182,8 @@ public partial class FenceSettingsWindow : Window
             TitleOwn.Visibility = Visible(font is not null || own.TitleAlign is not null);
             TitleBarBox.IsChecked = own.TitleOnHover != true;
 
-            IconSizeBox.SelectedIndex = Array.FindIndex(IconSizes, entry => entry.Size == fence.IconSize);
-            LabelsBox.SelectedIndex = fence.Labels == LabelMode.Always ? 0 : 1;
+            IconSizeBox.SelectedIndex = Array.FindIndex(IconSizes, entry => entry.Size == (fence.IconSize ?? view.Appearance.IconSize)); // M41b bridge: follows All fences
+            LabelsBox.SelectedIndex = (fence.Labels ?? view.Appearance.Labels) == LabelMode.Always ? 0 : 1;
             LayoutRow.Visibility = Visible(fence.Kind == FenceKind.Items); // as in View ▸: only a fence of items has a layout
             LayoutBox.SelectedIndex = fence.Layout == FenceLayout.Flow ? 0 : 1;
             SpacingBox.ItemsSource = new[] { $"{LikeAllName} (Normal)", "Compact", "Normal", "Roomy" };

@@ -37,9 +37,9 @@ public static class ConfigNormalizer
                 Id = string.IsNullOrWhiteSpace(loadedFence.Id) || !seenFenceIds.Add(loadedFence.Id) ? Fence.NewId() : loadedFence.Id,
                 Title = loadedFence.Title ?? "",
                 IsLibrary = loadedFence.IsLibrary && !libraryFound,
-                Labels = Enum.IsDefined(loadedFence.Labels) ? loadedFence.Labels : LabelMode.Always, // a hand-edited number (M8b review)
+                Labels = loadedFence.Labels is { } labels && Enum.IsDefined(labels) ? labels : null, // a hand-edited number follows All fences (M8b review, M41b)
                 Tabs = loadedFence.Tabs ?? [], // a hand-edited "tabs": null (M9 final review)
-                IconSize = IconSizes.Contains(loadedFence.IconSize) ? loadedFence.IconSize : 48,
+                IconSize = loadedFence.IconSize is { } iconSize && IconSizes.Contains(iconSize) ? iconSize : null, // M41b: else All fences'
                 CustomColor = Appearance.Argb.FromHex(loadedFence.CustomColor)?.ToHex(), // M14: a broken colour is none
                 Layout = Enum.IsDefined(loadedFence.Layout) ? loadedFence.Layout : Items.FenceLayout.Flow, // M24: a typo is Flow
                 Collect = Items.CollectRules.Normalize(loadedFence.Collect), // M27
@@ -53,7 +53,7 @@ public static class ConfigNormalizer
             fences.Add(fence);
         }
 
-        return config with
+        return AllFences.Introduce(config with // M41b: once, after the repair (an odd own size already follows)
         {
             SchemaVersion = NeoFencesConfig.CurrentSchemaVersion,
             Settings = settings,
@@ -65,7 +65,7 @@ public static class ConfigNormalizer
                 // M22: only a fence that holds items (not a folder view, not gone)
                 NewGamesFence = fences.Any(fence => fence.Id == config.Library?.NewGamesFence && fence.View is null) ? config.Library!.NewGamesFence : null,
             },
-        };
+        });
     }
 
     /// <summary>M14: strengths in range, a known style, a whole global title font (spec §2).</summary>
@@ -83,6 +83,10 @@ public static class ConfigNormalizer
             TitleStyle = Enum.IsDefined(appearance.TitleStyle) ? appearance.TitleStyle : defaults.TitleStyle,
             NameStyle = Enum.IsDefined(appearance.NameStyle) ? appearance.NameStyle : defaults.NameStyle,
             Motion = Enum.IsDefined(appearance.Motion) ? appearance.Motion : defaults.Motion,
+            IconSize = IconSizes.Contains(appearance.IconSize) ? appearance.IconSize : defaults.IconSize, // M41b
+            Labels = Enum.IsDefined(appearance.Labels) ? appearance.Labels : defaults.Labels,
+            TitleAlign = Enum.IsDefined(appearance.TitleAlign) ? appearance.TitleAlign : defaults.TitleAlign,
+            Spacing = Enum.IsDefined(appearance.Spacing) ? appearance.Spacing : defaults.Spacing,
             TitleFont = new TitleFont(
                 string.IsNullOrWhiteSpace(font?.Family) ? defaults.TitleFont.Family : font.Family.Trim(),
                 font?.Size is { } size && TitleFont.Sizes.Contains(size) ? size : defaults.TitleFont.Size,

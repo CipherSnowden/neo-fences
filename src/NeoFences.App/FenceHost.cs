@@ -612,6 +612,7 @@ public sealed partial class FenceHost
         Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, () =>
         {
             foreach (var window in _windows.Values) window.ApplyWidgetBar(_lightTheme);
+            RestyleAll(); // M41b: fences coloured "Windows accent" follow it
         });
 
     private void OnDisplayChanged()
@@ -967,15 +968,17 @@ public sealed partial class FenceHost
             // Leaving the box re-registers: Settings must show if that failed (final review I5).
             if (!recording) RefreshSettings();
         };
+        // M41b bridge until Settings v2 (Task 5): the labels box is All fences' names; "Apply to all" also makes every fence follow.
         window.DefaultLabelsChanged += labels =>
         {
-            _config = _config with { Settings = _config.Settings with { DefaultLabels = labels } };
+            _config = _config with { Settings = _config.Settings with { Appearance = Appearance with { Labels = labels } } };
+            RestyleAll();
             SaveNow();
         };
         window.LabelsAppliedToAll += labels =>
         {
-            _config = FenceEdits.SetLabelsEverywhere(_config, labels);
-            foreach (var fenceWindow in _windows.Values) fenceWindow.SetLabelMode(labels);
+            _config = AllFences.MakeFollow(_config with { Settings = _config.Settings with { Appearance = Appearance with { Labels = labels } } }, LookSetting.Labels);
+            RestyleAll();
             Log.Information("labels for every fence: {Labels}", labels);
             SaveNow();
             RefreshSettings();
@@ -1018,7 +1021,7 @@ public sealed partial class FenceHost
         GameModeActive: _gameMode,
         Version: typeof(FenceHost).Assembly.GetName().Version?.ToString(3) ?? "",
         DataFolder: AppPaths.DataDirectory,
-        DefaultLabels: _config.Settings.DefaultLabels,
+        DefaultLabels: Appearance.Labels, // M41b bridge: All fences' names
         ShowShortcutArrows: _config.Settings.ShowShortcutArrows,
         QuickHideGesture: _config.Settings.QuickHideGesture, // M33
         DrawGesture: _config.Settings.DrawGesture,

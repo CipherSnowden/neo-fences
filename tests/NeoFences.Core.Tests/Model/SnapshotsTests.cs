@@ -63,7 +63,7 @@ public class SnapshotsTests
         Assert.Equal("Alpha", restoredItems.Find("a")!.Name);
         Assert.Empty(Get(restored, games).Tabs); // the tab merge is undone
         Assert.Equal(TabColor.Blue, Get(restored, tools).TabColor);
-        Assert.Equal(64, Get(restored, games).IconSize);
+        Assert.Equal(64, NeoFences.Core.Appearance.FenceLook.Resolve(restored.Settings.Appearance, Get(restored, games), false, null).IconSize); // M41b: shown size
         Assert.Equal(Box, restored.Layouts[Setup].Fences[games.Id]);
         Assert.Equal(Box with { X = 500 }, restored.Layouts[Setup].Fences[tools.Id]);
     }

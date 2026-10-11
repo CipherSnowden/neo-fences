@@ -82,7 +82,8 @@ public static class Snapshots
     public static (NeoFencesConfig Config, ItemsDocument Items) Restore(NeoFencesConfig current, Snapshot snapshot, DateTimeOffset? restoredAt = null)
     {
         // The snapshot file may be damaged or hand-edited: the normalizer gives it unique ids and sane tabs.
-        var saved = ConfigNormalizer.Normalize(new NeoFencesConfig { Fences = snapshot.Fences, Layouts = snapshot.Layouts });
+        // M41b: not the one-time move to All fences here — these fences have no settings yet (the second Normalize decides).
+        var saved = ConfigNormalizer.Normalize(new NeoFencesConfig { Fences = snapshot.Fences, Layouts = snapshot.Layouts, Settings = new Settings { AllFencesIntroduced = true } });
         var layouts = new Dictionary<string, Layout>(current.Layouts);
         foreach (var (fingerprint, layout) in saved.Layouts) layouts[fingerprint] = layout;
         var config = ConfigNormalizer.Normalize(current with

@@ -359,10 +359,7 @@ public partial class FenceWindow : Window
             FenceKind.View => "The folder is not touched",
             _ => "Your files are not touched",
         };
-        UpdateEmptyHint();
-        _labelMode = fence.Labels;
-        SetIconSize(fence.IconSize);
-        SetLabelMode(fence.Labels);
+        UpdateEmptyHint(); // M41b: icon size and names come with the style (ApplyStyle), which may follow All fences
     }
 
     /// <summary>Elements shown now (M37: the start's timing).</summary>
@@ -1117,9 +1114,9 @@ public partial class FenceWindow : Window
     }
 
     /// <summary>A fence's columns at this window's width (M28: a hidden tab's own, for its new elements in a Free fence).</summary>
-    public int ColumnsFor(Fence fence, bool covers) =>
+    public int ColumnsFor(FenceStyle style, bool covers) =>
         !ItemList.IsLoaded || ItemList.ActualWidth <= 0 ? 0 // not laid out yet: no columns to pin with (final review M4)
-            : FenceGrid.ColumnsFor(ItemList.ActualWidth - 8, ItemWidthFor(fence.IconSize, fence.Labels, covers) + 4 + 2 * FenceLook.CellInset(fence.Look?.Spacing ?? Spacing.Normal)); // M36: its own spacing
+            : FenceGrid.ColumnsFor(ItemList.ActualWidth - 8, ItemWidthFor(style.IconSize, style.Labels, covers) + 4 + 2 * FenceLook.CellInset(style.Spacing)); // M41b: its own or All fences'
 
     private void OnItemMouseEnter(object sender, MouseEventArgs args)
     {
@@ -1448,6 +1445,12 @@ public partial class FenceWindow : Window
             return;
         }
         if (style.LightTone != _lightTheme) ApplyTheme(style.LightTone); // M41a: a theme has its own tone, whatever Windows uses
+        if (_style is null || style.IconSize != _style.IconSize || style.Labels != _style.Labels)
+        {
+            _labelMode = style.Labels; // M41b: the fence's own, else All fences'
+            SetIconSize(style.IconSize);
+            SetLabelMode(style.Labels);
+        }
         _style = style;
         Resources["FenceVeil"] = Frozen(style.Veil);
         Resources["FenceOutline"] = Frozen(style.Border);
