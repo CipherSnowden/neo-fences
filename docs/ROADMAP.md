@@ -64,7 +64,7 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Owner's fences set up for daily use (whole snapshots "Before Claude's setup" and "Before bigger widgets"): All fences Aurora + Clean, Games Game HUD + Caps, emoji titles, Desk a floating board of four Medium widgets on 96-px cells, full height
   - [x] Owner's glass tint: Transparency for All fences 0/72 → 50 (the Crysis 3 logo smeared red through clear glass); snapshot "Before more glass tint"
   - [~] **rc.6** (the owner's feedback 2026-10-11, branch `rc6`; the owner chose rc.6 over waiting for 1.0.1): fences snap to a 16-px desktop grid away from other fences; Windows 11's own window border off on every fence (a frame around widget boards, a doubled edge on glass, a rounded line around Game HUD; the VMs draw none, proven on the owner's PC); app icons from the app's large art scaled down smoothly when it has it (a rough 48-px frame before), the icon cache starts over; checklist BB4–BB6
-  - [ ] Release 1.0.0-rc.6; the week with friends starts again from it
+  - [ ] Release 1.0.0-rc.6 (the user approved the release 2026-10-11: "rc.6 now"); the week with friends starts again from it
   - [ ] About a week with friends on the last RC with no crash, data loss or stuck icons; then 1.0.0
   - [ ] After 1.0: a widget board with its own bigger grid (mockups with the owner)
   - [x] Updates downloaded the full package (75 MB) after the delta: the Release workflow built every RC's delta from the latest stable (0.26.0), so RC installs failed the patch checksum (Velopack log: "Restored data doesn't match checksum") and fell back; now built from the previous tag's release (`--pre` after an RC); check the run log at the next release
