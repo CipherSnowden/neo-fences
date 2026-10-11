@@ -1098,3 +1098,16 @@ Redragon has smooth 256-px art but a rough 48-px frame. The red smear: Transpare
 gaps win; resize steps never below the minimum; 6 tests); DWMWA_BORDER_COLOR none on every fence; `IconArt.IsLarge`
 (the 256-px art's alpha box ≥ 60 % of the canvas) and the icon loader scaling large art down with WIC (else the icon at
 its size); the icon cache index version 2 (older ones start over). Core 1090 tests. Guide and checklist BB4–BB6.
+**Review (Opus):** three risks fixed — the large-art path only at fence sizes (16–32 px keep their own small frames),
+a failing icon handler not asked twice, and pictures no cache index names deleted at start. VM live checks 19 of 19.
+**Released:** 1.0.0-rc.6 on 2026-10-11: CI green; the Release run built no delta — the workflow's `--pre` was splatted as a
+lone string, which PowerShell passes as its letters (`-`, `p`, `r`, `e`) — so rc.6 has only the full package (updates
+take the full 75 MB once more); fixed in the workflow (an array) and checked locally, for the next release. Checksums and
+attestation verified, VM install check rc.5 → rc.6 from the draft's files 16 of 16, published as a pre-release.
+**Installed on the owner's PC (owner away, "u do"):** NeoFences' own download from GitHub crawled (~11 KB/s, 29 of 75 MB in
+45 min), so the updater was pointed at the verified release files on this PC (`NEOFENCES_UPDATE_SOURCE`, as in the VMs):
+rc.5 → rc.6 in a minute, the four fences unchanged; the next start uses GitHub again. Windows' rounded border is gone
+(Game HUD's corner clean). **Regression found there:** AMD Ryzen Master and Sideloadly showed a tiny icon inside a faint
+square — Windows draws a small icon's 256-px picture with a soft frame (alpha 38–77) round the canvas, and any alpha
+counted as art. Fixed: only solid art (alpha ≥ 128) counts (test with the frame; the owner's 25 icons checked side by
+side: no boxes, Redragon, Discord, Epic, Ubisoft, Forza and Mafia II smoother) → rc.7.
