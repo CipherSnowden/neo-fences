@@ -108,7 +108,7 @@ Check 'widget-click' { # the owner: a plain click on a widget never selects it (
   $widget = Element 'Clock' ([System.Windows.Automation.ControlType]::ListItem); if (-not $widget) { throw 'the clock is not in the fence' }
   $x, $y = Center $widget; LeftClick $x $y; Start-Sleep -Seconds 1
   $selected = $widget.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected; Shot 'widget-clicked'
-  DoubleClick $x $y; $opened = Wait { @(LogText | Select-String -SimpleMatch 'widget opened: Clock').Count -gt 0 } 10; $clock = Wait { [bool](WindowLike '*Clock*') } 20
+  DoubleClick $x $y; $opened = Wait { @(LogText | Select-String -SimpleMatch 'widget opened: "Clock"').Count -gt 0 } 10; $clock = Wait { [bool](WindowLike '*Clock*') } 20
   if ($clock) { [void][NfVm.W]::SetForegroundWindow((WindowLike '*Clock*')); Keys @(0x12, 0x73) }
   "selected after one click: $selected; the double-click opened the widget: $opened (Clock window: $clock)"; (-not $selected) -and $opened
 }

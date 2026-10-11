@@ -2043,6 +2043,8 @@ public partial class FenceWindow : Window
             _clickOpens = !widget;
             container.Focus();
             args.Handled = true;
+            // A handled press never reaches MouseDoubleClick (VM check widget-click), so a widget opens from its second press.
+            if (widget && args.ClickCount == 2 && _pressedKey is { } widgetKey) OpenRequested?.Invoke(widgetKey);
             return;
         }
         // Ctrl+press on a selected item: unselect it on release, not now, so Ctrl+drag can still copy the selection (M3b review).
@@ -2139,7 +2141,7 @@ public partial class FenceWindow : Window
     {
         if (args.ChangedButton != MouseButton.Left || InPanel(args.OriginalSource)) return; // M26: the panel opens its own entries
         if (ItemsControl.ContainerFromElement(ItemList, (DependencyObject)args.OriginalSource) is ListBoxItem { DataContext: FenceItemView view }
-            && (!OneClickOpens || view.IsWidget)) // M41a: one click already opened it
+            && !OneClickOpens && !view.IsWidget) // M41a: one click already opened it; a widget opens from its second press
             OpenRequested?.Invoke(view.Key);
     }
 
