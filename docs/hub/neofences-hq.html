@@ -786,11 +786,11 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-11",
-  commit: "7b994d9",
+  commit: "6a1a3aa",
   phase: "1.0.0-rc — release candidate with friends (path to 1.0)",
-  current: "1.0.0-rc.5 RELEASED (pre-release) and installed on your PC: widgets show the design that fits, Wallpaper Engine playlists get a plain preview · VM 16 of 16 from rc.4 · slow updates fixed (every RC's small update was built from 0.26.0, so it failed and the full 75 MB came down; next release builds it from rc.5) · NOW: about a week with friends, then 1.0.0 · YOUR TURN: send friends the rc.5 link; check Now playing with Spotify and a full-screen game",
+  current: "1.0.0-rc.5 on your PC; your last checks passed (Now playing with Spotify, game mode with Plague Inc) · fences set up: Aurora + Clean, Games in Game HUD, Desk a full-height board of bigger widgets · NOW: about a week with friends, then 1.0.0 · held for after 1.0.0: no frame around a widget board (branch board-edge, proven on your PC)",
   waiting: [
-    "You're on 1.0.0-rc.5 (installed 2026-10-11). Two checks only your PC can do: play something in Spotify and try the Now playing widget (play/pause, next, the bar, the wheel for volume); play a full-screen game for a minute (the fences stay still, then move again).",
+    "Your last checks passed on rc.5: Now playing followed Spotify; game mode switched on 4 s after Plague Inc started and NeoFences stayed at 1.35 % CPU. Your fences are set up (undo: tray → Restore snapshot → Before Claude's setup / Before bigger widgets).",
     "Send friends the rc.5 link if you like. About a week with no crash, lost data or stuck icons, then 1.0.0 (rc.5's code, version bumped) — I ask for your go then.",
     "After 1.0.0, about 15 minutes in a browser: VirusTotal, Microsoft's review of the installer, and (optional) winget — steps ready in RELEASING.md."
   ],
@@ -828,8 +828,12 @@ const HUB = {
       { t: "rc.5 fixes: widgets show the biggest design that fits; Wallpaper Engine playlists get a plain preview; review fixed; VM 19 of 19", s: "done" },
       { t: "Released 1.0.0-rc.5 (VM 16 of 16 from rc.4) and installed on your PC (look unchanged, widgets whole)", s: "done" },
       { t: "Slow updates: the small update failed on every RC (built from 0.26.0, Velopack checksum error) and the full 75 MB downloaded — release workflow fixed to build from the previous RC; check its log at the next release", s: "done" },
-      { t: "Send friends the rc.5 link; check Now playing with Spotify and a full-screen game", s: "you" },
-      { t: "About a week with friends with no crash, data loss or stuck icons; then 1.0.0", s: "todo" }
+      { t: "Your checks: Now playing with Spotify, game mode with Plague Inc — passed", s: "done" },
+      { t: "Your fences set up: Aurora + Clean, Games Game HUD + Caps, emoji titles, Desk a floating board of bigger widgets (snapshots first)", s: "done" },
+      { t: "Frame around a widget board = Windows 11's window border; fixed on branch board-edge (VM 19 of 19), held so 1.0.0 stays rc.5's code", s: "done" },
+      { t: "Send friends the rc.5 link (optional)", s: "you" },
+      { t: "About a week with friends with no crash, data loss or stuck icons; then 1.0.0", s: "todo" },
+      { t: "After 1.0.0: merge board-edge (1.0.1); design a widget board with its own bigger grid with you (mockups)", s: "todo" }
     ] },
     { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
       { t: "You picked the keyboard through Peek and a scripted VM test pass; Windows 10 dropped — Windows 11 only (ADR-059)", s: "done" },
@@ -1580,7 +1584,8 @@ const HUB = {
     { date: "2026-10-11", topic: "rc.1 feedback, rc.2, M41 brainstorm", done: "Win+D bug reproduced and fixed via VM probes; rc.2 released (14 of 14); visual brainstorm of titles, widgets, motion, themes, clicks, menus, Fence settings v4, Settings v2, recipes.", next: "Widgets brainstorm; M41a spec and plan." },
     { date: "2026-10-11", topic: "M41a feel built, 1.0.0-rc.3 released", done: "Widgets brainstorm; spec approved; prototype VM 14 of 14; plan; built (1010 tests, ADR-063 to 066); Opus review fixes; widget clicks fixed; CPU 0.42 % on your PC; VM 15 of 15; rc.3 released (install check 16 of 16); installed on your PC; M41b option audit (120 options, 10 decisions for you).", next: "You pick the 10 audit cards; then the M41b spec → plan → build → rc.4. You look at Now playing with Spotify or YouTube." },
     { date: "2026-10-11", topic: "M41b settings built", done: "Your 10 audit picks; spec; plan; built (1070 tests, ADR-067): Fence settings with All fences, preview and recipes, Settings with search; Opus review fixed; VM 19 of 19. Released 1.0.0-rc.4 (VM 16 of 16 from rc.3).", next: "About a week with friends, then 1.0.0; you look at Now playing with Spotify or YouTube." },
-    { date: "2026-10-11", topic: "rc.4 desktop checks, rc.5 fixes", done: "rc.3 → rc.4 on your PC kept your look; hidden desktop over Wallpaper Engine OK; two bugs found and fixed (widgets cut off, playlist preview); Opus review fixed; 1078 tests; VM 19 of 19. Released rc.5 (VM 16 of 16) and installed on your PC. Slow updates traced to RC deltas built from 0.26.0; workflow fixed.", next: "About a week with friends, then 1.0.0; Now playing with Spotify; a full-screen game." }
+    { date: "2026-10-11", topic: "rc.4 desktop checks, rc.5 fixes", done: "rc.3 → rc.4 on your PC kept your look; hidden desktop over Wallpaper Engine OK; two bugs found and fixed (widgets cut off, playlist preview); Opus review fixed; 1078 tests; VM 19 of 19. Released rc.5 (VM 16 of 16) and installed on your PC. Slow updates traced to RC deltas built from 0.26.0; workflow fixed.", next: "About a week with friends, then 1.0.0; Now playing with Spotify; a full-screen game." },
+    { date: "2026-10-11", topic: "Last rc.5 checks, fences set up, board frame", done: "Now playing with Spotify and game mode with Plague Inc passed (1.35 % CPU); slow updates traced and fixed in the release workflow; hub tidied; your fences set up, Desk widgets about twice as big; the board frame found (Windows 11 border) and fixed on a branch, VM 19 of 19.", next: "About a week with friends, then 1.0.0; then board-edge and the widget-board design." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2346,7 +2351,11 @@ const HUB = {
     ["605197d", "docs: marked the 1.0.0-rc.5 release as approved"],
     ["7afeb62", "docs: recorded the 1.0.0-rc.5 release"],
     ["20be1e1", "docs: refreshed the hub for the 1.0.0-rc.5 release"],
-    ["831cad5", "fix: built release-candidate deltas from the previous pre-release instead of the latest stable, so installed copies stop falling back to the full package"]
+    ["831cad5", "fix: built release-candidate deltas from the previous pre-release instead of the latest stable, so installed copies stop falling back to the full package"],
+    ["b483dfb", "docs: amended ADR-062 with the delta base and refreshed the hub for the slow-update fix"],
+    ["7b994d9", "docs: tidied the hub and roadmap so only real next steps stay open"],
+    ["2ed9c3c", "docs: pointed the hub at the tidy commit"],
+    ["6a1a3aa", "docs: recorded the owner's last rc.5 checks, the fence setup and the board frame fix held for after 1.0.0"]
   ]
 };
 /* ===== END HUB DATA ===== */
