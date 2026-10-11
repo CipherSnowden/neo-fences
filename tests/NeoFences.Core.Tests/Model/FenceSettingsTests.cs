@@ -126,21 +126,21 @@ public class FenceSettingsTests
     public void Save_ReplacesAnOwnRecipeOfTheSameName()
     {
         var fence = Red with { IconSize = 64, Labels = LabelMode.OnHover, Look = new OwnLook { Strength = 70 } };
-        var config = Recipes.Save(ConfigWith(fence), fence.Id, "  My dark look ", emoji: null);
-        Assert.Equal("My dark look", Recipes.Matching(config, fence));
+        var config = Recipes.Save(ConfigWith(fence), fence.Id, "  My dark look ", emoji: null, windowsLight: false);
+        Assert.Equal("My dark look", Recipes.Matching(config, fence, windowsLight: false));
         var changed = config.WithFence(fence with { Look = new OwnLook { Strength = 10 } });
-        config = Recipes.Save(changed, fence.Id, "my DARK look", emoji: null);
+        config = Recipes.Save(changed, fence.Id, "my DARK look", emoji: null, windowsLight: false);
         Assert.Equal(10, config.Presets.Single().Look.Strength); // replaced, not added
         Assert.Equal("my DARK look", config.Presets.Single().Name);
-        Assert.Same(config, Recipes.Save(config, fence.Id, "Minimal", emoji: null));
-        Assert.Same(config, Recipes.Save(config, fence.Id, "", emoji: null));
+        Assert.Same(config, Recipes.Save(config, fence.Id, "Minimal", emoji: null, windowsLight: false));
+        Assert.Same(config, Recipes.Save(config, fence.Id, "", emoji: null, windowsLight: false));
     }
 
     [Fact]
     public void Delete_RemovesOnlyAnOwnRecipe_AndTheFencesKeepTheirLook()
     {
         var fence = Red with { Look = new OwnLook { Strength = 70 } };
-        var config = Recipes.Save(ConfigWith(fence), fence.Id, "Mine", emoji: null);
+        var config = Recipes.Save(ConfigWith(fence), fence.Id, "Mine", emoji: null, windowsLight: false);
         config = Recipes.Delete(config, "MINE");
         Assert.Empty(config.Presets);
         Assert.Equal(new OwnLook { Strength = 70 }, config.Fences[0].Look); // recipes are copies, not links

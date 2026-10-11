@@ -677,7 +677,7 @@ public partial class FenceSettingsWindow : Window
     private void ShowRecipes(FenceSettingsView view)
     {
         RecipeCards.Children.Clear();
-        var matching = view.Fence is { } fence && !view.AllFences ? Recipes.Matching(view.Config, fence) : null;
+        var matching = view.Fence is { } fence && !view.AllFences ? Recipes.Matching(view.Config, fence, view.LightTheme) : null;
         foreach (var recipe in Recipes.All(view.Config))
         {
             var card = new ToggleButton

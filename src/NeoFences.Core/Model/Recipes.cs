@@ -50,9 +50,17 @@ public static class Recipes
     public static NeoFencesConfig Apply(NeoFencesConfig config, string fenceId, Recipe recipe)
     {
         var fence = Require(config, fenceId);
+        var look = recipe.Look;
+        var mine = fence.Look ?? new OwnLook();
         return config.WithFence(fence with
         {
-            Look = ConfigNormalizer.NormalizeLook(recipe.Look),
+            // Part by part (1.0.1): a part the recipe has not keeps the fence's own value.
+            Look = ConfigNormalizer.NormalizeLook(new OwnLook
+            {
+                Theme = look.Theme ?? mine.Theme, TitleStyle = look.TitleStyle ?? mine.TitleStyle, ColourStyle = look.ColourStyle ?? mine.ColourStyle,
+                Strength = look.Strength ?? mine.Strength, TitleFont = look.TitleFont ?? mine.TitleFont, TitleAlign = look.TitleAlign ?? mine.TitleAlign,
+                TitleOnHover = look.TitleOnHover ?? mine.TitleOnHover, Spacing = look.Spacing ?? mine.Spacing,
+            }),
             IconSize = recipe.IconSize ?? fence.IconSize,
             Labels = recipe.Labels ?? fence.Labels,
             OpenWith = recipe.OpenWith ?? fence.OpenWith,
@@ -103,7 +111,10 @@ public static class Recipes
         if (look.Theme is { } theme) lines.Add("Theme → " + ThemeName(theme));
         if (look.Strength is { } strength) lines.Add($"Transparency → {strength} %");
         if (look.TitleStyle is { } style) lines.Add("Title style → " + style);
-        if (look.TitleOnHover == true) lines.Add("Title bar → only on hover");
+        if (look.ColourStyle is { } colourStyle) lines.Add("Colour style → " + ColourStyleName(colourStyle));
+        if (look.TitleFont is { } font) lines.Add("Title font → " + FontName(font));
+        if (look.TitleAlign is { } align) lines.Add("Title alignment → " + align);
+        if (look.TitleOnHover is { } onHover) lines.Add(onHover ? "Title bar → only on hover" : "Title bar → always shown");
         if (look.Spacing is { } spacing) lines.Add("Spacing → " + spacing);
         if (recipe.IconSize is { } size) lines.Add($"Icon size → {size} px");
         if (recipe.Labels is { } labels) lines.Add(labels == LabelMode.Always ? "Names → always" : "Names → on hover");
@@ -117,6 +128,20 @@ public static class Recipes
     {
         FenceTheme.Aurora => "Aurora glass", FenceTheme.Hud => "Game HUD", FenceTheme.LightMica => "Light Mica", _ => theme.ToString(),
     };
+
+    private static string ColourStyleName(ColourStyle style) => style switch
+    {
+        ColourStyle.TintedGlass => "Tinted glass", ColourStyle.TitleStrip => "Title strip", _ => "Accent edge",
+    };
+
+    /// <summary>"Consolas, Large, Bold": the parts the font has (sizes by their Fence settings names).</summary>
+    private static string FontName(TitleFont font)
+    {
+        string[] sizeNames = ["Small", "Normal", "Large", "Huge"];
+        var size = font.Size is { } points ? TitleFont.Sizes.ToList().IndexOf(points) is var index and >= 0 ? sizeNames[index] : $"{points} pt" : null;
+        var weight = font.Weight is { } chosen ? chosen == TitleWeight.SemiBold ? "Semibold" : chosen.ToString() : null;
+        return string.Join(", ", new[] { font.Family, size, weight }.OfType<string>());
+    }
 
     /// <summary>Why a name cannot be a new recipe's, or null when it can.</summary>
     public static string? NameProblem(string name)
@@ -132,22 +157,16 @@ public static class Recipes
     /// "Save as recipe…": what the fence shows now (its own values and what it follows), under a name and emoji. An own recipe
     /// of the same name (any case) is replaced in its place; a name with a <see cref="NameProblem"/> changes nothing.
     /// </summary>
-    public static NeoFencesConfig Save(NeoFencesConfig config, string fenceId, string name, string? emoji)
+    public static NeoFencesConfig Save(NeoFencesConfig config, string fenceId, string name, string? emoji, bool windowsLight)
     {
         if (NameProblem(name) is not null) return config;
         var fence = Require(config, fenceId);
         var all = config.Settings.Appearance;
-        var own = fence.Look ?? new OwnLook();
         var recipe = new Recipe
         {
             Name = Clean(name),
             Emoji = Model.Emoji.Normalize(emoji),
-            Look = new OwnLook
-            {
-                Theme = own.Theme ?? all.Theme, TitleStyle = own.TitleStyle ?? all.TitleStyle, ColourStyle = own.ColourStyle ?? all.ColourStyle,
-                Strength = own.Strength ?? all.StrengthDark, TitleFont = own.TitleFont, TitleAlign = own.TitleAlign ?? all.TitleAlign,
-                TitleOnHover = own.TitleOnHover ?? all.TitleOnHover, Spacing = own.Spacing ?? all.Spacing,
-            },
+            Look = Shown(all, fence, windowsLight),
             IconSize = fence.IconSize ?? all.IconSize,
             Labels = fence.Labels ?? all.Labels,
             Layout = fence.Layout,
@@ -171,18 +190,29 @@ public static class Recipes
     /// The recipe the fence looks like now (its card is lit), or null. A recipe matches when every part it has is what the
     /// fence shows (own value, else All fences').
     /// </summary>
-    public static string? Matching(NeoFencesConfig config, Fence fence)
+    public static string? Matching(NeoFencesConfig config, Fence fence, bool windowsLight)
     {
         var all = config.Settings.Appearance;
-        var own = fence.Look ?? new OwnLook();
-        var shown = new OwnLook
-        {
-            Theme = own.Theme ?? all.Theme, TitleStyle = own.TitleStyle ?? all.TitleStyle, ColourStyle = own.ColourStyle ?? all.ColourStyle,
-            Strength = own.Strength ?? all.StrengthDark, TitleFont = own.TitleFont, TitleAlign = own.TitleAlign ?? all.TitleAlign,
-            TitleOnHover = own.TitleOnHover ?? all.TitleOnHover, Spacing = own.Spacing ?? all.Spacing,
-        };
+        var shown = Shown(all, fence, windowsLight);
         return All(config).FirstOrDefault(recipe => Matches(recipe, shown, fence.IconSize ?? all.IconSize, fence.Labels ?? all.Labels,
             fence.Layout, fence.OpenWith ?? config.Settings.OpenItemsWith))?.Name;
+    }
+
+    /// <summary>
+    /// The look the fence shows: its own parts, else All fences'. The transparency is the tone's (1.0.1): Light Mica is light,
+    /// the other themes dark, Classic follows Windows (<paramref name="windowsLight"/>).
+    /// </summary>
+    private static OwnLook Shown(AppearanceSettings all, Fence fence, bool windowsLight)
+    {
+        var own = fence.Look ?? new OwnLook();
+        var theme = own.Theme ?? all.Theme;
+        var light = theme == FenceTheme.LightMica || theme == FenceTheme.Classic && windowsLight;
+        return new OwnLook
+        {
+            Theme = theme, TitleStyle = own.TitleStyle ?? all.TitleStyle, ColourStyle = own.ColourStyle ?? all.ColourStyle,
+            Strength = own.Strength ?? (light ? all.StrengthLight : all.StrengthDark), TitleFont = own.TitleFont, TitleAlign = own.TitleAlign ?? all.TitleAlign,
+            TitleOnHover = own.TitleOnHover ?? all.TitleOnHover, Spacing = own.Spacing ?? all.Spacing,
+        };
     }
 
     private static bool Matches(Recipe recipe, OwnLook shown, int iconSize, LabelMode labels, Items.FenceLayout layout, OpenWith openWith)

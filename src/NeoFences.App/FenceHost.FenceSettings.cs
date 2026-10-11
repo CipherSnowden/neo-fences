@@ -81,7 +81,7 @@ public sealed partial class FenceHost
         window.RecipeSaved += (name, emoji) =>
         {
             if (_config.Fences.All(fence => fence.Id != session.FenceId)) return; // gone meanwhile (final review)
-            _config = Recipes.Save(_config, session.FenceId!, name, emoji);
+            _config = Recipes.Save(_config, session.FenceId!, name, emoji, windowsLight: _lightTheme);
             Log.Information("recipe saved: {Name}", name);
             ScheduleSave();
             RefreshAllFenceSettings(); // every open window lists the recipes
