@@ -8,7 +8,7 @@ using NeoFences.Core.Model;
 namespace NeoFences.App;
 
 /// <summary>What Fence settings shows: the fence, Settings' look (for "Like all fences (…)"), the presets and the lit one.</summary>
-public sealed record FenceSettingsView(Fence Fence, AppearanceSettings Appearance, bool LightTheme, IReadOnlyList<LookPreset> Presets, string? Matching,
+public sealed record FenceSettingsView(Fence Fence, AppearanceSettings Appearance, bool LightTheme, IReadOnlyList<Recipe> Presets, string? Matching,
     OpenWith OpenItemsWith = OpenWith.OneClick);
 
 /// <summary>
@@ -23,7 +23,7 @@ public partial class FenceSettingsWindow : Window
     public event Action<FenceLayout>? LayoutChanged;
     /// <summary>M41a: the fence's own "Open items with", or null (like all fences).</summary>
     public event Action<OpenWith?>? OpenWithChanged;
-    public event Action<LookPreset>? PresetChosen;
+    public event Action<Recipe>? PresetChosen;
     public event Action? LikeAllChosen;
     public event Action<string>? PresetSaved;
     public event Action<string>? PresetDeleted;
@@ -208,7 +208,7 @@ public partial class FenceSettingsWindow : Window
         foreach (var preset in view.Presets)
         {
             var chip = Chip(preset.Name, isOn: preset.Name == view.Matching, () => PresetChosen?.Invoke(preset));
-            if (LookPresets.BuiltIn.Contains(preset))
+            if (Recipes.BuiltIn.Contains(preset))
             {
                 PresetChips.Children.Add(chip);
                 continue;
@@ -238,7 +238,7 @@ public partial class FenceSettingsWindow : Window
 
     private void SavePreset()
     {
-        if (LookPresets.NameProblem(PresetNameBox.Text) is { } problem)
+        if (Recipes.NameProblem(PresetNameBox.Text) is { } problem)
         {
             SaveProblem.Text = problem;
             SaveProblem.Visibility = Visibility.Visible;

@@ -80,7 +80,7 @@ public class FenceSettingsTests
     public void OwnLookAndPresets_SurviveTheFile_AndTyposAreRepaired()
     {
         var look = new OwnLook { ColourStyle = ColourStyle.TintedGlass, Strength = 25, TitleFont = new TitleFont("Bahnschrift", null, TitleWeight.Bold), TitleAlign = TitleAlign.Right, TitleOnHover = true, Spacing = Spacing.Compact };
-        var config = ConfigWith(Red with { Look = look }) with { Presets = [new LookPreset { Name = "Dark", Look = look, IconSize = 64, Labels = LabelMode.OnHover }] };
+        var config = ConfigWith(Red with { Look = look }) with { Presets = [new Recipe { Name = "Dark", Look = look, IconSize = 64, Labels = LabelMode.OnHover }] };
         var back = ConfigNormalizer.Normalize(ConfigJson.Deserialize(ConfigJson.Serialize(config)));
         Assert.Equal(look, back.Fences[0].Look);
         Assert.Equal(config.Presets[0], back.Presets[0]);
@@ -93,64 +93,26 @@ public class FenceSettingsTests
     }
 
     [Fact]
-    public void Normalizer_KeepsOwnPresetsWithUsableNamesOnly()
+    public void Normalizer_KeepsOwnRecipesWithUsableNamesOnly()
     {
         var config = ConfigNormalizer.Normalize(new NeoFencesConfig
         {
             Presets =
             [
-                new LookPreset { Name = "  Mine  ", IconSize = 50, Labels = (LabelMode)4 },
-                new LookPreset { Name = "MINE" },          // the same name again
-                new LookPreset { Name = "glass" },         // a built-in's name
-                new LookPreset { Name = " \t " },          // blank
+                new Recipe { Name = "  Mine  ", IconSize = 50, Labels = (LabelMode)4 },
+                new Recipe { Name = "MINE" },          // the same name again
+                new Recipe { Name = "game shelf" },    // a built-in's name (M41b)
+                new Recipe { Name = " \t " },          // blank
                 null!,
-                new LookPreset { Name = new string('x', 80), Look = null! },
+                new Recipe { Name = new string('x', 80), Look = null! },
             ],
         });
-        Assert.Equal(["Mine", new string('x', LookPresets.MaxNameLength)], config.Presets.Select(preset => preset.Name));
-        Assert.Equal(new LookPreset { Name = "Mine" }, config.Presets[0]); // odd icon size and labels dropped
+        Assert.Equal(["Mine", new string('x', Recipes.MaxNameLength)], config.Presets.Select(recipe => recipe.Name));
+        Assert.Equal(new Recipe { Name = "Mine" }, config.Presets[0]); // odd icon size and labels dropped
         Assert.Equal(new OwnLook(), config.Presets[1].Look);
     }
 
-    // ---------- §2 presets ----------
-
-    [Fact]
-    public void BuiltIns_AreTheFiveFromTheSpec()
-    {
-        Assert.Equal(["Glass", "Minimal", "Title strip", "Solid", "Compact"], LookPresets.BuiltIn.Select(preset => preset.Name));
-        var minimal = LookPresets.BuiltIn[1];
-        Assert.True(minimal.Look.TitleOnHover);
-        Assert.Equal(LabelMode.OnHover, minimal.Labels);
-        var compact = LookPresets.BuiltIn[4];
-        Assert.Equal((32, LabelMode.OnHover, Spacing.Compact), (compact.IconSize, compact.Labels, compact.Look.Spacing));
-        // Every built-in survives the normalizer unchanged (none of them is "like all fences").
-        foreach (var preset in LookPresets.BuiltIn) Assert.Equal(preset.Look, ConfigNormalizer.NormalizeLook(preset.Look));
-    }
-
-    [Fact]
-    public void Apply_CopiesTheLook_KeepsTheColour_AndSetsIconSizeAndLabelsOnlyWhereThePresetHasThem()
-    {
-        var fence = Red with { IconSize = 64, Labels = LabelMode.Always, Look = new OwnLook { TitleAlign = TitleAlign.Right } };
-        var config = LookPresets.Apply(ConfigWith(fence), fence.Id, LookPresets.BuiltIn[4]); // Compact
-        var compact = config.Fences[0];
-        Assert.Equal((32, LabelMode.OnHover, TabColor.Red), (compact.IconSize, compact.Labels, compact.TabColor));
-        Assert.Equal(new OwnLook { Spacing = Spacing.Compact }, compact.Look); // the whole own look is the preset's
-
-        var glass = LookPresets.Apply(config, fence.Id, LookPresets.BuiltIn[0]).Fences[0];
-        Assert.Equal(32, glass.IconSize); // Glass has no icon size: the fence keeps its own
-        Assert.Equal(LabelMode.Always, glass.Labels);
-        Assert.Equal("Glass", LookPresets.Matching(config with { Fences = [glass] }, glass));
-    }
-
-    [Fact]
-    public void LikeAllFences_DropsTheOwnLook_ButKeepsIconSizeLabelsAndLayout()
-    {
-        var fence = Red with { IconSize = 96, Labels = LabelMode.OnHover, Layout = FenceLayout.Free, Look = new OwnLook { Strength = 50 } };
-        var cleared = LookPresets.LikeAllFences(ConfigWith(fence), fence.Id).Fences[0];
-        Assert.Null(cleared.Look);
-        Assert.Equal((96, LabelMode.OnHover, FenceLayout.Free), (cleared.IconSize, cleared.Labels, cleared.Layout));
-        Assert.Null(LookPresets.Matching(ConfigWith(cleared), cleared));
-    }
+    // ---------- §2 presets: recipes since M41b (RecipesTests) ----------
 
     [Fact]
     public void SetLook_StoresAnEmptyLookAsNone()
@@ -161,35 +123,29 @@ public class FenceSettingsTests
     }
 
     [Fact]
-    public void Save_KeepsTheFencesLook_ReplacesAnOwnPresetOfTheSameName_AndRefusesBadNames()
+    public void Save_ReplacesAnOwnRecipeOfTheSameName()
     {
         var fence = Red with { IconSize = 64, Labels = LabelMode.OnHover, Look = new OwnLook { Strength = 70 } };
-        var config = LookPresets.Save(ConfigWith(fence), fence.Id, "  My dark look ");
-        Assert.Equal(new LookPreset { Name = "My dark look", Look = new OwnLook { Strength = 70 }, IconSize = 64, Labels = LabelMode.OnHover }, config.Presets.Single());
-        Assert.Equal("My dark look", LookPresets.Matching(config, fence));
-
+        var config = Recipes.Save(ConfigWith(fence), fence.Id, "  My dark look ", emoji: null);
+        Assert.Equal("My dark look", Recipes.Matching(config, fence));
         var changed = config.WithFence(fence with { Look = new OwnLook { Strength = 10 } });
-        config = LookPresets.Save(changed, fence.Id, "my DARK look");
+        config = Recipes.Save(changed, fence.Id, "my DARK look", emoji: null);
         Assert.Equal(10, config.Presets.Single().Look.Strength); // replaced, not added
         Assert.Equal("my DARK look", config.Presets.Single().Name);
-
-        Assert.Equal("Type a name.", LookPresets.NameProblem("   "));
-        Assert.Equal("“Solid” is a built-in preset: choose another name.", LookPresets.NameProblem(" solid"));
-        Assert.Null(LookPresets.NameProblem("Solid 2"));
-        Assert.Same(config, LookPresets.Save(config, fence.Id, "Glass"));
-        Assert.Same(config, LookPresets.Save(config, fence.Id, ""));
+        Assert.Same(config, Recipes.Save(config, fence.Id, "Minimal", emoji: null));
+        Assert.Same(config, Recipes.Save(config, fence.Id, "", emoji: null));
     }
 
     [Fact]
-    public void Delete_RemovesOnlyAnOwnPreset_AndTheFencesKeepTheirLook()
+    public void Delete_RemovesOnlyAnOwnRecipe_AndTheFencesKeepTheirLook()
     {
         var fence = Red with { Look = new OwnLook { Strength = 70 } };
-        var config = LookPresets.Save(ConfigWith(fence), fence.Id, "Mine");
-        config = LookPresets.Delete(config, "MINE");
+        var config = Recipes.Save(ConfigWith(fence), fence.Id, "Mine", emoji: null);
+        config = Recipes.Delete(config, "MINE");
         Assert.Empty(config.Presets);
-        Assert.Equal(new OwnLook { Strength = 70 }, config.Fences[0].Look); // presets are copies, not links
-        Assert.Same(config, LookPresets.Delete(config, "Glass"));
-        Assert.Equal(LookPresets.BuiltIn, LookPresets.All(config));
+        Assert.Equal(new OwnLook { Strength = 70 }, config.Fences[0].Look); // recipes are copies, not links
+        Assert.Same(config, Recipes.Delete(config, "Game shelf"));
+        Assert.Equal(Recipes.BuiltIn, Recipes.All(config));
     }
 
     // ---------- §3 reset and the whole snapshot ----------
@@ -201,7 +157,7 @@ public class FenceSettingsTests
         var config = ConfigWith(fence) with
         {
             Settings = new Settings { HideDesktopIcons = true, PeekHotkey = "Ctrl+Q", AutoUpdate = false, Appearance = Appearance with { WallpaperAccent = true } },
-            Presets = [new LookPreset { Name = "Mine" }],
+            Presets = [new Recipe { Name = "Mine" }],
             Library = new LibrarySettings
             {
                 Folders = ["D:\\Games"], Hidden = ["steam:1"], CoverChoices = new Dictionary<string, string> { ["steam:2"] = "choice.jpg" },
@@ -222,7 +178,7 @@ public class FenceSettingsTests
         var fence = Red;
         var before = ConfigWith(fence) with
         {
-            Settings = new Settings { PeekHotkey = "Ctrl+Q" }, Presets = [new LookPreset { Name = "Mine" }], Library = new LibrarySettings { Folders = ["D:\\Games"] },
+            Settings = new Settings { PeekHotkey = "Ctrl+Q" }, Presets = [new Recipe { Name = "Mine" }], Library = new LibrarySettings { Folders = ["D:\\Games"] },
         };
         var items = new ItemsDocument().With(fence.Id, [VirtualItem.Create("C:\\tools\\a.exe")]);
         var whole = Snapshots.TakeWhole(before, items, "Before import", DateTimeOffset.UnixEpoch);

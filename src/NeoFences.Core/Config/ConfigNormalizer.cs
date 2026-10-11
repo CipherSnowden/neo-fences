@@ -122,21 +122,25 @@ public static class ConfigNormalizer
     }
 
     /// <summary>M36: own presets with a usable name (tidied, not blank, not a built-in's, the first of the same name); odd values dropped.</summary>
-    private static List<LookPreset> NormalizePresets(IReadOnlyList<LookPreset>? presets)
+    private static List<Recipe> NormalizePresets(IReadOnlyList<Recipe>? presets)
     {
-        var names = new HashSet<string>(LookPresets.BuiltIn.Select(preset => preset.Name), StringComparer.OrdinalIgnoreCase);
-        var kept = new List<LookPreset>();
+        var names = new HashSet<string>(Recipes.BuiltIn.Select(preset => preset.Name), StringComparer.OrdinalIgnoreCase);
+        var kept = new List<Recipe>();
         foreach (var preset in presets ?? [])
         {
             if (preset is null) continue;
-            var name = LookPresets.Clean(preset.Name);
+            var name = Recipes.Clean(preset.Name);
             if (name.Length == 0 || !names.Add(name)) continue;
-            kept.Add(new LookPreset
+            kept.Add(new Recipe
             {
                 Name = name,
                 Look = NormalizeLook(preset.Look) ?? new OwnLook(),
                 IconSize = preset.IconSize is { } iconSize && IconSizes.Contains(iconSize) ? iconSize : null,
                 Labels = preset.Labels is { } labels && Enum.IsDefined(labels) ? labels : null,
+                Emoji = Emoji.Normalize(preset.Emoji), // M41b: recipes
+                Layout = preset.Layout is { } layout && Enum.IsDefined(layout) ? layout : null,
+                OpenWith = preset.OpenWith is { } openWith && Enum.IsDefined(openWith) ? openWith : null,
+                Inbox = preset.Inbox,
             });
         }
         return kept;

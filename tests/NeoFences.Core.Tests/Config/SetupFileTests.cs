@@ -19,7 +19,7 @@ public class SetupFileTests
         {
             Fences = [fence],
             Settings = new Settings { PeekHotkey = "Ctrl+Q" },
-            Presets = [new LookPreset { Name = "Mine", Look = new OwnLook { Spacing = Spacing.Roomy } }],
+            Presets = [new Recipe { Name = "Mine", Look = new OwnLook { Spacing = Spacing.Roomy } }],
             Library = new LibrarySettings { Folders = ["D:\\Games"], CoverChoices = new Dictionary<string, string> { ["steam:1"] = "choice-steam-1.jpg" } },
         };
         var items = new ItemsDocument().With(fence.Id,

@@ -18,8 +18,8 @@ public sealed record NeoFencesConfig
     /// <summary>Game Library settings (M12): game folders, sources, hidden games.</summary>
     public LibrarySettings Library { get; init; } = new();
 
-    /// <summary>The owner's own look presets (M36), after the built-in ones (<see cref="LookPresets.BuiltIn"/>).</summary>
-    public IReadOnlyList<LookPreset> Presets { get; init; } = [];
+    /// <summary>The owner's own look presets (M36), after the built-in ones (<see cref="Recipes.BuiltIn"/>).</summary>
+    public IReadOnlyList<Recipe> Presets { get; init; } = [];
 
     /// <summary>Fingerprint of the display configuration seen last; new configurations are derived from it.</summary>
     public string? LastLayoutFingerprint { get; init; }

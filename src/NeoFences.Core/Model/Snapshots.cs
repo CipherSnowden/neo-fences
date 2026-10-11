@@ -27,7 +27,7 @@ public sealed record Snapshot
 
     public LibrarySettings? Library { get; init; }
 
-    public IReadOnlyList<LookPreset>? Presets { get; init; }
+    public IReadOnlyList<Recipe>? Presets { get; init; }
 }
 
 /// <summary>Taking and restoring snapshots (M10). Pure: the App saves the result.</summary>

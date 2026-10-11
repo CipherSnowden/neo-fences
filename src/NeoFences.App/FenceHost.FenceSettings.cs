@@ -23,8 +23,8 @@ public sealed partial class FenceHost
         if (_config.Fences.All(fence => fence.Id != fenceId)) return;
         var window = new FenceSettingsWindow(fenceId);
         window.LookChanged += look => ChangeFence(fenceId, config => FenceEdits.SetLook(config, fenceId, look));
-        window.PresetChosen += preset => ChangeFence(fenceId, config => LookPresets.Apply(config, fenceId, preset));
-        window.LikeAllChosen += () => ChangeFence(fenceId, config => LookPresets.LikeAllFences(config, fenceId));
+        window.PresetChosen += preset => ChangeFence(fenceId, config => Recipes.Apply(config, fenceId, preset));
+        window.LikeAllChosen += () => ChangeFence(fenceId, config => AllFences.UseAllDefaults(config, fenceId));
         window.IconSizeChanged += iconSize => ChangeFence(fenceId, config => FenceEdits.SetIconSize(config, fenceId, iconSize));
         window.LabelsChanged += labels => ChangeFence(fenceId, config => FenceEdits.SetLabels(config, fenceId, labels));
         window.OpenWithChanged += openWith => ChangeFence(fenceId, config => FenceEdits.SetOpenWith(config, fenceId, openWith)); // M41a
@@ -39,14 +39,14 @@ public sealed partial class FenceHost
         };
         window.PresetSaved += name =>
         {
-            _config = LookPresets.Save(_config, fenceId, name);
+            _config = Recipes.Save(_config, fenceId, name, emoji: null);
             Log.Information("look preset saved: {Name}", name);
             ScheduleSave();
             RefreshAllFenceSettings(); // every open window lists the presets
         };
         window.PresetDeleted += name =>
         {
-            _config = LookPresets.Delete(_config, name);
+            _config = Recipes.Delete(_config, name);
             Log.Information("look preset deleted: {Name}", name);
             ScheduleSave();
             RefreshAllFenceSettings();
@@ -85,7 +85,7 @@ public sealed partial class FenceHost
             window.Close();
             return;
         }
-        window.Show(new FenceSettingsView(shown, Appearance, _lightTheme, LookPresets.All(_config), LookPresets.Matching(_config, shown), _config.Settings.OpenItemsWith));
+        window.Show(new FenceSettingsView(shown, Appearance, _lightTheme, Recipes.All(_config), Recipes.Matching(_config, shown), _config.Settings.OpenItemsWith));
     }
 
     private void RefreshAllFenceSettings()
