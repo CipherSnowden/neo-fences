@@ -128,6 +128,65 @@ Check 'now-playing' { # spec section 6.6: a song in Windows' media controls show
   "player ready: $ready; song shown: $shown; pause reached the player: $paused; next reached it and the next song shows: $nexted"
   $ready -and $shown -and $paused -and $nexted
 }
+Check 'upgrade-looks-same' { # M41b (ADR-067): an rc.3 setup's icon sizes and names look the same after the move to All fences
+  StopNeoFences
+  $path = Join-Path $data 'config.json'; $config = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+  $config.settings | Add-Member -NotePropertyName allFencesIntroduced -NotePropertyValue $false -Force
+  $config.settings.appearance.PSObject.Properties.Remove('iconSize'); $config.settings.appearance.PSObject.Properties.Remove('labels')
+  $first = $config.fences[0]
+  $first | Add-Member -NotePropertyName iconSize -NotePropertyValue 96 -Force
+  $first | Add-Member -NotePropertyName labels -NotePropertyValue 'onHover' -Force
+  $config | ConvertTo-Json -Depth 50 | Set-Content -LiteralPath $path -Encoding UTF8
+  $items = [ordered]@{ schema = 1; fences = @{ $first.id = @(@{ id = 'big'; target = 'C:\Windows' }) } }
+  $items | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $data 'items.json') -Encoding UTF8
+  StartNeoFences
+  $height = ItemHeight 'Windows'
+  "a 96 px item with names on hover: $height px tall (an rc.3 setup's look; 48 px with names would be about 96)"; $height -ge 100 -and $height -le 116
+}
+Check 'fence-settings-all' { # M41b: All fences changes following fences; a fence's own theme stays
+  $opened = OpenFromFenceMenu "Fence settings$([char]0x2026)"
+  $own = ClickOn (Button 'Neon'); Start-Sleep -Seconds 1
+  $all = ClickOn (Button 'All fences'); Start-Sleep -Seconds 1
+  $hud = ClickOn (Button 'Game HUD'); Start-Sleep -Seconds 2; Shot 'fence-settings-all'
+  $window = WindowLike '*fence settings'; if ($window) { [void][NfVm.W]::SetForegroundWindow($window); Keys @(0x1B) }
+  $log = LogText
+  $thisFence = @($log | Select-String -SimpleMatch 'fence settings: fence.theme = Neon (this fence)').Count -gt 0
+  $allFences = @($log | Select-String -SimpleMatch 'fence settings: fence.theme = Hud (All fences)').Count -gt 0
+  Start-Sleep -Seconds 3 # saved
+  $config = Get-Content -LiteralPath (Join-Path $data 'config.json') -Raw | ConvertFrom-Json
+  $kept = $config.fences[0].look.theme -eq 'neon' -and $config.settings.appearance.theme -eq 'hud'
+  "opened: $opened; Neon for this fence: $thisFence; Game HUD for all: $allFences; saved (own neon, all hud): $kept"; $thisFence -and $allFences -and $kept
+}
+Check 'recipe-all' { # M41b (spec section 4): a recipe on all fences takes a snapshot first and never touches items
+  $before = (Get-FileHash -LiteralPath (Join-Path $data 'items.json')).Hash
+  $opened = OpenFromFenceMenu "Fence settings$([char]0x2026)"
+  ClickOn (Button 'All fences') | Out-Null; Start-Sleep -Seconds 1
+  $chosen = ClickOn (Button 'Recipe Minimal'); Start-Sleep -Seconds 1
+  Keys @(0x0D); Start-Sleep -Seconds 1 # Continue...
+  $applied = ClickOn (Button 'Apply to all fences'); Start-Sleep -Seconds 3; Shot 'recipe-all'
+  $window = WindowLike '*fence settings'; if ($window) { [void][NfVm.W]::SetForegroundWindow($window); Keys @(0x1B) }
+  Start-Sleep -Seconds 2
+  $snapshot = @(Get-ChildItem -LiteralPath (Join-Path $data 'snapshots') -ErrorAction SilentlyContinue |
+    Where-Object { (Get-Content -LiteralPath $_.FullName -Raw) -match '"name": *"Before Minimal' }).Count -gt 0
+  $same = (Get-FileHash -LiteralPath (Join-Path $data 'items.json')).Hash -eq $before
+  $config = Get-Content -LiteralPath (Join-Path $data 'config.json') -Raw | ConvertFrom-Json
+  $titleOnHover = $config.settings.appearance.titleOnHover -eq $true
+  "opened: $opened; recipe: $chosen; applied: $applied; snapshot Before Minimal: $snapshot; items.json unchanged: $same; all fences' title on hover: $titleOnHover"
+  $snapshot -and $same -and $titleOnHover
+}
+Check 'settings-search' { # M41b (spec section 3): "double" finds both double-click settings
+  $opened = OpenFromFenceMenu "Settings$([char]0x2026)"
+  $box = Element 'Search settings' ([System.Windows.Automation.ControlType]::Edit)
+  if ($box) { $box.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue('double'); Start-Sleep -Seconds 1 }
+  $names = @([System.Windows.Automation.AutomationElement]::RootElement.FindAll([System.Windows.Automation.TreeScope]::Descendants,
+    (New-Object System.Windows.Automation.PropertyCondition ([System.Windows.Automation.AutomationElement]::ControlTypeProperty), ([System.Windows.Automation.ControlType]::Button))) |
+    ForEach-Object { $_.Current.Name })
+  $desktop = @($names | Where-Object { $_ -like 'Double-click empty desktop hides all fences*' }).Count -gt 0
+  $clicks = @($names | Where-Object { $_ -like 'Open items with*' }).Count -gt 0
+  Shot 'settings-search'
+  $window = WindowLike 'NeoFences settings'; if ($window) { [void][NfVm.W]::SetForegroundWindow($window); Keys @(0x12, 0x73) }
+  "opened: $opened; found the desktop double-click: $desktop; found Open items with: $clicks"; $desktop -and $clicks
+}
 Check 'rolled-up-click' { # last: every fence rolled up, opening on click (review I4)
   StopNeoFences
   $path = Join-Path $data 'config.json'; $config = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json

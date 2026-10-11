@@ -77,3 +77,14 @@ function HiddenDesktopPassthrough { # ADR-066: hidden by a double-click, the des
   "hidden: $hidden; Explorer's menu while hidden: $menu; fences back: $back; menu with fences shown (replayed): $shownMenu"
   $hidden -and $menu -and $back -and $shownMenu
 }
+# M41b: buttons by name, a real click (WPF's ToggleButton fires Click only for the mouse), and the fence menu's entries.
+function Button([string]$name) { Element $name ([System.Windows.Automation.ControlType]::Button) }
+function ClickOn($element) { if (-not $element) { return $false }; $x, $y = Center $element; LeftClick $x $y; $true }
+function OpenFromFenceMenu([string]$entryName) { # the left-most fence's title, so a fence full of items still gives its menu
+  $fence = @(Fences | Sort-Object { (Rect $_).Left })[0]; $rect = Rect $fence
+  RightClick ([int](($rect.Left + $rect.Right) / 2)) ($rect.Top + 14)
+  $entry = Element $entryName ([System.Windows.Automation.ControlType]::MenuItem)
+  if (-not $entry) { Keys @(0x1B); return $false }
+  $entry.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 2; $true
+}
+function ItemHeight([string]$name) { $item = Element $name ([System.Windows.Automation.ControlType]::ListItem); if ($item) { [int]$item.Current.BoundingRectangle.Height } else { 0 } }

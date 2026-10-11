@@ -89,7 +89,11 @@ public partial class SettingsWindow : Window
         _selectFenceMenu = Segmented(FenceMenuChoice, ["Guided", "Compact"], index => FenceMenuChanged?.Invoke(index == 1 ? FenceMenuStyle.Compact : FenceMenuStyle.Guided));
         ChangeAllLookButton.Click += (_, _) => ChangeAllFencesLookRequested?.Invoke(); // M41b
         PrivacyButton.Click += (_, _) => PrivacyRequested?.Invoke();
-        SearchBox.TextChanged += (_, _) => ShowSearch();
+        SearchBox.TextChanged += (_, _) =>
+        {
+            SearchHint.Visibility = SearchBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+            ShowSearch();
+        };
         SearchBox.KeyDown += (_, key) =>
         {
             if (key.Key == Key.Enter && SearchResults.Children.OfType<Button>().FirstOrDefault() is { } first)
