@@ -105,7 +105,7 @@ public static class NowPlaying
 
     /// <summary>Nothing playing: the last song dimmed ("Last: …"), or just "Nothing playing".</summary>
     public static NowPlayingFace Face(MediaTrack? current, MediaTrack? last) =>
-        current is { } playing ? new(playing, Idle: false, playing.Title, playing.Artist)
+        current is { } playing ? new(playing, Idle: false, playing.Title is { Length: > 0 } title ? title : AppName(playing.App), playing.Artist) // M41b: untitled → the app
         : last is { } earlier ? new(earlier, Idle: true, "Nothing playing", $"Last: {earlier.Title} · {earlier.Artist}")
         : new(null, Idle: true, "Nothing playing", "");
 
@@ -142,6 +142,12 @@ public static class NowPlaying
 }
 
 /// <summary>M41a (spec §6.5): fences that hold only widgets may float.</summary>
+/// <summary>M41b (spec §7): touchpads send small wheel deltas; one volume step per 120 units (Windows' notch), the rest kept.</summary>
+public static class VolumeWheel
+{
+    public static (int Steps, int Remainder) Add(int remainder, int delta) => ((remainder + delta) / 120, (remainder + delta) % 120);
+}
+
 public static class WidgetBoards
 {
     /// <summary>The fence holds widgets and nothing else (by its items' targets).</summary>

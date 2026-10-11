@@ -227,3 +227,23 @@ public class FloatOfferTests
     [Fact]
     public void AFenceWithItems_IsNotOffered() => Assert.False(WidgetBoards.OfferFloat(before: [@"C:\Games"], after: [@"C:\Games", Clock]));
 }
+
+/// <summary>M41b (spec §7): the rc.3 leftovers that are Core's.</summary>
+public class Rc3LeftoverTests
+{
+    [Fact]
+    public void AnUntitledSession_ShowsTheAppsName()
+    {
+        var face = NowPlaying.Face(new MediaTrack("", "", "", "Spotify.exe"), last: null);
+        Assert.Equal(NowPlaying.AppName("Spotify.exe"), face.Title);
+    }
+
+    [Theory]
+    [InlineData(0, 120, 1, 0)]
+    [InlineData(0, 40, 0, 40)]
+    [InlineData(80, 40, 1, 0)]
+    [InlineData(0, -250, -2, -10)]
+    [InlineData(30, -40, 0, -10)]
+    public void TheWheel_AddsUpToWholeSteps(int remainder, int delta, int steps, int left) =>
+        Assert.Equal((steps, left), VolumeWheel.Add(remainder, delta));
+}
