@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-11",
-  commit: "554c626",
+  commit: "7a4fd62",
   phase: "1.0.0-rc — release candidate with friends (path to 1.0)",
-  current: "M41a FEEL BUILT on branch m41a-feel (not released yet): fence themes (Aurora glass, Game HUD, Neon, Light Mica), title styles and emoji, Motion, one click opens, Guided/Compact menu, widgets in S/M/L with a gallery and a flip side, floating boards, Calendar, Now playing, a hands-off hidden desktop · reviewed and fixed, 1010 tests · waiting on you: CPU check on your PC (yes / later / skip) and the go for 1.0.0-rc.3",
+  current: "1.0.0-rc.3 RELEASED (rc.1/rc.2 update themselves): fence themes (Aurora glass, Game HUD, Neon, Light Mica), title styles and emoji, Motion, one click opens, Guided/Compact menu, widgets in S/M/L with a gallery and a flip side, floating boards, Calendar, Now playing, a hidden desktop that is yours · CPU 0.42 % with ten Lively fences · next: M41b settings → rc.4",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -824,9 +824,11 @@ const HUB = {
       { t: "Built: Core test-first (1010 tests), app, guide, checklist AZ1–AZ14, ADR-063 to 066", s: "done" },
       { t: "Opus review: HUD crash on comma-decimal locales, Now playing at rest in games, reveal state, hung players, late covers and more — all fixed", s: "done" },
       { t: "Your follow-up: a single click on a widget no longer selects it (hover highlights; double-click opens)", s: "done" },
-      { t: "VM live checks on the branch build", s: "wip" },
-      { t: "CPU check on your PC with ten Lively fences — your call: yes / later / skip (skip = theme motion at 10 fps)", s: "you" },
-      { t: "Merge, version 1.0.0-rc.3, release as a pre-release — with your go", s: "you" }
+      { t: "A widget's double-click opened nothing after the no-selection fix — fixed (opens from the second press); VM live checks 15 of 15", s: "done" },
+      { t: "CPU check on your PC: ten Aurora / HUD / Neon fences, Motion Lively, idle: 0.42 % in Task Manager (goal under 2 %)", s: "done" },
+      { t: "Released 1.0.0-rc.3: CI green, attestation and checksums verified, VM install check rc.2 → rc.3 16 of 16", s: "done" },
+      { t: "Look at Now playing with Spotify or YouTube on rc.3 (the VM has no sound)", s: "you" },
+      { t: "M41b settings → rc.4 (option audit, Fence settings v4, Settings v2, recipes; plus the deferred minors and the gallery's search)", s: "next" }
     ] },
     { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
       { t: "You picked the keyboard through Peek and a scripted VM test pass; Windows 10 dropped — Windows 11 only (ADR-059)", s: "done" },
@@ -1270,7 +1272,7 @@ const HUB = {
     { v: "0.26.0", s: "done", scope: "Release readiness (M39): a freeware licence, privacy and security notes and third-party notices (in the app: Settings → About → Licence and notices), SHA-256 checksums and build attestations on every release, issue forms, a landing page, install help for SmartScreen and Smart App Control, new guide pictures. Released 2026-10-10; install check in the Windows 11 VM." },
     { v: "1.0.0-rc.1", s: "done", scope: "Release candidate for friends: a GitHub pre-release that stable copies never see; it updates itself to later release candidates and to 1.0.0. Released 2026-10-10." },
     { v: "1.0.0-rc.2", s: "done", scope: "Release candidate 2: Win+D works after Peek, desktop icons hidden after the first desktop sort, crisper fence text. Released 2026-10-11." },
-    { v: "1.0.0-rc.3", s: "wip", scope: "Feel (M41a): fence themes, title and name styles, emoji, Motion Off/Calm/Lively, one click opens, Guided/Compact fence menu, widgets in Small/Medium/Large with a gallery and a flip side, floating widget boards, Calendar, Now playing, a hidden desktop that is fully yours, click wallpaper to reveal it. Built; waiting for the CPU check and your go." },
+    { v: "1.0.0-rc.3", s: "done", scope: "Feel (M41a): fence themes, title and name styles, emoji, Motion Off/Calm/Lively, one click opens, Guided/Compact fence menu, widgets in Small/Medium/Large with a gallery and a flip side, floating widget boards, Calendar, Now playing, a hidden desktop that is fully yours, click wallpaper to reveal it. Released 2026-10-11." },
     { v: "1.0.0-rc.4", s: "todo", scope: "Settings (M41b): every option audited, Fence settings v4 with a live preview, Settings v2 with visual pickers and search, recipes." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
@@ -1395,13 +1397,13 @@ const HUB = {
     ["Bulk fix of missing items", "—", "0.10", "M19", "done", "After one Locate…, the others from the same old place; undo from the tray (ADR-042)", "extra"],
     ["Folder views (read-only live folder fences)", "3+", "M21", "0.11", "done", "ADR-044; replaces Portals", "parity"],
     ["Auto-collect rules", "3+", "later", "—", "todo", "Replaces Rules (ADR-040)", "parity"],
-    ["Fence themes: Classic, Aurora glass, Game HUD, Neon, Light Mica", "—", "rc.3", "M41a", "wip", "Per fence with a transparency slider; moving parts pause when unseen or in a game (ADR-063)", "extra"],
-    ["Title styles (Simple, Clean, Pill, Caps), emoji, name styles", "—", "rc.3", "M41a", "wip", "Per fence; names Crisp / Chips / None (ADR-063)", "extra"],
-    ["Motion Off / Calm / Lively", "—", "rc.3", "M41a", "wip", "Lift, tilt, sweep, press ripple, items arrive; off in games and when Windows animations are off (ADR-063)", "extra"],
-    ["One click opens; Guided / Compact fence menu", "—", "rc.3", "M41a", "wip", "No selection left behind; Ctrl+click still selects; double click as an option (ADR-064)", "extra"],
-    ["Widgets in S/M/L, gallery, flip side, floating boards", "6", "rc.3", "M41a", "wip", "Clock with world cities, Calendar, System stats (ADR-065)", "parity"],
-    ["Now playing widget", "—", "rc.3", "M41a", "wip", "Windows' media controls: cover glow, vinyl, play/skip/shuffle/repeat, scrub, wheel volume; local only (ADR-065)", "extra"],
-    ["Hidden desktop is fully yours; click wallpaper to reveal", "—", "rc.3", "M41a", "wip", "The hook only watches while fences are hidden (ADR-066)", "extra"],
+    ["Fence themes: Classic, Aurora glass, Game HUD, Neon, Light Mica", "—", "rc.3", "M41a", "done", "Per fence with a transparency slider; moving parts pause when unseen or in a game (ADR-063)", "extra"],
+    ["Title styles (Simple, Clean, Pill, Caps), emoji, name styles", "—", "rc.3", "M41a", "done", "Per fence; names Crisp / Chips / None (ADR-063)", "extra"],
+    ["Motion Off / Calm / Lively", "—", "rc.3", "M41a", "done", "Lift, tilt, sweep, press ripple, items arrive; off in games and when Windows animations are off (ADR-063)", "extra"],
+    ["One click opens; Guided / Compact fence menu", "—", "rc.3", "M41a", "done", "No selection left behind; Ctrl+click still selects; double click as an option (ADR-064)", "extra"],
+    ["Widgets in S/M/L, gallery, flip side, floating boards", "6", "rc.3", "M41a", "done", "Clock with world cities, Calendar, System stats (ADR-065)", "parity"],
+    ["Now playing widget", "—", "rc.3", "M41a", "done", "Windows' media controls: cover glow, vinyl, play/skip/shuffle/repeat, scrub, wheel volume; local only (ADR-065)", "extra"],
+    ["Hidden desktop is fully yours; click wallpaper to reveal", "—", "rc.3", "M41a", "done", "The hook only watches while fences are hidden (ADR-066)", "extra"],
     ["Fences holding the desktop's own icons (Takeover)", "1+", "—", "M2", "parked", "ADR-040: fences hold virtual items instead", "parity"],
     ["Inbox / default fence for new items", "—", "—", "M2", "parked", "No auto-fill (ADR-040)", "extra"],
     ["Folder Portals", "3+", "—", "M4", "parked", "Came back read-only as folder views (M21, ADR-044)", "parity"],
@@ -1582,7 +1584,7 @@ const HUB = {
     { date: "2026-10-10", topic: "M39 release readiness (merged)", done: "0.25.0 released (VM install check); M38.1 second VM; M39: Core on Linux (WindowsPath), trust files, checked downloads, landing page, screenshots; Opus review C1 fixed; VM passes 13/13 and 8/8; merged locally.", next: "Release 0.26.0 (asked), then 1.0.0-rc for friends." },
     { date: "2026-10-10", topic: "0.26.0 and 1.0.0-rc.1 released", done: "0.26.0: website live, Pages and private reporting on, checksums fixed to the downloadable files, VM 13 of 13. RC: pre-release channel (ADR-062), rc.1 published, VM 13 of 13, a fresh 0.26.0 ignored it.", next: "Friends' feedback for about a week; rc.2 for any blocker; then 1.0.0 and the outreach." },
     { date: "2026-10-11", topic: "rc.1 feedback, rc.2, M41 brainstorm", done: "Win+D bug reproduced and fixed via VM probes; rc.2 released (14 of 14); visual brainstorm of titles, widgets, motion, themes, clicks, menus, Fence settings v4, Settings v2, recipes.", next: "Widgets brainstorm; M41a spec and plan." },
-    { date: "2026-10-11", topic: "M41a feel built", done: "Widgets brainstorm; spec approved; prototype VM 14 of 14; plan; built on m41a-feel (1010 tests, ADR-063 to 066); Opus review fixes; a widget's single click no longer selects it.", next: "VM live checks; your CPU check or skip; merge and 1.0.0-rc.3 with your go; then M41b settings." }
+    { date: "2026-10-11", topic: "M41a feel built, 1.0.0-rc.3 released", done: "Widgets brainstorm; spec approved; prototype VM 14 of 14; plan; built (1010 tests, ADR-063 to 066); Opus review fixes; widget clicks fixed; CPU 0.42 % on your PC; VM 15 of 15; rc.3 released (install check 16 of 16).", next: "M41b settings → rc.4; you look at Now playing with Spotify or YouTube." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2313,7 +2315,12 @@ const HUB = {
     ["00614fa", "fix: fixed the review findings: HUD on comma-decimal locales, Now playing at rest in games, card rebuilds, theme tones, reveal state, hung players, late covers"],
     ["36968b8", "fix: a plain click on a widget no longer selects it; VM check for it"],
     ["04f650f", "test: logged widget opens; the widget-click check reads the log"],
-    ["554c626", "docs: recorded the M41a build in the roadmap and the session log"]
+    ["554c626", "docs: recorded the M41a build in the roadmap and the session log"],
+    ["6d37d40", "fix: a widget opened from its second press, since a handled press never reaches the double-click"],
+    ["461dc39", "test: measured theme CPU on the owner's PC: 0.42 % with ten Lively fences"],
+    ["1309e75", "chore: bumped the version to 1.0.0-rc.3"],
+    ["47a146c", "docs: marked the 1.0.0-rc.3 release as approved"],
+    ["7a4fd62", "docs: recorded the 1.0.0-rc.3 release"]
   ]
 };
 /* ===== END HUB DATA ===== */
