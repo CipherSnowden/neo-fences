@@ -271,9 +271,10 @@ public sealed class IconLoader : IDisposable
     /// </summary>
     private static BitmapSource? Smooth(string target, int sizePx)
     {
-        if (sizePx < LargeArtPx && ShellItems.TryGetImage(target, LargeArtPx) is { } large && IconArt.IsLarge(large.Pixels, large.Width, large.Height))
-            return ScaledDown(large, sizePx);
-        return Frozen(ShellItems.TryGetImage(target, sizePx));
+        // Review: only fence-sized icons; at 16–32 px (panel rows, pickers) the app's own small frame beats 256-px art shrunk.
+        if (sizePx < 48 || sizePx >= LargeArtPx) return Frozen(ShellItems.TryGetImage(target, sizePx));
+        if (ShellItems.TryGetImage(target, LargeArtPx) is not { } large) return null; // review: a failing handler is not asked twice
+        return IconArt.IsLarge(large.Pixels, large.Width, large.Height) ? ScaledDown(large, sizePx) : Frozen(ShellItems.TryGetImage(target, sizePx));
     }
 
     /// <summary>Scaled with WIC's high-quality filter (a decode at the target size), keeping the shape; the big one if that fails.</summary>

@@ -25,6 +25,16 @@ public sealed class IconDiskCache(string directory)
         var (index, failure) = IconCacheIndex.Load(IndexPath);
         if (failure is not null) Log.Warning(failure, "icon cache: the index could not be read; the cache starts over");
         var (kept, delete) = IconCache.Prune(index, DateTimeOffset.Now);
+        // rc.6 review: pictures no index names (an index from an older NeoFences, or a damaged one, started over) go too.
+        var named = kept.Entries.Values.Select(entry => entry.File).Concat(delete).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            delete = [.. delete, .. Directory.EnumerateFiles(directory, "*.png").Select(Path.GetFileName).OfType<string>().Where(file => !named.Contains(file))];
+        }
+        catch (Exception listFailure) when (listFailure is IOException or UnauthorizedAccessException)
+        {
+            Log.Warning(listFailure, "icon cache: the folder could not be listed");
+        }
         foreach (var file in delete)
         {
             try
