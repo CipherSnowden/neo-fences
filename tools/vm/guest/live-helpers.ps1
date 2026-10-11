@@ -80,11 +80,15 @@ function HiddenDesktopPassthrough { # ADR-066: hidden by a double-click, the des
 # M41b: buttons by name, a real click (WPF's ToggleButton fires Click only for the mouse), and the fence menu's entries.
 function Button([string]$name) { Element $name ([System.Windows.Automation.ControlType]::Button) }
 function ClickOn($element) { if (-not $element) { return $false }; $x, $y = Center $element; LeftClick $x $y; $true }
-function OpenFromFenceMenu([string]$entryName) { # the left-most fence's title, so a fence full of items still gives its menu
+function OpenFromFenceMenu([string]$entryName) { # empty fence space, else the title; a Guided menu entry or a Compact icon-row button
   $fence = @(Fences | Sort-Object { (Rect $_).Left })[0]; $rect = Rect $fence
-  RightClick ([int](($rect.Left + $rect.Right) / 2)) ($rect.Top + 14)
-  $entry = Element $entryName ([System.Windows.Automation.ControlType]::MenuItem)
-  if (-not $entry) { Keys @(0x1B); return $false }
-  $entry.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 2; $true
+  foreach ($y in @(($rect.Bottom - 12), ($rect.Top + 14))) {
+    RightClick ([int](($rect.Left + $rect.Right) / 2)) $y
+    $entry = Element $entryName ([System.Windows.Automation.ControlType]::MenuItem)
+    if (-not $entry) { $entry = Element $entryName ([System.Windows.Automation.ControlType]::Button) }
+    if ($entry) { $entry.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 2; return $true }
+    Keys @(0x1B); Start-Sleep -Milliseconds 500
+  }
+  $false
 }
 function ItemHeight([string]$name) { $item = Element $name ([System.Windows.Automation.ControlType]::ListItem); if ($item) { [int]$item.Current.BoundingRectangle.Height } else { 0 } }
