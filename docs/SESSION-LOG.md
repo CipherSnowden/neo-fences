@@ -1120,3 +1120,25 @@ version 2, so rc.7 reused rc.6's pictures. Each cached icon is loaded fresh once
 owner's PC NeoFences' own icon cache was cleared and every icon came back right.
 **Lesson:** a change to how an icon is drawn bumps the icon cache version in the same release.
 **Next:** the owner uses rc.7 for a while (a week was the rule; a few days suggested — the owner decides); then 1.0.0 from rc.7's code.
+
+## 2026-10-12 — M42 1.0.1 polish; 1.0.0; handoff to the Mac
+
+**Done (branch `m42-polish`):** the rc.4 review's deferred minors, Core test-first (1099 tests): a recipe on one fence
+changes only the look parts it has (font, alignment, colour style, spacing stay); Save as recipe and the lit card use the
+transparency of the tone the fence shows (Light Mica light, Classic follows Windows); the confirmations list colour style,
+title font, alignment and a shown title bar; a fences-only snapshot from before rc.4 (every fence with icon size and
+names) restores with values equal to All fences' following (no badges) — newer snapshots keep own values (final review
+I1); settings search no longer throws on half an emoji; the volume wheel drops its leftover when turned back. App: Ctrl+Z
+in Fence settings puts back the panels Downloads inbox changed (`SettingsUndoStep`); previews refresh on a tab switch, a
+fence delete (end of `SyncBoxes`) and a wallpaper change, each wallpaper decoded once on the shell worker with
+`IgnoreImageCache` (final review I2); a new Games fence's names follow All fences; `DefaultLabels` no longer copied.
+**Owner's pick:** "Colour fences from the wallpaper" only in Fence settings (All fences → Accent colour), removed from
+Settings → Look & feel; search "wallpaper colour" finds Accent colour.
+**Checks:** VM live checks 20 of 20 (new: recipe-inbox-undo, settings-search wallpaper colour); checklist BC1–BC7.
+Final Opus review: no critical; I1, I2 fixed. **Deferred minors:** Wallpaper Engine changes refresh an open preview only
+through the accent watcher (on while the wallpaper colour is on); Ctrl+Z restores the whole panel record (a filter edited
+after the recipe goes too); a recipe that changes no panel look still adds an undo step when panels already match; the
+wallpaper colour's source ("From Wallpaper Engine: …") is no longer shown anywhere.
+**Decisions:** none new (the owner's pick follows the M41b "nothing in two places" goal).
+**Next:** 1.0.1 from `m42-polish` after the owner has used 1.0.0; the owner moves development to a MacBook (only Core
+builds and tests there — the App, VM checks and the release install check need the Windows PC).
