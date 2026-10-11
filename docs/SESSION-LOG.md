@@ -1065,3 +1065,21 @@ the full package.
 full-screen game), the week with friends and the 1.0 browser steps; finished items marked done; old by-hand checks from
 0.17–0.19 and before the pivot marked not needed for 1.0 (`[-]` in the roadmap: the VM checks and the RC desktop checks
 cover them).
+
+## 2026-10-11 — the owner's last rc.5 checks, fences set up, the board frame
+
+**Checks (owner's PC, rc.5):** Now playing followed Spotify ("a thousand years", then the next song: cover, record,
+controls). Game mode with Plague Inc: on 4 s after the game started, the mouse hook removed, back when the owner switched
+out; NeoFences used 1.35 % CPU with Lively themes and Now playing (target under 2 %).
+**Fences set up (asked):** whole snapshots first ("Before Claude's setup", "Before bigger widgets"); All fences Aurora
+glass + Clean titles; Games Game HUD + Caps; emoji titles; Desk a floating board. The owner found the widgets small and
+"unimportant": a widget's size is in the fence's icon cells (48 px icons: about 68 × 60 px), so Large in a 3-column fence
+showed Medium (rc.5). Desk got its own icon size 96 (cells about 120 px) and full height: clock, Now playing, calendar
+and stats at about 240 px each. A widget board with its own bigger grid is a design for after 1.0 (with the owner).
+**Board frame found:** the thin light frame around the Desk board was Windows 11's own border around a rounded window
+(PrintWindow of the fence showed no frame; the screen did). Proven on the owner's running Desk window by setting
+DWMWA_BORDER_COLOR to none from outside (frame gone). Fixed on branch `board-edge` (b696ee4: none for a board, Windows'
+default otherwise); VM live checks 19 of 19 (one rerun: Windows' Clock app updating itself covered a fence). Held until
+after 1.0.0 so 1.0.0 stays rc.5's code — or rc.6 if the owner prefers. The VMs draw no window borders (no graphics
+acceleration): checklist BB4 is for a real PC.
+**Next:** the week with friends on rc.5, then 1.0.0; then `board-edge` and the widget-board design.
