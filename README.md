@@ -28,7 +28,7 @@ play, and it never moves, renames or deletes anything of yours.
 > first.
 
 NeoFences **updates itself**: when a new version is ready the tray menu shows *"Restart to update"*; if you ignore it,
-the update installs the next time NeoFences exits. You can turn this off in **Settings → Updates**.
+the update installs the next time NeoFences exits. You can turn this off in **Settings → Updates & privacy**.
 
 ## Quick start
 
@@ -37,7 +37,7 @@ the update installs the next time NeoFences exits. You can turn this off in **Se
    Web links); each becomes a fence of links to what is on your desktop.
 2. **Add more:** drag files, folders, apps from Start, or a web address onto a fence — or right-click a fence →
    **Add** → **Item…**.
-3. **Tidy the desktop (optional):** in **Settings → General**, switch on **Hide desktop icons while NeoFences runs**. Your
+3. **Tidy the desktop (optional):** in **Settings → Desktop**, switch on **Hide desktop icons while NeoFences runs**. Your
    icons come back whenever NeoFences exits — even after a crash.
 4. **Quick-hide:** double-click empty desktop to hide all fences (and the icons); double-click again to bring them back.
    While they are hidden the desktop is all yours (right-click, drag, interactive wallpapers).

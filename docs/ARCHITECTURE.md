@@ -122,6 +122,9 @@ happen) is behind Shift+right-click, under a line saying it acts on the real fil
 | App/FenceThemeLayer, FenceWindow.Motion (M41a) | the theme's drawing behind the items (Aurora's lights, HUD's frame and scan line, Neon's glow, Mica's grain), ≤ 20 fps, paused while hidden or rolled up; item hover lift / glow / tilt / sweep, press dip / ripple, staggered arrival, tooltips growing in, the title-on-hover fade (ADR-063) | WPF animations (render transforms, brushes) |
 | App/WidgetFace, NowPlayingCard, FenceWindow.Widgets, FenceHost.Media (M41a) | widget faces per kind and size in glass cards (ADR-065); Now playing's sleeve, record, tonearm, scrub and players; the gallery drawn in the fence ("+" on the title, Widget…), the widget's back (flip, a popup raised topmost), the corner grip's snap; the media reading on the widget tick, covers in memory | WPF (code-built), Popup |
 | App/FenceHost.Clicks (M41a) | one click opens (per fence), the fence menu's shape (Guided / Compact, `ArrangeMenu`), names' style and motion pushed to the windows, the one-time themes tip | — |
+| Core/Model (M41b) | `AllFences` (own value or follows: `LookSetting`, `HasOwn`, `ClearOwn`, `MakeFollow`, `UseAllDefaults`, the one-time `Introduce`), `SettingEdits` (one Fence settings change by catalog id, this fence or All fences; `UndoTo`), `Recipes` (`Recipe`: look and behaviour, apply to one / all / the games fences), `SettingsCatalog` (labels, plain explanations, search) | ADR-067 |
+| App/FenceSettingsWindow, FenceHost.FenceSettings, RecipeDialogs (M41b) | Fence settings v4: rows built from the catalog with badges, the preview (the fence window's `VisualBrush` over the wallpaper picture), explainer, undo per window, recipes with their confirmations | ADR-067 |
+| App/SettingsWindow (M41b) | seven pages with coloured tiles, search over `SettingsCatalog` (a Fence settings result opens Fence settings for All fences), gesture pictures | ADR-067 |
 
 ## Threads
 

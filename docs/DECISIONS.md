@@ -1701,3 +1701,40 @@ right-press for the draw gesture and replayed plain clicks, also while the fence
 
 **Consequences.** Hidden means hands off; a fence-drawing right-drag still works while the fences show. The reveal gesture
 adds a left-up to what the hook reads (still `WH_MOUSE_LL` only, hard rule 3).
+
+## ADR-067 — The look lives in one place; recipes replace presets
+**Date:** 2026-10-11 · **Status:** Accepted · **Amends:** ADR-057 (a fence's own look; presets), ADR-063/064 (where their
+settings live)
+
+**Context.** Friends on rc.1: settings "hard to understand, duplicated, some do nothing". The M41b audit counted 120
+options: 11 without effect at least sometimes (the clock's Seconds and Date line always; Hidden games for every current
+setup; Colour style on any theme but Classic; title weight and alignment under Caps or Pill), 34 reachable in two or more
+places, 22 unclear. The owner took every suggestion of the ten audit cards (`settings-audit.html`, 2026-10-11).
+
+**Decision.**
+- **One place for a fence's look and behaviour: Fence settings**, with **This fence | All fences** on top. Every setting a
+  fence can have of its own (theme, transparency, colour style, title style and font, alignment, title bar, icon size,
+  names, spacing, open with — `LookSetting`) shows a badge: *This fence* (own) or *All fences* (follows), with **Use all
+  fences'**; **Use all defaults** drops every own value; in All fences mode **Make them follow** clears the counted own
+  values. All fences' values are `AppearanceSettings` (new: `IconSize`, `Labels`, `TitleAlign`, `TitleOnHover`,
+  `Spacing`) and `Settings.OpenItemsWith` / `RollupExpand`. `Fence.IconSize` and `Fence.Labels` become nullable (null:
+  follows); new fences follow. **Settings** keeps what is not about a fence (Look & feel: animations, item names, menu
+  style, the wallpaper colour) and finds every setting by search (`SettingsCatalog`: labels, plain explanations, words).
+- **Existing setups keep their look:** once (`Settings.AllFencesIntroduced`, `AllFences.Introduce` in the normalizer), All
+  fences' icon size and labels become the most common among the fences (a tie prefers 48 and Always), and a fence whose
+  values equal them follows; snapshots restore their fences' values as they were.
+- **Transparency** is one slider for both modes: it writes both stored values (`WithStrength`); a setup keeps its two until
+  the slider moves.
+- **Colour:** the fence menu's Colour ▸ goes; Fence settings has None, **Windows accent** (`Fence.WindowsAccent`, followed
+  live), eight swatches and Custom…; "Use my accent colour" (a one-time copy) goes.
+- **Recipes replace presets** (`Recipe`, JSON key `presets` kept): look plus icon size, names, layout and open with —
+  never items, places or sizes. Built in: Game shelf, Work desk, Downloads inbox (also sets folder panels to Details,
+  newest first), Minimal; the old built-in presets go, own presets become own recipes. One fence: one confirmation, Ctrl+Z.
+  All fences: two confirmations, "Only fences that hold games", a snapshot "Before …" first.
+- **Removed:** the clock's Seconds and Date line (the size decides), Hidden games (nothing can hide a game since M22),
+  "Labels for new fences" / "Apply to all fences", the widget back's Size row, covers' Normal / Large (the item size grid).
+
+**Consequences.** One window answers "how does this fence look and behave"; Settings shrinks to seven pages with search.
+No schema bump: new fields are optional, null fields are not written, old fields stay readable (an rc.3 reading rc.4's
+config shows following fences at 48 / Always). Fence settings' preview draws the real fence window (a `VisualBrush`) over
+the monitor's wallpaper picture from `WallpaperSources` (Wallpaper Engine's preview included).

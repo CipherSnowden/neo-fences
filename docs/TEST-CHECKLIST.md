@@ -884,3 +884,19 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 | AZ12 | Ten Aurora / HUD / Neon fences, Motion Lively, idle for a minute (Task Manager, NeoFences' CPU) — on the owner's PC, asked first | average under 2 %; else theme motion drops to 10 fps |
 | AZ13 | Spotify (or a YouTube tab) playing, a Now playing widget Large; pause, next, the bar, shuffle, repeat, the wheel, the cover; a second player; stop all | each works or is hidden when the player does not allow it; the pills switch players; the wheel shows Windows' volume flyout; the cover brings the player forward; then "Nothing playing" with the last song |
 | AZ14 | Widgets: add each from the gallery in S, M and L; drag a corner across sizes; ⚙ → change options → Done; an old 3×3 clock from rc.2 | the snap label shows the size; the back flips and closes; the old clock shows Large; nothing else moves |
+
+## BA — 1.0.0-rc.4 settings (M41b)
+
+| ID | Steps | Expected |
+|---|---|---|
+| BA1 | An rc.3 setup (fences with different icon sizes and names, own looks, own presets; light and dark mode) updated to rc.4 | every fence looks exactly as before; own presets are listed as recipes |
+| BA2 | Fence settings (fence menu) → This fence → Neon | only that fence changes, at once; its Theme badge says This fence; Use all fences' brings it back |
+| BA3 | Switch to All fences → Game HUD | every following fence changes; a fence with its own theme keeps it; the line "1 fence has its own — Make them follow" |
+| BA4 | Make them follow | that fence follows too; the line goes |
+| BA5 | A fence with several own settings → Use all defaults | it follows All fences in everything; emoji, name, colour, layout and lock stay |
+| BA6 | Change three settings, then Undo three times (button and Ctrl+Z) | each change goes back in turn; Undo greys out ("Nothing to undo") |
+| BA7 | With Fence settings open: rename the fence from its title; delete it; restore a snapshot; switch its box's tab | the window follows the new name; closes when the fence is gone; never shows stale values or crashes |
+| BA8 | All fences → recipe Game shelf → Continue → tick Only fences that hold games → Apply; then tray → Restore snapshot "Before Game shelf" | two confirmations; only game fences change; items, places and sizes unchanged; the restore brings the old look back |
+| BA9 | Settings search: "double", "icons", "x", an emoji, empty | double: both double-click settings; a Fence settings result opens Fence settings (All fences) at that row; odd text: no crash, "Nothing found" |
+| BA10 | Fence settings' preview with a picture wallpaper, with Wallpaper Engine, with a solid colour | the fence over its wallpaper (Wallpaper Engine's preview picture); a plain background with the note otherwise; Hold to compare shows the opening look |
+| BA11 | `Invoke-VmChecks.ps1 -Name NF-Win11-Dev -Live` and `-Script probe-settings.ps1` | every check PASS; the screenshots show both windows, the recipe confirmations and the search |

@@ -71,6 +71,8 @@ Sources for Fences 6: stardock.com news posts "Now Announcing: Fences 6", "Fence
 | Themes (Classic, Aurora glass, Game HUD, Neon, Light Mica), title styles, emoji, name styles, motion | 1.0.0-rc.3 (M41a) | done | ADR-063 |
 | One click opens; Guided / Compact fence menu; a hidden desktop left alone; click wallpaper to reveal | 1.0.0-rc.3 (M41a) | done | ADR-064, ADR-066 |
 | Widgets in Small / Medium / Large, gallery, flip side, floating boards; Calendar; Now playing | 1.0.0-rc.3 (M41a) | done | ADR-065 |
+| Fence settings with This fence / All fences, live preview, explanations, undo; recipes (Game shelf, Work desk, Downloads inbox, Minimal) | 1.0.0-rc.4 (M41b) | done | ADR-067 |
+| Settings in seven pages with search and gesture pictures; options without effect removed | 1.0.0-rc.4 (M41b) | done | ADR-067 |
 | Modern widgets; stats with CPU / GPU temperatures (Afterburner or HWiNFO, read-only) and RAM in GB; °F option | 0.19 (M31) | done | ADR-052; disk tile dropped |
 | Folder views: types, files/folders only, newest N, live sort, "+ N more" | 0.11 (M21) | done | ADR-044; Downloads/Screenshots start newest first; panels since 0.15 |
 | Folder panel element: Details / List / Icons, header sort, browse in (Back / Up / Home), Fill fence | 0.15 (M26) | done | ADR-048; folder views migrate to panels |
