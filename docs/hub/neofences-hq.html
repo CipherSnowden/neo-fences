@@ -786,9 +786,9 @@ flowchart TD
 /* ===== HUB DATA — update this block each session to mirror docs/ ===== */
 const HUB = {
   updated: "2026-10-11",
-  commit: "8a32db5",
+  commit: "e15adac",
   phase: "1.0.0-rc — release candidate with friends (path to 1.0)",
-  current: "1.0.0-rc.3 RELEASED and installed on your PC · M41b settings (→ rc.4) STARTED: 120 options checked — 11 do nothing (sometimes or always), 34 in two or more places, 22 unclear · YOUR TURN: pick the 10 cards on the Settings check-up page (browser preview), then I write the rc.4 spec",
+  current: "M41b SETTINGS BUILT (rc.4 candidate, not released): Fence settings with This fence / All fences, live preview, explanations, undo and recipes · Settings in seven pages with search · options that did nothing removed · review fixed, 1070 tests, VM 19 of 19 · YOUR TURN: go for 1.0.0-rc.4",
   waiting: [
     "NEW in 0.19.0 — modern widgets: System stats shows CPU, CPU TEMP, GPU, GPU TEMP and RAM in GB; temperatures come from MSI Afterburner (or HWiNFO). Right-click the stats for °F. Worth checking by hand: light mode (AQ2), and the tiles after closing Afterburner (AQ5).",
     "NEW in 0.18.0 — first-run welcome: a fresh install's first fence offers Sort my desktop…, Add item…, Guide. Worth checking by hand: the welcome at its smallest size and in light mode (AP3), a file dropped on it (AP4), the welcome as a tab (AP7), and the first-start tray notice.",
@@ -833,10 +833,11 @@ const HUB = {
     { group: "M41b · Settings (1.0.0-rc.4)", items: [
       { t: "rc.3 installed on your PC (your data copied first; it now follows release candidates)", s: "done" },
       { t: "Option audit: 120 options — 11 do nothing (e.g. the clock's Seconds and Date line), 34 in two or more places, 22 unclear", s: "done" },
-      { t: "Pick the 10 Settings check-up cards in the browser preview (skip a card = my suggestion), then say done", s: "you" },
-      { t: "Spec from your picks + Fence settings v4 + Settings v2 + recipes + the small rc.3 leftovers + gallery search → your OK", s: "next" },
-      { t: "Plan, build, review, VM checks", s: "todo" },
-      { t: "Release 1.0.0-rc.4 — with your go; then about a week with friends; then 1.0.0", s: "todo" }
+      { t: "You picked all 10 Settings check-up cards (my suggestions); spec approved", s: "done" },
+      { t: "Built: Fence settings (This fence / All fences, preview over your wallpaper, explanations, undo, recipes), Settings (seven pages, search, gesture pictures), removals, rc.3 leftovers; 1070 tests", s: "done" },
+      { t: "Opus review: recipe snapshots, undo scope, a corrupt-wallpaper crash, recipe layouts, kept presets, slider undo — fixed; VM 19 of 19; screenshots sent to you", s: "done" },
+      { t: "Go for 1.0.0-rc.4: merge, version, release as a pre-release", s: "you" },
+      { t: "Then about a week with friends; then 1.0.0", s: "todo" }
     ] },
     { group: "M38 · Keyboard way in and the Windows 11 VM (0.25.0)", items: [
       { t: "You picked the keyboard through Peek and a scripted VM test pass; Windows 10 dropped — Windows 11 only (ADR-059)", s: "done" },
@@ -1281,7 +1282,7 @@ const HUB = {
     { v: "1.0.0-rc.1", s: "done", scope: "Release candidate for friends: a GitHub pre-release that stable copies never see; it updates itself to later release candidates and to 1.0.0. Released 2026-10-10." },
     { v: "1.0.0-rc.2", s: "done", scope: "Release candidate 2: Win+D works after Peek, desktop icons hidden after the first desktop sort, crisper fence text. Released 2026-10-11." },
     { v: "1.0.0-rc.3", s: "done", scope: "Feel (M41a): fence themes, title and name styles, emoji, Motion Off/Calm/Lively, one click opens, Guided/Compact fence menu, widgets in Small/Medium/Large with a gallery and a flip side, floating widget boards, Calendar, Now playing, a hidden desktop that is fully yours, click wallpaper to reveal it. Released 2026-10-11." },
-    { v: "1.0.0-rc.4", s: "wip", scope: "Settings (M41b): every option audited, Fence settings v4 with a live preview, Settings v2 with visual pickers and search, recipes." },
+    { v: "1.0.0-rc.4", s: "wip", scope: "Settings (M41b): a fence's look and behaviour in one window — This fence or All fences, a live preview over your wallpaper, explanations, undo, recipes (Game shelf, Work desk, Downloads inbox, Minimal); Settings in seven pages with search; options that did nothing removed. Built; waiting for your go." },
     { v: "1.0.0", s: "todo", scope: "The first version shared with friends." },
     { v: "v2", s: "todo", scope: "Theme packs “Nanosuit” and “Animus”, desktop pages, icon colour tint, compact context menu." },
     { v: "Ideas", s: "todo", scope: "Wallpaper-adaptive accent, optional local-AI sorting with llama.cpp, Avalonia cross-platform port if ever needed." }
@@ -1412,6 +1413,9 @@ const HUB = {
     ["Widgets in S/M/L, gallery, flip side, floating boards", "6", "rc.3", "M41a", "done", "Clock with world cities, Calendar, System stats (ADR-065)", "parity"],
     ["Now playing widget", "—", "rc.3", "M41a", "done", "Windows' media controls: cover glow, vinyl, play/skip/shuffle/repeat, scrub, wheel volume; local only (ADR-065)", "extra"],
     ["Hidden desktop is fully yours; click wallpaper to reveal", "—", "rc.3", "M41a", "done", "The hook only watches while fences are hidden (ADR-066)", "extra"],
+    ["Fence settings: This fence / All fences, live preview, explanations, undo", "—", "rc.4", "M41b", "done", "One place for the look; badges and Make them follow (ADR-067)", "extra"],
+    ["Recipes: Game shelf, Work desk, Downloads inbox, Minimal, your own", "—", "rc.4", "M41b", "done", "One fence or all; a snapshot first for all (ADR-067)", "extra"],
+    ["Settings: seven pages, search, gesture pictures", "—", "rc.4", "M41b", "done", "Options without effect removed (ADR-067)", "extra"],
     ["Fences holding the desktop's own icons (Takeover)", "1+", "—", "M2", "parked", "ADR-040: fences hold virtual items instead", "parity"],
     ["Inbox / default fence for new items", "—", "—", "M2", "parked", "No auto-fill (ADR-040)", "extra"],
     ["Folder Portals", "3+", "—", "M4", "parked", "Came back read-only as folder views (M21, ADR-044)", "parity"],
@@ -1489,7 +1493,8 @@ const HUB = {
     { id: "ADR-063", t: "Themes with a little life, title styles, name styles and motion", s: "Accepted", d: "Per fence: Classic, Aurora glass, Game HUD, Neon, Light Mica (moving parts at most 20 fps, paused when unseen or in a game); titles Simple / Clean / Pill / Caps with an emoji; names Crisp / Chips / None; Motion Off / Calm / Lively. Existing setups keep Classic + Simple; new installs start Aurora + Clean.", c: "Fences feel alive without a GPU cost when nobody looks; no schema change." },
     { id: "ADR-064", t: "One click opens; the fence menu comes Guided or Compact", s: "Accepted", d: "A press and release without moving opens the item and leaves nothing selected; Ctrl+click and the drag box still select several; a setting (and a per-fence switch) brings double click back. The fence menu loses entries Fence settings… already holds and comes Guided (sections, default) or Compact (icon row).", c: "Amends ADR-056 and M34's selection look." },
     { id: "ADR-065", t: "Widgets in three sizes, a gallery, a flip side, floating boards; Now playing through the Windows SDK projection", s: "Accepted", d: "Glass widgets in Small/Medium/Large (corner drag snaps, Size menu), a gallery drawn inside the fence, settings on the widget's back, a per-fence Widgets float; Calendar replaces Date; Now playing reads Windows' media sessions (TFM net10.0-windows10.0.22621.0, no new NuGet).", c: "Download grows 144 → 170 MB; nothing leaves the PC." },
-    { id: "ADR-066", t: "A hidden desktop belongs to the user; click wallpaper to reveal it", s: "Accepted", d: "While the fences are quick-hidden the mouse hook only watches (desktop menu, drags and Wallpaper Engine work as in Windows); an optional click on empty wallpaper minimizes all windows and the next one brings them back, decided from the desktop each time.", c: "Refines ADR-007, ADR-011 and ADR-053." }
+    { id: "ADR-066", t: "A hidden desktop belongs to the user; click wallpaper to reveal it", s: "Accepted", d: "While the fences are quick-hidden the mouse hook only watches (desktop menu, drags and Wallpaper Engine work as in Windows); an optional click on empty wallpaper minimizes all windows and the next one brings them back, decided from the desktop each time.", c: "Refines ADR-007, ADR-011 and ADR-053." },
+    { id: "ADR-067", t: "The look lives in one place; recipes replace presets", s: "Accepted", d: "Fence settings edits This fence or All fences, each setting with a badge (own / follows), Make them follow and Use all defaults; Settings keeps what is not about a fence and finds every setting by search; existing setups move icon sizes and labels to All fences once, looking the same; recipes (look and behaviour, never items or places) replace presets.", c: "Amends ADR-057; no schema bump; old fields stay readable." }
   ],
   research: [
     { t: "M19 prototype and live check: apps, bulk fix, Add from desktop", b: "Start lists 182 apps in 0.34 s; shell:AppsFolder\\<id> parses with name and icon, a made-up id fails with 0x80070002 (Missing). Dragging from Start works; Windows' drag-image helper refuses Start's drags (now quiet). A fresh install misses games outside launchers until the game folder is set. Live check AE 29/30; the installed 0.9.0 updated itself to 0.10.0 from the release's delta (0.4 MB).", impact: "Released as 0.10.0; deferred minors in docs/research/m19-apps-relocate-desktop-fill.md.", src: [] },
@@ -1592,7 +1597,8 @@ const HUB = {
     { date: "2026-10-10", topic: "M39 release readiness (merged)", done: "0.25.0 released (VM install check); M38.1 second VM; M39: Core on Linux (WindowsPath), trust files, checked downloads, landing page, screenshots; Opus review C1 fixed; VM passes 13/13 and 8/8; merged locally.", next: "Release 0.26.0 (asked), then 1.0.0-rc for friends." },
     { date: "2026-10-10", topic: "0.26.0 and 1.0.0-rc.1 released", done: "0.26.0: website live, Pages and private reporting on, checksums fixed to the downloadable files, VM 13 of 13. RC: pre-release channel (ADR-062), rc.1 published, VM 13 of 13, a fresh 0.26.0 ignored it.", next: "Friends' feedback for about a week; rc.2 for any blocker; then 1.0.0 and the outreach." },
     { date: "2026-10-11", topic: "rc.1 feedback, rc.2, M41 brainstorm", done: "Win+D bug reproduced and fixed via VM probes; rc.2 released (14 of 14); visual brainstorm of titles, widgets, motion, themes, clicks, menus, Fence settings v4, Settings v2, recipes.", next: "Widgets brainstorm; M41a spec and plan." },
-    { date: "2026-10-11", topic: "M41a feel built, 1.0.0-rc.3 released", done: "Widgets brainstorm; spec approved; prototype VM 14 of 14; plan; built (1010 tests, ADR-063 to 066); Opus review fixes; widget clicks fixed; CPU 0.42 % on your PC; VM 15 of 15; rc.3 released (install check 16 of 16); installed on your PC; M41b option audit (120 options, 10 decisions for you).", next: "You pick the 10 audit cards; then the M41b spec → plan → build → rc.4. You look at Now playing with Spotify or YouTube." }
+    { date: "2026-10-11", topic: "M41a feel built, 1.0.0-rc.3 released", done: "Widgets brainstorm; spec approved; prototype VM 14 of 14; plan; built (1010 tests, ADR-063 to 066); Opus review fixes; widget clicks fixed; CPU 0.42 % on your PC; VM 15 of 15; rc.3 released (install check 16 of 16); installed on your PC; M41b option audit (120 options, 10 decisions for you).", next: "You pick the 10 audit cards; then the M41b spec → plan → build → rc.4. You look at Now playing with Spotify or YouTube." },
+    { date: "2026-10-11", topic: "M41b settings built", done: "Your 10 audit picks; spec; plan; built (1070 tests, ADR-067): Fence settings with All fences, preview and recipes, Settings with search; Opus review fixed; VM 19 of 19.", next: "Your go for rc.4; you look at Now playing with Spotify or YouTube." }
   ],
   commits: [
     ["681de83", "docs: added v1 design spec"],
@@ -2330,7 +2336,20 @@ const HUB = {
     ["47a146c", "docs: marked the 1.0.0-rc.3 release as approved"],
     ["7a4fd62", "docs: recorded the 1.0.0-rc.3 release"],
     ["a8c6e79", "docs: claimed M41b settings"],
-    ["8a32db5", "docs: recorded the rc.3 install and the M41b option audit"]
+    ["8a32db5", "docs: recorded the rc.3 install and the M41b option audit"],
+    ["6773593", "docs: wrote the M41b settings spec"],
+    ["7a264dc", "docs: wrote the M41b settings implementation plan"],
+    ["ff3d4eb", "feat: added all-fences defaults that fences follow, with a one-time move of icon sizes and labels"],
+    ["62ec5a0", "feat: replaced look presets with recipes that set look and behaviour for one fence or all"],
+    ["141b8e3", "feat: added a settings catalog with plain explanations and search"],
+    ["21b1c60", "feat: added setting edits for this fence or all fences, with undo, to Core"],
+    ["77619af", "feat: rebuilt Fence settings with this fence or all fences, a live preview, explanations, undo and recipes"],
+    ["6108d7a", "fix: an untitled song showed its app and touchpad scrolling added up to volume steps"],
+    ["bf3e5eb", "feat: rebuilt Settings with pages, search and pictures, and removed options that did nothing"],
+    ["4ed5314", "docs: recorded the settings redesign in ADR-067, the guide, the README and checklist BA"],
+    ["f5a21c0", "test: added VM checks and a probe for the settings redesign, and a search placeholder"],
+    ["7c5ee05", "fix: fixed the review findings: whole snapshots before recipes, undo limited to Fence settings, a corrupt wallpaper, recipe layouts, kept presets, one undo step per drag"],
+    ["e15adac", "docs: recorded the M41b build in the roadmap and the session log"]
   ]
 };
 /* ===== END HUB DATA ===== */
