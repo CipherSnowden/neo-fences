@@ -85,12 +85,19 @@ public static class SettingsCatalog
     /// <summary>Lower case without accents ("Transparéncy" → "transparency").</summary>
     private static string Fold(string text)
     {
-        var decomposed = text.ToLowerInvariant().Normalize(NormalizationForm.FormD);
-        var kept = new StringBuilder(decomposed.Length);
-        foreach (var character in decomposed)
+        try
         {
-            if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark) kept.Append(character);
+            var decomposed = text.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+            var kept = new StringBuilder(decomposed.Length);
+            foreach (var character in decomposed)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark) kept.Append(character);
+            }
+            return kept.ToString().Normalize(NormalizationForm.FormC);
         }
-        return kept.ToString().Normalize(NormalizationForm.FormC);
+        catch (ArgumentException)
+        {
+            return text.ToLowerInvariant(); // half an emoji (pasted text) makes Normalize throw (1.0.1): no accents folded
+        }
     }
 }

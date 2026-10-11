@@ -37,6 +37,14 @@ public class SettingsCatalogTests
     [InlineData("   ")]
     public void AnEmptyQuery_FindsNothing(string? query) => Assert.Empty(SettingsCatalog.Search(query));
 
+    // 1.0.1 (rc.4 review minor): pasted text with half an emoji threw from string.Normalize on every keystroke.
+    [Fact]
+    public void ALoneSurrogate_DoesNotThrow_AndFindsNothing()
+    {
+        Assert.Empty(SettingsCatalog.Search("animations \uD83D"));
+        Assert.Empty(SettingsCatalog.Search("\uDE00"));
+    }
+
     [Theory]
     [InlineData("x")]
     [InlineData("🎮")]
