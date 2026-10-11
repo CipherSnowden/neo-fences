@@ -113,7 +113,7 @@ public sealed class WidgetFace : Grid
         grip.DragCompleted += (_, _) =>
         {
             label.Visibility = Visibility.Collapsed;
-            if (snapped is { } size && _view is { } view && size != view.WidgetSize) Owner?.ChooseWidgetSize(view.Key, size);
+            if (snapped is { } size && _view is { } view && size != view.ChosenWidgetSize) Owner?.ChooseWidgetSize(view.Key, size); // rc.5: the chosen size, not the one that fits
             snapped = null;
         };
         MouseEnter += (_, _) => gear.Visibility = grip.Visibility = Visibility.Visible;

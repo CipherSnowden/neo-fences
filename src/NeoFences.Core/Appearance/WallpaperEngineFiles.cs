@@ -12,21 +12,26 @@ public static class WallpaperEngineFiles
     /// Monitor index → the selected wallpaper's file, from <c>&lt;user&gt;.general.wallpaperconfig.selectedwallpapers</c>
     /// ("Monitor0", "Monitor1", …). The first user with a selection wins; anything unreadable gives none.
     /// </summary>
-    public static IReadOnlyDictionary<int, string> SelectedWallpapers(string configJson) =>
-        Monitors(configJson, monitor => monitor.TryGetProperty("file", out var file) && file.ValueKind == JsonValueKind.String
-            && file.GetString() is { Length: > 0 } path ? path.Replace('/', '\\') : null);
+    public static IReadOnlyDictionary<int, string> SelectedWallpapers(string configJson) => Monitors(configJson, (file, _) => file);
 
     /// <summary>
     /// The monitors playing a playlist of two or more wallpapers (rc.5): Wallpaper Engine changes them itself and its
-    /// <c>file</c> stays the one last picked there, so which one shows is not known.
+    /// <c>file</c> stays the one last picked there, so which one shows is not known. A <c>file</c> that is not in the stored
+    /// playlist was picked on its own afterwards and is the one showing. Same user as <see cref="SelectedWallpapers"/>.
     /// </summary>
     public static IReadOnlySet<int> PlaylistMonitors(string configJson) =>
-        Monitors(configJson, monitor => monitor.TryGetProperty("playlist", out var playlist) && playlist.ValueKind == JsonValueKind.Object
-            && playlist.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array && items.GetArrayLength() > 1 ? "" : null)
+        Monitors(configJson, (file, monitor) =>
+            monitor.TryGetProperty("playlist", out var playlist) && playlist.ValueKind == JsonValueKind.Object
+            && playlist.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array && items.GetArrayLength() > 1
+            && items.EnumerateArray().Any(item => item.ValueKind == JsonValueKind.String
+                && string.Equals(item.GetString()?.Replace('/', '\\'), file, StringComparison.OrdinalIgnoreCase)) ? "" : null)
             .Keys.ToHashSet();
 
-    /// <summary>Monitor index → what <paramref name="read"/> takes from its entry (null: left out); the first user with any wins.</summary>
-    private static Dictionary<int, string> Monitors(string configJson, Func<JsonElement, string?> read)
+    /// <summary>
+    /// Monitor index → what <paramref name="read"/> takes from its entry and its file (null: left out), for the first user
+    /// with a selected file on any monitor.
+    /// </summary>
+    private static Dictionary<int, string> Monitors(string configJson, Func<string, JsonElement, string?> read)
     {
         var selected = new Dictionary<int, string>();
         try
@@ -39,14 +44,18 @@ public static class WallpaperEngineFiles
                     || !user.Value.TryGetProperty("general", out var general) || general.ValueKind != JsonValueKind.Object
                     || !general.TryGetProperty("wallpaperconfig", out var wallpaperConfig) || wallpaperConfig.ValueKind != JsonValueKind.Object
                     || !wallpaperConfig.TryGetProperty("selectedwallpapers", out var wallpapers) || wallpapers.ValueKind != JsonValueKind.Object) continue;
+                var anyFile = false;
                 foreach (var monitor in wallpapers.EnumerateObject())
                 {
                     if (!monitor.Name.StartsWith("Monitor", StringComparison.OrdinalIgnoreCase)
                         || !int.TryParse(monitor.Name.AsSpan(7), out var index) || index < 0
-                        || monitor.Value.ValueKind != JsonValueKind.Object || read(monitor.Value) is not { } value) continue;
-                    selected[index] = value;
+                        || monitor.Value.ValueKind != JsonValueKind.Object
+                        || !monitor.Value.TryGetProperty("file", out var file) || file.ValueKind != JsonValueKind.String
+                        || file.GetString() is not { Length: > 0 } path) continue;
+                    anyFile = true;
+                    if (read(path.Replace('/', '\\'), monitor.Value) is { } value) selected[index] = value;
                 }
-                if (selected.Count > 0) return selected;
+                if (anyFile) return selected;
             }
         }
         catch (JsonException)

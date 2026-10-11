@@ -91,7 +91,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
         Span = shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One);
         if (Span != span) // M41a; final review I3: only a real change rebuilds a face
         {
-            ShownSpan = Span; // the grid trims it again on its next pass (rc.5)
+            ShownSpan = _columns is { } columns ? Span.Clamp(columns) : Span; // as the grid will trim it (rc.5): one face build, not two
             Changed(nameof(WidgetSize));
         }
         StoredCell = shown.Cell;
@@ -144,7 +144,10 @@ public sealed class FenceItemView : INotifyPropertyChanged
     public WidgetOptions Options { get; private set { field = value; Changed(); } } = new();
 
     /// <summary>M41a: the widget's size — Small, Medium or Large — from its span.</summary>
-    public WidgetSize WidgetSize => Widget is { } kind ? WidgetSizes.Fitting(WidgetSizes.Of(Span, kind), ShownSpan) : WidgetSize.Small;
+    public WidgetSize WidgetSize => WidgetSizes.Fitting(ChosenWidgetSize, ShownSpan);
+
+    /// <summary>rc.5: the size the user chose (the Size menu's tick, a corner drag's start); <see cref="WidgetSize"/> is what fits.</summary>
+    public WidgetSize ChosenWidgetSize => Widget is { } kind ? WidgetSizes.Of(Span, kind) : WidgetSize.Small;
 
     /// <summary>M41a: the time of the last tick (the faces format what they show from it).</summary>
     public DateTime WidgetNow { get; private set { field = value; Changed(); } } = DateTime.Now;
@@ -183,10 +186,12 @@ public sealed class FenceItemView : INotifyPropertyChanged
     public GridSpan ShownSpan { get; private set; } = GridSpan.One;
 
     private (double CellWidth, double CellHeight, double IconDips, double LabelHeight, double Inset)? _sizedFor;
+    private int? _columns;
 
-    /// <summary>The grid's span for it (rc.5): a widget's face follows it; other elements keep their own span.</summary>
-    public void Show(GridSpan shown)
+    /// <summary>The grid's span for it and the fence's columns (rc.5): a widget's face follows it; other elements keep their own span.</summary>
+    public void Show(GridSpan shown, int columns)
     {
+        _columns = columns;
         if (shown == ShownSpan || Widget is null) return;
         var before = WidgetSize;
         ShownSpan = shown;

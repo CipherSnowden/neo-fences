@@ -93,10 +93,11 @@ public partial class FenceWindow
         // M41b (audit cards 3, 9): no Size row (gallery, corner drag and right-click → Size), no Seconds / Date line (the size decides).
         switch (kind)
         {
-            case WidgetKind.Clock when view.WidgetSize != WidgetSize.Large:
+            case WidgetKind.Clock when view.ChosenWidgetSize != WidgetSize.Large: // rc.5: a Large clock in a narrow fence keeps its cities
                 stack.Children.Add(Note("Small shows the time and the day, Medium adds the date. World clocks show on the Large clock — make it Large to pick them."));
                 break;
             case WidgetKind.Clock:
+                if (view.WidgetSize != WidgetSize.Large) stack.Children.Add(Note("This fence is too narrow for the Large clock — widen it to see the world clocks."));
                 for (var index = 0; index < WorldClocks.Max; index++)
                 {
                     var slot = index;

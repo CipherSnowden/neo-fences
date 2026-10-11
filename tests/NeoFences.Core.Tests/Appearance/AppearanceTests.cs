@@ -178,6 +178,17 @@ public class AppearanceTests
         Assert.Equal([0], WallpaperEngineFiles.PlaylistMonitors(config));
         Assert.Equal(3, WallpaperEngineFiles.SelectedWallpapers(config).Count);
         Assert.Empty(WallpaperEngineFiles.PlaylistMonitors("{ not json"));
+        // the same user as SelectedWallpapers (final review): another user's playlist is not this one's
+        Assert.Empty(WallpaperEngineFiles.PlaylistMonitors("""
+            { "a": { "general": { "wallpaperconfig": { "selectedwallpapers": { "Monitor0": { "file": "C:/WE/one/scene.pkg" } } } } },
+              "b": { "general": { "wallpaperconfig": { "selectedwallpapers": { "Monitor0": { "file": "C:/WE/x/scene.pkg",
+                "playlist": { "items": [ "C:/WE/x/scene.pkg", "C:/WE/y/scene.pkg" ] } } } } } } }
+            """));
+        // a single wallpaper picked outside an old playlist that is still stored: it shows
+        Assert.Empty(WallpaperEngineFiles.PlaylistMonitors("""
+            { "u": { "general": { "wallpaperconfig": { "selectedwallpapers": { "Monitor0": { "file": "C:/WE/solo/scene.pkg",
+                "playlist": { "items": [ "C:/WE/x/scene.pkg", "C:/WE/y/scene.pkg" ] } } } } } } }
+            """));
         Assert.Empty(WallpaperEngineFiles.PlaylistMonitors("""{ "u": { "general": { "wallpaperconfig": { "selectedwallpapers": { "Monitor0": { "playlist": { "items": 5 } } } } } } }"""));
     }
 
