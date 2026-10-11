@@ -254,6 +254,8 @@ public partial class FenceWindow : Window
         RenameItem.Click += (_, _) => BeginRename();
         FenceSettingsItem.Click += (_, _) => FenceSettingsRequested?.Invoke(); // M36
         LockItem.Click += (_, _) => LockToggled?.Invoke(LockItem.IsChecked);
+        RollUpItem.Click += (_, _) => RollUpToggled?.Invoke(); // M41b
+        BodyContextMenu.Opened += (_, _) => RollUpItem.Header = _rolledUp ? "Unroll" : "Roll up";
         DeleteItem.Click += (_, _) => DeleteRequested?.Invoke();
         SettingsItem.Click += (_, _) => SettingsRequested?.Invoke();
         BuildIconRow(); // M41a
@@ -601,20 +603,21 @@ public partial class FenceWindow : Window
     {
         MenuItem[] all = [SectionAdd, SectionFence, SectionAll, IconRow, AddMenu, AddItemItem, AddFromDesktopItem, AddGamesItem, AddFolderPanelItem,
             AddWidgetItem, SortItem, AutoCollectItem, RenameItem, FenceSettingsItem, TabColorItem, LockItem, RefreshItem, NewFenceMenu, SettingsItem,
-            DetachTabItem, DeleteItem];
+            DetachTabItem, DeleteItem, RollUpItem];
         foreach (var entry in all) (ItemsControl.ItemsControlFromItemContainer(entry) ?? entry.Parent as ItemsControl)?.Items.Remove(entry);
         BodyContextMenu.Items.Clear();
         AddMenu.Items.Clear();
         object[] order = _menuStyle == FenceMenuStyle.Compact
             ?
             [
-                IconRow, new Separator(), AddMenu, SortItem, AutoCollectItem, TabColorItem, RefreshItem, new Separator(), NewFenceMenu, SettingsItem,
+                // M41b (audit card 6): the colour lives in Fence settings now.
+                IconRow, new Separator(), AddMenu, SortItem, RollUpItem, AutoCollectItem, RefreshItem, new Separator(), NewFenceMenu, SettingsItem,
                 new Separator(), DetachTabItem, DeleteItem,
             ]
             :
             [
                 SectionAdd, AddItemItem, AddFromDesktopItem, AddGamesItem, AddFolderPanelItem, AddWidgetItem,
-                SectionFence, RenameItem, FenceSettingsItem, TabColorItem, LockItem, SortItem, AutoCollectItem, RefreshItem,
+                SectionFence, RenameItem, FenceSettingsItem, LockItem, RollUpItem, SortItem, AutoCollectItem, RefreshItem,
                 SectionAll, NewFenceMenu, SettingsItem, new Separator(), DetachTabItem, DeleteItem,
             ];
         foreach (var entry in order) BodyContextMenu.Items.Add(entry);

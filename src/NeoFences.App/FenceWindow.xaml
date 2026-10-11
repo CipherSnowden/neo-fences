@@ -315,7 +315,9 @@
                         <MenuItem x:Name="AddFolderPanelItem" Header="Folder panel…" local:MenuGlyph.Glyph="&#xE8B7;" />
                         <!-- M41a (spec §6.3): the widget gallery. -->
                         <MenuItem x:Name="AddWidgetItem" Header="Widget…" local:MenuGlyph.Glyph="&#xE9F9;" />
-                        <MenuItem x:Name="SortItem" Header="Sort by" local:MenuGlyph.Glyph="&#xE8CB;" />
+                        <MenuItem x:Name="SortItem" Header="Sort now" local:MenuGlyph.Glyph="&#xE8CB;" />
+                        <!-- M41b: rolling up had only the title double-click -->
+                        <MenuItem x:Name="RollUpItem" Header="Roll up" local:MenuGlyph.Glyph="&#xE70E;" />
                         <!-- M27: new matching files of a folder become items here. -->
                         <MenuItem x:Name="AutoCollectItem" Header="Auto-collect…" local:MenuGlyph.Glyph="&#xE895;" />
                         <MenuItem x:Name="RenameItem" Header="Rename" InputGestureText="F2" local:MenuGlyph.Glyph="&#xE8AC;" />
