@@ -1054,3 +1054,10 @@ step): rc.4 → rc.5 by its own update, the same four fences in the same places 
 fetched the delta (7.6 MB) and then the full package (75 MB) on a ~70 KB/s link — about 16 minutes; worth a look later.
 **Next:** about a week with friends on rc.5, then 1.0.0 (that code, version bumped); the owner checks Now playing with
 Spotify and a full-screen game.
+**Slow updates, found:** Velopack's log (`%LOCALAPPDATA%\velopack\velopack_NeoFences.App.log`) showed the rc.4 → rc.5 delta
+failing on `NeoFences.Core.dll.zsdiff` ("Restored data doesn't match checksum"), then the full 75 MB download; the same
+for rc.3 → rc.4. The Release run's log: "Building delta 0.26.0 -> 1.0.0-rc.5" — `vpk download github` fetches the latest
+stable release, so every RC's delta was built from 0.26.0. Fixed in the workflow: after a pre-release tag it downloads
+the latest pre-release (`--pre`); RELEASING.md step 4 now checks the run's "Building delta" line. The published rc.5 delta
+stays as it is (rc.4 copies take the full package once, which works). 1.0.0 will be built from rc.5: copies on 0.26.0 take
+the full package.

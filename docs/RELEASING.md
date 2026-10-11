@@ -32,7 +32,10 @@ For friends to try before a stable release. The same steps as "Every release" be
 4. **Tag** `vx.y.z` and push the tag. The **Release** workflow builds, tests and packs (Velopack, with a delta from the
    previous release), writes `SHA256SUMS.txt`, records **build attestations**, and uploads a **draft** release. Check the
    draft's assets: Setup.exe, the portable zip, the full and delta packages, `releases.win.json`, `RELEASES`,
-   `SHA256SUMS.txt`.
+   `SHA256SUMS.txt`. The run's log must say `Building delta <previous tag's version> -> x.y.z`: the delta is built from
+   the release before this tag (after a release candidate, the latest pre-release, `vpk download github --pre`). A delta
+   from another version makes every installed copy fail the patch checksum and download the full package instead (rc.3
+   to rc.5 were built from 0.26.0). 1.0.0 is built from the last RC, so copies still on 0.26.0 take the full package.
 5. **Install check in the VM** (not on the owner's PC): download the draft's assets
    (`gh release download vx.y.z --dir <folder>`), then
    `pwsh -File tools\vm\Invoke-VmChecks.ps1 -Name NF-Win11 -PreviousSetup <last release's Setup.exe> -Feed <folder> -Candidate x.y.z`

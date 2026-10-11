@@ -28,9 +28,15 @@ jobs:
       - name: Previous release (makes a small delta update)
         shell: pwsh
         continue-on-error: true # none before the first release
+        # The delta is built from the release before this tag: after a release candidate (rc.4 -> rc.5, rc.5 -> 1.0.0) that is
+        # the latest pre-release; vpk's default, the latest stable, made every RC's delta from 0.26.0, so RC installs failed
+        # the patch checksum and downloaded the full package (found on the owner's PC, rc.5).
         run: |
           dotnet tool restore
-          dotnet vpk download github --repoUrl "https://github.com/${{ github.repository }}" --token "${{ secrets.GITHUB_TOKEN }}" --outputDir artifacts/releases
+          $previous = git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>$null
+          $pre = if ($previous -like '*-*') { @('--pre') } else { @() }
+          Write-Host "previous release: $previous $pre"
+          dotnet vpk download github --repoUrl "https://github.com/${{ github.repository }}" --token "${{ secrets.GITHUB_TOKEN }}" --outputDir artifacts/releases @pre
       - name: Release notes (feat and fix commits since the previous tag)
         shell: pwsh
         run: |
