@@ -916,8 +916,8 @@ Debug build with `NEOFENCES_TEST_CRASH=1` for AS1–AS4 (each start crashes once
 
 | ID | Steps | Expected |
 |---|---|---|
-| BC1 | A fence with its own title font, centred title and Roomy spacing → recipe Game shelf (this fence) | theme, title style and transparency change; the font, centring and spacing stay; the confirmation lists only what changes |
-| BC2 | Windows in light mode, a Classic fence → Save as recipe… → switch Windows to dark | the saved recipe keeps the light transparency; its card is lit in light mode only |
+| BC1 | A fence with its own title font, centred title and Roomy spacing → recipe Game shelf (this fence) | theme, title style, transparency, icon size, names and clicks change; the font, centring and spacing stay; the confirmation lists every part the recipe sets |
+| BC2 | Classic with different light and dark transparency (Settings values); Windows in light mode → Save as recipe… → switch Windows to dark | the saved recipe keeps the light transparency; its card is lit in light mode only |
 | BC3 | Fence settings open for a tab of a box → click another tab of that box; then delete the fence the All fences window previews; then change the wallpaper | the tab's window says "This fence is not shown right now" (or shows it again); the All fences preview moves to another fence; the preview shows the new wallpaper |
 | BC4 | A fence with a folder panel (List, by name) → recipe Downloads inbox (this fence) → Ctrl+Z in Fence settings | the panel turns Details, newest first; Ctrl+Z brings back List by name and the old look in one step |
 | BC5 | Restore a fences-only snapshot taken before rc.4 (for example "Before deleting …") | the fences look as before; no "This fence" badges for icon size or names where they match All fences |

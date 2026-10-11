@@ -19,6 +19,8 @@ public sealed partial class FenceHost
     private const string AllFencesKey = "*";
     private readonly Dictionary<string, FenceSettingsSession> _fenceSettings = new(StringComparer.Ordinal);
     private IReadOnlyList<WallpaperImage>? _previewWallpapers;
+    /// <summary>Each wallpaper's picture, decoded once per read (final review: not on the UI thread at every refresh).</summary>
+    private IReadOnlyDictionary<string, BitmapSource> _previewPictures = new Dictionary<string, BitmapSource>();
 
     private sealed class FenceSettingsSession(FenceSettingsWindow window, string? fenceId, NeoFencesConfig opened)
     {
@@ -339,30 +341,13 @@ public sealed partial class FenceHost
         ImageSource? picture = null;
         var crop = new Rect(0, 0, 1, 1);
         string? note = null;
-        if (monitor?.ImagePath is { } path)
+        if (monitor?.ImagePath is { } path && _previewPictures.TryGetValue(path, out var image))
         {
-            try
-            {
-                // BeginInit/EndInit: OnLoad releases the file and the decode width keeps it small (final review: an initializer
-                // after the constructor is ignored, and a corrupt picture throws FileFormatException — caught below).
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.UriSource = new Uri(path);
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.DecodePixelWidth = 1280;
-                image.EndInit();
-                image.Freeze();
-                picture = image;
-                // ponytail: the picture is taken as filling its monitor (Windows' Fill); Fit / Tile wallpapers are cropped a little off.
-                var (width, height) = ((double)(monitor.Right - monitor.Left), (double)(monitor.Bottom - monitor.Top));
-                crop = new Rect((rect.X - monitor.Left) / width, (rect.Y - monitor.Top) / height, rect.Width / width, rect.Height / height);
-                note = monitor.Origin;
-            }
-            catch (Exception failure) when (failure is not OutOfMemoryException) // hard rule 7: no picture, a plain background
-            {
-                Log.Information(failure, "fence settings preview: the wallpaper picture could not be read");
-                picture = null;
-            }
+            picture = image;
+            // ponytail: the picture is taken as filling its monitor (Windows' Fill); Fit / Tile wallpapers are cropped a little off.
+            var (width, height) = ((double)(monitor.Right - monitor.Left), (double)(monitor.Bottom - monitor.Top));
+            crop = new Rect((rect.X - monitor.Left) / width, (rect.Y - monitor.Top) / height, rect.Width / width, rect.Height / height);
+            note = monitor.Origin;
         }
         note ??= _previewWallpapers is null ? "Reading your wallpaper…"
             : monitor?.Origin == WallpaperSources.PlaylistOrigin ? "Wallpaper Engine plays a playlist — showing a plain background"
@@ -380,9 +365,32 @@ public sealed partial class FenceHost
         _shellWorker.Run(() =>
         {
             var images = WallpaperSources.Read((source, failure) => Log.Information(failure, "fence settings preview: {Source} could not be read", source));
+            var pictures = new Dictionary<string, BitmapSource>(StringComparer.OrdinalIgnoreCase);
+            foreach (var path in images.Select(image => image.ImagePath).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    // BeginInit/EndInit: OnLoad releases the file, the decode width keeps it small, IgnoreImageCache reads a file
+                    // written again under the same name (Spotlight); frozen, it crosses to the UI thread. A corrupt picture throws.
+                    var picture = new BitmapImage();
+                    picture.BeginInit();
+                    picture.UriSource = new Uri(path);
+                    picture.CacheOption = BitmapCacheOption.OnLoad;
+                    picture.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+                    picture.DecodePixelWidth = 1280;
+                    picture.EndInit();
+                    picture.Freeze();
+                    pictures[path] = picture;
+                }
+                catch (Exception failure) when (failure is not OutOfMemoryException) // hard rule 7: no picture, a plain background
+                {
+                    Log.Information(failure, "fence settings preview: the wallpaper picture could not be read");
+                }
+            }
             dispatcher.BeginInvoke(() =>
             {
                 _previewWallpapers = images;
+                _previewPictures = pictures;
                 foreach (var session in _fenceSettings.Values) UpdatePreview(session);
             });
         });
