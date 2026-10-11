@@ -58,6 +58,7 @@ public sealed class FenceGridPanel : Panel
         for (var index = 0; index < children.Count; index++)
         {
             var span = Arrangement.Spans[index];
+            if ((children[index] as FrameworkElement)?.DataContext is FenceItemView view) view.Show(span); // rc.5: trimmed widgets fit
             children[index].Measure(new Size(span.Columns * CellWidth, span.Rows * CellHeight));
         }
         var width = double.IsInfinity(availableSize.Width) ? Columns * CellWidth : Math.Min(availableSize.Width, Columns * CellWidth);

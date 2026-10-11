@@ -33,6 +33,18 @@ public class WidgetsFeelTests
     [InlineData(4, 4, WidgetSize.Large)]
     public void AnOldSpan_IsTheNearestSize(int columns, int rows, WidgetSize size) => Assert.Equal(size, WidgetSizes.Of(new GridSpan(columns, rows), WidgetKind.Stats));
 
+    // rc.5 (owner's desktop): a Large widget in a three-column fence is trimmed to 3×2; it shows the biggest design that fits.
+    [Theory]
+    [InlineData(WidgetSize.Large, 4, 2, WidgetSize.Large)]
+    [InlineData(WidgetSize.Large, 3, 2, WidgetSize.Medium)]
+    [InlineData(WidgetSize.Large, 3, 1, WidgetSize.Small)]
+    [InlineData(WidgetSize.Medium, 2, 2, WidgetSize.Medium)]
+    [InlineData(WidgetSize.Medium, 1, 2, WidgetSize.Small)]
+    [InlineData(WidgetSize.Small, 4, 2, WidgetSize.Small)] // never bigger than chosen
+    [InlineData(WidgetSize.Small, 1, 1, WidgetSize.Small)]
+    public void AWidgetShows_TheBiggestDesignThatFitsItsSpace(WidgetSize chosen, int columns, int rows, WidgetSize shown) =>
+        Assert.Equal(shown, WidgetSizes.Fitting(chosen, new GridSpan(columns, rows)));
+
     [Fact]
     public void AWidgetsLayoutSpan_IsItsSizesSpan_AnItemKeepsItsOwn()
     {

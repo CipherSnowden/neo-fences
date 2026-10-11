@@ -89,7 +89,11 @@ public sealed class FenceItemView : INotifyPropertyChanged
         Options = shown.Options ?? new WidgetOptions();
         var span = Span;
         Span = shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One);
-        if (Span != span) Changed(nameof(WidgetSize)); // M41a; final review I3: only a real change rebuilds a face
+        if (Span != span) // M41a; final review I3: only a real change rebuilds a face
+        {
+            ShownSpan = Span; // the grid trims it again on its next pass (rc.5)
+            Changed(nameof(WidgetSize));
+        }
         StoredCell = shown.Cell;
         if (shown.Panel is { } panel) // M26
         {
@@ -140,7 +144,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
     public WidgetOptions Options { get; private set { field = value; Changed(); } } = new();
 
     /// <summary>M41a: the widget's size — Small, Medium or Large — from its span.</summary>
-    public WidgetSize WidgetSize => Widget is { } kind ? WidgetSizes.Of(Span, kind) : WidgetSize.Small;
+    public WidgetSize WidgetSize => Widget is { } kind ? WidgetSizes.Fitting(WidgetSizes.Of(Span, kind), ShownSpan) : WidgetSize.Small;
 
     /// <summary>M41a: the time of the last tick (the faces format what they show from it).</summary>
     public DateTime WidgetNow { get; private set { field = value; Changed(); } } = DateTime.Now;
@@ -172,6 +176,24 @@ public sealed class FenceItemView : INotifyPropertyChanged
     /// <summary>Its size in the fence's cells (M24).</summary>
     public GridSpan Span { get; private set; } = GridSpan.One;
 
+    /// <summary>
+    /// Its span as the grid shows it (rc.5): <see cref="Span"/> trimmed to the fence's columns. A widget sizes its face by
+    /// it and shows the biggest design that fits, never a cut-off one.
+    /// </summary>
+    public GridSpan ShownSpan { get; private set; } = GridSpan.One;
+
+    private (double CellWidth, double CellHeight, double IconDips, double LabelHeight, double Inset)? _sizedFor;
+
+    /// <summary>The grid's span for it (rc.5): a widget's face follows it; other elements keep their own span.</summary>
+    public void Show(GridSpan shown)
+    {
+        if (shown == ShownSpan || Widget is null) return;
+        var before = WidgetSize;
+        ShownSpan = shown;
+        if (_sizedFor is { } sized) ApplySize(sized.CellWidth, sized.CellHeight, sized.IconDips, sized.LabelHeight, sized.Inset);
+        if (WidgetSize != before) Changed(nameof(WidgetSize));
+    }
+
     /// <summary>Its stored cell (M24, Free fences), or null.</summary>
     public GridCell? StoredCell { get; private set; }
 
@@ -193,12 +215,14 @@ public sealed class FenceItemView : INotifyPropertyChanged
     {
         const double MaxIcon = 256;
         double CellPaddingX = 4 + 2 * inset, CellPaddingY = 8 + 2 * inset; // the item template: inset, a 1-px edge, 1,3 padding
-        var width = Span.Columns * cellWidth - CellPaddingX;
-        var height = Span.Rows * cellHeight - CellPaddingY - labelHeight;
+        _sizedFor = (cellWidth, cellHeight, iconDips, labelHeight, inset);
+        var span = Widget is null ? Span : ShownSpan; // rc.5: a widget fits the space the grid gives it
+        var width = span.Columns * cellWidth - CellPaddingX;
+        var height = span.Rows * cellHeight - CellPaddingY - labelHeight;
         var icon = Span == GridSpan.One ? iconDips : Math.Clamp(Math.Floor(Math.Min(width - 8, height)), iconDips, MaxIcon);
         var tileHeight = Math.Max(16, Math.Floor(Math.Min(height, (width - 4) * 1.5)));
         if (Tile) icon = Math.Clamp(Math.Round(tileHeight / 1.5 * 0.55), 24, 96); // M34: the glow tile's icon, about half the tile (Blur's 32 px icon at about twice)
-        (WidgetWidth, WidgetHeight) = (width, Span.Rows * cellHeight - CellPaddingY); // M25: no label under a widget (M26: a panel's area too)
+        (WidgetWidth, WidgetHeight) = (width, span.Rows * cellHeight - CellPaddingY); // M25: no label under a widget (M26: a panel's area too)
         var changed = Math.Abs(icon - IconDips) > 0.5;
         (ContentWidth, IconDips, TileWidth, TileHeight) = (width, icon, Math.Floor(tileHeight / 1.5), tileHeight);
         return changed;

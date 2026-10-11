@@ -20,6 +20,16 @@ public static class WidgetSizes
         stored is { } span ? span.Columns >= 3 ? WidgetSize.Large : span.Rows >= 2 ? WidgetSize.Medium : WidgetSize.Small
         : kind == WidgetKind.Clock ? WidgetSize.Small : WidgetSize.Medium;
 
+    /// <summary>
+    /// The design a widget shows in the space it gets (rc.5): the chosen size, or the biggest smaller one that fits — a
+    /// Large widget in a three-column fence is trimmed to three columns and shows Medium instead of a cut-off Large.
+    /// </summary>
+    public static WidgetSize Fitting(WidgetSize chosen, GridSpan space)
+    {
+        var fits = space.Columns >= 4 && space.Rows >= 2 ? WidgetSize.Large : space.Columns >= 2 && space.Rows >= 2 ? WidgetSize.Medium : WidgetSize.Small;
+        return fits < chosen ? fits : chosen;
+    }
+
     /// <summary>A corner drag (in cells, fractions included) snaps to the size it is nearest.</summary>
     public static WidgetSize Snap(double columns, double rows) =>
         columns >= 3 ? WidgetSize.Large : rows >= 1.5 ? WidgetSize.Medium : WidgetSize.Small;
