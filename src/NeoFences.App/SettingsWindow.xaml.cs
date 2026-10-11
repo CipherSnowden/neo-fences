@@ -12,7 +12,8 @@ public sealed record SettingsView(
     bool StartWithWindows, bool HideDesktopIcons, string PeekHotkey, bool PeekHotkeyActive, RollupExpand RollupExpand,
     bool GameModeEnabled, bool GameModeActive, string Version, string DataFolder, LabelMode DefaultLabels, bool ShowShortcutArrows,
     IReadOnlyList<NeoFences.Core.Config.SnapshotEntry> Snapshots, LibraryView Library, AppearanceView Appearance, UpdatesView Updates,
-    bool QuickHideGesture = true, bool DrawGesture = true, string? Banner = null);
+    bool QuickHideGesture = true, bool DrawGesture = true, string? Banner = null,
+    bool RevealGesture = false, OpenWith OpenItemsWith = OpenWith.OneClick, FenceMenuStyle FenceMenu = FenceMenuStyle.Guided);
 
 /// <summary>One row of the Snapshots list (M10).</summary>
 public sealed record SnapshotRow(string Path, string Name, string When)
@@ -34,6 +35,10 @@ public partial class SettingsWindow : Window
     /// <summary>Settings → the desktop gesture switches (M33).</summary>
     public event Action<bool>? QuickHideGestureChanged;
     public event Action<bool>? DrawGestureChanged;
+    /// <summary>M41a: "Click wallpaper to reveal desktop", "Open items with", "Fence menu".</summary>
+    public event Action<bool>? RevealGestureChanged;
+    public event Action<OpenWith>? OpenItemsWithChanged;
+    public event Action<FenceMenuStyle>? FenceMenuChanged;
     /// <summary>A new Peek hotkey was pressed in the box (text like "Ctrl+Alt+P"); answer with <see cref="ShowHotkeyResult"/>.</summary>
     public event Action<string>? PeekHotkeyChosen;
     /// <summary>Settings → Updates (M17).</summary>
@@ -74,6 +79,15 @@ public partial class SettingsWindow : Window
         OnToggled(HideIconsBox, isChecked => HideDesktopIconsChanged?.Invoke(isChecked));
         OnToggled(QuickHideGestureBox, isChecked => QuickHideGestureChanged?.Invoke(isChecked)); // M33
         OnToggled(DrawGestureBox, isChecked => DrawGestureChanged?.Invoke(isChecked));
+        OnToggled(RevealGestureBox, isChecked => RevealGestureChanged?.Invoke(isChecked)); // M41a
+        OpenWithBox.SelectionChanged += (_, _) =>
+        {
+            if (!_updating && OpenWithBox.SelectedItem is ComboBoxItem { Tag: string openWith }) OpenItemsWithChanged?.Invoke(Enum.Parse<OpenWith>(openWith));
+        };
+        FenceMenuBox.SelectionChanged += (_, _) =>
+        {
+            if (!_updating && FenceMenuBox.SelectedItem is ComboBoxItem { Tag: string style }) FenceMenuChanged?.Invoke(Enum.Parse<FenceMenuStyle>(style));
+        };
         BannerLogsButton.Click += (_, _) => OpenLogsRequested?.Invoke();
         OnToggled(GameModeBox, isChecked => GameModeChanged?.Invoke(isChecked));
         RollupBox.SelectionChanged += (_, _) =>
@@ -96,8 +110,8 @@ public partial class SettingsWindow : Window
         LabelsApplyAllButton.Click += (_, _) => LabelsAppliedToAll?.Invoke(SelectedLabels);
         // Screen readers read each setting's description with it (M6b review carry-over).
         foreach (var (control, description) in new (UIElement, TextBlock)[]
-                 { (StartupBox, StartupDescription), (HideIconsBox, HideIconsDescription), (QuickHideGestureBox, QuickHideGestureDescription), (DrawGestureBox, DrawGestureDescription), (HotkeyBox, HotkeyDescription),
-                   (LabelsBox, LabelsDescription), (ArrowsBox, ArrowsDescription), (RollupBox, RollupDescription), (GameModeBox, GameModeDescription) })
+                 { (StartupBox, StartupDescription), (HideIconsBox, HideIconsDescription), (QuickHideGestureBox, QuickHideGestureDescription), (DrawGestureBox, DrawGestureDescription), (RevealGestureBox, RevealGestureDescription), (HotkeyBox, HotkeyDescription),
+                   (LabelsBox, LabelsDescription), (ArrowsBox, ArrowsDescription), (RollupBox, RollupDescription), (GameModeBox, GameModeDescription), (OpenWithBox, OpenWithDescription), (FenceMenuBox, FenceMenuDescription) })
         {
             System.Windows.Automation.AutomationProperties.SetHelpText(control, description.Text);
         }
@@ -280,6 +294,9 @@ public partial class SettingsWindow : Window
         HideIconsBox.IsChecked = view.HideDesktopIcons;
         QuickHideGestureBox.IsChecked = view.QuickHideGesture; // M33
         DrawGestureBox.IsChecked = view.DrawGesture;
+        RevealGestureBox.IsChecked = view.RevealGesture; // M41a
+        OpenWithBox.SelectedIndex = view.OpenItemsWith == OpenWith.DoubleClick ? 1 : 0;
+        FenceMenuBox.SelectedIndex = view.FenceMenu == FenceMenuStyle.Compact ? 1 : 0;
         BannerText.Text = view.Banner ?? "";
         Banner.Visibility = view.Banner is null ? Visibility.Collapsed : Visibility.Visible;
         HotkeyBox.Text = view.PeekHotkey;

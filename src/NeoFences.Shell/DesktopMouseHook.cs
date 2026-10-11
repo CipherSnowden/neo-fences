@@ -15,6 +15,7 @@ namespace NeoFences.Shell;
 /// <item>right-drag of 8 px or more → <see cref="DesktopGesture.RightDragStarted"/> / <see cref="DesktopGesture.RightDragCompleted"/>
 /// (draw a fence). Every desktop right-press is swallowed and, if it was a plain click, replayed so Explorer's desktop
 /// menu still appears (S2, proven in M0; S1 broke Explorer's desktop state).</item>
+/// <item>a left press and release in place → <see cref="DesktopGesture.Click"/> (M41a: "Click wallpaper to reveal desktop").</item>
 /// </list>
 /// While <see cref="PeekActive"/>, a click outside NeoFences' windows raises <see cref="PeekClickOutside"/> (and goes through).
 /// Callbacks run on the hook thread: marshal to the UI thread and return fast.
@@ -39,7 +40,8 @@ public sealed class DesktopMouseHook : IDisposable
     /// <summary>Set by the UI while fences are shown over windows (Peek).</summary>
     public volatile bool PeekActive;
 
-    /// <summary>False when the draw gesture is off (M33): right-presses go to Windows untouched, no right-drag is tracked.</summary>
+    /// <summary>False when the draw gesture is off (M33): right-presses go to Windows untouched, no right-drag is tracked. M41a
+    /// (ADR-066): also false while the fences are quick-hidden — the hook then only watches.</summary>
     public volatile bool HandleRightButton = true;
 
     public bool IsInstalled { get; private set; }
@@ -98,6 +100,7 @@ public sealed class DesktopMouseHook : IDisposable
             MouseAction? action = (uint)wParam.Value switch
             {
                 PInvoke.WM_LBUTTONDOWN => MouseAction.LeftDown,
+                PInvoke.WM_LBUTTONUP => MouseAction.LeftUp, // M41a: a click on empty wallpaper (reveal)
                 PInvoke.WM_RBUTTONDOWN => MouseAction.RightDown,
                 PInvoke.WM_RBUTTONUP => MouseAction.RightUp,
                 PInvoke.WM_MOUSEMOVE => MouseAction.Move,

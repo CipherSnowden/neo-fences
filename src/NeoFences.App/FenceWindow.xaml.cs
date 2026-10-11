@@ -38,7 +38,7 @@ public partial class FenceWindow : Window
     private const double ResizeBorderDips = 6;
 
     // The menu lists ConfigNormalizer.IconSizes (one list, M2c review carry-over); these are only their names.
-    private static readonly Dictionary<int, string> IconSizeNames = new() { [32] = "Small", [48] = "Medium", [64] = "Large", [96] = "Extra large" };
+
 
     private readonly ObservableCollection<FenceItemView> _items = [];
     private readonly IconLoader _iconLoader;
@@ -137,7 +137,7 @@ public partial class FenceWindow : Window
     /// <summary>Enter with several items selected: open each.</summary>
     public event Action<IReadOnlyList<string>>? OpenManyRequested;
     public event Action<string>? RenameRequested;
-    public event Action<int>? IconSizeRequested;
+
     /// <summary>Fence menu → Fence settings… (M36).</summary>
     public event Action? FenceSettingsRequested;
     public event Action<bool>? LockToggled;
@@ -164,9 +164,8 @@ public partial class FenceWindow : Window
     /// <summary>Fence menu → "New Game Library fence" (M12).</summary>
     public event Action? NewLibraryRequested;
     /// <summary>Fence menu → Add widget ▸ (M25).</summary>
-    public event Action<WidgetKind>? AddWidgetRequested;
-    /// <summary>Fence menu → Layout ▸ Flow / Free (M24).</summary>
-    public event Action<FenceLayout>? LayoutRequested;
+    public event Action<WidgetKind, WidgetSize>? AddWidgetRequested;
+
     /// <summary>Fence menu → "Add games…" (M22).</summary>
     public event Action? AddGamesRequested;
     /// <summary>Fence menu → "New folder panel…" (M26; M21's "New folder view…").</summary>
@@ -183,14 +182,18 @@ public partial class FenceWindow : Window
     public event Action? SettingsRequested;
     /// <summary>Double-click on the title: roll up to the title bar, or back down (M5).</summary>
     public event Action? RollUpToggled;
-    /// <summary>Fence menu → Labels (M8b): always, or only on hover / selection.</summary>
-    public event Action<LabelMode>? LabelModeRequested;
+
 
     private Point? _pressPoint;                 // left button pressed on an item: a drag may start
     private string? _pressedKey;                // the element under the pointer: it leads a group drag (M28)
     private ListBoxItem? _deferredSelect;       // pressed on an already selected item: select it alone only on release
     private Point? _bandStart;                  // left button pressed on empty space: rubber band
     private ListBoxItem? _deferredToggle;       // Ctrl+press on a selected item: unselect it on release unless it was dragged
+    private ListBoxItem? _clickCandidate;       // M41a: a plain press that opens the item on release, unless it becomes a drag
+    private ListBoxItem? _menuPicked;           // M41a: the item a right-click selected for its menu; unselected when the menu closes
+
+    /// <summary>M41a (ADR-064): one click opens (the fence's own choice, else Settings'); false: Windows' double click.</summary>
+    public bool OneClickOpens { get; set; } = true;
     private LabelMode _labelMode = LabelMode.Always;
     private ListBoxItem? _hoveredContainer;
     private (uint At, Point Where)? _lastCaptionPress; // a title double-click recognised by NeoFences itself (M8b); message time
@@ -203,6 +206,9 @@ public partial class FenceWindow : Window
         BoxId = fence.Id;
         _iconLoader = iconLoader;
         InitializeComponent();
+        _themeLayer = new FenceThemeLayer(ThemeLayer); // M41a
+        ItemsShownChanged += UpdateThemePause;
+        InitializeMotion();
         foreach (var (sort, name) in new[] { (FenceSort.Name, "Name"), (FenceSort.Type, "Type"), (FenceSort.Date, "Date (newest first)") })
         {
             var sortItem = new MenuItem { Header = name, Tag = sort };
@@ -213,18 +219,29 @@ public partial class FenceWindow : Window
         DetachTabItem.Click += (_, _) => DetachTabRequested?.Invoke();
         TitleBar.SizeChanged += (_, _) => UpdateTabStripWidth();
         PreviewKeyDown += OnTabKeys;
-        UndoButton.Click += (_, _) => UndoRequested?.Invoke(); // M33
+        UndoButton.Click += (_, _) => // M33; M41a: the bar also carries a one-time tip with its own button
+        {
+            var action = _undoBarAction;
+            HideUndo();
+            action?.Invoke();
+        };
         _undoTimer.Tick += (_, _) => HideUndo();
         NewLibraryItem.Click += (_, _) => NewLibraryRequested?.Invoke();
         NewFolderPanelItem.Click += (_, _) => NewFolderPanelRequested?.Invoke(); // M26
         AddFolderPanelItem.Click += (_, _) => AddFolderPanelRequested?.Invoke();
         AutoCollectItem.Click += (_, _) => AutoCollectRequested?.Invoke(); // M27
         AddGamesItem.Click += (_, _) => AddGamesRequested?.Invoke();
-        AddClockItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Clock); // M25
-        AddDateItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Date);
-        AddStatsItem.Click += (_, _) => AddWidgetRequested?.Invoke(WidgetKind.Stats);
-        LayoutFlowItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Flow);
-        LayoutFreeItem.Click += (_, _) => LayoutRequested?.Invoke(FenceLayout.Free);
+        AddWidgetItem.Click += (_, _) => OpenGallery(); // M41a: the gallery at the pointer
+        AddWidgetButton.Click += (_, _) => OpenGallery();
+        GalleryClose.Click += (_, _) => CloseGallery();
+        Frame.MouseEnter += (_, _) => ShowAddWidgetButton();
+        _addWidgetWatch.Tick += (_, _) =>
+        {
+            if (PointerInside()) return;
+            _addWidgetWatch.Stop();
+            AddWidgetButton.Visibility = Visibility.Collapsed;
+        };
+
         ItemList.SizeChanged += (_, _) => ApplyFill(); // M26: a filling panel follows the fence's size
         AddItemItem.Click += (_, _) => AddItemRequested?.Invoke();
         WelcomeSortButton.Click += (_, _) => AddFromDesktopRequested?.Invoke(); // M30: the welcome's buttons
@@ -232,20 +249,14 @@ public partial class FenceWindow : Window
         WelcomeGuideButton.Click += (_, _) => GuideRequested?.Invoke();
         AddFromDesktopItem.Click += (_, _) => AddFromDesktopRequested?.Invoke();
         RefreshItem.Click += (_, _) => RefreshRequested?.Invoke();
-        foreach (var size in ConfigNormalizer.IconSizes)
-        {
-            var sizeItem = new MenuItem { Header = IconSizeNames.GetValueOrDefault(size, $"{size} px"), Tag = size, IsCheckable = true };
-            sizeItem.Click += (_, _) => IconSizeRequested?.Invoke(size);
-            IconSizeItem.Items.Add(sizeItem);
-        }
         NewFenceItem.Click += (_, _) => NewFenceRequested?.Invoke();
         RenameItem.Click += (_, _) => BeginRename();
         FenceSettingsItem.Click += (_, _) => FenceSettingsRequested?.Invoke(); // M36
         LockItem.Click += (_, _) => LockToggled?.Invoke(LockItem.IsChecked);
         DeleteItem.Click += (_, _) => DeleteRequested?.Invoke();
         SettingsItem.Click += (_, _) => SettingsRequested?.Invoke();
-        LabelsAlwaysItem.Click += (_, _) => LabelModeRequested?.Invoke(LabelMode.Always);
-        LabelsOnHoverItem.Click += (_, _) => LabelModeRequested?.Invoke(LabelMode.OnHover);
+        BuildIconRow(); // M41a
+        ArrangeMenu();
         TitleBox.MaxLength = FenceEdits.MaxTitleLength; // the cut in FenceEdits.Rename never surprises the user (M2c review)
         ItemList.SelectionChanged += (_, _) => UpdateHoverLabel();
         ItemList.AddHandler(System.Windows.Controls.ScrollViewer.ScrollChangedEvent, new System.Windows.Controls.ScrollChangedEventHandler((_, scrolled) =>
@@ -313,11 +324,17 @@ public partial class FenceWindow : Window
         TitleText.Text = fence.Title;
         _kind = fence.Kind;
         _welcome = fence.Welcome; // M30 (UpdateEmptyHint below shows or ends the welcome)
+        _emoji = fence.Emoji; // M41a
+        ApplyTitleStyle();
+        if (fence.WidgetsFloat != _widgetsFloat)
+        {
+            _widgetsFloat = fence.WidgetsFloat;
+            ApplyWidgetCards();
+            ApplyThemeLayer();
+        }
         _layout = fence.Layout; // M24
         Resources["GridLayout"] = _layout; // the panel takes it through a resource (final review I3)
-        LayoutItem.Visibility = fence.Kind == FenceKind.Items ? Visibility.Visible : Visibility.Collapsed;
-        LayoutFlowItem.IsChecked = _layout == FenceLayout.Flow;
-        LayoutFreeItem.IsChecked = _layout == FenceLayout.Free;
+
         // The library is NeoFences' own A–Z list of games: no items to add or sort (M12). A folder view shows its folder
         // read-only: nothing to add; "Sort by" is its own, kept (M21).
         var items = _kind == FenceKind.Items;
@@ -327,6 +344,10 @@ public partial class FenceWindow : Window
         AddGamesItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddWidgetItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AddFolderPanelItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        SectionAdd.Visibility = items ? Visibility.Visible : Visibility.Collapsed; // M41a: a heading only over entries
+        AddMenu.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        _addButton.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
+        _widgetButton.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AutoCollectItem.Visibility = items ? Visibility.Visible : Visibility.Collapsed;
         AutoCollectItem.Header = fence.Collect.Count switch { 0 => "Auto-collect…", 1 => "Auto-collect… (1 rule)", var count => $"Auto-collect… ({count} rules)" }; // M27
         SortItem.Visibility = _kind == FenceKind.Library ? Visibility.Collapsed : Visibility.Visible;
@@ -443,7 +464,7 @@ public partial class FenceWindow : Window
     {
         var many = _tabs.Count > 1;
         TabStrip.Visibility = _renaming ? Visibility.Hidden : many ? Visibility.Visible : Visibility.Collapsed;
-        TitleText.Visibility = _renaming ? Visibility.Hidden : many ? Visibility.Collapsed : Visibility.Visible;
+        TitleChrome.Visibility = _renaming ? Visibility.Hidden : many ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private Border BuildTabHeader(Fence tab, bool isActive)
@@ -559,6 +580,77 @@ public partial class FenceWindow : Window
         OpenFenceMenu();
     }
 
+    /// <summary>M41a (spec §5): the fence menu's shape, from Settings → Appearance → Fence menu.</summary>
+    public FenceMenuStyle MenuStyle
+    {
+        get => _menuStyle;
+        set
+        {
+            if (value == _menuStyle) return;
+            _menuStyle = value;
+            ArrangeMenu();
+        }
+    }
+
+    private FenceMenuStyle _menuStyle = FenceMenuStyle.Guided;
+    private readonly Button _addButton = new(), _lockButton = new(), _widgetButton = new();
+
+    /// <summary>
+    /// M41a: the same entries in either shape — Guided: headings over "Add to this fence" (Add opened up), "This fence",
+    /// "Everything"; Compact: an icon row (add, rename, settings, lock) over a short list with Add as a submenu.
+    /// </summary>
+    private void ArrangeMenu()
+    {
+        MenuItem[] all = [SectionAdd, SectionFence, SectionAll, IconRow, AddMenu, AddItemItem, AddFromDesktopItem, AddGamesItem, AddFolderPanelItem,
+            AddWidgetItem, SortItem, AutoCollectItem, RenameItem, FenceSettingsItem, TabColorItem, LockItem, RefreshItem, NewFenceMenu, SettingsItem,
+            DetachTabItem, DeleteItem];
+        foreach (var entry in all) (ItemsControl.ItemsControlFromItemContainer(entry) ?? entry.Parent as ItemsControl)?.Items.Remove(entry);
+        BodyContextMenu.Items.Clear();
+        AddMenu.Items.Clear();
+        object[] order = _menuStyle == FenceMenuStyle.Compact
+            ?
+            [
+                IconRow, new Separator(), AddMenu, SortItem, AutoCollectItem, TabColorItem, RefreshItem, new Separator(), NewFenceMenu, SettingsItem,
+                new Separator(), DetachTabItem, DeleteItem,
+            ]
+            :
+            [
+                SectionAdd, AddItemItem, AddFromDesktopItem, AddGamesItem, AddFolderPanelItem, AddWidgetItem,
+                SectionFence, RenameItem, FenceSettingsItem, TabColorItem, LockItem, SortItem, AutoCollectItem, RefreshItem,
+                SectionAll, NewFenceMenu, SettingsItem, new Separator(), DetachTabItem, DeleteItem,
+            ];
+        foreach (var entry in order) BodyContextMenu.Items.Add(entry);
+        if (_menuStyle == FenceMenuStyle.Compact)
+            foreach (var entry in new[] { AddFromDesktopItem, AddGamesItem, AddFolderPanelItem, AddWidgetItem }) AddMenu.Items.Add(entry);
+    }
+
+    /// <summary>The Compact menu's icon row (M41a): each button closes the menu and does what its entry does.</summary>
+    private void BuildIconRow()
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        Button Add(Button button, string glyph, string name, Action run)
+        {
+            button.Style = (Style)FindResource("MenuIconButton");
+            button.Content = new TextBlock { Text = glyph, FontFamily = (FontFamily)FindResource("MenuIconFont"), FontSize = 16 };
+            button.ToolTip = name;
+            System.Windows.Automation.AutomationProperties.SetName(button, name);
+            button.Click += (_, _) =>
+            {
+                BodyContextMenu.IsOpen = false;
+                run();
+            };
+            row.Children.Add(button);
+            return button;
+        }
+        Add(_addButton, MenuGlyph.Item, "Add item…", () => AddItemRequested?.Invoke());
+        Add(new Button(), MenuGlyph.Rename, "Rename", BeginRename);
+        Add(new Button(), MenuGlyph.Settings, "Fence settings…", () => FenceSettingsRequested?.Invoke());
+        Add(_lockButton, MenuGlyph.Lock, "Lock position", () => LockToggled?.Invoke(!LockItem.IsChecked));
+        Add(_widgetButton, MenuGlyph.Widget, "Add a widget…", () => OpenGallery());
+        IconRow.Header = row;
+        BodyContextMenu.Opened += (_, _) => _lockButton.Opacity = LockItem.IsChecked ? 1 : 0.55; // locked: the lock shows lit
+    }
+
     /// <summary>The fence menu at the pointer (a header or the title right-clicked).</summary>
     private void OpenFenceMenu()
     {
@@ -568,8 +660,29 @@ public partial class FenceWindow : Window
     }
 
     /// <summary>The undo bar for about 10 seconds (M33): "Removed 3 items · Undo".</summary>
+    private Action? _undoBarAction;
+
+    /// <summary>
+    /// M41a (spec §1): a one-time tip in the undo bar's place ("New: fence themes · Try them"); it goes after 30 s or a click.
+    /// </summary>
+    public void ShowTip(string text, string button, Action action)
+    {
+        UndoText.Text = text;
+        UndoButton.Content = button;
+        System.Windows.Automation.AutomationProperties.SetName(UndoButton, button);
+        _undoBarAction = action;
+        UndoBar.Visibility = Visibility.Visible;
+        _undoTimer.Stop();
+        _undoTimer.Interval = TimeSpan.FromSeconds(30);
+        _undoTimer.Start();
+    }
+
     public void ShowUndo(string label)
     {
+        UndoButton.Content = "Undo";
+        System.Windows.Automation.AutomationProperties.SetName(UndoButton, "Undo");
+        _undoBarAction = () => UndoRequested?.Invoke();
+        _undoTimer.Interval = TimeSpan.FromSeconds(10);
         UndoText.Text = label;
         UndoBar.Visibility = Visibility.Visible;
         _undoTimer.Stop();
@@ -675,6 +788,7 @@ public partial class FenceWindow : Window
     {
         _title = title;
         TitleText.Text = title;
+        ApplyTitleStyle(); // M41a: Caps spells it out in capitals
     }
 
     /// <summary>
@@ -684,7 +798,10 @@ public partial class FenceWindow : Window
     /// </summary>
     public void SetItems(IReadOnlyList<ShownItem> shownItems)
     {
+        _countText = Titles.CountText(shownItems.Select(shown => shown.Target), System.Globalization.CultureInfo.CurrentCulture); // M41a
+        ApplyTitleStyle();
         var wanted = shownItems.Select(shown => shown.Key).ToHashSet(StringComparer.Ordinal);
+        var arriving = new List<FenceItemView>(); // M41a: new ones arrive with motion
         for (var index = _items.Count - 1; index >= 0; index--)
         {
             if (!wanted.Contains(_items[index].Key)) _items.RemoveAt(index);
@@ -718,7 +835,9 @@ public partial class FenceWindow : Window
             ApplyArt(view);
             if (IsLoaded) RequestIcon(view); // before that, Loaded requests them at the right DPI (M2b review)
             _items.Insert(index, view);
+            arriving.Add(view);
         }
+        Arrive(arriving);
         foreach (var view in _items) HookPanel(view);
         if (_items.Any(view => view.IsTile) != _hasCovers)
         {
@@ -758,6 +877,7 @@ public partial class FenceWindow : Window
     public void ShowItemMenu(ContextMenu menu, bool fromKeyboard)
     {
         _itemMenu = menu;
+        menu.Closed += (_, _) => ForgetMenuPick();
         var selected = ItemList.SelectedItem is { } item ? ItemList.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem : null;
         menu.PlacementTarget = fromKeyboard && selected is not null ? selected : ItemList;
         menu.Placement = fromKeyboard && selected is not null
@@ -770,11 +890,19 @@ public partial class FenceWindow : Window
     public void ShowItemMenuAt(ContextMenu menu, int screenX, int screenY)
     {
         _itemMenu = menu;
+        menu.Closed += (_, _) => ForgetMenuPick();
         var at = ItemList.PointFromScreen(new Point(screenX, screenY));
         menu.PlacementTarget = ItemList;
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Relative;
         (menu.HorizontalOffset, menu.VerticalOffset) = (at.X, at.Y);
         menu.IsOpen = true;
+    }
+
+    /// <summary>M41a: with one click, a right-click's selection lasts only while its menu is open (nothing lingers).</summary>
+    private void ForgetMenuPick()
+    {
+        if (OneClickOpens && _menuPicked is { IsSelected: true } picked && ItemList.SelectedItems.Count == 1) picked.IsSelected = false;
+        _menuPicked = null;
     }
 
     private int IconSizePx => (int)Math.Round(_iconSizeDips * VisualTreeHelper.GetDpi(this).DpiScaleX);
@@ -930,7 +1058,7 @@ public partial class FenceWindow : Window
         Resources["IconSize"] = (double)iconSizeDips;
         Resources["ArrowSize"] = Math.Max(12.0, Math.Round(iconSizeDips * 0.36));
         ApplyItemWidth(requestIcons: false); // M28: the reload below asks once
-        foreach (var sizeItem in IconSizeItem.Items.OfType<MenuItem>()) sizeItem.IsChecked = (int)sizeItem.Tag == iconSizeDips;
+
         ReloadIcons();
         ReloadArt();
     }
@@ -952,8 +1080,7 @@ public partial class FenceWindow : Window
         Resources["LabelVisibility"] = labelMode == LabelMode.Always ? Visibility.Visible : Visibility.Collapsed;
         Resources["TileNameVisibility"] = labelMode == LabelMode.Always ? Visibility.Collapsed : Visibility.Visible; // M34: a cover shows its name over itself
         Resources["ItemToolTips"] = labelMode == LabelMode.Always; // the pop-under name replaces the tooltip
-        LabelsAlwaysItem.IsChecked = labelMode == LabelMode.Always;
-        LabelsOnHoverItem.IsChecked = labelMode == LabelMode.OnHover;
+
         ApplyItemWidth();
         UpdateHoverLabel();
     }
@@ -997,12 +1124,14 @@ public partial class FenceWindow : Window
     {
         _hoveredContainer = sender as ListBoxItem;
         UpdateHoverLabel();
+        if (sender is ListBoxItem entered) LiftItem(entered, lifted: true); // M41a
     }
 
     private void OnItemMouseLeave(object sender, MouseEventArgs args)
     {
         if (ReferenceEquals(_hoveredContainer, sender)) _hoveredContainer = null;
         UpdateHoverLabel();
+        if (sender is ListBoxItem left) LiftItem(left, lifted: false);
     }
 
     /// <summary>
@@ -1116,6 +1245,8 @@ public partial class FenceWindow : Window
     public void HideFaded()
     {
         var generation = ++_fadeGeneration;
+        _hiddenByUser = true; // M41a: nothing of the theme moves while hidden
+        UpdateThemePause();
         if (!IsVisible || !AnimationsAllowed())
         {
             BeginAnimation(OpacityProperty, null);
@@ -1136,10 +1267,13 @@ public partial class FenceWindow : Window
     public void ShowFaded()
     {
         ++_fadeGeneration;
+        _hiddenByUser = false;
+        UpdateThemePause();
         var fadeIn = AnimationsAllowed();
         BeginAnimation(OpacityProperty, null);
         Show();
         if (fadeIn) BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeDuration));
+        Arrive([.. _items]); // M41a
     }
 
     /// <summary>Click mode: a single click on the rolled-up title opens it.</summary>
@@ -1232,16 +1366,8 @@ public partial class FenceWindow : Window
         var hoverLabel = new SolidColorBrush(light ? Color.FromArgb(0xF0, 0xF4, 0xF4, 0xF4) : Color.FromArgb(0xE6, 0x20, 0x22, 0x28));
         hoverLabel.Freeze();
         Resources["HoverLabelBackground"] = hoverLabel;
-        // Soft halo behind labels, like desktop icon labels: readable on busy or bright wallpapers (user choice).
-        var shadow = new DropShadowEffect
-        {
-            Color = light ? Colors.White : Colors.Black,
-            ShadowDepth = light ? 0 : 1,
-            BlurRadius = 4,
-            Opacity = 0.9,
-        };
-        shadow.Freeze();
-        Resources["LabelShadow"] = shadow;
+        ApplyNameStyle(); // M41a: the names' shadow or chip follow the tone
+        ApplyWidgetCards();
         // M31: the widgets' softer shadow, and their bars in the Windows accent (style A's gradient).
         var widgetShadow = new DropShadowEffect { Color = light ? Colors.White : Colors.Black, ShadowDepth = light ? 0 : 1, BlurRadius = 8, Opacity = 0.45 };
         widgetShadow.Freeze();
@@ -1265,6 +1391,39 @@ public partial class FenceWindow : Window
         fill.Freeze();
         edge.Freeze();
         (Resources["ItemSelectedFill"], Resources["ItemSelectedEdge"]) = (fill, edge);
+        var ram = new LinearGradientBrush(Color.FromRgb(0x9B, 0x7B, 0xFF), Color.FromRgb(0xC3, 0xA8, 0xFF), 0); // M41a: RAM's bar
+        ram.Freeze();
+        Resources["WidgetBarRam"] = ram;
+    }
+
+    /// <summary>
+    /// M41a (spec §6.1, §6.5): a widget's glass card — light on the fence's own glass; a floating board's widgets carry a
+    /// denser card of their own (the fence draws no glass behind them).
+    /// </summary>
+    private void ApplyWidgetCards()
+    {
+        Resources["WidgetCard"] = Frozen(_widgetsFloat
+            ? _lightTheme ? new Argb(0xD9, 0xF4, 0xF6, 0xF9) : new Argb(0x9E, 0x12, 0x14, 0x1C)
+            : _lightTheme ? new Argb(0x33, 0xFF, 0xFF, 0xFF) : new Argb(0x17, 0xFF, 0xFF, 0xFF));
+        Resources["WidgetCardEdge"] = Frozen(_lightTheme ? new Argb(0x1A, 0, 0, 0) : new Argb(0x22, 0xFF, 0xFF, 0xFF));
+    }
+
+    private bool _widgetsFloat;
+
+    /// <summary>M41a (spec §6.5): what a Now playing widget asked for — a command, or (null) its player to the front.</summary>
+    public event Action<string, MediaCommand?, TimeSpan?>? MediaRequested;
+
+    /// <summary>M41a: a Now playing widget (its key) switched to another player (its app id).</summary>
+    public event Action<string, string>? MediaPlayerChosen;
+
+    public void RequestMedia(string appId, MediaCommand? command, TimeSpan? at = null) => MediaRequested?.Invoke(appId, command, at);
+
+    public void ShowMediaPlayer(string widgetKey, string appId) => MediaPlayerChosen?.Invoke(widgetKey, appId);
+
+    /// <summary>The Now playing widgets this window shows: their media, from the host's reading.</summary>
+    public void ShowMedia(Func<string, NowPlayingData?> mediaOf)
+    {
+        foreach (var view in _items.Where(view => view.Widget == WidgetKind.NowPlaying)) view.Media = mediaOf(view.Key);
     }
 
     private FenceStyle? _style;
@@ -1275,22 +1434,19 @@ public partial class FenceWindow : Window
     /// </summary>
     public void ApplyStyle(FenceStyle style)
     {
-        if (style == _style)
+        if (style == _style && style.LightTone == _lightTheme)
         {
             ApplyTabLook(style); // only the headers SetTabs rebuilt (M16: brushes are not rebuilt when nothing changed)
             return;
         }
         _style = style;
+        if (style.LightTone != _lightTheme) ApplyTheme(style.LightTone); // M41a: a theme has its own tone, whatever Windows uses
         Resources["FenceVeil"] = Frozen(style.Veil);
         Resources["FenceOutline"] = Frozen(style.Border);
         Resources["FenceTitleText"] = Frozen(style.TitleText);
         TitleStripFill.Background = style.TitleStrip is { } strip ? Frozen(strip) : Brushes.Transparent;
-        TitleText.FontFamily = new FontFamily(style.Font.Family); // a font that is gone falls back to Segoe UI; the name stays
-        TitleText.FontSize = style.Font.Size;
-        TitleText.FontWeight = ToWeight(style.Font.Weight);
-        // M36: the fence's title alignment, title bar on hover and spacing.
-        TitleText.TextAlignment = style.Align switch { TitleAlign.Centre => TextAlignment.Center, TitleAlign.Right => TextAlignment.Right, _ => TextAlignment.Left };
-        _titleOnHover = style.TitleOnHover;
+        // M36: title bar on hover and spacing; the font and alignment are the title style's (ApplyTitleStyle, M41a).
+        _titleOnHover = style.TitleOnHover || _widgetsFloat; // M41a: a floating board shows its title on hover
         UpdateHoverTimer();
         UpdateTitleBar(PointerInside());
         var inset = FenceLook.CellInset(style.Spacing);
@@ -1300,6 +1456,8 @@ public partial class FenceWindow : Window
             Resources["CellInset"] = new Thickness(inset);
             ApplyCellSizes();
         }
+        ApplyThemeLayer();
+        ApplyTitleStyle();
         ApplyTabLook(style);
         if (style.TitleHeight != _captionHeightDips)
         {
@@ -1312,6 +1470,143 @@ public partial class FenceWindow : Window
                 FenceWindowChrome.SetPixelRect(Handle, FenceWindowChrome.GetPixelRect(Handle) with { Height = RolledUpHeightPx });
             }
         }
+    }
+
+    private NameStyle _nameStyle = NameStyle.Crisp;
+
+    /// <summary>M41a (spec §4): how item names are drawn, every fence (Settings → Appearance → Item names).</summary>
+    public NameStyle NameStyle
+    {
+        get => _nameStyle;
+        set
+        {
+            if (value == _nameStyle) return;
+            _nameStyle = value;
+            ApplyNameStyle();
+        }
+    }
+
+    /// <summary>
+    /// Crisp: a tight 1 px shadow (the old soft halo blurred the letters); Chips: each name on an opaque soft pill, so its text
+    /// can use ClearType even in this layered window; Plain: nothing behind the text.
+    /// </summary>
+    private void ApplyNameStyle()
+    {
+        var chips = _nameStyle == NameStyle.Chips;
+        Resources["LabelChipBackground"] = chips ? Frozen(_lightTheme ? new Argb(0xFF, 0xF2, 0xF3, 0xF5) : new Argb(0xFF, 0x2A, 0x2C, 0x33)) : Brushes.Transparent;
+        Resources["LabelChipPadding"] = chips ? new Thickness(6, 1, 6, 2) : new Thickness(0);
+        Resources["LabelClearType"] = chips ? ClearTypeHint.Enabled : ClearTypeHint.Auto;
+        if (_nameStyle != NameStyle.Crisp)
+        {
+            Resources["LabelShadow"] = null;
+            return;
+        }
+        var shadow = new DropShadowEffect { Color = _lightTheme ? Colors.White : Colors.Black, ShadowDepth = _lightTheme ? 0 : 1, BlurRadius = 2, Opacity = 0.95 };
+        shadow.Freeze();
+        Resources["LabelShadow"] = shadow;
+    }
+
+    private readonly FenceThemeLayer _themeLayer;
+    private string? _emoji;
+    private string _countText = "";
+    private Motion _motion = Motion.Off;
+    private bool _hiddenByUser;
+
+    /// <summary>M41a (spec §3): the motion that plays now (the host applies game mode and Windows' animation setting).</summary>
+    public Motion Motion
+    {
+        get => _motion;
+        set
+        {
+            if (value == _motion) return;
+            _motion = value;
+            ApplyThemeLayer();
+        }
+    }
+
+    /// <summary>The theme's accent: the fence's colour, HUD's cyan, else Windows' accent (lighter on a dark tone).</summary>
+    private Color AccentColour(FenceStyle style) =>
+        style.Accent is { } accent ? Color.FromArgb(0xFF, accent.R, accent.G, accent.B)
+        : style.LightTone ? SystemColors.AccentColorDark1 : SystemColors.AccentColorLight1;
+
+    /// <summary>M41a (ADR-063): the theme's own drawing; HUD draws the veil inside its cut-corner frame.</summary>
+    private void ApplyThemeLayer()
+    {
+        if (_style is not { } style) return;
+        _themeLayer.Apply(_widgetsFloat ? FenceTheme.Classic : style.Theme, AccentColour(style), Frozen(style.Veil), _motion); // a board draws nothing behind
+        var hud = _themeLayer.DrawsVeil;
+        if (hud || _widgetsFloat) Frame.Background = Brushes.Transparent;
+        else Frame.SetResourceReference(Border.BackgroundProperty, "FenceVeil");
+        Frame.BorderThickness = new Thickness(hud || _widgetsFloat || style.Theme == FenceTheme.Neon ? 0 : 1); // drawn by the theme, or none
+        Frame.CornerRadius = new CornerRadius(hud ? 0 : 8);
+        _titleOnHover = style.TitleOnHover || _widgetsFloat;
+        UpdateHoverTimer();
+        UpdateTitleBar(PointerInside());
+        if (Handle != 0) FenceWindowChrome.ApplyAccentBlur(Handle, blur: !_widgetsFloat); // M41a: no glass behind a floating board
+        UpdateThemePause();
+    }
+
+    private void UpdateThemePause() => _themeLayer.Pause(_hiddenByUser || !ItemsShown);
+
+    /// <summary>
+    /// M41a (spec §2): Simple — the title as before, in display type; Clean — an accent underline and the count; Pill — emoji,
+    /// name and count in a soft pill; Caps — a glowing accent marker, spaced capitals, the count. The emoji shows in all.
+    /// </summary>
+    private void ApplyTitleStyle()
+    {
+        if (_style is not { } style) return;
+        var titleStyle = style.TitleStyle;
+        var (clean, pill, caps) = (titleStyle == TitleStyle.Clean, titleStyle == TitleStyle.Pill, titleStyle == TitleStyle.Caps);
+        var accent = new SolidColorBrush(AccentColour(style));
+        accent.Freeze();
+        TitleText.Text = caps ? Spaced(_title.ToUpper(System.Globalization.CultureInfo.CurrentCulture)) : _title;
+        TitleText.FontFamily = style.Font.Family == "Segoe UI" && !caps ? DisplayFont : new FontFamily(style.Font.Family);
+        TitleText.FontSize = caps ? Math.Max(12.5, style.Font.Size - 1.5) : style.Font.Size;
+        TitleText.FontWeight = caps ? FontWeights.Bold : ToWeight(style.Font.Weight);
+        TitleText.TextAlignment = clean || titleStyle == TitleStyle.Simple
+            ? style.Align switch { TitleAlign.Centre => TextAlignment.Center, TitleAlign.Right => TextAlignment.Right, _ => TextAlignment.Left }
+            : TextAlignment.Left;
+        TitleText.Effect = style.Theme == FenceTheme.Neon ? Glow(AccentColour(style), radius: 10) : null; // Neon: a lit title
+        TitleMarker.Visibility = caps ? Visibility.Visible : Visibility.Collapsed;
+        TitleMarker.Background = accent;
+        TitleMarker.Effect = caps ? Glow(AccentColour(style), radius: 8) : null;
+        TitleEmoji.Text = _emoji ?? "";
+        TitleEmoji.FontSize = style.Font.Size;
+        TitleEmoji.Visibility = _emoji is null ? Visibility.Collapsed : Visibility.Visible;
+        TitleCount.Text = _countText;
+        TitleCount.Visibility = (clean || pill || caps) && _countText.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        TitleUnderline.Visibility = clean ? Visibility.Visible : Visibility.Collapsed;
+        TitleUnderline.Fill = accent;
+        TitleUnderline.HorizontalAlignment = style.Align switch { TitleAlign.Centre => HorizontalAlignment.Center, TitleAlign.Right => HorizontalAlignment.Right, _ => HorizontalAlignment.Left };
+        TitleChrome.HorizontalAlignment = pill ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+        TitleChrome.Padding = pill ? new Thickness(4, 1, 6, 1) : new Thickness(0);
+        if (pill)
+        {
+            TitleChrome.SetResourceReference(Border.BackgroundProperty, "FenceHover");
+            TitleChrome.SetResourceReference(Border.BorderBrushProperty, "FenceBorder");
+        }
+        else (TitleChrome.Background, TitleChrome.BorderBrush) = (Brushes.Transparent, Brushes.Transparent);
+    }
+
+    private static readonly FontFamily DisplayFont = new("Segoe UI Variable Display, Segoe UI");
+
+    /// <summary>
+    /// Caps' letter-spacing: WPF's TextBlock has none, so a hair space goes between the letters.
+    /// ponytail: hair spaces, not real tracking; a FormattedText run with per-glyph advances if it ever looks off.
+    /// </summary>
+    private static string Spaced(string text) =>
+        string.Join(' ', System.Globalization.StringInfo.GetTextElementEnumerator(text) is var elements ? Elements(elements) : []);
+
+    private static IEnumerable<string> Elements(System.Globalization.TextElementEnumerator elements)
+    {
+        while (elements.MoveNext()) yield return elements.GetTextElement();
+    }
+
+    private static System.Windows.Media.Effects.DropShadowEffect Glow(Color colour, double radius)
+    {
+        var glow = new System.Windows.Media.Effects.DropShadowEffect { Color = colour, ShadowDepth = 0, BlurRadius = radius, Opacity = 0.9 };
+        glow.Freeze();
+        return glow;
     }
 
     private bool _keyboardMode;
@@ -1378,11 +1673,27 @@ public partial class FenceWindow : Window
     private void UpdateTitleBar(bool pointerInside)
     {
         var shown = !_titleOnHover || pointerInside || _rolledUp || _renaming || _drag is not null || BodyContextMenu.IsOpen;
-        var opacity = shown ? 1.0 : 0.0;
-        if (TitleBar.Opacity == opacity) return;
-        TitleBar.Opacity = TitleStripFill.Opacity = TitleColorBar.Opacity = opacity;
+        BoardOutline.Visibility = _widgetsFloat && shown ? Visibility.Visible : Visibility.Collapsed; // M41a
+        if (shown == _titleShown) return;
+        _titleShown = shown;
+        FadeTitle(shown ? 1.0 : 0.0); // M41a: a 150 ms fade with motion on
         if (shown) Body.SetResourceReference(Border.BorderBrushProperty, "FenceDivider");
         else Body.BorderBrush = Brushes.Transparent;
+    }
+
+    private bool _titleShown = true;
+    private const int WmNcMouseMove = 0x00A0;
+    private readonly System.Windows.Threading.DispatcherTimer _addWidgetWatch = new() { Interval = TimeSpan.FromMilliseconds(250) };
+
+    /// <summary>
+    /// M41a (spec §6.3): the "+" on the title while the pointer is anywhere over the fence (client or caption); a short watch,
+    /// only while it shows, hides it again once the pointer has left.
+    /// </summary>
+    private void ShowAddWidgetButton()
+    {
+        if (_kind != FenceKind.Items || _tabs.Count > 1 || _renaming || AddWidgetButton.Visibility == Visibility.Visible) return;
+        AddWidgetButton.Visibility = Visibility.Visible;
+        _addWidgetWatch.Start();
     }
 
     private bool PointerInside()
@@ -1401,9 +1712,9 @@ public partial class FenceWindow : Window
         foreach (var header in TabStrip.Children.OfType<Border>())
         {
             if (header.Child is not Grid { Children: [TextBlock title, ..] }) continue;
-            title.FontFamily = TitleText.FontFamily;
+            title.FontFamily = style.Font.Family == "Segoe UI" ? DisplayFont : new FontFamily(style.Font.Family); // a font that is gone falls back; the name stays
             title.FontSize = style.Font.Size;
-            if (Equals(header.Tag, FenceId)) title.FontWeight = TitleText.FontWeight;
+            if (Equals(header.Tag, FenceId)) title.FontWeight = ToWeight(style.Font.Weight);
         }
     }
 
@@ -1607,6 +1918,7 @@ public partial class FenceWindow : Window
         {
             ItemList.SelectedItems.Clear();
             container.IsSelected = true;
+            _menuPicked = container; // M41a: only for the menu
         }
         // From the mouse, or (menu key: CursorLeft < 0) from the item's corner. PointToScreen gives physical pixels.
         var anchor = args.CursorLeft >= 0 ? PointToScreen(Mouse.GetPosition(this)) : container.PointToScreen(new Point(container.ActualWidth / 2, container.ActualHeight / 2));
@@ -1678,6 +1990,9 @@ public partial class FenceWindow : Window
     {
         if (InPanel(args.OriginalSource)) return; // M26: a panel selects and drags its own entries
         if (args.OriginalSource is DependencyObject source && FindAncestor<System.Windows.Controls.Primitives.ScrollBar>(source) is not null) return;
+        // M41a: a widget's own buttons and its corner grip take their press; it is not the start of a drag or a click.
+        if (args.OriginalSource is DependencyObject handle
+            && (FindAncestor<System.Windows.Controls.Primitives.ButtonBase>(handle) is not null || FindAncestor<System.Windows.Controls.Primitives.Thumb>(handle) is not null)) return;
         // Text selection in a text box must never start a drag (M3b review I3).
         if (args.OriginalSource is DependencyObject pressed && FindAncestor<TextBox>(pressed) is not null) return;
         var container = args.OriginalSource is DependencyObject element ? FindAncestor<ListBoxItem>(element) : null;
@@ -1694,6 +2009,16 @@ public partial class FenceWindow : Window
         }
         _pressPoint = args.GetPosition(ItemList);
         _pressedKey = (container.DataContext as FenceItemView)?.Key;
+        // M41a: one click opens — no selection is left behind (a widget keeps its double-click: its face is for reading).
+        if (OneClickOpens && Keyboard.Modifiers == ModifierKeys.None && container.DataContext is FenceItemView { IsWidget: false }
+            && !(container.IsSelected && ItemList.SelectedItems.Count > 1))
+        {
+            ItemList.SelectedItems.Clear();
+            _clickCandidate = args.ClickCount == 1 ? container : null; // a double-click's second press opens nothing more
+            container.Focus();
+            args.Handled = true;
+            return;
+        }
         // Ctrl+press on a selected item: unselect it on release, not now, so Ctrl+drag can still copy the selection (M3b review).
         if (container.IsSelected && Keyboard.Modifiers == ModifierKeys.Control && args.ClickCount == 1)
         {
@@ -1730,6 +2055,8 @@ public partial class FenceWindow : Window
         _pressPoint = null;
         _deferredSelect = null;
         _deferredToggle = null; // dragged: the item stays selected
+        if (_clickCandidate is { } candidate) candidate.IsSelected = true; // M41a: a one-click press became a drag of that item
+        _clickCandidate = null;
         // The element under the pointer first: a Free fence keeps the others' offsets from it (M28).
         var dragged = ItemList.SelectedItems.OfType<FenceItemView>().Select(view => view.Key).OrderBy(key => key == _pressedKey ? 0 : 1).ToList();
         if (dragged.Count > 0) DragRequested?.Invoke(dragged); // returns when the drag ends (Windows' modal loop)
@@ -1737,6 +2064,8 @@ public partial class FenceWindow : Window
 
     private void OnListRelease(object sender, MouseButtonEventArgs args)
     {
+        if (_clickCandidate is { DataContext: FenceItemView clicked } && _pressPoint is not null) OpenRequested?.Invoke(clicked.Key); // M41a: one click
+        _clickCandidate = null;
         _pressPoint = null;
         if (_deferredToggle is { } toggled)
         {
@@ -1783,7 +2112,8 @@ public partial class FenceWindow : Window
     private void OnItemDoubleClick(object sender, MouseButtonEventArgs args)
     {
         if (args.ChangedButton != MouseButton.Left || InPanel(args.OriginalSource)) return; // M26: the panel opens its own entries
-        if (ItemsControl.ContainerFromElement(ItemList, (DependencyObject)args.OriginalSource) is ListBoxItem { DataContext: FenceItemView view })
+        if (ItemsControl.ContainerFromElement(ItemList, (DependencyObject)args.OriginalSource) is ListBoxItem { DataContext: FenceItemView view }
+            && (!OneClickOpens || view.IsWidget)) // M41a: one click already opened it
             OpenRequested?.Invoke(view.Key);
     }
 
@@ -1792,7 +2122,7 @@ public partial class FenceWindow : Window
         Handle = new WindowInteropHelper(this).Handle;
         HwndSource.FromHwnd(Handle).AddHook(OnMessage);
         FenceWindowChrome.ApplyToolWindowStyles(Handle);
-        FenceWindowChrome.ApplyAccentBlur(Handle);
+        FenceWindowChrome.ApplyAccentBlur(Handle, blur: !_widgetsFloat);
         if (!FenceWindowChrome.UseRoundedCorners(Handle)) CornersUnavailable = true; // Windows 10: square blur corners (ADR-024)
     }
 
@@ -1806,6 +2136,9 @@ public partial class FenceWindow : Window
         }
         switch (message)
         {
+            case WmNcMouseMove:
+                ShowAddWidgetButton(); // M41a: the title is a caption — WPF sees no mouse there
+                break;
             case WmWindowPosChanging:
                 if (!Peeking) FenceWindowChrome.KeepAtBottom(lParam); // fences never rise above apps, except during Peek
                 break;

@@ -86,7 +86,17 @@
                     <CheckBox x:Name="DrawGestureBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Right-drag on the desktop to draw a fence" />
                     <StackPanel>
                         <TextBlock Text="Right-drag on the desktop to draw a fence" TextWrapping="Wrap" />
-                        <TextBlock x:Name="DrawGestureDescription" Style="{StaticResource Description}" Text="Hold the right mouse button on empty desktop and draw a rectangle. With both desktop gestures off, NeoFences watches no mouse clicks at all." />
+                        <TextBlock x:Name="DrawGestureDescription" Style="{StaticResource Description}" Text="Hold the right mouse button on empty desktop and draw a rectangle. With every desktop gesture off, NeoFences watches no mouse clicks at all." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- M41a (ADR-066): macOS-style, off by default. -->
+            <Border Style="{StaticResource Card}">
+                <DockPanel>
+                    <CheckBox x:Name="RevealGestureBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Click wallpaper to reveal desktop" />
+                    <StackPanel>
+                        <TextBlock Text="Click wallpaper to reveal desktop" TextWrapping="Wrap" />
+                        <TextBlock x:Name="RevealGestureDescription" Style="{StaticResource Description}" Text="Click empty wallpaper and your windows step aside, so your fences and wallpaper are in view; click it again to bring them back. Like Win+D." />
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -108,6 +118,19 @@
 
             </StackPanel>
             <StackPanel x:Name="FencesPage" Margin="0,16,0,0" Visibility="Collapsed">
+            <!-- M41a (ADR-064): one click opens by default; each fence can choose in Fence settings. -->
+            <Border Style="{StaticResource Card}">
+                <DockPanel>
+                    <ComboBox x:Name="OpenWithBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Open items with">
+                        <ComboBoxItem Content="One click" Tag="OneClick" />
+                        <ComboBoxItem Content="Double click" Tag="DoubleClick" />
+                    </ComboBox>
+                    <StackPanel>
+                        <TextBlock Text="Open items with" TextWrapping="Wrap" />
+                        <TextBlock x:Name="OpenWithDescription" Style="{StaticResource Description}" Text="One click opens an item, a game or a folder. Ctrl+click or a drag box still selects several. Each fence can choose its own in Fence settings." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <DockPanel>
@@ -147,10 +170,56 @@
 
             </StackPanel>
             <StackPanel x:Name="AppearancePage" Margin="0,16,0,0" Visibility="Collapsed">
+            <!-- M41a (ADR-063, spec §1–4): theme, title style, name style and motion; M41b turns them into visual pickers. -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <DockPanel>
+                        <ComboBox x:Name="ThemeBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Theme">
+                            <ComboBoxItem Content="Classic" Tag="Classic" />
+                            <ComboBoxItem Content="Aurora glass" Tag="Aurora" />
+                            <ComboBoxItem Content="Game HUD" Tag="Hud" />
+                            <ComboBoxItem Content="Neon" Tag="Neon" />
+                            <ComboBoxItem Content="Light Mica" Tag="LightMica" />
+                        </ComboBox>
+                        <StackPanel>
+                            <TextBlock Text="Theme" TextWrapping="Wrap" />
+                            <TextBlock x:Name="ThemeDescription" Style="{StaticResource Description}" Text="Every fence without a theme of its own (Fence settings… gives one fence its own). Aurora's light drifts, HUD's scan line sweeps, Neon's edge breathes — gently, and never in a game." />
+                        </StackPanel>
+                    </DockPanel>
+                    <DockPanel Margin="0,10,0,0">
+                        <ComboBox x:Name="TitleStyleBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Title style">
+                            <ComboBoxItem Content="Simple" Tag="Simple" />
+                            <ComboBoxItem Content="Clean (underline, count)" Tag="Clean" />
+                            <ComboBoxItem Content="Pill (emoji, count)" Tag="Pill" />
+                            <ComboBoxItem Content="CAPS (marker, count)" Tag="Caps" />
+                        </ComboBox>
+                        <TextBlock Text="Title style" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <DockPanel Margin="0,10,0,0">
+                        <ComboBox x:Name="NameStyleBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Item names">
+                            <ComboBoxItem Content="Crisp" Tag="Crisp" />
+                            <ComboBoxItem Content="Chips (on a soft pill)" Tag="Chips" />
+                            <ComboBoxItem Content="Plain" Tag="Plain" />
+                        </ComboBox>
+                        <TextBlock Text="Item names" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <DockPanel Margin="0,10,0,0">
+                        <ComboBox x:Name="MotionBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Motion">
+                            <ComboBoxItem Content="Lively" Tag="Lively" />
+                            <ComboBoxItem Content="Calm" Tag="Calm" />
+                            <ComboBoxItem Content="Off" Tag="Off" />
+                        </ComboBox>
+                        <StackPanel>
+                            <TextBlock Text="Motion" TextWrapping="Wrap" />
+                            <TextBlock x:Name="MotionDescription" Style="{StaticResource Description}" Text="Items lift under the mouse and dip when pressed; they arrive one after another. Off in games and when Windows' animation effects are off." />
+                        </StackPanel>
+                    </DockPanel>
+                </StackPanel>
+            </Border>
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock Text="Colour style" />
-                    <TextBlock Style="{StaticResource Description}" Text="How a fence shows its colour (fence menu → Colour)." />
+                    <TextBlock Style="{StaticResource Description}" Text="How a Classic fence shows its colour (fence menu → Colour); the other themes use it as their accent." />
                     <UniformGrid Rows="1" Margin="0,10,0,0" AutomationProperties.Name="Colour style">
                         <RadioButton x:Name="AccentEdgeStyle" GroupName="ColourStyle" Margin="0,0,8,0" AutomationProperties.Name="Accent edge">
                             <StackPanel>
@@ -179,13 +248,13 @@
             </Border>
             <Border Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock Text="Background strength" />
+                    <TextBlock Text="Transparency" />
                     <TextBlock x:Name="StrengthDescription" Style="{StaticResource Description}" />
                     <DockPanel Margin="0,8,0,0">
                         <TextBlock Text="Clear" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,10,0" Style="{StaticResource Description}" />
                         <TextBlock Text="Solid" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="10,0,0,0" Style="{StaticResource Description}" />
                         <Slider x:Name="StrengthSlider" Minimum="0" Maximum="85" TickFrequency="5" IsSnapToTickEnabled="True" SmallChange="5" LargeChange="10"
-                                VerticalAlignment="Center" AutomationProperties.Name="Background strength" />
+                                VerticalAlignment="Center" AutomationProperties.Name="Transparency" />
                     </DockPanel>
                 </StackPanel>
             </Border>
@@ -232,6 +301,19 @@
                         </ComboBox>
                     </StackPanel>
                 </StackPanel>
+            </Border>
+            <!-- M41a (spec §5): the fence menu's shape. -->
+            <Border Style="{StaticResource Card}">
+                <DockPanel>
+                    <ComboBox x:Name="FenceMenuBox" DockPanel.Dock="Right" Width="230" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="Fence menu">
+                        <ComboBoxItem Content="Guided (with headings)" Tag="Guided" />
+                        <ComboBoxItem Content="Compact (icon row)" Tag="Compact" />
+                    </ComboBox>
+                    <StackPanel>
+                        <TextBlock Text="Fence menu" TextWrapping="Wrap" />
+                        <TextBlock x:Name="FenceMenuDescription" Style="{StaticResource Description}" Text="Guided names each group of a fence's right-click menu; Compact puts the everyday actions in a row of icons on top." />
+                    </StackPanel>
+                </DockPanel>
             </Border>
 
             </StackPanel>

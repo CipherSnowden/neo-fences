@@ -27,6 +27,9 @@ public sealed partial class FenceHost
         window.LikeAllChosen += () => ChangeFence(fenceId, config => LookPresets.LikeAllFences(config, fenceId));
         window.IconSizeChanged += iconSize => ChangeFence(fenceId, config => FenceEdits.SetIconSize(config, fenceId, iconSize));
         window.LabelsChanged += labels => ChangeFence(fenceId, config => FenceEdits.SetLabels(config, fenceId, labels));
+        window.OpenWithChanged += openWith => ChangeFence(fenceId, config => FenceEdits.SetOpenWith(config, fenceId, openWith)); // M41a
+        window.EmojiChanged += emoji => ChangeFence(fenceId, config => FenceEdits.SetEmoji(config, fenceId, emoji));
+        window.WidgetsFloatChanged += floating => ChangeFence(fenceId, config => FenceEdits.SetWidgetsFloat(config, fenceId, floating));
         window.LayoutChanged += layout =>
         {
             // The shown tab takes the menu's path (a Free layout pins the cells where the items are now).
@@ -82,7 +85,7 @@ public sealed partial class FenceHost
             window.Close();
             return;
         }
-        window.Show(new FenceSettingsView(shown, Appearance, _lightTheme, LookPresets.All(_config), LookPresets.Matching(_config, shown)));
+        window.Show(new FenceSettingsView(shown, Appearance, _lightTheme, LookPresets.All(_config), LookPresets.Matching(_config, shown), _config.Settings.OpenItemsWith));
     }
 
     private void RefreshAllFenceSettings()

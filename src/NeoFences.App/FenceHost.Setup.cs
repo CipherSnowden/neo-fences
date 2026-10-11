@@ -141,8 +141,10 @@ public sealed partial class FenceHost
         var current = _config.Settings;
         if (target.StartWithWindows != current.StartWithWindows) SetStartWithWindows(target.StartWithWindows);
         if (target.HideDesktopIcons != current.HideDesktopIcons) SetHideDesktopIcons(target.HideDesktopIcons);
-        if (target.QuickHideGesture != current.QuickHideGesture || target.DrawGesture != current.DrawGesture)
-            SetGestures(quickHide: target.QuickHideGesture, draw: target.DrawGesture);
+        if (target.QuickHideGesture != current.QuickHideGesture || target.DrawGesture != current.DrawGesture || target.RevealGesture != current.RevealGesture)
+            SetGestures(quickHide: target.QuickHideGesture, draw: target.DrawGesture, reveal: target.RevealGesture);
+        if (target.OpenItemsWith != current.OpenItemsWith) SetOpenItemsWith(target.OpenItemsWith); // M41a
+        if (target.FenceMenu != current.FenceMenu) SetFenceMenu(target.FenceMenu);
         if (target.RollupExpand != current.RollupExpand) SetRollupExpand(target.RollupExpand);
         if (target.GameMode != current.GameMode) SetGameModeEnabled(target.GameMode);
         if (target.AutoUpdate != current.AutoUpdate) SetAutoUpdate(target.AutoUpdate);

@@ -71,6 +71,7 @@ public sealed partial class FenceHost
         if (_widgetTimer is { IsEnabled: false } stopped) stopped.Start();
         var now = DateTime.Now;
         foreach (var window in windows) window.UpdateWidgets(now, _lastStats);
+        TickMedia(windows); // M41a: Now playing
         var elapsed = Clock.Elapsed;
         if (!_statsInFlight && (_lastStatsAt is not { } last || elapsed - last >= StatsEvery - TimeSpan.FromMilliseconds(100)) // timer jitter: every 2 s, not 3
             && windows.Any(window => window.ShowsWidget(WidgetKind.Stats)))
@@ -109,15 +110,20 @@ public sealed partial class FenceHost
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
-    /// <summary>Fence menu → Add widget ▸: at the end (Flow) or the first free spot (Free); several of a kind are fine.</summary>
-    private void AddWidget(FenceWindow window, WidgetKind kind)
+    /// <summary>
+    /// The widget gallery (M41a): in its size, at the end (Flow) or the first free spot (Free); several of a kind are fine.
+    /// A fence that now holds only widgets offers once to let them float.
+    /// </summary>
+    private void AddWidget(FenceWindow window, WidgetKind kind, WidgetSize size)
     {
         if (window.Kind != Core.Model.FenceKind.Items) return;
-        var widget = VirtualItem.Create(Widgets.Target(kind));
+        var widget = VirtualItem.Create(Widgets.Target(kind)) with { Size = WidgetSizes.SpanOf(size) };
         _items = _items.With(window.FenceId, [.. _items.Of(window.FenceId), widget]); // not ItemEdits.Add: it would merge a second clock into the first
-        Log.Information("{Widget} widget added to fence {FenceId}", kind, window.FenceId);
+        Log.Information("{Widget} widget ({Size}) added to fence {FenceId}", kind, size, window.FenceId);
         ItemsChanged(checkTargets: []);
-        window.SelectItems([widget.Id]);
+        if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is { WidgetsFloat: false } fence
+            && WidgetBoards.OnlyWidgets([.. _items.Of(window.FenceId).Select(item => item.Target)]))
+            window.ShowTip("Only widgets here — let them float?", "Float", () => ChangeFence(fence.Id, config => Core.Model.FenceEdits.SetWidgetsFloat(config, fence.Id, true)));
     }
 
     /// <summary>Double-click: the clock opens Windows' Clock app, System stats Task Manager; the date page nothing.</summary>
@@ -130,31 +136,29 @@ public sealed partial class FenceHost
         }
     }
 
-    /// <summary>A widget's menu: the clock's options (M31: the stats' °F), Size ▸, Properties…, Remove from fence.</summary>
+    /// <summary>
+    /// A widget's menu (M41a, spec §6.2, §6.4): its settings (the widget flips over to them), Size ▸ Small / Medium / Large,
+    /// Remove from fence. The options themselves live on the widget's back.
+    /// </summary>
     private void ShowWidgetMenu(FenceWindow window, VirtualItem item, bool fromKeyboard)
     {
         var menu = new ContextMenu();
         void Command(string header, string? glyph, Action run, bool? isChecked = null, bool danger = false) =>
             menu.Items.Add(MenuGlyph.Entry(header, glyph, run, isChecked, danger)); // M35
-        if (Widgets.Of(item.Target) == WidgetKind.Clock)
-        {
-            var options = item.Widget ?? new WidgetOptions();
-            Command("Show seconds", null, () => SetWidgetOptions(item.Id, options with { Seconds = !options.Seconds }), isChecked: options.Seconds);
-            Command("Show date", null, () => SetWidgetOptions(item.Id, options with { Date = !options.Date }), isChecked: options.Date);
-            menu.Items.Add(new Separator());
-        }
-        if (Widgets.Of(item.Target) == WidgetKind.Stats) // M31
-        {
-            var options = item.Widget ?? new WidgetOptions();
-            Command("Temperature in °F", null, () => SetWidgetOptions(item.Id, options with { Fahrenheit = !options.Fahrenheit }), isChecked: options.Fahrenheit);
-            menu.Items.Add(new Separator());
-        }
-        menu.Items.Add(SizeMenu(menu, [item]));
+        if (Widgets.Of(item.Target) is not { } kind) return;
+        Command("Widget settings…", MenuGlyph.Settings, () => window.FlipWidget(item.Id));
+        var sizes = MenuGlyph.Entry("Size", MenuGlyph.Size);
+        var current = WidgetSizes.Of(item.Size, kind);
+        foreach (var size in Enum.GetValues<WidgetSize>())
+            sizes.Items.Add(MenuGlyph.Entry(size.ToString(), null, () => SetWidgetSize(item.Id, size), isChecked: size == current));
+        menu.Items.Add(sizes);
         menu.Items.Add(new Separator());
-        Command("Properties…", MenuGlyph.Properties, () => ShowProperties(window, item.Id, focusName: false));
         Command("Remove from fence", MenuGlyph.Remove, () => RemoveItems(window, [item.Id]), danger: true);
         window.ShowItemMenu(menu, fromKeyboard);
     }
+
+    /// <summary>M41a: Small, Medium or Large (the size menu, the corner drag, the widget's back).</summary>
+    private void SetWidgetSize(string itemId, WidgetSize size) => SetSize([itemId], WidgetSizes.SpanOf(size));
 
     private void SetWidgetOptions(string itemId, WidgetOptions options)
     {

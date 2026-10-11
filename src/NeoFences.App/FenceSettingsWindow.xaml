@@ -29,6 +29,34 @@
                 </Border>
 
                 <TextBlock Text="Look" Style="{StaticResource SectionHeader}" />
+                <!-- M41a (ADR-063, spec §1–2): the fence's own theme, title style and emoji. -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <DockPanel>
+                            <ComboBox x:Name="ThemeBox" DockPanel.Dock="Right" Width="210" VerticalAlignment="Center" AutomationProperties.Name="Theme" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Theme" />
+                                <TextBlock x:Name="ThemeOwn" Text="This fence's own" Style="{StaticResource Description}" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Visibility="Collapsed" />
+                            </StackPanel>
+                        </DockPanel>
+                        <DockPanel Margin="0,8,0,0">
+                            <ComboBox x:Name="TitleStyleBox" DockPanel.Dock="Right" Width="210" VerticalAlignment="Center" AutomationProperties.Name="Title style" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Title style" />
+                                <TextBlock x:Name="TitleStyleOwn" Text="This fence's own" Style="{StaticResource Description}" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Visibility="Collapsed" />
+                            </StackPanel>
+                        </DockPanel>
+                        <DockPanel Margin="0,8,0,0">
+                            <TextBox x:Name="EmojiBox" DockPanel.Dock="Right" Width="60" MaxLength="16" FontFamily="Segoe UI Emoji" FontSize="16" HorizontalContentAlignment="Center"
+                                     VerticalAlignment="Center" AutomationProperties.Name="Emoji" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Emoji" />
+                                <TextBlock Text="Before the title (in the pill with the Pill style). Pick one or type your own; empty for none." Style="{StaticResource Description}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                        <WrapPanel x:Name="EmojiPicks" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
                 <Border Style="{StaticResource Card}">
                     <DockPanel>
                         <ComboBox x:Name="StyleBox" DockPanel.Dock="Right" Width="210" VerticalAlignment="Center" AutomationProperties.Name="Colour style" />
@@ -43,7 +71,7 @@
                         <DockPanel>
                             <Button x:Name="StrengthLikeAllButton" Content="Like all fences" DockPanel.Dock="Right" Visibility="Collapsed" />
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Background" />
+                                <TextBlock Text="Transparency" />
                                 <TextBlock x:Name="StrengthDescription" Style="{StaticResource Description}" />
                             </StackPanel>
                         </DockPanel>
@@ -51,7 +79,7 @@
                             <TextBlock Text="Clear" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,10,0" Style="{StaticResource Description}" />
                             <TextBlock Text="Solid" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="10,0,0,0" Style="{StaticResource Description}" />
                             <Slider x:Name="StrengthSlider" Minimum="0" Maximum="85" TickFrequency="5" IsSnapToTickEnabled="True" SmallChange="5" LargeChange="10"
-                                    VerticalAlignment="Center" AutomationProperties.Name="Background strength" />
+                                    VerticalAlignment="Center" AutomationProperties.Name="Transparency" />
                         </DockPanel>
                     </StackPanel>
                 </Border>
@@ -114,6 +142,22 @@
                                 <ComboBoxItem Content="Free (fixed positions)" />
                             </ComboBox>
                             <TextBlock Text="Layout" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <!-- M41a (spec §6.5): a fence of widgets drops its glass and title. -->
+                        <DockPanel x:Name="FloatRow" Margin="0,0,0,8">
+                            <CheckBox x:Name="FloatBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" AutomationProperties.Name="Widgets float" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Widgets float" />
+                                <TextBlock Text="No glass and no title: each widget is its own card on the wallpaper. Point at the fence to move or right-click it." Style="{StaticResource Description}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                        <!-- M41a (ADR-064): e.g. one click only in a games fence. -->
+                        <DockPanel Margin="0,8,0,0">
+                            <ComboBox x:Name="OpenWithBox" DockPanel.Dock="Right" Width="210" AutomationProperties.Name="Open items with" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Open items with" />
+                                <TextBlock x:Name="OpenWithOwn" Text="This fence's own" Style="{StaticResource Description}" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Visibility="Collapsed" />
+                            </StackPanel>
                         </DockPanel>
                         <DockPanel Margin="0,8,0,0">
                             <ComboBox x:Name="SpacingBox" DockPanel.Dock="Right" Width="210" AutomationProperties.Name="Spacing" />

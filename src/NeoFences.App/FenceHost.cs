@@ -192,6 +192,7 @@ public sealed partial class FenceHost
         // M30: a fresh start says where NeoFences lives; Windows 11 may tuck a new tray icon behind the ^ arrow.
         _firstStartNotice = loaded.Source == ConfigLoadSource.Fresh && !loaded.IsReadOnly; // not for an older build on a newer config (final review I1); held while a game runs (M32 review I1)
         ShowFirstStartNotice(); // M31: or once a retried tray icon shows
+        IntroduceThemes(); // M41a
         StartUpdates(); // M17: the first check a minute after start
         ScheduleSave();
         MarkFencesShown(); // M37: the timing marks
@@ -208,7 +209,7 @@ public sealed partial class FenceHost
     /// <summary>All of NeoFences' run-time modes together (Core rules: which fences, icons and hooks they imply).</summary>
     private RunState Current => new(HideIcons: _config.Settings.HideDesktopIcons, QuickHidden: _quickHidden, Paused: _paused, GameMode: _gameMode,
         IconsHiddenByUser: _iconsHiddenByUser)
-        { SafeMode = SafeMode, QuickHideGesture = _config.Settings.QuickHideGesture, DrawGesture = _config.Settings.DrawGesture }; // M33
+        { SafeMode = SafeMode, QuickHideGesture = _config.Settings.QuickHideGesture, DrawGesture = _config.Settings.DrawGesture, RevealGesture = _config.Settings.RevealGesture }; // M33, M41a
 
     /// <summary>
     /// Windows asked to end the session (WPF's SessionEnding, inside WM_QUERYENDSESSION). WPF then shuts the app
@@ -308,7 +309,7 @@ public sealed partial class FenceHost
         window.SnapRect = (rect, edges) => SnapFence(window, rect, edges);
         window.MovedByUser += OnFenceMoved;
         window.RenameRequested += title => RenameFence(window, title);
-        window.IconSizeRequested += iconSize => SetFenceIconSize(window, iconSize);
+
         window.FenceSettingsRequested += () => OpenFenceSettings(window.FenceId); // M36
         window.LockToggled += locked => SetFenceLocked(window, locked);
         window.DeleteRequested += () => DeleteFence(window);
@@ -333,11 +334,15 @@ public sealed partial class FenceHost
         window.AutoCollectRequested += () => EditCollectRules(window); // M27
         window.PanelCommandRequested += (itemId, command) => OnPanelCommand(window, itemId, command);
         window.AddGamesRequested += () => AddGames(window); // M22
-        window.LayoutRequested += layout => SetFenceLayout(window, layout); // M24
-        window.AddWidgetRequested += kind => AddWidget(window, kind); // M25
+
+        window.AddWidgetRequested += (kind, size) => AddWidget(window, kind, size); // M25, M41a
+        window.MediaRequested += OnMediaRequested; // M41a
+        window.MediaPlayerChosen += OnMediaPlayerChosen;
+        window.WidgetOptionsChanged += SetWidgetOptions;
+        window.WidgetSizeChosen += SetWidgetSize;
         window.ItemsShownChanged += OnWidgetTick; // a rolled-up fence opened: its widgets show the right time at once
         window.SettingsRequested += OpenSettings;
-        window.LabelModeRequested += labels => SetFenceLabels(window, labels);
+
         window.SetShortcutArrows(_config.Settings.ShowShortcutArrows);
         window.SortRequested += sort => SortFence(window, sort);
         window.DragRequested += keys => DragItems(window, keys);
@@ -542,12 +547,6 @@ public sealed partial class FenceHost
         ScheduleSave();
     }
 
-    private void SetFenceIconSize(FenceWindow window, int iconSize)
-    {
-        _config = FenceEdits.SetIconSize(_config, window.FenceId, iconSize);
-        window.SetIconSize(iconSize);
-        ScheduleSave();
-    }
 
     private void SetFenceLocked(FenceWindow window, bool locked)
     {
@@ -920,8 +919,11 @@ public sealed partial class FenceHost
         var window = new SettingsWindow();
         window.StartWithWindowsChanged += SetStartWithWindows;
         window.HideDesktopIconsChanged += SetHideDesktopIcons;
-        window.QuickHideGestureChanged += enabled => SetGestures(quickHide: enabled, draw: _config.Settings.DrawGesture); // M33
-        window.DrawGestureChanged += enabled => SetGestures(quickHide: _config.Settings.QuickHideGesture, draw: enabled);
+        window.QuickHideGestureChanged += enabled => SetGestures(quickHide: enabled, draw: _config.Settings.DrawGesture, reveal: _config.Settings.RevealGesture); // M33
+        window.DrawGestureChanged += enabled => SetGestures(quickHide: _config.Settings.QuickHideGesture, draw: enabled, reveal: _config.Settings.RevealGesture);
+        window.RevealGestureChanged += enabled => SetGestures(quickHide: _config.Settings.QuickHideGesture, draw: _config.Settings.DrawGesture, reveal: enabled); // M41a
+        window.OpenItemsWithChanged += SetOpenItemsWith;
+        window.FenceMenuChanged += SetFenceMenu;
         window.PeekHotkeyChosen += text =>
         {
             var (saved, message) = SetPeekHotkey(text);
@@ -1020,6 +1022,9 @@ public sealed partial class FenceHost
         ShowShortcutArrows: _config.Settings.ShowShortcutArrows,
         QuickHideGesture: _config.Settings.QuickHideGesture, // M33
         DrawGesture: _config.Settings.DrawGesture,
+        RevealGesture: _config.Settings.RevealGesture, // M41a
+        OpenItemsWith: _config.Settings.OpenItemsWith,
+        FenceMenu: _config.Settings.FenceMenu,
         Banner: _banner,
         Snapshots: ListSnapshots(),
         Library: LibrarySettingsView(),
@@ -1122,13 +1127,6 @@ public sealed partial class FenceHost
         });
     }
 
-    /// <summary>Fence menu → Labels (M8b).</summary>
-    private void SetFenceLabels(FenceWindow window, LabelMode labels)
-    {
-        _config = FenceEdits.SetLabels(_config, window.FenceId, labels);
-        window.SetLabelMode(labels);
-        ScheduleSave();
-    }
 
     private void SetRollupExpand(RollupExpand mode)
     {
@@ -1162,7 +1160,7 @@ public sealed partial class FenceHost
         _mouseHook = new DesktopMouseHook(
             onGesture: (gesture, screenX, screenY) => dispatcher.BeginInvoke(() => OnDesktopGesture(gesture, screenX, screenY)),
             onPeekClickOutside: () => dispatcher.BeginInvoke(() => SetPeek(false)),
-            log: message => Log.Information("{Message}", message)) { HandleRightButton = _config.Settings.DrawGesture }; // M33 review I3
+            log: message => Log.Information("{Message}", message)) { HandleRightButton = Current.HandlesRightButton }; // M33 review I3, M41a
     }
 
     /// <summary>Windows drops a low-level hook silently (LowLevelHooksTimeout): a fresh one after Explorer restarts and on unlock.</summary>
@@ -1234,11 +1232,13 @@ public sealed partial class FenceHost
         SetPanelsPaused(gameMode); // M21, M26
         SetCollectPaused(); // M27
         UpdateHoverPolls(); // M37
+        RestyleAll(); // M41a: motion stops in a game and comes back after
         if (!gameMode)
         {
             ApplyDeferredShellWork();
             OnWidgetTick(); // M28: widgets right at once
             ShowFirstStartNotice(); // M32: a notice held back by a game
+            IntroduceThemes(); // M41a
             if (_onlineArtAskPending) MaybeAskOnlineArt(); // M34: the covers question held back by a game
             FlushNotices(); // M33 review I7: safe mode or save notices held back by a game
         }
@@ -1393,8 +1393,12 @@ public sealed partial class FenceHost
 
     private void OnDesktopGesture(DesktopGesture gesture, int screenX, int screenY)
     {
+        if (gesture == DesktopGesture.DoubleClick) _revealTimer?.Stop(); // the first click was half of a double-click
         switch (gesture)
         {
+            case DesktopGesture.Click when Current.RevealWanted: // M41a: "Click wallpaper to reveal desktop"
+                ScheduleReveal(screenX, screenY);
+                break;
             // A double-click on a visible native icon opens it; only empty desktop toggles quick-hide.
             case DesktopGesture.DoubleClick when Current.QuickHideGesture && (Current.IconsHidden
                 || !DesktopWindows.IsOverDesktopIcon(screenX, screenY, log: message => Log.Warning("{Message}", message))):
@@ -1423,6 +1427,7 @@ public sealed partial class FenceHost
         if (hidden && !_config.Settings.HideDesktopIcons) _iconsHiddenByUser = DesktopIcons.TryIsHidden() == true && !_watchdog.IsIconsHiddenMarked;
         var iconsWereHidden = Current.IconsHidden;
         _quickHidden = hidden;
+        if (_mouseHook is not null) _mouseHook.HandleRightButton = Current.HandlesRightButton; // M41a (ADR-066): hidden, the hook only watches
         foreach (var window in _windows.Values)
         {
             if (hidden) window.HideFaded(); // 150 ms fade (spec §6)
@@ -1771,14 +1776,38 @@ public sealed partial class FenceHost
         if (any) yield return TrayMenuItem.Separator;
     }
 
-    /// <summary>Settings → the desktop gesture switches (M33): both off means the mouse hook is not installed at all.</summary>
-    private void SetGestures(bool quickHide, bool draw)
+    /// <summary>Settings → the desktop gesture switches (M33; M41a: reveal): all off means the mouse hook is not installed at all.</summary>
+    private void SetGestures(bool quickHide, bool draw, bool reveal)
     {
-        _config = _config with { Settings = _config.Settings with { QuickHideGesture = quickHide, DrawGesture = draw } };
-        Log.Information("desktop gestures: quick-hide {QuickHide}, draw {Draw}", quickHide, draw);
-        if (_mouseHook is not null) _mouseHook.HandleRightButton = draw; // M33 review I3: right-press back to Windows
+        _config = _config with { Settings = _config.Settings with { QuickHideGesture = quickHide, DrawGesture = draw, RevealGesture = reveal } };
+        Log.Information("desktop gestures: quick-hide {QuickHide}, draw {Draw}, reveal {Reveal}", quickHide, draw, reveal);
+        if (_mouseHook is not null) _mouseHook.HandleRightButton = Current.HandlesRightButton; // M33 review I3: right-press back to Windows
         UpdateMouseHook();
         ScheduleSave();
         RefreshSettings();
+    }
+
+    private DispatcherTimer? _revealTimer;
+    private bool _revealed; // M41a: our click moved the windows aside; the next one brings them back
+
+    /// <summary>
+    /// M41a (ADR-066): a click on empty wallpaper shows the desktop (or brings the windows back) once Windows' double-click
+    /// time has passed without a second click — a double-click stays quick-hide. Not over a visible native icon (its click
+    /// selects it).
+    /// </summary>
+    private void ScheduleReveal(int screenX, int screenY)
+    {
+        _revealTimer?.Stop();
+        _revealTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(DesktopReveal.DoubleClickTime) };
+        _revealTimer.Tick += (_, _) =>
+        {
+            _revealTimer?.Stop();
+            if (!Current.RevealWanted) return;
+            if (!Current.IconsHidden && DesktopWindows.IsOverDesktopIcon(screenX, screenY, log: message => Log.Warning("{Message}", message))) return;
+            if (!DesktopReveal.Set(revealed: !_revealed, log: message => Log.Warning("{Message}", message))) return;
+            _revealed = !_revealed;
+            Log.Information("reveal desktop: {Revealed}", _revealed);
+        };
+        _revealTimer.Start();
     }
 }

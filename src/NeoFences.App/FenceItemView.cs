@@ -88,6 +88,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
         Widget = Widgets.Of(shown.Target); // M25
         Options = shown.Options ?? new WidgetOptions();
         Span = shown.Span ?? (shown.Tile ? new GridSpan(1, 2) : GridSpan.One);
+        Changed(nameof(WidgetSize)); // M41a
         StoredCell = shown.Cell;
         if (shown.Panel is { } panel) // M26
         {
@@ -135,7 +136,16 @@ public sealed class FenceItemView : INotifyPropertyChanged
     /// <summary>"Clock", "Date" or "Stats": the template shows that layout.</summary>
     public string WidgetKindName => Widget?.ToString() ?? "";
 
-    public WidgetOptions Options { get; private set; } = new();
+    public WidgetOptions Options { get; private set { field = value; Changed(); } } = new();
+
+    /// <summary>M41a: the widget's size — Small, Medium or Large — from its span.</summary>
+    public WidgetSize WidgetSize => Widget is { } kind ? WidgetSizes.Of(Span, kind) : WidgetSize.Small;
+
+    /// <summary>M41a: the time of the last tick (the faces format what they show from it).</summary>
+    public DateTime WidgetNow { get; private set { field = value; Changed(); } } = DateTime.Now;
+
+    /// <summary>M41a: what plays now, for a Now playing widget (the host reads Windows' media sessions).</summary>
+    public NowPlayingData? Media { get; set { if (Equals(field, value)) return; field = value; Changed(); } }
 
     /// <summary>The clock's time, or the date page's weekday (M25).</summary>
     public string WidgetMain { get; private set { field = value; Changed(); } } = "";
@@ -156,6 +166,7 @@ public sealed class FenceItemView : INotifyPropertyChanged
     /// <summary>Shows the widget as of <paramref name="now"/> (M25); stats from the last reading (null rows show "—").</summary>
     public void RenderWidget(DateTime now, System.Globalization.CultureInfo culture, StatsSample? stats)
     {
+        WidgetNow = now; // M41a: the faces update from it
         switch (Widget)
         {
             case WidgetKind.Clock:

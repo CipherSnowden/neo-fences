@@ -30,6 +30,7 @@ public sealed partial class FenceHost
     {
         if (_config.Fences.FirstOrDefault(fence => fence.Id == window.FenceId) is not { } shown) return;
         window.ApplyStyle(FenceLook.Resolve(Appearance, shown, _lightTheme, AccentAt(window)));
+        ApplyFeel(window, shown); // M41a
     }
 
     private void RestyleAll()

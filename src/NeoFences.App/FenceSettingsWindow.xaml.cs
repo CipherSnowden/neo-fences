@@ -8,7 +8,8 @@ using NeoFences.Core.Model;
 namespace NeoFences.App;
 
 /// <summary>What Fence settings shows: the fence, Settings' look (for "Like all fences (…)"), the presets and the lit one.</summary>
-public sealed record FenceSettingsView(Fence Fence, AppearanceSettings Appearance, bool LightTheme, IReadOnlyList<LookPreset> Presets, string? Matching);
+public sealed record FenceSettingsView(Fence Fence, AppearanceSettings Appearance, bool LightTheme, IReadOnlyList<LookPreset> Presets, string? Matching,
+    OpenWith OpenItemsWith = OpenWith.OneClick);
 
 /// <summary>
 /// Fence menu → Fence settings… (M36, spec §1): presets, then the look (each setting "Like all fences" or the fence's own),
@@ -20,12 +21,21 @@ public partial class FenceSettingsWindow : Window
     public event Action<int>? IconSizeChanged;
     public event Action<LabelMode>? LabelsChanged;
     public event Action<FenceLayout>? LayoutChanged;
+    /// <summary>M41a: the fence's own "Open items with", or null (like all fences).</summary>
+    public event Action<OpenWith?>? OpenWithChanged;
     public event Action<LookPreset>? PresetChosen;
     public event Action? LikeAllChosen;
     public event Action<string>? PresetSaved;
     public event Action<string>? PresetDeleted;
+    /// <summary>M41a: the fence's emoji (one grapheme), or null for none.</summary>
+    public event Action<string?>? EmojiChanged;
+    /// <summary>M41a: "Widgets float".</summary>
+    public event Action<bool>? WidgetsFloatChanged;
 
     private const string LikeAllName = "Like all fences";
+    private static readonly string[] ThemeNames = ["Classic", "Aurora glass", "Game HUD", "Neon", "Light Mica"]; // FenceTheme's order
+    private static readonly string[] TitleStyleNames = ["Simple", "Clean", "Pill", "Caps"]; // TitleStyle's order
+    private static readonly string[] EmojiChoices = ["🎮", "🕹️", "💼", "📁", "⬇️", "🎵", "🎬", "📷", "🛠️", "💻", "🌐", "📚", "⭐", "🔥", "🧪", "🗂️"];
     private static readonly ColourStyle[] Styles = [ColourStyle.AccentEdge, ColourStyle.TintedGlass, ColourStyle.TitleStrip];
     private static readonly string[] StyleNames = ["Accent edge", "Tinted glass", "Title strip"];
     private static readonly (int Size, string Name)[] TitleSizes = [(12, "Small"), (14, "Normal"), (17, "Large"), (20, "Huge")];
@@ -45,6 +55,25 @@ public partial class FenceSettingsWindow : Window
         FenceId = fenceId;
         InitializeComponent();
         StyleBox.SelectionChanged += (_, _) => ReportLook();
+        ThemeBox.SelectionChanged += (_, _) => ReportLook(); // M41a
+        FloatBox.Checked += (_, _) => { if (!_updating) WidgetsFloatChanged?.Invoke(true); };
+        FloatBox.Unchecked += (_, _) => { if (!_updating) WidgetsFloatChanged?.Invoke(false); };
+        TitleStyleBox.SelectionChanged += (_, _) => ReportLook();
+        EmojiBox.TextChanged += (_, _) =>
+        {
+            if (!_updating && _view is { } shown && Emoji.Normalize(EmojiBox.Text) != shown.Fence.Emoji) EmojiChanged?.Invoke(Emoji.Normalize(EmojiBox.Text));
+        };
+        foreach (var choice in EmojiChoices.Append(""))
+        {
+            var pick = new Button
+            {
+                Content = choice.Length == 0 ? "None" : choice, FontFamily = new System.Windows.Media.FontFamily("Segoe UI Emoji"), FontSize = choice.Length == 0 ? 12 : 16,
+                Padding = new Thickness(6, 0, 6, 0), Margin = new Thickness(0, 0, 4, 4), MinWidth = 34,
+            };
+            System.Windows.Automation.AutomationProperties.SetName(pick, choice.Length == 0 ? "No emoji" : $"Emoji {choice}");
+            pick.Click += (_, _) => EmojiBox.Text = choice;
+            EmojiPicks.Children.Add(pick);
+        }
         StrengthSlider.ValueChanged += (_, _) =>
         {
             if (_updating) return;
@@ -75,6 +104,10 @@ public partial class FenceSettingsWindow : Window
         {
             if (!_updating && LayoutBox.SelectedIndex >= 0) LayoutChanged?.Invoke(LayoutBox.SelectedIndex == 0 ? FenceLayout.Flow : FenceLayout.Free);
         };
+        OpenWithBox.SelectionChanged += (_, _) =>
+        {
+            if (!_updating && OpenWithBox.SelectedIndex >= 0) OpenWithChanged?.Invoke(OpenWithBox.SelectedIndex switch { 1 => OpenWith.OneClick, 2 => OpenWith.DoubleClick, _ => null });
+        };
         LikeAllAgainButton.Click += (_, _) => LikeAllChosen?.Invoke();
         CloseButton.Click += (_, _) => Close(); // IsCancel does not close a window shown modeless (M35)
         SavePresetButton.Click += (_, _) =>
@@ -100,7 +133,7 @@ public partial class FenceSettingsWindow : Window
     {
         // Rebuilt only when something changed: a refresh on activation must not disturb a list being opened.
         if (_view is { } shown && shown.Fence == view.Fence && shown.Appearance == view.Appearance && shown.LightTheme == view.LightTheme
-            && shown.Matching == view.Matching && shown.Presets.SequenceEqual(view.Presets)) return;
+            && shown.Matching == view.Matching && shown.Presets.SequenceEqual(view.Presets) && shown.OpenItemsWith == view.OpenItemsWith) return;
         _updating = true;
         try
         {
@@ -112,16 +145,26 @@ public partial class FenceSettingsWindow : Window
             ShowPresets(view);
             LikeAllAgainButton.IsEnabled = fence.Look is not null;
 
+            ThemeBox.ItemsSource = ThemeNames.Prepend($"{LikeAllName} ({ThemeNames[(int)settings.Theme]})").ToList(); // M41a
+            ThemeBox.SelectedIndex = own.Theme is { } theme ? (int)theme + 1 : 0;
+            ThemeOwn.Visibility = Visible(own.Theme is not null);
+            TitleStyleBox.ItemsSource = TitleStyleNames.Prepend($"{LikeAllName} ({TitleStyleNames[(int)settings.TitleStyle]})").ToList();
+            TitleStyleBox.SelectedIndex = own.TitleStyle is { } titleStyle ? (int)titleStyle + 1 : 0;
+            TitleStyleOwn.Visibility = Visible(own.TitleStyle is not null);
+            if (Emoji.Normalize(EmojiBox.Text) != fence.Emoji) EmojiBox.Text = fence.Emoji ?? "";
+
             StyleBox.ItemsSource = StyleNames.Prepend($"{LikeAllName} ({StyleNames[Array.IndexOf(Styles, settings.ColourStyle)]})").ToList();
             StyleBox.SelectedIndex = own.ColourStyle is { } style ? Array.IndexOf(Styles, style) + 1 : 0;
             StyleOwn.Visibility = Visible(own.ColourStyle is not null);
 
             _ownStrength = own.Strength;
-            var allStrength = view.LightTheme ? settings.StrengthLight : settings.StrengthDark;
+            var shownTheme = own.Theme ?? settings.Theme; // M41a: the strength of the tone the fence shows
+            var lightTone = shownTheme == FenceTheme.LightMica || (shownTheme == FenceTheme.Classic && view.LightTheme);
+            var allStrength = lightTone ? settings.StrengthLight : settings.StrengthDark;
             StrengthSlider.Value = own.Strength ?? allStrength;
             StrengthDescription.Text = own.Strength is { } strength
                 ? $"This fence's own: {strength} % in light and dark mode."
-                : $"{LikeAllName} ({allStrength} % in {(view.LightTheme ? "light" : "dark")} mode).";
+                : $"{LikeAllName} ({allStrength} % for {(lightTone ? "light" : "dark")} fences).";
             StrengthDescription.SetResourceReference(TextBlock.ForegroundProperty, own.Strength is null ? "TextFillColorSecondaryBrush" : "AccentTextFillColorPrimaryBrush");
             StrengthLikeAllButton.Visibility = Visible(own.Strength is not null);
 
@@ -146,6 +189,11 @@ public partial class FenceSettingsWindow : Window
             SpacingBox.ItemsSource = new[] { $"{LikeAllName} (Normal)", "Compact", "Normal", "Roomy" };
             SpacingBox.SelectedIndex = own.Spacing is { } spacing ? Array.IndexOf(Spacings, spacing) + 1 : 0;
             SpacingOwn.Visibility = Visible(own.Spacing is not null);
+            OpenWithBox.ItemsSource = new[] { $"{LikeAllName} ({(view.OpenItemsWith == OpenWith.OneClick ? "One click" : "Double click")})", "One click", "Double click" };
+            OpenWithBox.SelectedIndex = fence.OpenWith switch { OpenWith.OneClick => 1, OpenWith.DoubleClick => 2, _ => 0 };
+            OpenWithOwn.Visibility = Visible(fence.OpenWith is not null);
+            FloatBox.IsChecked = fence.WidgetsFloat;
+            FloatRow.Visibility = Visible(fence.Kind == FenceKind.Items);
         }
         finally
         {
@@ -215,6 +263,8 @@ public partial class FenceSettingsWindow : Window
             TitleAlign = AlignBox.SelectedIndex > 0 ? (TitleAlign)(AlignBox.SelectedIndex - 1) : null,
             TitleOnHover = TitleBarBox.IsChecked == true ? null : true,
             Spacing = SpacingBox.SelectedIndex > 0 ? Spacings[SpacingBox.SelectedIndex - 1] : null,
+            Theme = ThemeBox.SelectedIndex > 0 ? (FenceTheme)(ThemeBox.SelectedIndex - 1) : null, // M41a
+            TitleStyle = TitleStyleBox.SelectedIndex > 0 ? (TitleStyle)(TitleStyleBox.SelectedIndex - 1) : null,
         };
         if (ConfigNormalizer.NormalizeLook(look) == ConfigNormalizer.NormalizeLook(_view.Fence.Look)) return;
         LookChanged?.Invoke(look);

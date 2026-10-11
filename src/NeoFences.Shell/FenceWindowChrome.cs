@@ -33,9 +33,10 @@ public static class FenceWindowChrome
 
     /// <summary>Blur of whatever is behind the window, focus-independent. Requires a layered (AllowsTransparency) window.</summary>
     /// <returns>False if Windows rejected the call; the fence then shows its plain tint (fallback).</returns>
-    public static unsafe bool ApplyAccentBlur(nint handle, uint tintAbgr = DefaultTint)
+    public static unsafe bool ApplyAccentBlur(nint handle, uint tintAbgr = DefaultTint, bool blur = true)
     {
-        var policy = new AccentPolicy { AccentState = AccentEnableBlurBehind, GradientColor = tintAbgr };
+        // M41a: blur = false for a floating widget board — no glass behind the widgets, only their own cards.
+        var policy = new AccentPolicy { AccentState = blur ? AccentEnableBlurBehind : AccentDisabled, GradientColor = tintAbgr };
         var data = new WindowCompositionAttributeData { Attribute = WcaAccentPolicy, Data = (nint)(&policy), SizeOfData = sizeof(AccentPolicy) };
         return SetWindowCompositionAttribute(handle, ref data) != 0;
     }
@@ -157,4 +158,5 @@ public static class FenceWindowChrome
 
     private const int WcaAccentPolicy = 19;
     private const int AccentEnableBlurBehind = 3;
+    private const int AccentDisabled = 0;
 }
