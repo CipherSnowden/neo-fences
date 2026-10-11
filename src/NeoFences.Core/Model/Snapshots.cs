@@ -85,8 +85,10 @@ public static class Snapshots
         // M41b: not the one-time move to All fences here — these fences have no settings yet (the second Normalize decides).
         var saved = ConfigNormalizer.Normalize(new NeoFencesConfig { Fences = snapshot.Fences, Layouts = snapshot.Layouts, Settings = new Settings { AllFencesIntroduced = true } });
         // A fences-only snapshot from before rc.4 stored 48 / Always on every fence (1.0.1): what equals All fences' follows it.
+        // Only that shape (final review I1): from rc.4 on, a following fence stores neither, so own values there are chosen.
         var all = current.Settings.Appearance;
-        var fences = snapshot.Settings is not null ? saved.Fences
+        var beforeRc4 = snapshot.Settings is null && snapshot.Fences is { Count: > 0 } stored && stored.All(fence => fence is { IconSize: not null, Labels: not null });
+        var fences = !beforeRc4 ? saved.Fences
             : saved.Fences.Select(fence => fence with { IconSize = fence.IconSize == all.IconSize ? null : fence.IconSize, Labels = fence.Labels == all.Labels ? null : fence.Labels }).ToList();
         var layouts = new Dictionary<string, Layout>(current.Layouts);
         foreach (var (fingerprint, layout) in saved.Layouts) layouts[fingerprint] = layout;

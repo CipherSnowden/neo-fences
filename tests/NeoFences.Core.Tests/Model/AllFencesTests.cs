@@ -147,6 +147,17 @@ public class AllFencesTests
         Assert.Equal(((int?)32, (LabelMode?)LabelMode.OnHover), (restored.Fences[1].IconSize, restored.Fences[1].Labels));
     }
 
+    // Final review I1: a fences-only snapshot from rc.4 on (some fence follows) keeps own values that equal All fences' —
+    // a Games fence's own 64 must not start following.
+    [Fact]
+    public void RestoringANewerFencesOnlySnapshot_KeepsOwnValues()
+    {
+        var current = new NeoFencesConfig { Settings = Settings.NewInstall with { Appearance = AppearanceSettings.NewInstall with { IconSize = 64 } } };
+        var snapshot = new Snapshot { Name = "Before deleting", Fences = [Fence.Create("Games") with { IconSize = 64 }, Fence.Create("Work")] };
+        var (restored, _) = Snapshots.Restore(current, snapshot);
+        Assert.Equal(64, restored.Fences[0].IconSize);
+    }
+
     [Fact]
     public void WithStrength_SetsOneValueForBothModes()
     {
