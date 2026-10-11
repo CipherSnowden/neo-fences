@@ -151,7 +151,6 @@ public static class NowPlaying
         time.TotalHours >= 1 ? $"{(int)time.TotalHours}:{time.Minutes:00}:{time.Seconds:00}" : $"{time.Minutes}:{time.Seconds:00}";
 }
 
-/// <summary>M41a (spec §6.5): fences that hold only widgets may float.</summary>
 /// <summary>M41b (spec §7): touchpads send small wheel deltas; one volume step per 120 units (Windows' notch), the rest kept.</summary>
 public static class VolumeWheel
 {
@@ -162,6 +161,7 @@ public static class VolumeWheel
     }
 }
 
+/// <summary>M41a (spec §6.5): fences that hold only widgets may float.</summary>
 public static class WidgetBoards
 {
     /// <summary>The fence holds widgets and nothing else (by its items' targets).</summary>

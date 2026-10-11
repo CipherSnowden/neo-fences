@@ -262,7 +262,7 @@ public sealed partial class FenceHost
             return;
         }
         SetQuickHidden(false); // a new fence must show (as "New fence" does)
-        var fence = Fence.Create("Games", isLibrary: true) with { IconSize = 64, Labels = _config.Settings.DefaultLabels };
+        var fence = Fence.Create("Games", isLibrary: true) with { IconSize = 64 }; // names follow All fences (1.0.1)
         _config = _config with { Fences = [.. _config.Fences, fence] };
         Log.Information("Game Library fence created");
         SyncBoxes();

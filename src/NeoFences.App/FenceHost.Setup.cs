@@ -156,7 +156,7 @@ public sealed partial class FenceHost
         }
         if (target.PeekHotkey != current.PeekHotkey && SetPeekHotkey(target.PeekHotkey) is (false, var problem))
             Log.Warning("peek hotkey {Hotkey} not taken: {Problem}; the old one stays", target.PeekHotkey, problem);
-        _config = _config with { Settings = _config.Settings with { ShowShortcutArrows = target.ShowShortcutArrows, DefaultLabels = target.DefaultLabels } };
+        _config = _config with { Settings = _config.Settings with { ShowShortcutArrows = target.ShowShortcutArrows } };
         SaveNow();
         RefreshSettings();
     }
