@@ -67,10 +67,12 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Released 1.0.0-rc.6 on 2026-10-11 (VM 16 of 16 from rc.5; attestation and checksums verified; no delta: the workflow split `--pre` into letters, fixed in dea1d1e for the next release); the week with friends starts again from it
   - [x] Released 1.0.0-rc.7 on 2026-10-12 (the owner away, "u do"; VM 16 of 16 from rc.6 with the delta alone; on the owner's PC by its own 157-KB update in under 2 min): rc.6's icon rule boxed small-art icons (AMD Ryzen Master, Sideloadly) on the owner's PC — only solid art counts; the first release with a delta from the previous RC
   - [x] rc.7 on the owner's PC with no crash, data loss or stuck icons; the owner asked for 1.0.0 on 2026-10-12 (moving development to another machine)
-  - [ ] Release 1.0.0 (the user approved the release 2026-10-12): rc.7's code, version bumped
+  - [x] Released 1.0.0 on 2026-10-12: rc.7's code, version bumped; the Release run built "delta 1.0.0-rc.7 -> 1.0.0"; checksums and attestation verified; VM install check rc.7 → 1.0.0 16 of 16; published as the latest release (the website now offers it)
+  - [ ] After 1.0.0, the owner in a browser: VirusTotal, the Microsoft false-positive review, winget (optional) — `docs/RELEASING.md` "At 1.0.0"
   - [ ] After 1.0: a widget board with its own bigger grid (mockups with the owner)
   - [x] Updates downloaded the full package (75 MB) after the delta: the Release workflow built every RC's delta from the latest stable (0.26.0), so RC installs failed the patch checksum (Velopack log: "Restored data doesn't match checksum") and fell back; now built from the previous tag's release (`--pre` after an RC); check the run log at the next release
-- [~] **M42 — 1.0.1 polish** — claimed by session 2026-10-12 1.0.1-polish (branch `m42-polish`, merged only after 1.0.0 ships from rc.7's code): the rc.4 review's deferred minors
+- [x] **M42 — 1.0.1 polish** (branch `m42-polish`, merged 2026-10-12 after 1.0.0 shipped): the rc.4 review's deferred minors and the owner's pick (the wallpaper colour only in Fence settings); 1099 tests; VM live checks 20 of 20, settings probe 20 of 20; final Opus review — I1, I2 fixed, minors in the session log
+  - [ ] Release 1.0.1 after the owner has used 1.0.0 (the install check needs the Windows PC)
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
   - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches

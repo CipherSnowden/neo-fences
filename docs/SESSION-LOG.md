@@ -1140,5 +1140,10 @@ through the accent watcher (on while the wallpaper colour is on); Ctrl+Z restore
 after the recipe goes too); a recipe that changes no panel look still adds an undo step when panels already match; the
 wallpaper colour's source ("From Wallpaper Engine: …") is no longer shown anywhere.
 **Decisions:** none new (the owner's pick follows the M41b "nothing in two places" goal).
-**Next:** 1.0.1 from `m42-polish` after the owner has used 1.0.0; the owner moves development to a MacBook (only Core
+**Released:** 1.0.0 on 2026-10-12 (the owner: "release the version if good enough", moving to the Mac): rc.7's code with
+the version bumped; the Release run built "delta 1.0.0-rc.7 -> 1.0.0"; checksums and attestation verified; VM install
+check rc.7 → 1.0.0 from the draft's files 16 of 16; published as the latest release. M42 merged into main after it.
+**Handoff:** the project folder, this session's transcripts, scratchpad and the memory copied to the LOCO_DUCK pendrive
+with a HANDOFF.md (the old NeoFences-test folder stays: removing at the drive root is blocked for Claude).
+**Next:** the 1.0.0 outreach in a browser (RELEASING.md "At 1.0.0"); 1.0.1 from main after the owner has used 1.0.0; the owner moves development to a MacBook (only Core
 builds and tests there — the App, VM checks and the release install check need the Windows PC).
