@@ -184,8 +184,34 @@ Check 'settings-search' { # M41b (spec section 3): "double" finds both double-cl
   $desktop = @($names | Where-Object { $_ -like 'Double-click empty desktop hides all fences*' }).Count -gt 0
   $clicks = @($names | Where-Object { $_ -like 'Open items with*' }).Count -gt 0
   Shot 'settings-search'
+  # 1.0.1 (the owner's pick): the wallpaper colour is found at Fence settings' Accent colour, no longer on Look & feel
+  if ($box) { $box.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue('wallpaper colour'); Start-Sleep -Seconds 1 }
+  $accent = @([System.Windows.Automation.AutomationElement]::RootElement.FindAll([System.Windows.Automation.TreeScope]::Descendants,
+    (New-Object System.Windows.Automation.PropertyCondition ([System.Windows.Automation.AutomationElement]::ControlTypeProperty), ([System.Windows.Automation.ControlType]::Button))) |
+    ForEach-Object { $_.Current.Name } | Where-Object { $_ -like 'Accent colour*' }).Count -gt 0
+  Shot 'settings-search-wallpaper'
   $window = WindowLike 'NeoFences settings'; if ($window) { [void][NfVm.W]::SetForegroundWindow($window); Keys @(0x12, 0x73) }
-  "opened: $opened; found the desktop double-click: $desktop; found Open items with: $clicks"; $desktop -and $clicks
+  "opened: $opened; found the desktop double-click: $desktop; found Open items with: $clicks; wallpaper colour at Accent colour: $accent"; $desktop -and $clicks -and $accent
+}
+Check 'recipe-inbox-undo' { # 1.0.1 (rc.4 review minor): Ctrl+Z in Fence settings puts back the panel Downloads inbox changed
+  StopNeoFences
+  $config = Get-Content -LiteralPath (Join-Path $data 'config.json') -Raw | ConvertFrom-Json
+  $fences = @{}; $n = 0
+  foreach ($fence in $config.fences) { $n++; $fences[$fence.id] = @(@{ id = "panel$n"; target = 'C:\Windows'; panel = @{ look = 'list'; sort = 'name' } }) }
+  [ordered]@{ schema = 1; fences = $fences } | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $data 'items.json') -Encoding UTF8
+  StartNeoFences
+  function PanelLooks { @((Get-Content -LiteralPath (Join-Path $data 'items.json') -Raw | ConvertFrom-Json).fences.PSObject.Properties.Value | ForEach-Object { $_.panel.look }) }
+  $opened = OpenFromFenceMenu "Fence settings$([char]0x2026)"
+  $chosen = ClickOn (Button 'Recipe Downloads inbox'); Start-Sleep -Seconds 1
+  Keys @(0x0D); Start-Sleep -Seconds 4 # Apply
+  $after = PanelLooks
+  $window = WindowLike '*fence settings'; if ($window) { [void][NfVm.W]::SetForegroundWindow($window); Keys @(0x11, 0x5A) }
+  Start-Sleep -Seconds 4; Shot 'recipe-inbox-undo'
+  $undone = PanelLooks
+  if ($window) { Keys @(0x1B) }
+  $applied = @($after | Where-Object { $_ -eq 'details' }).Count -eq 1
+  $back = @($undone | Where-Object { $_ -ne 'list' }).Count -eq 0
+  "opened: $opened; recipe: $chosen; panels after the recipe: $($after -join ', '); after Ctrl+Z: $($undone -join ', ')"; $applied -and $back
 }
 Check 'rolled-up-click' { # last: every fence rolled up, opening on click (review I4)
   StopNeoFences
