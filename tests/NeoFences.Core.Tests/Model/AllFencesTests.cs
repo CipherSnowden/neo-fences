@@ -135,6 +135,18 @@ public class AllFencesTests
         Assert.Equal(64, restored.Settings.Appearance.IconSize); // All fences' stays the user's
     }
 
+    // 1.0.1 (rc.4 review minor): a fences-only snapshot from before rc.4 stored 48 / Always on every fence; where that is
+    // what All fences shows anyway, the fence follows again (no "This fence" badges).
+    [Fact]
+    public void RestoringAFencesOnlySnapshot_ValuesEqualToAllFences_Follow()
+    {
+        var current = new NeoFencesConfig { Settings = Settings.NewInstall with { Appearance = AppearanceSettings.NewInstall with { IconSize = 48, Labels = LabelMode.Always } } };
+        var snapshot = new Snapshot { Name = "Before deleting", Fences = [Fence.Create("A") with { IconSize = 48, Labels = LabelMode.Always }, Fence.Create("B") with { IconSize = 32, Labels = LabelMode.OnHover }] };
+        var (restored, _) = Snapshots.Restore(current, snapshot);
+        Assert.Equal(((int?)null, (LabelMode?)null), (restored.Fences[0].IconSize, restored.Fences[0].Labels));
+        Assert.Equal(((int?)32, (LabelMode?)LabelMode.OnHover), (restored.Fences[1].IconSize, restored.Fences[1].Labels));
+    }
+
     [Fact]
     public void WithStrength_SetsOneValueForBothModes()
     {

@@ -84,11 +84,15 @@ public static class Snapshots
         // The snapshot file may be damaged or hand-edited: the normalizer gives it unique ids and sane tabs.
         // M41b: not the one-time move to All fences here — these fences have no settings yet (the second Normalize decides).
         var saved = ConfigNormalizer.Normalize(new NeoFencesConfig { Fences = snapshot.Fences, Layouts = snapshot.Layouts, Settings = new Settings { AllFencesIntroduced = true } });
+        // A fences-only snapshot from before rc.4 stored 48 / Always on every fence (1.0.1): what equals All fences' follows it.
+        var all = current.Settings.Appearance;
+        var fences = snapshot.Settings is not null ? saved.Fences
+            : saved.Fences.Select(fence => fence with { IconSize = fence.IconSize == all.IconSize ? null : fence.IconSize, Labels = fence.Labels == all.Labels ? null : fence.Labels }).ToList();
         var layouts = new Dictionary<string, Layout>(current.Layouts);
         foreach (var (fingerprint, layout) in saved.Layouts) layouts[fingerprint] = layout;
         var config = ConfigNormalizer.Normalize(current with
         {
-            Fences = saved.Fences, Layouts = layouts,
+            Fences = fences, Layouts = layouts,
             Settings = snapshot.Settings ?? current.Settings, Library = snapshot.Library ?? current.Library, Presets = snapshot.Presets ?? current.Presets,
         });
         if (restoredAt is { } now) config = StartCollectingAt(config, now);
