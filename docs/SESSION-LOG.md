@@ -1119,4 +1119,4 @@ minutes. Icons cached by rc.6 still showed boxes (AMD, Apex Light, GCC, MSI Afte
 version 2, so rc.7 reused rc.6's pictures. Each cached icon is loaded fresh once a day, so copies heal within 24 h; on the
 owner's PC NeoFences' own icon cache was cleared and every icon came back right.
 **Lesson:** a change to how an icon is drawn bumps the icon cache version in the same release.
-**Next:** the owner uses rc.7 for a few days (shortened from a week, the owner's call); then 1.0.0 from rc.7's code.
+**Next:** the owner uses rc.7 for a while (a week was the rule; a few days suggested — the owner decides); then 1.0.0 from rc.7's code.
