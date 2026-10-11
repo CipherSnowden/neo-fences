@@ -52,12 +52,12 @@ before setting them up); a release candidate for friends before 1.0.0. Unsigned 
   - [x] Owner follow-up: a plain click on a widget never selects it (hover highlights; a double-click still opens it); VM check `widget-click`
   - [x] The owner's CPU check (2026-10-11, `tools/perf/measure-themes.ps1`): ten Aurora / HUD / Neon fences with Motion Lively, idle 60 s: 0.42 % in Task Manager (6.6 % of one core, 16 logical processors), under the 2 % goal
   - [x] VM live checks on the branch build 15 of 15; merged locally into main
-- [~] **M41b — Settings** (1.0.0-rc.4; claimed by session 2026-10-11 m41b-settings): option audit, Fence settings v4, Settings v2, recipes; M41a deferred minors; the gallery's search
+- [x] **M41b — Settings** (1.0.0-rc.4; merged 2026-10-11): option audit, Fence settings v4, Settings v2, recipes; M41a deferred minors; the gallery's search
   - [x] Option audit: 120 options inventoried (11 without effect at least sometimes, 34 in two or more places, 22 unclear); 10 decisions put to the owner in the visual companion (`settings-audit.html`), wording fixes and leftovers listed
   - [x] Owner picked the 10 audit cards (all suggestions); spec `docs/superpowers/specs/2026-10-11-m41b-settings-design.md` approved; plan `docs/superpowers/plans/2026-10-11-m41b-settings.md`
   - [x] Built on branch `m41b-settings`: Core test-first (AllFences, SettingEdits, Recipes, SettingsCatalog; 1070 tests), Fence settings v4, Settings v2, the audit's removals, the rc.3 leftovers, ADR-067, guide, checklist BA; final Opus review "with fixes" — 5 important (+3 re-graded) fixed; VM live checks 19 of 19, probe screenshots sent to the owner
   - [x] Merged into main 2026-10-11
-  - [ ] Release 1.0.0-rc.4 (the user approved the release 2026-10-11)
+  - [x] Released 1.0.0-rc.4 on 2026-10-11 (Fence settings with All fences, preview and recipes; Settings with search; VM 16 of 16 from rc.3)
 - After 1.0: Avalonia spike → Linux (KDE) → macOS; Microsoft Store build; sensor picker; clock options; desktop pages; search palette; theme packs; translations
 - [x] **M19 — 0.10.0: Store apps as items, bulk fix of missing items, Add from desktop…, M18 reliability leftovers** — spec `docs/superpowers/specs/2026-10-05-m19-apps-relocate-desktop-fill-design.md`, plan `docs/superpowers/plans/2026-10-05-m19-apps-relocate-desktop-fill.md`, ADR-042/043
   - [x] Prototype with live probes (app list, Start drag, generic icons, bulk fix, Add from desktop on the real desktop); plan with replay-verified patches

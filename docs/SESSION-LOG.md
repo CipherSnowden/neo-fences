@@ -1025,4 +1025,7 @@ settings-search); probe screenshots sent to the owner.
 preview goes stale after a tab switch until the window is activated; fences from an old fences-only snapshot come back with
 own 48 / Always; All fences' accent row duplicates the wallpaper colour switch; Recipes.Changes omits some parts; Downloads
 inbox's panel change is not undone by Ctrl+Z; small leftovers (a doc summary, a reversed wheel's first notch, DefaultLabels).
-**Next:** the owner's go for 1.0.0-rc.4 (merge, version, release); the owner looks at Now playing with Spotify / YouTube.
+**Released:** 1.0.0-rc.4 on 2026-10-11: CI green, checksums and attestation verified, VM install check rc.3 → rc.4 from the
+draft's files 16 of 16, published as a pre-release (the website still serves 0.26.0).
+**Next:** about a week with friends on rc.4, then 1.0.0 (that code, version bumped); the owner looks at Now playing with
+Spotify / YouTube.
