@@ -38,16 +38,16 @@ public static class FenceWindowChrome
         // M41a: blur = false for a floating widget board — no glass behind the widgets, only their own cards.
         var policy = new AccentPolicy { AccentState = blur ? AccentEnableBlurBehind : AccentDisabled, GradientColor = tintAbgr };
         var data = new WindowCompositionAttributeData { Attribute = WcaAccentPolicy, Data = (nint)(&policy), SizeOfData = sizeof(AccentPolicy) };
-        // After rc.5 (the owner's Desk board): Windows 11 draws a thin light border around a rounded window. On glass it
-        // blends in; around a board without glass it stood alone as a frame. None for a board, Windows' own otherwise
-        // (refused on Windows 10, where there is no such border).
-        var border = blur ? DwmColorDefault : DwmColorNone;
+        // rc.6 (the owner's desktop): Windows 11 draws a thin light border around a rounded window. Around a board without
+        // glass it stood alone as a frame; on glass it doubled the fence's own edge, and around Game HUD it was a rounded
+        // line over square cut corners. The fence draws its own edge (or its theme does): none from Windows (refused on
+        // Windows 10, where there is no such border).
+        var border = DwmColorNone;
         PInvoke.DwmSetWindowAttribute((HWND)handle, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, &border, sizeof(uint));
         return SetWindowCompositionAttribute(handle, ref data) != 0;
     }
 
-    private const uint DwmColorDefault = 0xFFFFFFFF; // DWMWA_COLOR_DEFAULT
-    private const uint DwmColorNone = 0xFFFFFFFE;    // DWMWA_COLOR_NONE
+    private const uint DwmColorNone = 0xFFFFFFFE; // DWMWA_COLOR_NONE
 
     /// <summary>
     /// Rounded corners drawn by Windows 11 itself (DWMWA_WINDOW_CORNER_PREFERENCE), which also round the accent blur.
