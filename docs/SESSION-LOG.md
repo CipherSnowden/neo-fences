@@ -1083,3 +1083,18 @@ default otherwise); VM live checks 19 of 19 (one rerun: Windows' Clock app updat
 after 1.0.0 so 1.0.0 stays rc.5's code — or rc.6 if the owner prefers. The VMs draw no window borders (no graphics
 acceleration): checklist BB4 is for a real PC.
 **Next:** the week with friends on rc.5, then 1.0.0; then `board-edge` and the widget-board design.
+
+## 2026-10-11 — the owner's feedback after rc.5: grid snapping, borders, icons, glass tint (rc.6)
+
+**Feedback:** fences should snap to a grid (free placement annoying); icons and fences still look aliased; a strange
+gradient in the right fence from the Crysis 3 logo on the Wallpaper Engine wallpaper. The owner chose rc.6 now over
+1.0.1 (the week with friends starts again).
+**Found (zoomed screenshot, a read-only icon experiment):** Windows 11 draws its own thin rounded border around every
+fence: doubled the glass fences' own edge and drew a rounded grey line around Game HUD's square cut corners. Icons:
+Steam and AISnatch are smooth; AMD Ryzen Master and Sideloadly ship only up to 48-px art, stair-stepped as in Explorer;
+Redragon has smooth 256-px art but a rough 48-px frame. The red smear: Transparency 0 in dark mode (pure blur).
+**Done:** the owner's glass tint set to 50 (snapshot first; screenshots sent). Branch `rc6` (rebased on main, with
+`board-edge`): `Snapping.Snap` gridPx (16 DIP; the grid only on an axis where no fence or screen edge snaps, so fence
+gaps win; resize steps never below the minimum; 6 tests); DWMWA_BORDER_COLOR none on every fence; `IconArt.IsLarge`
+(the 256-px art's alpha box ≥ 60 % of the canvas) and the icon loader scaling large art down with WIC (else the icon at
+its size); the icon cache index version 2 (older ones start over). Core 1090 tests. Guide and checklist BB4–BB6.
